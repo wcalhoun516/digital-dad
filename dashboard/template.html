@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Digital Dad — Dr. George Calhoun's Intellectual Archive</title>
+<style>
+/* ===== BASE ===== */
+:root {
+  --bg: #0a0a0a;
+  --bg-card: #141414;
+  --bg-hover: #1a1a1a;
+  --text: #e8e4df;
+  --text-muted: #8a8580;
+  --accent: #c9a84c;
+  --accent-dim: rgba(201, 168, 76, 0.15);
+  --border: #2a2a2a;
+  --serif: Georgia, "Times New Roman", serif;
+  --mono: "SF Mono", "Fira Code", "Cascadia Code", monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* ===== HEADER ===== */
+header {
+  text-align: center;
+  padding: 60px 20px 40px;
+  border-bottom: 1px solid var(--border);
+}
+
+header h1 {
+  font-family: var(--serif);
+  font-size: 3em;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+header .subtitle {
+  font-family: var(--mono);
+  font-size: 0.8em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+}
+
+header .meta {
+  font-family: var(--mono);
+  font-size: 0.75em;
+  color: var(--accent);
+  margin-top: 12px;
+}
+
+/* ===== TABS ===== */
+nav {
+  display: flex;
+  justify-content: center;
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--bg);
+}
+
+nav button {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-family: var(--mono);
+  font-size: 0.8em;
+  padding: 16px 28px;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+}
+
+nav button:hover { color: var(--text); background: var(--bg-hover); }
+nav button.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* ===== TAB CONTENT ===== */
+.tab-content { display: none; padding: 40px 20px; max-width: 1200px; margin: 0 auto; }
+.tab-content.active { display: block; }
+
+h2 {
+  font-family: var(--serif);
+  font-size: 1.8em;
+  font-weight: 400;
+  margin-bottom: 8px;
+}
+
+h3 {
+  font-family: var(--serif);
+  font-size: 1.3em;
+  font-weight: 400;
+  margin: 24px 0 12px;
+  color: var(--accent);
+}
+
+.section-desc {
+  font-size: 0.9em;
+  color: var(--text-muted);
+  margin-bottom: 30px;
+  font-family: var(--serif);
+  font-style: italic;
+}
+
+/* ===== THEME MAP (Tab 1) ===== */
+#theme-map-svg { width: 100%; background: var(--bg-card); border-radius: 8px; }
+
+.cluster-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.cluster-legend .item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85em;
+  font-family: var(--mono);
+  color: var(--text-muted);
+}
+
+.cluster-legend .swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+/* ===== TOOLTIP ===== */
+.tooltip {
+  position: absolute;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 12px 16px;
+  font-size: 0.85em;
+  pointer-events: none;
+  z-index: 200;
+  max-width: 300px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+
+.tooltip .title { font-family: var(--serif); font-weight: 600; margin-bottom: 4px; }
+.tooltip .date { font-family: var(--mono); font-size: 0.8em; color: var(--accent); }
+.tooltip .cluster { font-family: var(--mono); font-size: 0.75em; color: var(--text-muted); margin-top: 4px; }
+
+/* ===== TIMELINE (Tab 2) ===== */
+#timeline-container { overflow-x: auto; padding-bottom: 20px; }
+#timeline-svg { background: var(--bg-card); border-radius: 8px; min-width: 100%; }
+
+/* ===== PSYCHOPROFILE (Tab 3) ===== */
+.profile-narrative {
+  font-family: var(--serif);
+  font-size: 1.05em;
+  line-height: 1.8;
+  max-width: 750px;
+  margin: 0 auto;
+}
+
+.profile-narrative p { margin-bottom: 1.2em; }
+
+.radar-container {
+  display: flex;
+  justify-content: center;
+  margin: 40px 0;
+}
+
+.pull-quote {
+  border-left: 3px solid var(--accent);
+  padding: 12px 24px;
+  margin: 24px 0;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 1.15em;
+  color: var(--accent);
+}
+
+/* ===== LINGUISTIC DNA (Tab 4) ===== */
+.chart-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 30px;
+  margin: 20px 0;
+}
+
+.chart-card {
+  background: var(--bg-card);
+  border-radius: 8px;
+  padding: 24px;
+  border: 1px solid var(--border);
+}
+
+.chart-card h4 {
+  font-family: var(--mono);
+  font-size: 0.8em;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  margin-bottom: 16px;
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--mono);
+  font-size: 0.85em;
+}
+
+.stat-row .label { color: var(--text-muted); }
+.stat-row .value { color: var(--accent); font-weight: 600; }
+
+/* ===== RAW CORPUS (Tab 5) ===== */
+.search-bar {
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 0.9em;
+  margin-bottom: 20px;
+}
+
+.search-bar:focus { outline: none; border-color: var(--accent); }
+
+.corpus-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9em;
+}
+
+.corpus-table th {
+  text-align: left;
+  padding: 12px 8px;
+  border-bottom: 2px solid var(--border);
+  font-family: var(--mono);
+  font-size: 0.8em;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.corpus-table th:hover { color: var(--text); }
+
+.corpus-table td {
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.corpus-table tr:hover { background: var(--bg-hover); }
+
+.corpus-table .title-cell a {
+  color: var(--text);
+  text-decoration: none;
+  font-family: var(--serif);
+}
+
+.corpus-table .title-cell a:hover { color: var(--accent); }
+
+.corpus-table .date-cell { font-family: var(--mono); font-size: 0.85em; color: var(--text-muted); white-space: nowrap; }
+.corpus-table .wc-cell { font-family: var(--mono); font-size: 0.85em; text-align: right; }
+.corpus-table .tag-cell { font-size: 0.8em; }
+
+.tag {
+  display: inline-block;
+  background: var(--accent-dim);
+  color: var(--accent);
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-family: var(--mono);
+  font-size: 0.85em;
+  margin: 1px 2px;
+}
+
+/* ===== FOOTER ===== */
+footer {
+  text-align: center;
+  padding: 40px 20px;
+  border-top: 1px solid var(--border);
+  font-family: var(--mono);
+  font-size: 0.75em;
+  color: var(--text-muted);
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Digital Dad</h1>
+  <div class="subtitle">The Intellectual Archive of Dr. George Calhoun</div>
+  <div class="meta" id="header-meta"></div>
+</header>
+
+<nav id="tabs">
+  <button class="active" data-tab="themes">Theme Map</button>
+  <button data-tab="timeline">Timeline</button>
+  <button data-tab="psychoprofile">Psychoprofile</button>
+  <button data-tab="linguistic">Linguistic DNA</button>
+  <button data-tab="corpus">Raw Corpus</button>
+</nav>
+
+<!-- Tab 1: Theme Map -->
+<div class="tab-content active" id="tab-themes">
+  <h2>Theme Map</h2>
+  <p class="section-desc">Each bubble is an article. Size reflects word count, color reflects thematic cluster. Click to read.</p>
+  <div class="cluster-legend" id="cluster-legend"></div>
+  <svg id="theme-map-svg"></svg>
+</div>
+
+<!-- Tab 2: Timeline -->
+<div class="tab-content" id="tab-timeline">
+  <h2>Timeline</h2>
+  <p class="section-desc">The arc of an intellectual career — every article by date, colored by dominant theme.</p>
+  <div id="timeline-container">
+    <svg id="timeline-svg"></svg>
+  </div>
+</div>
+
+<!-- Tab 3: Psychoprofile -->
+<div class="tab-content" id="tab-psychoprofile">
+  <h2>Psychoanalytic Profile</h2>
+  <p class="section-desc">An AI-generated portrait of the mind behind the articles.</p>
+  <div class="radar-container"><svg id="radar-svg" width="400" height="400"></svg></div>
+  <div class="profile-narrative" id="profile-text"></div>
+</div>
+
+<!-- Tab 4: Linguistic DNA -->
+<div class="tab-content" id="tab-linguistic">
+  <h2>Linguistic DNA</h2>
+  <p class="section-desc">The statistical fingerprint of his writing — how he writes, not what he writes.</p>
+  <div id="aggregate-stats"></div>
+  <div class="chart-grid">
+    <div class="chart-card">
+      <h4>Sentence Length Distribution</h4>
+      <svg id="sentence-hist-svg" width="100%" height="250"></svg>
+    </div>
+    <div class="chart-card">
+      <h4>Most Distinctive Words</h4>
+      <svg id="words-bar-svg" width="100%" height="250"></svg>
+    </div>
+    <div class="chart-card">
+      <h4>Readability Over Time</h4>
+      <svg id="readability-svg" width="100%" height="250"></svg>
+    </div>
+    <div class="chart-card">
+      <h4>Vocabulary Richness Over Time</h4>
+      <svg id="ttr-svg" width="100%" height="250"></svg>
+    </div>
+  </div>
+</div>
+
+<!-- Tab 5: Raw Corpus -->
+<div class="tab-content" id="tab-corpus">
+  <h2>Raw Corpus</h2>
+  <p class="section-desc">Every article, searchable and sortable.</p>
+  <input type="text" class="search-bar" id="corpus-search" placeholder="Search titles, tags...">
+  <table class="corpus-table">
+    <thead>
+      <tr>
+        <th data-sort="date">Date</th>
+        <th data-sort="title">Title</th>
+        <th data-sort="word_count">Words</th>
+        <th>Tags</th>
+        <th>Theme</th>
+      </tr>
+    </thead>
+    <tbody id="corpus-tbody"></tbody>
+  </table>
+</div>
+
+<footer>
+  Digital Dad &middot; A project about preserving intellectual legacy &middot; Built with D3.js, Python, and the Anthropic API
+</footer>
+
+<!-- Tooltip -->
+<div class="tooltip" id="tooltip" style="display:none"></div>
+
+<!-- DATA INJECTION — replaced at build time -->
+<script>
+const THEME_DATA = /*__THEME_DATA__*/;
+const PSYCHOPROFILE_DATA = /*__PSYCHOPROFILE_DATA__*/;
+const LINGUISTIC_DATA = /*__LINGUISTIC_DATA__*/;
+const MANIFEST_DATA = /*__MANIFEST_DATA__*/;
+</script>
+
+<!-- D3.js (loaded from CDN; works when served, fallback message if file://) -->
+<script src="https://d3js.org/d3.v7.min.js"></script>
+
+<script>
+// ===== TAB NAVIGATION =====
+document.querySelectorAll('nav button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ===== TOOLTIP HELPERS =====
+const tooltip = document.getElementById('tooltip');
+function showTooltip(evt, html) {
+  tooltip.innerHTML = html;
+  tooltip.style.display = 'block';
+  tooltip.style.left = (evt.pageX + 15) + 'px';
+  tooltip.style.top = (evt.pageY - 10) + 'px';
+}
+function hideTooltip() { tooltip.style.display = 'none'; }
+
+// ===== COLOR SCALE =====
+const colors = ['#c9a84c', '#6ba3d6', '#e07b54', '#8cc084', '#c27ab5', '#d4c15c', '#78c5c5', '#d68a8a', '#a5a5d6', '#8ab87c'];
+function clusterColor(id) { return colors[id % colors.length]; }
+
+// ===== HEADER META =====
+if (MANIFEST_DATA) {
+  const n = MANIFEST_DATA.total_articles || (MANIFEST_DATA.articles ? MANIFEST_DATA.articles.length : 0);
+  document.getElementById('header-meta').textContent = n + ' articles analyzed';
+}
+
+// ===== CHECK D3 =====
+if (typeof d3 === 'undefined') {
+  document.querySelectorAll('.tab-content').forEach(t => {
+    t.innerHTML = '<h2 style="color:var(--accent)">D3.js not loaded</h2><p>This dashboard needs D3.js. Serve it with <code>make serve</code> or open via HTTP server.</p>' + t.innerHTML;
+  });
+}
+
+// ===== TAB 1: THEME MAP =====
+function renderThemeMap() {
+  if (!THEME_DATA || !THEME_DATA.articles || typeof d3 === 'undefined') return;
+
+  const articles = THEME_DATA.articles;
+  const clusters = THEME_DATA.clusters || [];
+  const svg = d3.select('#theme-map-svg');
+  const width = svg.node().parentElement.clientWidth;
+  const height = Math.max(500, width * 0.6);
+  svg.attr('width', width).attr('height', height).attr('viewBox', `0 0 ${width} ${height}`);
+
+  // Legend
+  const legend = document.getElementById('cluster-legend');
+  clusters.forEach(c => {
+    const item = document.createElement('div');
+    item.className = 'item';
+    item.innerHTML = `<span class="swatch" style="background:${clusterColor(c.id)}"></span>${c.label} (${c.size})`;
+    legend.appendChild(item);
+  });
+
+  // Force simulation
+  const maxWc = d3.max(articles, d => d.word_count) || 1;
+  const nodes = articles.map(d => ({
+    ...d,
+    r: Math.max(5, Math.sqrt(d.word_count / maxWc) * 30),
+  }));
+
+  const sim = d3.forceSimulation(nodes)
+    .force('charge', d3.forceManyBody().strength(-15))
+    .force('center', d3.forceCenter(width / 2, height / 2))
+    .force('collide', d3.forceCollide(d => d.r + 2))
+    .force('x', d3.forceX(d => {
+      const idx = d.cluster_id;
+      const cols = Math.ceil(Math.sqrt(clusters.length));
+      return ((idx % cols) + 0.5) / cols * width;
+    }).strength(0.15))
+    .force('y', d3.forceY(d => {
+      const idx = d.cluster_id;
+      const cols = Math.ceil(Math.sqrt(clusters.length));
+      return (Math.floor(idx / cols) + 0.5) / Math.ceil(clusters.length / cols) * height;
+    }).strength(0.15));
+
+  const circles = svg.selectAll('circle')
+    .data(nodes)
+    .join('circle')
+    .attr('r', d => d.r)
+    .attr('fill', d => clusterColor(d.cluster_id))
+    .attr('fill-opacity', 0.7)
+    .attr('stroke', d => clusterColor(d.cluster_id))
+    .attr('stroke-width', 1)
+    .attr('cursor', 'pointer')
+    .on('mouseover', (evt, d) => {
+      d3.select(evt.target).attr('fill-opacity', 1).attr('stroke-width', 2);
+      showTooltip(evt, `<div class="title">${d.title}</div><div class="date">${(d.date||'').slice(0,10)}</div><div class="cluster">${d.cluster_label} · ${d.word_count} words</div>`);
+    })
+    .on('mousemove', (evt) => {
+      tooltip.style.left = (evt.pageX + 15) + 'px';
+      tooltip.style.top = (evt.pageY - 10) + 'px';
+    })
+    .on('mouseout', (evt) => {
+      d3.select(evt.target).attr('fill-opacity', 0.7).attr('stroke-width', 1);
+      hideTooltip();
+    })
+    .on('click', (evt, d) => { if (d.url) window.open(d.url, '_blank'); });
+
+  sim.on('tick', () => {
+    circles
+      .attr('cx', d => Math.max(d.r, Math.min(width - d.r, d.x)))
+      .attr('cy', d => Math.max(d.r, Math.min(height - d.r, d.y)));
+  });
+}
+
+// ===== TAB 2: TIMELINE =====
+function renderTimeline() {
+  if (!THEME_DATA || !THEME_DATA.articles || typeof d3 === 'undefined') return;
+
+  const articles = THEME_DATA.articles.filter(a => a.date).sort((a, b) => a.date.localeCompare(b.date));
+  if (!articles.length) return;
+
+  const container = document.getElementById('timeline-container');
+  const svg = d3.select('#timeline-svg');
+  const margin = { top: 30, right: 30, bottom: 50, left: 40 };
+  const width = Math.max(container.clientWidth, articles.length * 12);
+  const height = 350;
+  svg.attr('width', width).attr('height', height);
+
+  const x = d3.scaleTime()
+    .domain(d3.extent(articles, d => new Date(d.date)))
+    .range([margin.left, width - margin.right]);
+
+  const clusters = [...new Set(articles.map(a => a.cluster_id))].sort();
+  const y = d3.scaleBand()
+    .domain(clusters)
+    .range([margin.top, height - margin.bottom])
+    .padding(0.3);
+
+  // X axis
+  svg.append('g')
+    .attr('transform', `translate(0,${height - margin.bottom})`)
+    .call(d3.axisBottom(x).ticks(d3.timeYear.every(1)))
+    .selectAll('text').attr('fill', '#8a8580').style('font-family', 'var(--mono)').style('font-size', '11px');
+  svg.selectAll('.domain, .tick line').attr('stroke', '#2a2a2a');
+
+  // Articles as circles
+  svg.selectAll('circle')
+    .data(articles)
+    .join('circle')
+    .attr('cx', d => x(new Date(d.date)))
+    .attr('cy', d => y(d.cluster_id) + y.bandwidth() / 2 + (Math.random() - 0.5) * y.bandwidth() * 0.6)
+    .attr('r', 4)
+    .attr('fill', d => clusterColor(d.cluster_id))
+    .attr('fill-opacity', 0.7)
+    .attr('cursor', 'pointer')
+    .on('mouseover', (evt, d) => {
+      d3.select(evt.target).attr('r', 7).attr('fill-opacity', 1);
+      showTooltip(evt, `<div class="title">${d.title}</div><div class="date">${(d.date||'').slice(0,10)}</div><div class="cluster">${d.cluster_label}</div>`);
+    })
+    .on('mousemove', (evt) => {
+      tooltip.style.left = (evt.pageX + 15) + 'px';
+      tooltip.style.top = (evt.pageY - 10) + 'px';
+    })
+    .on('mouseout', (evt) => {
+      d3.select(evt.target).attr('r', 4).attr('fill-opacity', 0.7);
+      hideTooltip();
+    })
+    .on('click', (evt, d) => { if (d.url) window.open(d.url, '_blank'); });
+}
+
+// ===== TAB 3: PSYCHOPROFILE =====
+function renderPsychoprofile() {
+  if (!PSYCHOPROFILE_DATA) return;
+
+  // Narrative
+  const text = PSYCHOPROFILE_DATA.profile_narrative || '';
+  const paras = text.split(/\n\n+/).filter(p => p.trim());
+  const profileDiv = document.getElementById('profile-text');
+  paras.forEach(p => {
+    const el = document.createElement('p');
+    // Convert **bold** to <strong>
+    el.innerHTML = p.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    profileDiv.appendChild(el);
+  });
+
+  // Radar chart
+  if (PSYCHOPROFILE_DATA.dimensions && typeof d3 !== 'undefined') {
+    const dims = PSYCHOPROFILE_DATA.dimensions;
+    const keys = Object.keys(dims);
+    if (keys.length === 0) return;
+
+    const svg = d3.select('#radar-svg');
+    const w = 400, h = 400, cx = w/2, cy = h/2, radius = 150;
+    const angleSlice = (Math.PI * 2) / keys.length;
+
+    // Concentric circles
+    for (let level = 1; level <= 5; level++) {
+      const r = radius * level / 5;
+      svg.append('circle').attr('cx', cx).attr('cy', cy).attr('r', r)
+        .attr('fill', 'none').attr('stroke', '#2a2a2a').attr('stroke-width', 0.5);
+    }
+
+    // Axes
+    keys.forEach((key, i) => {
+      const angle = angleSlice * i - Math.PI / 2;
+      const x2 = cx + radius * Math.cos(angle);
+      const y2 = cy + radius * Math.sin(angle);
+      svg.append('line').attr('x1', cx).attr('y1', cy).attr('x2', x2).attr('y2', y2)
+        .attr('stroke', '#2a2a2a').attr('stroke-width', 0.5);
+
+      // Label
+      const lx = cx + (radius + 20) * Math.cos(angle);
+      const ly = cy + (radius + 20) * Math.sin(angle);
+      svg.append('text').attr('x', lx).attr('y', ly)
+        .attr('text-anchor', 'middle').attr('dominant-baseline', 'middle')
+        .attr('fill', '#8a8580').attr('font-size', '11px').attr('font-family', 'var(--mono)')
+        .text(key.replace(/_/g, ' '));
+    });
+
+    // Data polygon
+    const points = keys.map((key, i) => {
+      const val = dims[key] / 10;
+      const angle = angleSlice * i - Math.PI / 2;
+      return [cx + radius * val * Math.cos(angle), cy + radius * val * Math.sin(angle)];
+    });
+
+    svg.append('polygon')
+      .attr('points', points.map(p => p.join(',')).join(' '))
+      .attr('fill', 'rgba(201, 168, 76, 0.2)')
+      .attr('stroke', '#c9a84c')
+      .attr('stroke-width', 2);
+
+    // Data points
+    points.forEach((p, i) => {
+      svg.append('circle').attr('cx', p[0]).attr('cy', p[1]).attr('r', 4)
+        .attr('fill', '#c9a84c');
+      svg.append('text').attr('x', p[0]).attr('y', p[1] - 10)
+        .attr('text-anchor', 'middle').attr('fill', '#c9a84c')
+        .attr('font-size', '12px').attr('font-family', 'var(--mono)').attr('font-weight', '600')
+        .text(dims[keys[i]]);
+    });
+  }
+}
+
+// ===== TAB 4: LINGUISTIC DNA =====
+function renderLinguistic() {
+  if (!LINGUISTIC_DATA || typeof d3 === 'undefined') return;
+
+  // Aggregate stats
+  const agg = LINGUISTIC_DATA.aggregate;
+  if (agg) {
+    const statsDiv = document.getElementById('aggregate-stats');
+    const card = document.createElement('div');
+    card.className = 'chart-card';
+    card.style.marginBottom = '30px';
+    card.innerHTML = '<h4>Aggregate Statistics</h4>';
+    const stats = [
+      ['Total Articles', agg.total_articles],
+      ['Total Words', agg.total_words?.toLocaleString()],
+      ['Avg Words/Article', Math.round(agg.avg_word_count)],
+      ['Avg Sentence Length', agg.avg_sentence_length + ' words'],
+      ['Avg Type-Token Ratio', agg.avg_type_token_ratio],
+      ['Flesch Reading Ease', agg.avg_flesch_reading_ease],
+      ['Flesch Grade Level', agg.avg_flesch_grade_level],
+      ['Gunning Fog Index', agg.avg_gunning_fog],
+    ];
+    stats.forEach(([label, value]) => {
+      if (value !== undefined) {
+        const row = document.createElement('div');
+        row.className = 'stat-row';
+        row.innerHTML = `<span class="label">${label}</span><span class="value">${value}</span>`;
+        card.appendChild(row);
+      }
+    });
+    statsDiv.appendChild(card);
+  }
+
+  // Sentence length histogram
+  const hist = LINGUISTIC_DATA.sentence_length_histogram;
+  if (hist && hist.length) {
+    const svg = d3.select('#sentence-hist-svg');
+    const bbox = svg.node().parentElement.getBoundingClientRect();
+    const w = bbox.width - 48, h = 220;
+    const margin = { top: 10, right: 10, bottom: 30, left: 40 };
+
+    const x = d3.scaleBand()
+      .domain(hist.map(d => d.bin_start))
+      .range([margin.left, w - margin.right])
+      .padding(0.15);
+
+    const y = d3.scaleLinear()
+      .domain([0, d3.max(hist, d => d.count)])
+      .range([h - margin.bottom, margin.top]);
+
+    svg.attr('viewBox', `0 0 ${w} ${h}`);
+
+    svg.selectAll('rect')
+      .data(hist)
+      .join('rect')
+      .attr('x', d => x(d.bin_start))
+      .attr('y', d => y(d.count))
+      .attr('width', x.bandwidth())
+      .attr('height', d => y(0) - y(d.count))
+      .attr('fill', '#c9a84c')
+      .attr('fill-opacity', 0.7);
+
+    svg.append('g')
+      .attr('transform', `translate(0,${h - margin.bottom})`)
+      .call(d3.axisBottom(x).tickValues(hist.filter((_, i) => i % 2 === 0).map(d => d.bin_start)))
+      .selectAll('text').attr('fill', '#8a8580').style('font-size', '10px');
+
+    svg.append('g')
+      .attr('transform', `translate(${margin.left},0)`)
+      .call(d3.axisLeft(y).ticks(5))
+      .selectAll('text').attr('fill', '#8a8580').style('font-size', '10px');
+
+    svg.selectAll('.domain, .tick line').attr('stroke', '#2a2a2a');
+  }
+
+  // Distinctive words bar chart
+  const words = LINGUISTIC_DATA.distinctive_words;
+  if (words && words.length) {
+    const top20 = words.slice(0, 20);
+    const svg = d3.select('#words-bar-svg');
+    const bbox = svg.node().parentElement.getBoundingClientRect();
+    const w = bbox.width - 48, h = 220;
+    const margin = { top: 10, right: 10, bottom: 30, left: 100 };
+
+    svg.attr('viewBox', `0 0 ${w} ${h}`);
+
+    const y = d3.scaleBand()
+      .domain(top20.map(d => d.word))
+      .range([margin.top, h - margin.bottom])
+      .padding(0.15);
+
+    const x = d3.scaleLinear()
+      .domain([0, d3.max(top20, d => d.frequency)])
+      .range([margin.left, w - margin.right]);
+
+    svg.selectAll('rect')
+      .data(top20)
+      .join('rect')
+      .attr('x', margin.left)
+      .attr('y', d => y(d.word))
+      .attr('width', d => x(d.frequency) - margin.left)
+      .attr('height', y.bandwidth())
+      .attr('fill', '#6ba3d6')
+      .attr('fill-opacity', 0.7);
+
+    svg.selectAll('.word-label')
+      .data(top20)
+      .join('text')
+      .attr('class', 'word-label')
+      .attr('x', margin.left - 6)
+      .attr('y', d => y(d.word) + y.bandwidth() / 2)
+      .attr('text-anchor', 'end')
+      .attr('dominant-baseline', 'middle')
+      .attr('fill', '#e8e4df')
+      .attr('font-size', '10px')
+      .attr('font-family', 'var(--mono)')
+      .text(d => d.word);
+
+    svg.selectAll('.domain, .tick line').attr('stroke', '#2a2a2a');
+  }
+
+  // Readability over time
+  const perArticle = LINGUISTIC_DATA.per_article;
+  if (perArticle && perArticle.length) {
+    const sorted = perArticle.filter(a => a.date).sort((a, b) => a.date.localeCompare(b.date));
+    if (sorted.length > 2) {
+      renderTimeSeries('#readability-svg', sorted, d => d.flesch_kincaid.reading_ease, '#e07b54', 'Reading Ease');
+      renderTimeSeries('#ttr-svg', sorted, d => d.type_token_ratio, '#8cc084', 'Type-Token Ratio');
+    }
+  }
+}
+
+function renderTimeSeries(selector, data, accessor, color, label) {
+  const svg = d3.select(selector);
+  const bbox = svg.node().parentElement.getBoundingClientRect();
+  const w = bbox.width - 48, h = 220;
+  const margin = { top: 10, right: 10, bottom: 30, left: 50 };
+
+  svg.attr('viewBox', `0 0 ${w} ${h}`);
+
+  const x = d3.scaleTime()
+    .domain(d3.extent(data, d => new Date(d.date)))
+    .range([margin.left, w - margin.right]);
+
+  const values = data.map(accessor);
+  const y = d3.scaleLinear()
+    .domain([d3.min(values) * 0.9, d3.max(values) * 1.1])
+    .range([h - margin.bottom, margin.top]);
+
+  const line = d3.line()
+    .x(d => x(new Date(d.date)))
+    .y(d => y(accessor(d)))
+    .curve(d3.curveMonotoneX);
+
+  // Moving average
+  const windowSize = Math.max(3, Math.floor(data.length / 15));
+  const smoothed = data.map((d, i) => {
+    const start = Math.max(0, i - windowSize);
+    const end = Math.min(data.length, i + windowSize + 1);
+    const slice = data.slice(start, end);
+    const avg = slice.reduce((s, v) => s + accessor(v), 0) / slice.length;
+    return { ...d, smoothed: avg };
+  });
+
+  // Raw dots
+  svg.selectAll('circle')
+    .data(data)
+    .join('circle')
+    .attr('cx', d => x(new Date(d.date)))
+    .attr('cy', d => y(accessor(d)))
+    .attr('r', 2)
+    .attr('fill', color)
+    .attr('fill-opacity', 0.3);
+
+  // Smoothed line
+  svg.append('path')
+    .datum(smoothed)
+    .attr('fill', 'none')
+    .attr('stroke', color)
+    .attr('stroke-width', 2)
+    .attr('d', d3.line().x(d => x(new Date(d.date))).y(d => y(d.smoothed)).curve(d3.curveMonotoneX));
+
+  svg.append('g')
+    .attr('transform', `translate(0,${h - margin.bottom})`)
+    .call(d3.axisBottom(x).ticks(5))
+    .selectAll('text').attr('fill', '#8a8580').style('font-size', '10px');
+
+  svg.append('g')
+    .attr('transform', `translate(${margin.left},0)`)
+    .call(d3.axisLeft(y).ticks(5))
+    .selectAll('text').attr('fill', '#8a8580').style('font-size', '10px');
+
+  svg.selectAll('.domain, .tick line').attr('stroke', '#2a2a2a');
+}
+
+// ===== TAB 5: RAW CORPUS =====
+function renderCorpus() {
+  const articles = [];
+
+  // Merge manifest data with theme labels
+  if (MANIFEST_DATA && MANIFEST_DATA.articles) {
+    const themeMap = {};
+    if (THEME_DATA && THEME_DATA.articles) {
+      THEME_DATA.articles.forEach(a => { themeMap[a.slug] = a.cluster_label; });
+    }
+    MANIFEST_DATA.articles.forEach(a => {
+      articles.push({ ...a, cluster_label: themeMap[a.slug] || '' });
+    });
+  }
+
+  articles.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+
+  const tbody = document.getElementById('corpus-tbody');
+  let currentSort = { key: 'date', asc: false };
+
+  function render(list) {
+    tbody.innerHTML = '';
+    list.forEach(a => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="date-cell">${(a.date || '').slice(0, 10)}</td>
+        <td class="title-cell"><a href="${a.url}" target="_blank" rel="noopener">${a.title || a.slug}</a></td>
+        <td class="wc-cell">${(a.word_count || 0).toLocaleString()}</td>
+        <td class="tag-cell">${(a.tags || []).map(t => `<span class="tag">${t}</span>`).join(' ')}</td>
+        <td class="tag-cell">${a.cluster_label ? `<span class="tag">${a.cluster_label}</span>` : ''}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  render(articles);
+
+  // Search
+  document.getElementById('corpus-search').addEventListener('input', (e) => {
+    const q = e.target.value.toLowerCase();
+    const filtered = articles.filter(a =>
+      (a.title || '').toLowerCase().includes(q) ||
+      (a.tags || []).some(t => t.toLowerCase().includes(q)) ||
+      (a.cluster_label || '').toLowerCase().includes(q)
+    );
+    render(filtered);
+  });
+
+  // Sort
+  document.querySelectorAll('.corpus-table th[data-sort]').forEach(th => {
+    th.addEventListener('click', () => {
+      const key = th.dataset.sort;
+      const asc = currentSort.key === key ? !currentSort.asc : true;
+      currentSort = { key, asc };
+      const sorted = [...articles].sort((a, b) => {
+        const va = a[key] || '';
+        const vb = b[key] || '';
+        if (typeof va === 'number') return asc ? va - vb : vb - va;
+        return asc ? va.localeCompare(vb) : vb.localeCompare(va);
+      });
+      render(sorted);
+    });
+  });
+}
+
+// ===== INIT =====
+window.addEventListener('DOMContentLoaded', () => {
+  renderThemeMap();
+  renderTimeline();
+  renderPsychoprofile();
+  renderLinguistic();
+  renderCorpus();
+});
+</script>
+</body>
+</html>

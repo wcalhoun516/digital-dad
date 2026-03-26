@@ -1,0 +1,416 @@
+{
+  "aggregate": {
+    "total_articles": 3,
+    "total_words": 6301,
+    "avg_word_count": 2100.33,
+    "avg_sentence_length": 20.23,
+    "avg_type_token_ratio": 0.38,
+    "avg_flesch_reading_ease": 46.4,
+    "avg_flesch_grade_level": 11.7,
+    "avg_gunning_fog": 15.63
+  },
+  "per_article": [
+    {
+      "slug": "europes-hamiltonian-moment-what-is-it-really",
+      "date": "2020-05-26",
+      "word_count": 1821,
+      "sentence_count": 80,
+      "avg_sentence_length": 23.1,
+      "sentence_length_std": 17.4,
+      "vocabulary_size": 756,
+      "type_token_ratio": 0.4152,
+      "hapax_ratio": 0.6799,
+      "flesch_kincaid": {
+        "reading_ease": 43.0,
+        "grade_level": 12.9
+      },
+      "gunning_fog": 16.9
+    },
+    {
+      "slug": "buffett-takes-on-japan-but-does-value-still-exist",
+      "date": "2020-10-05",
+      "word_count": 2261,
+      "sentence_count": 119,
+      "avg_sentence_length": 19.3,
+      "sentence_length_std": 13.7,
+      "vocabulary_size": 821,
+      "type_token_ratio": 0.3631,
+      "hapax_ratio": 0.6541,
+      "flesch_kincaid": {
+        "reading_ease": 48.8,
+        "grade_level": 11.2
+      },
+      "gunning_fog": 15.0
+    },
+    {
+      "slug": "why-china-stopped-the-ant-groups-ipo-part-2-ants-dangerous-business-model",
+      "date": "2020-11-16",
+      "word_count": 2219,
+      "sentence_count": 124,
+      "avg_sentence_length": 18.3,
+      "sentence_length_std": 13.3,
+      "vocabulary_size": 834,
+      "type_token_ratio": 0.3758,
+      "hapax_ratio": 0.6511,
+      "flesch_kincaid": {
+        "reading_ease": 47.3,
+        "grade_level": 11.1
+      },
+      "gunning_fog": 15.0
+    }
+  ],
+  "sentence_length_histogram": [
+    {
+      "bin_start": 0,
+      "bin_end": 5,
+      "count": 16
+    },
+    {
+      "bin_start": 5,
+      "bin_end": 10,
+      "count": 64
+    },
+    {
+      "bin_start": 10,
+      "bin_end": 15,
+      "count": 58
+    },
+    {
+      "bin_start": 15,
+      "bin_end": 20,
+      "count": 55
+    },
+    {
+      "bin_start": 20,
+      "bin_end": 25,
+      "count": 42
+    },
+    {
+      "bin_start": 25,
+      "bin_end": 30,
+      "count": 29
+    },
+    {
+      "bin_start": 30,
+      "bin_end": 35,
+      "count": 16
+    },
+    {
+      "bin_start": 35,
+      "bin_end": 40,
+      "count": 13
+    },
+    {
+      "bin_start": 40,
+      "bin_end": 45,
+      "count": 11
+    },
+    {
+      "bin_start": 45,
+      "bin_end": 50,
+      "count": 5
+    },
+    {
+      "bin_start": 50,
+      "bin_end": 55,
+      "count": 2
+    },
+    {
+      "bin_start": 55,
+      "bin_end": 60,
+      "count": 3
+    },
+    {
+      "bin_start": 60,
+      "bin_end": 65,
+      "count": 4
+    },
+    {
+      "bin_start": 65,
+      "bin_end": 70,
+      "count": 2
+    },
+    {
+      "bin_start": 70,
+      "bin_end": 75,
+      "count": 1
+    },
+    {
+      "bin_start": 75,
+      "bin_end": 80,
+      "count": 0
+    },
+    {
+      "bin_start": 80,
+      "bin_end": 85,
+      "count": 0
+    },
+    {
+      "bin_start": 85,
+      "bin_end": 90,
+      "count": 0
+    },
+    {
+      "bin_start": 90,
+      "bin_end": 95,
+      "count": 0
+    },
+    {
+      "bin_start": 95,
+      "bin_end": 100,
+      "count": 1
+    }
+  ],
+  "distinctive_words": [
+    {
+      "word": "ant",
+      "count": 57,
+      "frequency": 114.21
+    },
+    {
+      "word": "value",
+      "count": 52,
+      "frequency": 104.19
+    },
+    {
+      "word": "market",
+      "count": 49,
+      "frequency": 98.18
+    },
+    {
+      "word": "company",
+      "count": 28,
+      "frequency": 56.1
+    },
+    {
+      "word": "debt",
+      "count": 26,
+      "frequency": 52.09
+    },
+    {
+      "word": "financial",
+      "count": 26,
+      "frequency": 52.09
+    },
+    {
+      "word": "credit",
+      "count": 24,
+      "frequency": 48.09
+    },
+    {
+      "word": "loans",
+      "count": 18,
+      "frequency": 36.06
+    },
+    {
+      "word": "risk",
+      "count": 18,
+      "frequency": 36.06
+    },
+    {
+      "word": "hamilton",
+      "count": 17,
+      "frequency": 34.06
+    },
+    {
+      "word": "business",
+      "count": 17,
+      "frequency": 34.06
+    },
+    {
+      "word": "share",
+      "count": 17,
+      "frequency": 34.06
+    },
+    {
+      "word": "years",
+      "count": 15,
+      "frequency": 30.05
+    },
+    {
+      "word": "investors",
+      "count": 15,
+      "frequency": 30.05
+    },
+    {
+      "word": "buffett",
+      "count": 15,
+      "frequency": 30.05
+    },
+    {
+      "word": "price",
+      "count": 14,
+      "frequency": 28.05
+    },
+    {
+      "word": "growth",
+      "count": 14,
+      "frequency": 28.05
+    },
+    {
+      "word": "companies",
+      "count": 14,
+      "frequency": 28.05
+    },
+    {
+      "word": "earnings",
+      "count": 14,
+      "frequency": 28.05
+    },
+    {
+      "word": "valuation",
+      "count": 13,
+      "frequency": 26.05
+    },
+    {
+      "word": "metrics",
+      "count": 12,
+      "frequency": 24.04
+    },
+    {
+      "word": "stevens",
+      "count": 12,
+      "frequency": 24.04
+    },
+    {
+      "word": "high",
+      "count": 12,
+      "frequency": 24.04
+    },
+    {
+      "word": "technology",
+      "count": 12,
+      "frequency": 24.04
+    },
+    {
+      "word": "consumer",
+      "count": 12,
+      "frequency": 24.04
+    },
+    {
+      "word": "wireless",
+      "count": 11,
+      "frequency": 22.04
+    },
+    {
+      "word": "equity",
+      "count": 10,
+      "frequency": 20.04
+    },
+    {
+      "word": "investment",
+      "count": 10,
+      "frequency": 20.04
+    },
+    {
+      "word": "crisis",
+      "count": 9,
+      "frequency": 18.03
+    },
+    {
+      "word": "may",
+      "count": 9,
+      "frequency": 18.03
+    },
+    {
+      "word": "system",
+      "count": 9,
+      "frequency": 18.03
+    },
+    {
+      "word": "range",
+      "count": 9,
+      "frequency": 18.03
+    },
+    {
+      "word": "capital",
+      "count": 9,
+      "frequency": 18.03
+    },
+    {
+      "word": "career",
+      "count": 9,
+      "frequency": 18.03
+    },
+    {
+      "word": "industry",
+      "count": 9,
+      "frequency": 18.03
+    },
+    {
+      "word": "development",
+      "count": 9,
+      "frequency": 18.03
+    },
+    {
+      "word": "chairman",
+      "count": 9,
+      "frequency": 18.03
+    },
+    {
+      "word": "several",
+      "count": 9,
+      "frequency": 18.03
+    },
+    {
+      "word": "public",
+      "count": 9,
+      "frequency": 18.03
+    },
+    {
+      "word": "low",
+      "count": 9,
+      "frequency": 18.03
+    },
+    {
+      "word": "chinese",
+      "count": 9,
+      "frequency": 18.03
+    },
+    {
+      "word": "banks",
+      "count": 9,
+      "frequency": 18.03
+    },
+    {
+      "word": "national",
+      "count": 8,
+      "frequency": 16.03
+    },
+    {
+      "word": "were",
+      "count": 8,
+      "frequency": 16.03
+    },
+    {
+      "word": "stock",
+      "count": 8,
+      "frequency": 16.03
+    },
+    {
+      "word": "world",
+      "count": 8,
+      "frequency": 16.03
+    },
+    {
+      "word": "tech",
+      "count": 8,
+      "frequency": 16.03
+    },
+    {
+      "word": "segment",
+      "count": 8,
+      "frequency": 16.03
+    },
+    {
+      "word": "china",
+      "count": 8,
+      "frequency": 16.03
+    },
+    {
+      "word": "off",
+      "count": 7,
+      "frequency": 14.03
+    }
+  ]
+}

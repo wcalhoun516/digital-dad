@@ -1,0 +1,33 @@
+{
+  "last_updated": "2026-03-26T01:27:28.680630+00:00",
+  "total_articles": 3,
+  "articles": [
+    {
+      "slug": "europes-hamiltonian-moment-what-is-it-really",
+      "title": "Europe’s Hamiltonian Moment – What Is It Really?",
+      "date": "2020-05-26",
+      "url": "http://www.forbes.com/sites/georgecalhoun/2020/05/26/europes-hamiltonian-moment--what-is-it-really/",
+      "tags": [],
+      "word_count": 1804,
+      "file": "raw/europes-hamiltonian-moment-what-is-it-really.json"
+    },
+    {
+      "slug": "buffett-takes-on-japan-but-does-value-still-exist",
+      "title": "Buffett Takes On Japan: But Does “Value” Still Exist?",
+      "date": "2020-10-05",
+      "url": "http://www.forbes.com/sites/georgecalhoun/2020/10/05/buffett-takes-on-japan-but-does-value-still-exist/",
+      "tags": [],
+      "word_count": 2224,
+      "file": "raw/buffett-takes-on-japan-but-does-value-still-exist.json"
+    },
+    {
+      "slug": "why-china-stopped-the-ant-groups-ipo-part-2-ants-dangerous-business-model",
+      "title": "Why China Stopped The Ant Group’s IPO (Part 2): Ant’s Dangerous Business Model",
+      "date": "2020-11-16",
+      "url": "http://www.forbes.com/sites/georgecalhoun/2020/11/16/why-china-stopped-the-ant-groups-ipopart-2-ants-dangerous-business-model/",
+      "tags": [],
+      "word_count": 2178,
+      "file": "raw/why-china-stopped-the-ant-groups-ipo-part-2-ants-dangerous-business-model.json"
+    }
+  ]
+}

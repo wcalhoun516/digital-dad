@@ -1,0 +1,27 @@
+# Data (raw articles can be large)
+data/raw/*.json
+data/training/finetune.jsonl
+data/training/corpus.txt
+data/training/metadata.csv
+
+# Generated dashboard
+dashboard/index.html
+
+# Browser state from Playwright
+data/.browser-state/
+
+# Environment
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.venv/
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,30 @@
+[project]
+name = "digital-dad"
+version = "0.1.0"
+description = "Scrape, analyze, and visualize Dr. George Calhoun's Forbes articles"
+requires-python = ">=3.12"
+dependencies = []
+
+[project.optional-dependencies]
+scrape = [
+    "playwright>=1.49",
+    "playwright-stealth>=1.0",
+    "requests>=2.31",
+    "beautifulsoup4>=4.12",
+    "lxml>=5.0",
+]
+analyze = [
+    "scikit-learn>=1.5",
+    "anthropic>=0.40",
+    "python-dotenv>=1.0",
+]
+all = [
+    "digital-dad[scrape,analyze]",
+]
+
+[tool.setuptools.packages.find]
+include = ["scraper*", "analysis*", "viz*", "training*"]
+
+[build-system]
+requires = ["setuptools>=75.0"]
+build-backend = "setuptools.build_meta"
