@@ -47,3 +47,10 @@ Format:
 ```
 
 <!-- entries below -->
+
+### 2026-05-30 — infra — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/1
+- Source: plan:ready/0001
+- Summary: Added pytest + ruff dev deps, `tests/` scaffold with 27 characterization tests
+  (scraper/analysis utils + corpus-fingerprint), and `make test/lint/fmt/verify`. Plan moved
+  to `plans/done/`.

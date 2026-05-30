@@ -1,6 +1,10 @@
 PYTHON := .venv/bin/python
 
-.PHONY: scrape analyze training dashboard all serve search on-this-day clean
+# Lint/format are scoped to tests/ for now: the existing modules carry pre-existing
+# ruff findings (broadening the scope is a follow-up roadmap item, #1-3/cleanup).
+LINT_PATHS := tests
+
+.PHONY: scrape analyze training dashboard all serve search on-this-day clean test lint fmt verify
 
 scrape:
 	$(PYTHON) -m scraper $(ARGS)
@@ -25,6 +29,18 @@ search:
 
 on-this-day:
 	$(PYTHON) -c "from analysis.on_this_day import run; run()"
+
+test:
+	$(PYTHON) -m pytest -q
+
+lint:
+	$(PYTHON) -m ruff check $(LINT_PATHS)
+
+fmt:
+	$(PYTHON) -m ruff format $(LINT_PATHS)
+
+verify: lint test
+	$(MAKE) dashboard
 
 clean:
 	rm -f data/raw/*.json
