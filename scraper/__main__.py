@@ -6,8 +6,10 @@ then requests+BS4 → Playwright → Wayback for content extraction.
 
 import argparse
 import asyncio
+import hashlib
 import json
 import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -176,19 +178,34 @@ def main():
     # Step 3: Extract articles
     success = 0
     failed = 0
+    consecutive_failures = 0
     for i, url in enumerate(to_scrape, 1):
+        # Cooldown: if we've failed many in a row, Wayback is likely rate-limiting us
+        if consecutive_failures >= 5:
+            cooldown = min(120, 30 * (consecutive_failures // 5))
+            log.warning(
+                "⏸  %d consecutive failures — cooling down for %ds to avoid IP ban",
+                consecutive_failures, cooldown,
+            )
+            time.sleep(cooldown)
+            consecutive_failures = 0  # reset after cooldown
+
         log.info("[%d/%d] Extracting: %s", i, len(to_scrape), url)
         article = extract_article(url)
 
         if article is None:
             failed += 1
+            consecutive_failures += 1
             continue
+
+        consecutive_failures = 0
 
         # Save raw article JSON
         slug = slugify(article.get("title", "") or url.split("/")[-2])
         filename = f"{slug}.json"
         article["slug"] = slug
         article["scraped_at"] = datetime.now(timezone.utc).isoformat()
+        content_hash = hashlib.md5((article.get("body") or "").encode()).hexdigest()
 
         (RAW_DIR / filename).write_text(
             json.dumps(article, indent=2, ensure_ascii=False)
@@ -203,6 +220,7 @@ def main():
             "tags": article.get("tags", []),
             "word_count": article.get("word_count", 0),
             "file": f"raw/{filename}",
+            "content_hash": content_hash,
         }
 
         # Replace existing entry or append

@@ -2,7 +2,7 @@
 
 import math
 import re
-from collections import Counter
+from collections import Counter, defaultdict
 
 from .utils import load_articles, clean_text, save_analysis
 
@@ -67,6 +67,17 @@ def _gunning_fog(sentences: list[str], words: list[str]) -> float:
     return round(0.4 * (len(words) / len(sentences) + 100 * complex_words / len(words)), 1)
 
 
+def _vader_sentiment(text: str) -> dict:
+    """Compute VADER sentiment scores. Returns empty dict if nltk unavailable."""
+    try:
+        from nltk.sentiment import SentimentIntensityAnalyzer
+        sia = SentimentIntensityAnalyzer()
+        scores = sia.polarity_scores(text)
+        return {k: round(v, 4) for k, v in scores.items()}
+    except Exception:
+        return {}
+
+
 def analyze_article(article: dict) -> dict:
     """Compute linguistic metrics for a single article."""
     text = clean_text(article.get("body", ""))
@@ -97,6 +108,7 @@ def analyze_article(article: dict) -> dict:
         "hapax_ratio": round(len(hapax) / len(unique_words), 4) if unique_words else 0,
         "flesch_kincaid": _flesch_kincaid(sentences, words),
         "gunning_fog": _gunning_fog(sentences, words),
+        "sentiment": _vader_sentiment(text),
         "sentence_lengths": sentence_lengths,
     }
 
@@ -154,6 +166,16 @@ def run(articles: list[dict] | None = None) -> dict:
     # Aggregate metrics
     if per_article:
         avg = lambda key: round(sum(a[key] for a in per_article) / len(per_article), 2)
+
+        # Sentiment by year
+        by_year: dict = defaultdict(list)
+        for a in per_article:
+            if a.get("date") and a.get("sentiment", {}).get("compound") is not None:
+                by_year[a["date"][:4]].append(a["sentiment"]["compound"])
+        sentiment_by_year = {
+            y: round(sum(v) / len(v), 4) for y, v in sorted(by_year.items())
+        }
+
         aggregate = {
             "total_articles": len(per_article),
             "total_words": sum(a["word_count"] for a in per_article),
@@ -167,6 +189,7 @@ def run(articles: list[dict] | None = None) -> dict:
                 sum(a["flesch_kincaid"]["grade_level"] for a in per_article) / len(per_article), 1
             ),
             "avg_gunning_fog": avg("gunning_fog"),
+            "sentiment_by_year": sentiment_by_year,
         }
     else:
         aggregate = {}

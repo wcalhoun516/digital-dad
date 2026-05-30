@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.calhoun.digitaldad-weekly</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Volumes/FamilyWorkDrive/development/digital-dad/bin/weekly_run.sh</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Volumes/FamilyWorkDrive/development/digital-dad</string>
+
+    <!-- Sunday at 03:00 local time. macOS launchd runs missed jobs on next
+         wake, so this is robust to the Mac mini being asleep at 3am. -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Weekday</key>
+        <integer>0</integer>
+        <key>Hour</key>
+        <integer>3</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+
+    <key>RunAtLoad</key>
+    <false/>
+
+    <key>KeepAlive</key>
+    <false/>
+
+    <key>StandardOutPath</key>
+    <string>/Volumes/FamilyWorkDrive/development/digital-dad/data/cron/launchd.out</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Volumes/FamilyWorkDrive/development/digital-dad/data/cron/launchd.err</string>
+</dict>
+</plist>

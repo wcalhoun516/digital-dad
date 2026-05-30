@@ -31,19 +31,36 @@ log = setup_logging()
 class RateLimiter:
     """Enforce a minimum delay between requests to the same domain."""
 
+    # Domains that need longer delays to avoid rate-limit bans
+    SLOW_DOMAINS = {"web.archive.org": 5.0}
+
     def __init__(self, delay: float = 1.5):
         self.delay = delay
         self._last_request: dict[str, float] = {}
+        self._consecutive_errors: dict[str, int] = {}
 
     def wait(self, url: str) -> None:
         domain = urlparse(url).netloc
+        base_delay = self.SLOW_DOMAINS.get(domain, self.delay)
+        # Back off further if we've been getting errors
+        errors = self._consecutive_errors.get(domain, 0)
+        delay = base_delay * (1 + errors * 0.5)  # escalate on repeated errors
+
         now = time.monotonic()
         last = self._last_request.get(domain, 0.0)
-        remaining = self.delay - (now - last)
+        remaining = delay - (now - last)
         if remaining > 0:
             log.debug("Rate limiting: sleeping %.1fs for %s", remaining, domain)
             time.sleep(remaining)
         self._last_request[domain] = time.monotonic()
+
+    def record_success(self, url: str) -> None:
+        domain = urlparse(url).netloc
+        self._consecutive_errors[domain] = 0
+
+    def record_error(self, url: str) -> None:
+        domain = urlparse(url).netloc
+        self._consecutive_errors[domain] = self._consecutive_errors.get(domain, 0) + 1
 
 rate_limiter = RateLimiter()
 
@@ -97,6 +114,9 @@ def is_article_url(url: str) -> bool:
     path = parsed.path.rstrip("/")
     # Must be under /sites/georgecalhoun/ and have a slug after the author path
     if "/sites/georgecalhoun/" not in path:
+        return False
+    # Filter out /amp/ variants (duplicates of the main article)
+    if "/amp" in path:
         return False
     # Filter out the author listing page itself
     after_author = path.split("/sites/georgecalhoun/")[-1].strip("/")

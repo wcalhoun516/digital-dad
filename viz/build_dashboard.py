@@ -14,6 +14,16 @@ PLACEHOLDERS = {
     "/*__PSYCHOPROFILE_DATA__*/": DATA_DIR / "analysis" / "psychoprofile.json",
     "/*__LINGUISTIC_DATA__*/": DATA_DIR / "analysis" / "linguistics.json",
     "/*__MANIFEST_DATA__*/": DATA_DIR / "manifest.json",
+    "/*__ENTITY_DATA__*/": DATA_DIR / "analysis" / "entities.json",
+    "/*__EMBEDDINGS_DATA__*/": DATA_DIR / "analysis" / "embeddings.json",
+    "/*__PREDICTIONS_DATA__*/": DATA_DIR / "analysis" / "predictions.json",
+}
+
+# When an embeddings export is missing, inline an empty stub so the dashboard
+# still builds before the first semantic_search run.
+_EMPTY_DEFAULTS = {
+    "/*__EMBEDDINGS_DATA__*/": '{"model":null,"dim":0,"slugs":[],"titles":[],"dates":[],"urls":[],"vectors":[],"snippets":[]}',
+    "/*__PREDICTIONS_DATA__*/": '{"predictions":[],"aggregate":{"by_topic":{},"by_confidence":{},"by_year":{},"llm_verdicts":{}}}',
 }
 
 
@@ -32,10 +42,13 @@ def build():
                 json.loads(data)
             except json.JSONDecodeError as e:
                 print(f"Warning: Invalid JSON in {data_path}: {e}")
-                data = "null"
+                data = _EMPTY_DEFAULTS.get(placeholder, "null")
         else:
-            print(f"Warning: {data_path} not found — using null")
-            data = "null"
+            data = _EMPTY_DEFAULTS.get(placeholder, "null")
+            if placeholder not in _EMPTY_DEFAULTS:
+                print(f"Warning: {data_path} not found — using null")
+            else:
+                print(f"Note: {data_path} not found — inlining empty stub")
 
         html = html.replace(placeholder, data)
 

@@ -57,7 +57,7 @@ def discover_urls_from_wayback() -> list[str]:
 # Article extraction from Wayback
 # ---------------------------------------------------------------------------
 
-@retry(max_attempts=2, exceptions=(requests.RequestException,))
+@retry(max_attempts=3, backoff=3.0, exceptions=(requests.RequestException,))
 def extract_article_from_wayback(url: str) -> dict | None:
     """Fetch the most recent Wayback Machine snapshot of an article and extract content."""
     # Get the latest snapshot timestamp
@@ -72,12 +72,14 @@ def extract_article_from_wayback(url: str) -> dict | None:
 
     rate_limiter.wait(CDX_API)
     try:
-        resp = requests.get(CDX_API, params=params, timeout=15)
+        resp = requests.get(CDX_API, params=params, timeout=30)
         resp.raise_for_status()
         rows = resp.json()
+        rate_limiter.record_success(CDX_API)
     except Exception as exc:
+        rate_limiter.record_error(CDX_API)
         log.error("Wayback timestamp lookup failed for %s: %s", url, exc)
-        return None
+        raise  # let @retry handle it
 
     if len(rows) < 2:
         log.warning("No Wayback snapshot found for %s", url)
@@ -88,11 +90,13 @@ def extract_article_from_wayback(url: str) -> dict | None:
 
     rate_limiter.wait(wayback_url)
     try:
-        resp = requests.get(wayback_url, timeout=20, headers={
+        resp = requests.get(wayback_url, timeout=30, headers={
             "User-Agent": "digital-dad-scraper/0.1 (research project)"
         })
         resp.raise_for_status()
+        rate_limiter.record_success(wayback_url)
     except Exception as exc:
+        rate_limiter.record_error(wayback_url)
         log.error("Wayback fetch failed for %s: %s", wayback_url, exc)
         return None
 

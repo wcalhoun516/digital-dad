@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.calhoun.digitaldad-daily</string>
+
+    <!-- ProgramArguments points at the trampoline STAGED ON THE SYSTEM DISK so
+         the job can launch before the external volume mounts. The installer
+         substitutes __TRAMPOLINE_PATH__ with the real staged path. -->
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>__TRAMPOLINE_PATH__</string>
+    </array>
+
+    <!-- Every day at 01:00 local time. No Weekday key = daily. macOS runs
+         missed jobs on next wake, so this is robust to the Mac being asleep. -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>1</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+
+    <key>RunAtLoad</key>
+    <false/>
+
+    <key>KeepAlive</key>
+    <false/>
+
+    <key>StandardOutPath</key>
+    <string>/tmp/digitaldad_daily_routine.out.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/tmp/digitaldad_daily_routine.err.log</string>
+</dict>
+</plist>

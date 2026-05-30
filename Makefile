@@ -1,22 +1,30 @@
-.PHONY: scrape analyze training dashboard all serve clean
+PYTHON := .venv/bin/python
+
+.PHONY: scrape analyze training dashboard all serve search on-this-day clean
 
 scrape:
-	python -m scraper $(ARGS)
+	$(PYTHON) -m scraper $(ARGS)
 
 analyze:
-	python -m analysis $(ARGS)
+	$(PYTHON) -m analysis $(ARGS)
 
 training:
-	python -m training
+	$(PYTHON) -m training
 
 dashboard:
-	python viz/build_dashboard.py
+	$(PYTHON) viz/build_dashboard.py
 
 all: scrape analyze training dashboard
 
 serve: dashboard
 	@echo "Opening dashboard at http://localhost:8000"
-	python -m http.server 8000 -d dashboard
+	$(PYTHON) -m http.server 8000 -d dashboard
+
+search:
+	$(PYTHON) -m analysis.semantic_search "$(QUERY)"
+
+on-this-day:
+	$(PYTHON) -c "from analysis.on_this_day import run; run()"
 
 clean:
 	rm -f data/raw/*.json

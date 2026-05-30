@@ -294,6 +294,189 @@ h3 {
   margin: 1px 2px;
 }
 
+/* ===== ASK DAD (Chat) ===== */
+.chat-container {
+  max-width: 750px;
+  margin: 0 auto;
+}
+
+.chat-messages {
+  min-height: 200px;
+  max-height: 500px;
+  overflow-y: auto;
+  margin-bottom: 16px;
+  padding: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.chat-msg {
+  margin-bottom: 16px;
+  line-height: 1.7;
+}
+
+.chat-msg.user {
+  text-align: right;
+}
+
+.chat-msg.user .chat-bubble {
+  display: inline-block;
+  background: var(--accent-dim);
+  color: var(--text);
+  padding: 8px 16px;
+  border-radius: 12px 12px 0 12px;
+  font-family: var(--sans);
+  font-size: 0.95em;
+  max-width: 80%;
+  text-align: left;
+}
+
+.chat-msg.assistant .chat-bubble {
+  background: var(--bg-hover);
+  padding: 12px 16px;
+  border-radius: 12px 12px 12px 0;
+  font-family: var(--serif);
+  font-size: 1em;
+  line-height: 1.8;
+  max-width: 90%;
+}
+
+.chat-msg .chat-sources {
+  margin-top: 8px;
+  font-family: var(--mono);
+  font-size: 0.75em;
+  color: var(--text-muted);
+}
+
+.chat-msg .chat-sources a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.chat-msg .chat-sources a:hover {
+  text-decoration: underline;
+}
+
+.chat-input-row {
+  display: flex;
+  gap: 12px;
+}
+
+.chat-input-row input {
+  flex: 1;
+  padding: 12px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 0.95em;
+}
+
+.chat-input-row input:focus { outline: none; border-color: var(--accent); }
+
+.chat-input-row button {
+  padding: 12px 24px;
+  background: var(--accent);
+  color: var(--bg);
+  border: none;
+  border-radius: 6px;
+  font-family: var(--mono);
+  font-size: 0.85em;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.chat-input-row button:hover { opacity: 0.9; }
+.chat-input-row button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ===== TRACK RECORD ===== */
+.prediction-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 16px;
+  margin-bottom: 30px;
+}
+
+.prediction-stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  text-align: center;
+}
+
+.prediction-stat-card .stat-number {
+  font-family: var(--mono);
+  font-size: 2em;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.prediction-stat-card .stat-label {
+  font-family: var(--mono);
+  font-size: 0.75em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-top: 4px;
+}
+
+.prediction-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin-bottom: 12px;
+}
+
+.prediction-card .pred-claim {
+  font-family: var(--serif);
+  font-size: 1em;
+  line-height: 1.6;
+  margin-bottom: 8px;
+}
+
+.prediction-card .pred-meta {
+  font-family: var(--mono);
+  font-size: 0.8em;
+  color: var(--text-muted);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.pred-pill {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-family: var(--mono);
+  font-size: 0.8em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.pred-pill.pending { background: rgba(138,133,128,0.2); color: #8a8580; }
+.pred-pill.vindicated { background: rgba(140,192,132,0.2); color: #8cc084; }
+.pred-pill.wrong { background: rgba(224,123,84,0.2); color: #e07b54; }
+.pred-pill.mixed { background: rgba(201,168,76,0.2); color: #c9a84c; }
+.pred-pill.unfalsifiable { background: rgba(165,165,214,0.2); color: #a5a5d6; }
+
+.pred-verdict-llm {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: var(--bg-hover);
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 0.8em;
+  color: var(--text-muted);
+  border-left: 2px solid var(--border);
+}
+
 /* ===== FOOTER ===== */
 footer {
   text-align: center;
@@ -318,7 +501,11 @@ footer {
   <button data-tab="timeline">Timeline</button>
   <button data-tab="psychoprofile">Psychoprofile</button>
   <button data-tab="linguistic">Linguistic DNA</button>
+  <button data-tab="entities">Influence Map</button>
   <button data-tab="corpus">Raw Corpus</button>
+  <button data-tab="search">Search</button>
+  <button data-tab="askdad">Ask Dad</button>
+  <button data-tab="trackrecord">Track Record</button>
 </nav>
 
 <!-- Tab 1: Theme Map -->
@@ -333,6 +520,11 @@ footer {
 <div class="tab-content" id="tab-timeline">
   <h2>Timeline</h2>
   <p class="section-desc">The arc of an intellectual career — every article by date, colored by dominant theme.</p>
+  <div style="margin-bottom:16px">
+    <button id="timeline-color-toggle" style="background:var(--bg-card);border:1px solid var(--border);color:var(--text-muted);font-family:var(--mono);font-size:0.8em;padding:6px 16px;cursor:pointer;border-radius:3px;text-transform:uppercase;letter-spacing:0.08em">
+      Color by: Theme
+    </button>
+  </div>
   <div id="timeline-container">
     <svg id="timeline-svg"></svg>
   </div>
@@ -371,11 +563,26 @@ footer {
   </div>
 </div>
 
-<!-- Tab 5: Raw Corpus -->
+<!-- Tab 5: Influence Map -->
+<div class="tab-content" id="tab-entities">
+  <h2>Influence Map</h2>
+  <p class="section-desc">Who and what does he cite? Named entities extracted from the full corpus.</p>
+  <div id="entities-content"></div>
+</div>
+
+<!-- Tab 6: Raw Corpus -->
 <div class="tab-content" id="tab-corpus">
   <h2>Raw Corpus</h2>
   <p class="section-desc">Every article, searchable and sortable.</p>
-  <input type="text" class="search-bar" id="corpus-search" placeholder="Search titles, tags...">
+  <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;align-items:center">
+    <input type="text" class="search-bar" id="corpus-search" placeholder="Search titles, tags, themes..." style="margin-bottom:0;flex:1;min-width:200px">
+    <select id="corpus-year-filter" style="background:var(--bg-card);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:0.85em;padding:10px 12px;border-radius:0;cursor:pointer">
+      <option value="">All Years</option>
+    </select>
+    <select id="corpus-theme-filter" style="background:var(--bg-card);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:0.85em;padding:10px 12px;border-radius:0;cursor:pointer">
+      <option value="">All Themes</option>
+    </select>
+  </div>
   <table class="corpus-table">
     <thead>
       <tr>
@@ -390,8 +597,85 @@ footer {
   </table>
 </div>
 
+<!-- Tab 7: Semantic Search -->
+<div class="tab-content" id="tab-search">
+  <h2>Semantic Search</h2>
+  <p class="section-desc">Type any question or phrase. Results are ranked by cosine similarity over <code>sbert-mpnet-v2</code> embeddings — the article vectors are inlined into this page; the query vector is fetched live from the local-llm-conductor.</p>
+  <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;align-items:center">
+    <input type="text" class="search-bar" id="semantic-search-input"
+           placeholder="e.g. nuclear policy, central bank digital currency, ESG governance failures..."
+           style="margin-bottom:0;flex:1;min-width:240px">
+    <select id="semantic-search-topk" style="background:var(--bg-card);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:0.85em;padding:10px 12px;border-radius:0;cursor:pointer">
+      <option value="5">Top 5</option>
+      <option value="10" selected>Top 10</option>
+      <option value="20">Top 20</option>
+    </select>
+  </div>
+  <div id="semantic-search-status" style="font-family:var(--mono);font-size:0.85em;color:var(--text-muted);margin-bottom:16px;min-height:1.2em"></div>
+  <div id="semantic-search-results"></div>
+</div>
+
+<!-- Tab 8: Ask Dad -->
+<div class="tab-content" id="tab-askdad">
+  <h2>Ask Dad</h2>
+  <p class="section-desc">Ask a question and get an answer in Dr. Calhoun's voice, grounded in things he actually wrote. Not a hallucinated impression — an evidenced one.</p>
+  <div class="chat-container">
+    <div class="chat-messages" id="chat-messages">
+      <div class="chat-msg assistant">
+        <div class="chat-bubble" style="font-style:italic;color:var(--text-muted)">
+          Ask me anything — what I think about nuclear energy, why ESG is misunderstood, what's really happening with 5G. I'll answer from my published work.
+        </div>
+      </div>
+    </div>
+    <div class="chat-input-row">
+      <input type="text" id="chat-input" placeholder="What do you think about..." autocomplete="off">
+      <button id="chat-send">Ask</button>
+    </div>
+    <div style="display:flex;gap:16px;align-items:center;margin-top:10px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-family:var(--mono);font-size:0.75em;color:var(--text-muted)">Model:</span>
+        <button id="chat-tier-toggle" style="background:var(--bg-card);border:1px solid var(--border);color:var(--accent);font-family:var(--mono);font-size:0.75em;padding:4px 12px;cursor:pointer;border-radius:3px;text-transform:uppercase;letter-spacing:0.05em">
+          T2 Local — Free
+        </button>
+      </div>
+      <div id="chat-cost-info" style="font-family:var(--mono);font-size:0.75em;color:var(--text-muted)"></div>
+    </div>
+    <div style="font-family:var(--mono);font-size:0.7em;color:var(--text-muted);margin-top:6px">
+      RAG over <span id="chat-article-count">0</span> articles &middot; Requires local-llm-conductor on port 8080
+    </div>
+  </div>
+</div>
+
+<!-- Tab 9: Track Record -->
+<div class="tab-content" id="tab-trackrecord">
+  <h2>The Calhoun Track Record</h2>
+  <p class="section-desc">Forbes columnists make predictions. Most never get audited. This is the audit.</p>
+  <div class="prediction-stats" id="prediction-stats"></div>
+  <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;align-items:center">
+    <input type="text" class="search-bar" id="prediction-search" placeholder="Search predictions..." style="margin-bottom:0;flex:1;min-width:200px">
+    <select id="prediction-topic-filter" style="background:var(--bg-card);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:0.85em;padding:10px 12px;border-radius:0;cursor:pointer">
+      <option value="">All Topics</option>
+    </select>
+    <select id="prediction-verdict-filter" style="background:var(--bg-card);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:0.85em;padding:10px 12px;border-radius:0;cursor:pointer">
+      <option value="">All Verdicts</option>
+      <option value="pending">Pending</option>
+      <option value="vindicated">Vindicated</option>
+      <option value="wrong">Wrong</option>
+      <option value="mixed">Mixed</option>
+      <option value="unfalsifiable">Unfalsifiable</option>
+    </select>
+    <select id="prediction-confidence-filter" style="background:var(--bg-card);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:0.85em;padding:10px 12px;border-radius:0;cursor:pointer">
+      <option value="">All Confidence</option>
+      <option value="hedged">Hedged</option>
+      <option value="confident">Confident</option>
+      <option value="certain">Certain</option>
+    </select>
+  </div>
+  <div id="prediction-list"></div>
+</div>
+
 <footer>
-  Digital Dad &middot; A project about preserving intellectual legacy &middot; Built with D3.js, Python, and the Anthropic API
+  Digital Dad &middot; A project about preserving intellectual legacy &middot; Built with D3.js, Python, and the local-llm-conductor
 </footer>
 
 <!-- Tooltip -->
@@ -403,6 +687,9 @@ const THEME_DATA = /*__THEME_DATA__*/;
 const PSYCHOPROFILE_DATA = /*__PSYCHOPROFILE_DATA__*/;
 const LINGUISTIC_DATA = /*__LINGUISTIC_DATA__*/;
 const MANIFEST_DATA = /*__MANIFEST_DATA__*/;
+const ENTITY_DATA = /*__ENTITY_DATA__*/;
+const EMBEDDINGS_DATA = /*__EMBEDDINGS_DATA__*/;
+const PREDICTIONS_DATA = /*__PREDICTIONS_DATA__*/;
 </script>
 
 <!-- D3.js (loaded from CDN; works when served, fallback message if file://) -->
@@ -525,6 +812,21 @@ function renderTimeline() {
   const articles = THEME_DATA.articles.filter(a => a.date).sort((a, b) => a.date.localeCompare(b.date));
   if (!articles.length) return;
 
+  // Build sentiment lookup from linguistic data
+  const sentimentMap = {};
+  if (LINGUISTIC_DATA && LINGUISTIC_DATA.per_article) {
+    LINGUISTIC_DATA.per_article.forEach(a => {
+      if (a.slug && a.sentiment && a.sentiment.compound != null) {
+        sentimentMap[a.slug] = a.sentiment.compound;
+      }
+    });
+  }
+  const hasSentiment = Object.keys(sentimentMap).length > 0;
+  let colorBySentiment = false;
+
+  // Diverging color scale for sentiment: red (negative) → grey → green (positive)
+  const sentimentColor = d3.scaleDiverging(d3.interpolateRdYlGn).domain([-1, 0, 1]);
+
   const container = document.getElementById('timeline-container');
   const svg = d3.select('#timeline-svg');
   const margin = { top: 30, right: 30, bottom: 50, left: 40 };
@@ -549,19 +851,31 @@ function renderTimeline() {
     .selectAll('text').attr('fill', '#8a8580').style('font-family', 'var(--mono)').style('font-size', '11px');
   svg.selectAll('.domain, .tick line').attr('stroke', '#2a2a2a');
 
-  // Articles as circles
-  svg.selectAll('circle')
+  // Store random jitter per article so it stays stable on color toggle
+  articles.forEach(d => { if (d._jitter == null) d._jitter = (Math.random() - 0.5); });
+
+  function getColor(d) {
+    if (colorBySentiment) {
+      const s = sentimentMap[d.slug];
+      return s != null ? sentimentColor(s) : '#555';
+    }
+    return clusterColor(d.cluster_id);
+  }
+
+  const circles = svg.selectAll('circle')
     .data(articles)
     .join('circle')
     .attr('cx', d => x(new Date(d.date)))
-    .attr('cy', d => y(d.cluster_id) + y.bandwidth() / 2 + (Math.random() - 0.5) * y.bandwidth() * 0.6)
+    .attr('cy', d => y(d.cluster_id) + y.bandwidth() / 2 + d._jitter * y.bandwidth() * 0.6)
     .attr('r', 4)
-    .attr('fill', d => clusterColor(d.cluster_id))
+    .attr('fill', d => getColor(d))
     .attr('fill-opacity', 0.7)
     .attr('cursor', 'pointer')
     .on('mouseover', (evt, d) => {
       d3.select(evt.target).attr('r', 7).attr('fill-opacity', 1);
-      showTooltip(evt, `<div class="title">${d.title}</div><div class="date">${(d.date||'').slice(0,10)}</div><div class="cluster">${d.cluster_label}</div>`);
+      const sentiment = sentimentMap[d.slug];
+      const sLabel = sentiment != null ? ` · sentiment ${sentiment > 0 ? '+' : ''}${sentiment.toFixed(2)}` : '';
+      showTooltip(evt, `<div class="title">${d.title}</div><div class="date">${(d.date||'').slice(0,10)}</div><div class="cluster">${d.cluster_label}${sLabel}</div>`);
     })
     .on('mousemove', (evt) => {
       tooltip.style.left = (evt.pageX + 15) + 'px';
@@ -572,6 +886,19 @@ function renderTimeline() {
       hideTooltip();
     })
     .on('click', (evt, d) => { if (d.url) window.open(d.url, '_blank'); });
+
+  // Sentiment toggle button
+  const toggleBtn = document.getElementById('timeline-color-toggle');
+  if (hasSentiment && toggleBtn) {
+    toggleBtn.style.display = 'inline-block';
+    toggleBtn.addEventListener('click', () => {
+      colorBySentiment = !colorBySentiment;
+      toggleBtn.textContent = `Color by: ${colorBySentiment ? 'Sentiment' : 'Theme'}`;
+      circles.attr('fill', d => getColor(d));
+    });
+  } else if (toggleBtn) {
+    toggleBtn.style.display = 'none';
+  }
 }
 
 // ===== TAB 3: PSYCHOPROFILE =====
@@ -843,7 +1170,47 @@ function renderTimeSeries(selector, data, accessor, color, label) {
   svg.selectAll('.domain, .tick line').attr('stroke', '#2a2a2a');
 }
 
-// ===== TAB 5: RAW CORPUS =====
+// ===== TAB 5: INFLUENCE MAP =====
+function renderEntities() {
+  const container = document.getElementById('entities-content');
+  if (!ENTITY_DATA) {
+    container.innerHTML = '<p style="color:var(--text-muted)">No entity data found. Run <code>python -m analysis entities</code> to generate.</p>';
+    return;
+  }
+
+  const orgs = ENTITY_DATA.top_organizations || [];
+  const people = ENTITY_DATA.top_people || [];
+
+  function makeList(items, label) {
+    if (!items.length) return '';
+    const maxCount = items[0].count;
+    const rows = items.slice(0, 30).map(item => {
+      const pct = Math.round(item.count / maxCount * 100);
+      return `
+        <div style="display:flex;align-items:center;gap:12px;padding:6px 0;border-bottom:1px solid var(--border)">
+          <div style="width:180px;font-family:var(--serif);font-size:0.95em;flex-shrink:0">${item.name}</div>
+          <div style="flex:1;background:var(--bg-hover);height:8px;border-radius:2px;overflow:hidden">
+            <div style="width:${pct}%;height:100%;background:var(--accent);opacity:0.7"></div>
+          </div>
+          <div style="width:60px;text-align:right;font-family:var(--mono);font-size:0.8em;color:var(--text-muted)">${item.count}×</div>
+          <div style="width:80px;text-align:right;font-family:var(--mono);font-size:0.75em;color:var(--text-muted)">${item.article_count} articles</div>
+        </div>`;
+    }).join('');
+    return `
+      <div class="chart-card" style="margin-bottom:30px">
+        <h4>${label}</h4>
+        <div style="margin-top:16px">${rows}</div>
+      </div>`;
+  }
+
+  container.innerHTML = `
+    <div class="chart-grid">
+      <div>${makeList(orgs, 'Top Organizations & Companies')}</div>
+      <div>${makeList(people, 'Top People Cited')}</div>
+    </div>`;
+}
+
+// ===== TAB 6: RAW CORPUS =====
 function renderCorpus() {
   const articles = [];
 
@@ -860,8 +1227,34 @@ function renderCorpus() {
 
   articles.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
 
+  // Populate year filter
+  const years = [...new Set(articles.map(a => (a.date || '').slice(0, 4)).filter(Boolean))].sort().reverse();
+  const yearSel = document.getElementById('corpus-year-filter');
+  years.forEach(y => { const o = document.createElement('option'); o.value = y; o.textContent = y; yearSel.appendChild(o); });
+
+  // Populate theme filter
+  const themes = [...new Set(articles.map(a => a.cluster_label).filter(Boolean))].sort();
+  const themeSel = document.getElementById('corpus-theme-filter');
+  themes.forEach(t => { const o = document.createElement('option'); o.value = t; o.textContent = t; themeSel.appendChild(o); });
+
   const tbody = document.getElementById('corpus-tbody');
   let currentSort = { key: 'date', asc: false };
+
+  function getFiltered() {
+    const q = (document.getElementById('corpus-search').value || '').toLowerCase();
+    const year = yearSel.value;
+    const theme = themeSel.value;
+    return articles.filter(a => {
+      if (year && (a.date || '').slice(0, 4) !== year) return false;
+      if (theme && a.cluster_label !== theme) return false;
+      if (q && !(
+        (a.title || '').toLowerCase().includes(q) ||
+        (a.tags || []).some(t => t.toLowerCase().includes(q)) ||
+        (a.cluster_label || '').toLowerCase().includes(q)
+      )) return false;
+      return true;
+    });
+  }
 
   function render(list) {
     tbody.innerHTML = '';
@@ -880,16 +1273,12 @@ function renderCorpus() {
 
   render(articles);
 
-  // Search
-  document.getElementById('corpus-search').addEventListener('input', (e) => {
-    const q = e.target.value.toLowerCase();
-    const filtered = articles.filter(a =>
-      (a.title || '').toLowerCase().includes(q) ||
-      (a.tags || []).some(t => t.toLowerCase().includes(q)) ||
-      (a.cluster_label || '').toLowerCase().includes(q)
-    );
-    render(filtered);
+  // Search + filters
+  ['input', 'change'].forEach(ev => {
+    document.getElementById('corpus-search').addEventListener(ev === 'input' ? 'input' : 'change', () => render(getFiltered()));
   });
+  yearSel.addEventListener('change', () => render(getFiltered()));
+  themeSel.addEventListener('change', () => render(getFiltered()));
 
   // Sort
   document.querySelectorAll('.corpus-table th[data-sort]').forEach(th => {
@@ -897,7 +1286,7 @@ function renderCorpus() {
       const key = th.dataset.sort;
       const asc = currentSort.key === key ? !currentSort.asc : true;
       currentSort = { key, asc };
-      const sorted = [...articles].sort((a, b) => {
+      const sorted = [...getFiltered()].sort((a, b) => {
         const va = a[key] || '';
         const vb = b[key] || '';
         if (typeof va === 'number') return asc ? va - vb : vb - va;
@@ -908,13 +1297,577 @@ function renderCorpus() {
   });
 }
 
-// ===== INIT =====
+// ===== INIT (lazy render on tab switch) =====
+const rendered = {};
+// ===== SEMANTIC SEARCH =====
+const SEMANTIC_SEARCH_CONFIG = {
+  conductorUrl: 'http://127.0.0.1:8080/v1/embeddings',
+  // Always pin the same model used to build the corpus index. Mixing
+  // embedders puts query and documents in different vector spaces and
+  // makes cosine similarity meaningless.
+  pinnedModel: 'sbert-mpnet-v2',
+  debounceMs: 300,
+};
+
+let _semanticSearchInitialized = false;
+let _semanticSearchTimer = null;
+let _lastQueryToken = 0;
+
+function _cosineTopK(queryVec, vectors, k) {
+  // Vectors are normalized at index time (sbert encode normalize_embeddings=True),
+  // so technically just dot product is enough. We re-normalize the query and
+  // protect against the corner case where the index wasn't normalized.
+  const qNorm = Math.hypot(...queryVec);
+  if (qNorm === 0) return [];
+  const scored = new Array(vectors.length);
+  for (let i = 0; i < vectors.length; i++) {
+    const v = vectors[i];
+    let dot = 0;
+    let vNorm = 0;
+    for (let j = 0; j < v.length; j++) {
+      dot += v[j] * queryVec[j];
+      vNorm += v[j] * v[j];
+    }
+    vNorm = Math.sqrt(vNorm) || 1;
+    scored[i] = { idx: i, score: dot / (vNorm * qNorm) };
+  }
+  scored.sort((a, b) => b.score - a.score);
+  return scored.slice(0, k);
+}
+
+async function _fetchQueryEmbedding(text) {
+  const resp = await fetch(SEMANTIC_SEARCH_CONFIG.conductorUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: SEMANTIC_SEARCH_CONFIG.pinnedModel,
+      input: text,
+    }),
+  });
+  if (!resp.ok) {
+    throw new Error('conductor returned ' + resp.status);
+  }
+  const data = await resp.json();
+  return data.data[0].embedding;
+}
+
+function _renderSearchResults(hits) {
+  const container = document.getElementById('semantic-search-results');
+  if (!hits.length) {
+    container.innerHTML = '<p style="color:var(--text-muted);font-style:italic">No results.</p>';
+    return;
+  }
+  const slugs = EMBEDDINGS_DATA.slugs;
+  const titles = EMBEDDINGS_DATA.titles;
+  const dates = EMBEDDINGS_DATA.dates;
+  const urls = EMBEDDINGS_DATA.urls;
+  const cards = hits.map(h => {
+    const title = titles[h.idx] || '(untitled)';
+    const date = dates[h.idx] || '';
+    const url = urls[h.idx] || '#';
+    const score = h.score.toFixed(3);
+    return `<div class="chart-card" style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;gap:16px;align-items:baseline">
+        <a href="${url}" target="_blank" rel="noopener" style="color:var(--text);text-decoration:none;font-weight:600;font-size:1.05em">${title}</a>
+        <span style="font-family:var(--mono);font-size:0.8em;color:var(--text-muted);white-space:nowrap">${score}</span>
+      </div>
+      <div style="font-family:var(--mono);font-size:0.8em;color:var(--text-muted);margin-top:6px">${date}</div>
+    </div>`;
+  }).join('');
+  container.innerHTML = cards;
+}
+
+async function _runSemanticSearch(query, token) {
+  const statusEl = document.getElementById('semantic-search-status');
+  const resultsEl = document.getElementById('semantic-search-results');
+  if (!query || !query.trim()) {
+    statusEl.textContent = '';
+    resultsEl.innerHTML = '';
+    return;
+  }
+  if (!EMBEDDINGS_DATA || !EMBEDDINGS_DATA.vectors || !EMBEDDINGS_DATA.vectors.length) {
+    statusEl.innerHTML = '<span style="color:var(--accent-warm)">No embeddings index found. Run <code>make analyze</code> (or <code>python -m analysis.semantic_search "..."</code>) to build one, then rebuild the dashboard.</span>';
+    return;
+  }
+  statusEl.textContent = 'Embedding query via conductor...';
+  try {
+    const queryVec = await _fetchQueryEmbedding(query);
+    if (token !== _lastQueryToken) return; // a newer query has superseded this one
+    const k = parseInt(document.getElementById('semantic-search-topk').value, 10) || 10;
+    const hits = _cosineTopK(queryVec, EMBEDDINGS_DATA.vectors, k);
+    statusEl.textContent = `${hits.length} result${hits.length === 1 ? '' : 's'} for: "${query}"  ·  model: ${EMBEDDINGS_DATA.model || 'unknown'}`;
+    _renderSearchResults(hits);
+  } catch (err) {
+    if (token !== _lastQueryToken) return;
+    statusEl.innerHTML = '<span style="color:var(--accent-warm)">Search requires the local-llm-conductor service running at <code>127.0.0.1:8080</code>. Start it and try again. (' + (err.message || err) + ')</span>';
+    resultsEl.innerHTML = '';
+  }
+}
+
+function renderSearch() {
+  if (_semanticSearchInitialized) return;
+  _semanticSearchInitialized = true;
+  const input = document.getElementById('semantic-search-input');
+  const topk = document.getElementById('semantic-search-topk');
+  const handler = () => {
+    clearTimeout(_semanticSearchTimer);
+    const q = input.value;
+    const token = ++_lastQueryToken;
+    _semanticSearchTimer = setTimeout(() => _runSemanticSearch(q, token), SEMANTIC_SEARCH_CONFIG.debounceMs);
+  };
+  input.addEventListener('input', handler);
+  topk.addEventListener('change', handler);
+  // Show an initial hint if the index is empty
+  if (!EMBEDDINGS_DATA || !EMBEDDINGS_DATA.vectors || !EMBEDDINGS_DATA.vectors.length) {
+    document.getElementById('semantic-search-status').innerHTML =
+      '<span style="color:var(--accent-warm)">No embeddings index found. Run <code>make analyze</code> to build one.</span>';
+  } else {
+    document.getElementById('semantic-search-status').textContent =
+      `Index ready: ${EMBEDDINGS_DATA.slugs.length} articles · ${EMBEDDINGS_DATA.dim}-d vectors · model: ${EMBEDDINGS_DATA.model}`;
+  }
+}
+
+// ===== TAB 8: ASK DAD (RAG Chat) =====
+function renderAskDad() {
+  const messagesEl = document.getElementById('chat-messages');
+  const inputEl = document.getElementById('chat-input');
+  const sendBtn = document.getElementById('chat-send');
+  const countEl = document.getElementById('chat-article-count');
+
+  if (!EMBEDDINGS_DATA || !EMBEDDINGS_DATA.vectors || !EMBEDDINGS_DATA.vectors.length) {
+    messagesEl.innerHTML = '<p style="color:var(--text-muted)">No embeddings index. Run <code>make analyze</code> to build one.</p>';
+    return;
+  }
+
+  countEl.textContent = EMBEDDINGS_DATA.slugs.length;
+  const hasSnippets = EMBEDDINGS_DATA.snippets && EMBEDDINGS_DATA.snippets.some(s => s);
+
+  // Tier toggle state
+  let chatTier = 2;
+  const tierToggle = document.getElementById('chat-tier-toggle');
+  const costInfo = document.getElementById('chat-cost-info');
+
+  const TIER_LABELS = {
+    2: 'T2 Local — Free',
+    3: 'T3 Remote — ~$0.01–0.03/query',
+  };
+  const TIER_MODELS = {
+    2: 'qwen2.5:14b (local Ollama)',
+    3: 'Claude Sonnet 4.5 via OpenRouter',
+  };
+
+  tierToggle.addEventListener('click', () => {
+    chatTier = chatTier === 2 ? 3 : 2;
+    tierToggle.textContent = TIER_LABELS[chatTier];
+    tierToggle.style.color = chatTier === 3 ? '#e07b54' : 'var(--accent)';
+    costInfo.textContent = chatTier === 3
+      ? 'Est. ~$0.01–0.03 per query ($3/$15 per 1M tokens via OpenRouter)'
+      : '';
+  });
+
+  // Build rich persona from psychoprofile + linguistic data
+  let personaBlock = '';
+  if (PSYCHOPROFILE_DATA) {
+    const dims = PSYCHOPROFILE_DATA.dimensions || {};
+    const dimStr = Object.entries(dims).map(([k, v]) => `${k.replace(/_/g,' ')}: ${v}/10`).join(', ');
+    personaBlock += 'PERSONALITY PROFILE (derived from analysis of your full corpus):\n';
+    if (dimStr) personaBlock += `Dimensions: ${dimStr}\n`;
+    personaBlock += 'You are a contrarian economist — you relentlessly challenge consensus narratives. ';
+    personaBlock += 'You build forensic cases through data accumulation. You distrust institutional groupthink. ';
+    personaBlock += 'You have deep expertise in telecom, spectrum policy, nuclear energy, ESG, and market structure. ';
+    personaBlock += 'You are intellectually combative but never personal — you attack ideas, not people.\n\n';
+  }
+
+  let styleBlock = '';
+  if (LINGUISTIC_DATA && LINGUISTIC_DATA.aggregate) {
+    const agg = LINGUISTIC_DATA.aggregate;
+    styleBlock = 'WRITING STYLE (statistical fingerprint of your actual writing):\n';
+    styleBlock += `- Sentences average ${Math.round(agg.avg_sentence_length)} words\n`;
+    styleBlock += '- You favor em-dashes liberally — like this — to insert asides\n';
+    styleBlock += '- You use "Notably" and "Crucially" as paragraph hinges\n';
+    styleBlock += '- You marshal specific numbers, percentages, and data points to build your case\n';
+    styleBlock += `- Flesch reading ease: ${agg.avg_flesch_reading_ease} (academic but accessible)\n`;
+    styleBlock += '- You are sardonic, precise, and confident — never vague or hedging\n';
+    styleBlock += '- When you don\'t know something, you say so directly rather than waffling\n\n';
+  }
+
+  function buildSystemPrompt(sources) {
+    let prompt = 'You ARE Dr. George Calhoun — Forbes columnist, Stevens Institute professor, economist, and relentless contrarian. ';
+    prompt += 'You are speaking in first person as yourself. Do NOT break character. Do NOT sound like a generic AI assistant.\n\n';
+    prompt += 'RULES:\n';
+    prompt += '- Answer ONLY from the source articles provided below. These are things you actually wrote.\n';
+    prompt += '- Cite each claim with the article title and year in parentheses.\n';
+    prompt += '- If the sources don\'t cover the topic, say "I haven\'t written about that specifically" — don\'t fabricate.\n';
+    prompt += '- Be specific and opinionated, never vague. Use data points from your articles.\n';
+    prompt += '- Keep the tone of a sharp economist who has seen this movie before.\n\n';
+    if (personaBlock) prompt += personaBlock;
+    if (styleBlock) prompt += styleBlock;
+    prompt += '--- YOUR PUBLISHED ARTICLES (use these as your source of truth) ---\n\n';
+    sources.forEach((s, i) => {
+      prompt += `[${i + 1}] "${s.title}" (${(s.date || '').slice(0, 4)})\n`;
+      prompt += s.snippet + '\n\n';
+    });
+    return prompt;
+  }
+
+  async function handleSend() {
+    const query = inputEl.value.trim();
+    if (!query) return;
+
+    inputEl.value = '';
+    sendBtn.disabled = true;
+
+    // Add user message
+    const userDiv = document.createElement('div');
+    userDiv.className = 'chat-msg user';
+    userDiv.innerHTML = `<div class="chat-bubble">${query.replace(/</g,'&lt;')}</div>`;
+    messagesEl.appendChild(userDiv);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+
+    // Embed query and retrieve top-8 using hybrid approach:
+    //   1. T1 model rewrites query as focused search terms
+    //   2. Embed both original + rewritten, merge by max score per article
+    let sources;
+    try {
+      costInfo.textContent = 'Expanding query...';
+
+      let expandedQuery = null;
+      try {
+        const refineResp = await fetch('http://127.0.0.1:8080/v1/chat/completions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: 'phi3:mini', max_tokens: 60,
+            messages: [{ role: 'user', content:
+              `Rewrite this question as a search query for an archive of Forbes economics articles. Expand vague terms into specific related concepts (e.g. "Iran" → "Iran oil markets Strait of Hormuz geopolitical risk sanctions"). 3-12 words, no explanation.\n\nQuestion: "${query}"` }],
+          }),
+        });
+        if (refineResp.ok) {
+          const refineData = await refineResp.json();
+          const kw = (refineData.choices?.[0]?.message?.content || '').trim().replace(/^["']|["']$/g, '');
+          if (kw && kw.length > 2 && kw.length < 200) expandedQuery = kw;
+        }
+      } catch {}
+
+      costInfo.textContent = 'Embedding & retrieving articles...';
+
+      // Embed both queries in parallel and merge results
+      const embedPromises = [_fetchQueryEmbedding(query)];
+      if (expandedQuery) embedPromises.push(_fetchQueryEmbedding(expandedQuery));
+      const vecs = await Promise.all(embedPromises);
+
+      // Helper: compute norm without spreading 768 args to Math.hypot
+      function vecNorm(v) { let s = 0; for (let i = 0; i < v.length; i++) s += v[i] * v[i]; return Math.sqrt(s); }
+
+      // Precompute query norms
+      const qNorms = vecs.map(v => vecNorm(v));
+
+      // Score each article by the MAX similarity across both query vectors
+      const vectors = EMBEDDINGS_DATA.vectors;
+      const merged = new Array(vectors.length);
+      for (let i = 0; i < vectors.length; i++) {
+        let bestScore = -1;
+        const v = vectors[i];
+        let vNorm = 0;
+        for (let j = 0; j < v.length; j++) vNorm += v[j] * v[j];
+        vNorm = Math.sqrt(vNorm) || 1;
+        for (let qi = 0; qi < vecs.length; qi++) {
+          const qv = vecs[qi];
+          const qn = qNorms[qi];
+          if (qn === 0) continue;
+          let dot = 0;
+          for (let j = 0; j < v.length; j++) dot += v[j] * qv[j];
+          const score = dot / (vNorm * qn);
+          if (score > bestScore) bestScore = score;
+        }
+        merged[i] = { idx: i, score: bestScore };
+      }
+      merged.sort((a, b) => b.score - a.score);
+      const hits = merged.slice(0, 8);
+      sources = hits.map(h => ({
+        title: EMBEDDINGS_DATA.titles[h.idx] || '',
+        date: EMBEDDINGS_DATA.dates[h.idx] || '',
+        url: EMBEDDINGS_DATA.urls[h.idx] || '#',
+        slug: EMBEDDINGS_DATA.slugs[h.idx] || '',
+        snippet: (hasSnippets ? EMBEDDINGS_DATA.snippets[h.idx] : '') || '(article text not available)',
+        score: h.score,
+      }));
+    } catch (err) {
+      const errDiv = document.createElement('div');
+      errDiv.className = 'chat-msg assistant';
+      errDiv.innerHTML = `<div class="chat-bubble" style="color:var(--accent)">Could not embed query. Is the local-llm-conductor running on port 8080? (${err.message})</div>`;
+      messagesEl.appendChild(errDiv);
+      sendBtn.disabled = false;
+      return;
+    }
+
+    // Call conductor chat completion
+    const assistantDiv = document.createElement('div');
+    assistantDiv.className = 'chat-msg assistant';
+    const bubbleDiv = document.createElement('div');
+    bubbleDiv.className = 'chat-bubble';
+    bubbleDiv.textContent = 'Thinking...';
+    assistantDiv.appendChild(bubbleDiv);
+    messagesEl.appendChild(assistantDiv);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+
+    try {
+      const useTier = chatTier;
+      const requestBody = {
+        model: 'auto',
+        stream: true,
+        max_tokens: 1024,
+        messages: [
+          { role: 'system', content: buildSystemPrompt(sources) },
+          { role: 'user', content: query },
+        ],
+        tier: useTier,
+        function: 'text',
+      };
+      if (useTier === 3) requestBody.allow_remote = true;
+
+      if (useTier === 3) costInfo.textContent = 'Routing to Claude Sonnet 4.5 via OpenRouter...';
+
+      const resp = await fetch('http://127.0.0.1:8080/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!resp.ok) {
+        const errBody = await resp.text();
+        throw new Error('conductor returned ' + resp.status + ': ' + errBody);
+      }
+
+      // Stream SSE response
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let fullText = '';
+      let rawChunks = '';
+      bubbleDiv.textContent = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value, { stream: true });
+        rawChunks += chunk;
+        const lines = chunk.split('\n');
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          const payload = line.slice(6).trim();
+          if (payload === '[DONE]') continue;
+          try {
+            const parsed = JSON.parse(payload);
+            const delta = parsed.choices?.[0]?.delta?.content;
+            if (delta) {
+              fullText += delta;
+              bubbleDiv.innerHTML = fullText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+              messagesEl.scrollTop = messagesEl.scrollHeight;
+            }
+          } catch {}
+        }
+      }
+
+      // If streaming didn't work (non-streaming response), try parsing as regular JSON
+      let responseData = null;
+      if (!fullText) {
+        try {
+          responseData = JSON.parse(rawChunks);
+          fullText = responseData.choices?.[0]?.message?.content || 'No response received.';
+          bubbleDiv.innerHTML = fullText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+        } catch {}
+      }
+
+      // Try to extract cost/usage from non-streamed response or last SSE chunk
+      if (!responseData) {
+        // For non-streaming fallback, re-fetch usage with a separate call
+        // For now, parse the last data chunk if available
+        const allDataLines = rawChunks.split('\n').filter(l => l.startsWith('data: ') && !l.includes('[DONE]'));
+        if (allDataLines.length) {
+          try { responseData = JSON.parse(allDataLines[allDataLines.length - 1].slice(6)); } catch {}
+        }
+      }
+
+      // Show cost info
+      const usage = responseData?.usage;
+      const conductor = responseData?.conductor;
+      const modelUsed = conductor?.model_used || responseData?.model || TIER_MODELS[useTier];
+      let costLine = `Model: ${modelUsed}`;
+      if (usage) {
+        costLine += ` · ${(usage.prompt_tokens || 0).toLocaleString()} in / ${(usage.completion_tokens || 0).toLocaleString()} out`;
+        if (usage.cost != null) {
+          costLine += ` · Cost: $${usage.cost.toFixed(4)}`;
+        } else if (useTier === 2) {
+          costLine += ' · Cost: $0.00 (local)';
+        }
+      } else if (useTier === 2) {
+        costLine += ' · Cost: $0.00 (local)';
+      }
+      costInfo.textContent = costLine;
+
+      // If streaming, get actual cost via a non-streaming replay isn't practical,
+      // so for T3 we note that cost is available in OpenRouter dashboard
+      if (useTier === 3 && (!usage || usage.cost == null)) {
+        costInfo.textContent = costLine + ' · Check openrouter.ai/activity for exact cost';
+      }
+
+      // Add source footnotes
+      const sourcesDiv = document.createElement('div');
+      sourcesDiv.className = 'chat-sources';
+      sourcesDiv.innerHTML = 'Sources: ' + sources.map((s, i) =>
+        `<a href="${s.url}" target="_blank" rel="noopener">[${i + 1}] ${s.title} (${(s.date || '').slice(0, 4)})</a>`
+      ).join(' · ');
+      assistantDiv.appendChild(sourcesDiv);
+
+    } catch (err) {
+      bubbleDiv.innerHTML = `<span style="color:var(--accent)">Error: ${err.message}. Make sure the local-llm-conductor is running.</span>`;
+      costInfo.textContent = '';
+    }
+
+    sendBtn.disabled = false;
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
+  sendBtn.addEventListener('click', handleSend);
+  inputEl.addEventListener('keydown', e => { if (e.key === 'Enter') handleSend(); });
+}
+
+// ===== TAB 9: TRACK RECORD =====
+function renderTrackRecord() {
+  const statsEl = document.getElementById('prediction-stats');
+  const listEl = document.getElementById('prediction-list');
+
+  if (!PREDICTIONS_DATA || !PREDICTIONS_DATA.predictions || !PREDICTIONS_DATA.predictions.length) {
+    listEl.innerHTML = '<p style="color:var(--text-muted)">No predictions extracted yet. Run <code>python -m analysis predictions</code> to extract them.</p>';
+    return;
+  }
+
+  const predictions = PREDICTIONS_DATA.predictions;
+  const agg = PREDICTIONS_DATA.aggregate || {};
+
+  // Stats cards
+  const verdictCounts = {};
+  predictions.forEach(p => {
+    const v = p.llm_verdict || p.status || 'pending';
+    verdictCounts[v] = (verdictCounts[v] || 0) + 1;
+  });
+
+  const statCards = [
+    { label: 'Total Predictions', value: predictions.length, color: 'var(--accent)' },
+    { label: 'Vindicated', value: verdictCounts.vindicated || 0, color: '#8cc084' },
+    { label: 'Wrong', value: verdictCounts.wrong || 0, color: '#e07b54' },
+    { label: 'Mixed', value: verdictCounts.mixed || 0, color: '#c9a84c' },
+    { label: 'Pending', value: verdictCounts.pending || 0, color: '#8a8580' },
+    { label: 'Topics', value: Object.keys(agg.by_topic || {}).length, color: '#6ba3d6' },
+  ];
+
+  statsEl.innerHTML = statCards.map(s => `
+    <div class="prediction-stat-card">
+      <div class="stat-number" style="color:${s.color}">${s.value}</div>
+      <div class="stat-label">${s.label}</div>
+    </div>
+  `).join('');
+
+  // Populate topic filter
+  const topics = Object.keys(agg.by_topic || {}).sort();
+  const topicSel = document.getElementById('prediction-topic-filter');
+  topics.forEach(t => {
+    const o = document.createElement('option');
+    o.value = t; o.textContent = `${t} (${agg.by_topic[t]})`;
+    topicSel.appendChild(o);
+  });
+
+  function getFiltered() {
+    const q = (document.getElementById('prediction-search').value || '').toLowerCase();
+    const topic = topicSel.value;
+    const verdict = document.getElementById('prediction-verdict-filter').value;
+    const confidence = document.getElementById('prediction-confidence-filter').value;
+    return predictions.filter(p => {
+      if (topic && p.topic !== topic) return false;
+      if (verdict && (p.llm_verdict || p.status || 'pending') !== verdict) return false;
+      if (confidence && p.confidence_language !== confidence) return false;
+      if (q && !(
+        (p.claim || '').toLowerCase().includes(q) ||
+        (p.topic || '').toLowerCase().includes(q) ||
+        (p.article_title || '').toLowerCase().includes(q) ||
+        (p.context || '').toLowerCase().includes(q)
+      )) return false;
+      return true;
+    });
+  }
+
+  function renderList(items) {
+    if (!items.length) {
+      listEl.innerHTML = '<p style="color:var(--text-muted);font-style:italic">No predictions match your filters.</p>';
+      return;
+    }
+    listEl.innerHTML = items.map(p => {
+      const verdict = p.llm_verdict || p.status || 'pending';
+      const confLabel = p.confidence_language || '';
+      const date = (p.article_date || '').slice(0, 10);
+      const horizon = p.target_date_or_horizon || '';
+
+      let llmNote = '';
+      if (p.llm_verdict && p.llm_verdict_reasoning) {
+        llmNote = `<div class="pred-verdict-llm">
+          <strong>LLM verdict (advisory, not authoritative):</strong> ${p.llm_verdict_reasoning}
+          <span style="opacity:0.6"> — confidence: ${p.llm_verdict_confidence || 'low'}</span>
+        </div>`;
+      }
+
+      return `<div class="prediction-card">
+        <div class="pred-claim">"${(p.claim || '').replace(/</g,'&lt;')}"</div>
+        <div class="pred-meta">
+          <span class="pred-pill ${verdict}">${verdict}</span>
+          ${confLabel ? `<span title="Confidence language">${confLabel}</span>` : ''}
+          ${horizon ? `<span title="Target horizon">Horizon: ${horizon}</span>` : ''}
+          <span title="Prediction made on">Made: ${date}</span>
+          <span>${p.topic || ''}</span>
+          <a href="${p.article_url || '#'}" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none" title="${p.article_title || ''}">${(p.article_title || '').slice(0, 50)}${(p.article_title || '').length > 50 ? '...' : ''}</a>
+        </div>
+        ${p.context ? `<div style="font-size:0.85em;color:var(--text-muted);margin-top:6px;font-style:italic">${p.context}</div>` : ''}
+        ${llmNote}
+      </div>`;
+    }).join('');
+  }
+
+  renderList(predictions);
+
+  // Wire filters
+  document.getElementById('prediction-search').addEventListener('input', () => renderList(getFiltered()));
+  topicSel.addEventListener('change', () => renderList(getFiltered()));
+  document.getElementById('prediction-verdict-filter').addEventListener('change', () => renderList(getFiltered()));
+  document.getElementById('prediction-confidence-filter').addEventListener('change', () => renderList(getFiltered()));
+}
+
+function renderTab(name) {
+  if (rendered[name]) return;
+  rendered[name] = true;
+  switch(name) {
+    case 'themes': renderThemeMap(); break;
+    case 'timeline': renderTimeline(); break;
+    case 'psychoprofile': renderPsychoprofile(); break;
+    case 'linguistic': renderLinguistic(); break;
+    case 'entities': renderEntities(); break;
+    case 'corpus': renderCorpus(); break;
+    case 'search': renderSearch(); break;
+    case 'askdad': renderAskDad(); break;
+    case 'trackrecord': renderTrackRecord(); break;
+  }
+}
+
+// Hook tab navigation to lazy render
+document.querySelectorAll('nav button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    // Small delay to let display:block take effect before measuring widths
+    setTimeout(() => renderTab(btn.dataset.tab), 50);
+  });
+});
+
 window.addEventListener('DOMContentLoaded', () => {
-  renderThemeMap();
-  renderTimeline();
-  renderPsychoprofile();
-  renderLinguistic();
-  renderCorpus();
+  // Render the initially active tab
+  const activeBtn = document.querySelector('nav button.active');
+  if (activeBtn) renderTab(activeBtn.dataset.tab);
 });
 </script>
 </body>

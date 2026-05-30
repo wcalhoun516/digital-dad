@@ -1,11 +1,24 @@
-"""Psychoanalytic author profile — Anthropic API map-reduce analysis."""
+"""Psychoanalytic author profile — map-reduce LLM analysis.
+
+All LLM calls route through the local-llm-conductor at
+http://127.0.0.1:8080/v1 using its OpenAI-compatible API.
+
+Routing modes:
+  conductor_local   → Tier 2 (local Ollama reasoning model) — free
+  conductor_remote  → Tier 3 (remote model via OpenRouter) — costs money
+
+The conductor classifies and picks the actual model; this module just asks
+for ``function="text"`` and the requested tier.
+"""
 
 import json
-import os
+import time
+from datetime import datetime, timezone
 
-from .utils import load_articles, clean_text, chunk_text, save_analysis, ANALYSIS_DIR
+from .utils import load_articles, clean_text, save_analysis, ANALYSIS_DIR, DATA_DIR
 
-MODEL = "claude-sonnet-4-20250514"
+CONDUCTOR_URL = "http://127.0.0.1:8080/v1"
+RUNS_LOG = DATA_DIR / "analysis" / "runs.jsonl"
 
 MAP_PROMPT = """You are analyzing the writing of Dr. George Calhoun, a prolific Forbes contributor who writes about telecommunications, technology policy, ESG/sustainability, nuclear energy, and economic forces.
 
@@ -60,33 +73,60 @@ PER-ARTICLE ANALYSES:
 {analyses}"""
 
 
-def _get_client():
-    """Initialize and return the Anthropic client."""
+# ---------------------------------------------------------------------------
+# Client setup
+# ---------------------------------------------------------------------------
+
+def _get_conductor_client():
+    """Initialize OpenAI-compatible conductor client."""
     try:
-        from anthropic import Anthropic
+        from openai import OpenAI
     except ImportError:
-        raise ImportError("anthropic package not installed. Run: pip install -e '.[analyze]'")
+        raise ImportError("openai package not installed. Run: pip install -e '.[analyze]'")
+    return OpenAI(base_url=CONDUCTOR_URL, api_key="local")
 
-    try:
-        from dotenv import load_dotenv
-        load_dotenv()
-    except ImportError:
-        pass
 
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
-    if not api_key:
-        raise ValueError(
-            "ANTHROPIC_API_KEY not set. Copy .env.example to .env and add your key."
-        )
-    return Anthropic(api_key=api_key)
+def _call_conductor(client, prompt: str, max_tokens: int, tier: int) -> tuple[str, int, int, str]:
+    """Call via conductor OpenAI-compatible endpoint.
 
+    Returns (text, input_tokens, output_tokens, model_used). The conductor
+    picks the actual model based on tier + function="text"; we capture which
+    one it ended up choosing for the run record.
+    """
+    response = client.chat.completions.create(
+        model="auto",  # ignored — conductor classifies on (tier, function)
+        max_tokens=max_tokens,
+        messages=[{"role": "user", "content": prompt}],
+        extra_body={"tier": tier, "function": "text"},
+    )
+    text = response.choices[0].message.content or ""
+    usage = response.usage
+    # The conductor injects {"conductor": {"model_used": "..."}} into the response.
+    # The OpenAI SDK exposes unknown fields via model_extra (pydantic v2).
+    extra = getattr(response, "model_extra", None) or {}
+    conductor_meta = extra.get("conductor") or {}
+    model_used = conductor_meta.get("model_used") or response.model or "unknown"
+    return text, usage.prompt_tokens, usage.completion_tokens, model_used
+
+
+# ---------------------------------------------------------------------------
+# Run logging
+# ---------------------------------------------------------------------------
+
+def _log_run(entry: dict) -> None:
+    """Append a run record to runs.jsonl."""
+    RUNS_LOG.parent.mkdir(parents=True, exist_ok=True)
+    with open(RUNS_LOG, "a") as f:
+        f.write(json.dumps(entry) + "\n")
+
+
+# ---------------------------------------------------------------------------
+# Core helpers
+# ---------------------------------------------------------------------------
 
 def _batch_articles(articles: list[dict], batch_size: int = 5) -> list[list[dict]]:
     """Group articles into batches for API calls."""
-    batches = []
-    for i in range(0, len(articles), batch_size):
-        batches.append(articles[i : i + batch_size])
-    return batches
+    return [articles[i : i + batch_size] for i in range(0, len(articles), batch_size)]
 
 
 def _format_batch(batch: list[dict]) -> str:
@@ -94,7 +134,6 @@ def _format_batch(batch: list[dict]) -> str:
     parts = []
     for article in batch:
         text = clean_text(article.get("body", ""))
-        # Truncate very long articles to ~3000 words
         words = text.split()
         if len(words) > 3000:
             text = " ".join(words[:3000]) + "..."
@@ -107,23 +146,16 @@ def _format_batch(batch: list[dict]) -> str:
 def estimate_cost(articles: list[dict]) -> dict:
     """Estimate API cost without making calls."""
     batches = _batch_articles(articles)
-    total_input_chars = 0
-    for batch in batches:
-        formatted = _format_batch(batch)
-        total_input_chars += len(MAP_PROMPT) + len(formatted)
-
-    # Rough estimate: 4 chars per token, Sonnet pricing
+    total_input_chars = sum(
+        len(MAP_PROMPT) + len(_format_batch(b)) for b in batches
+    )
     input_tokens = total_input_chars / 4
-    output_tokens = len(batches) * 2000  # ~2000 tokens per batch response
+    output_tokens = len(batches) * 2000
     reduce_input = output_tokens + len(REDUCE_PROMPT)
     reduce_output = 4000
-
     total_input = input_tokens + reduce_input
     total_output = output_tokens + reduce_output
-
-    # Sonnet pricing: $3/M input, $15/M output
     cost = (total_input * 3 + total_output * 15) / 1_000_000
-
     return {
         "num_batches": len(batches),
         "est_input_tokens": int(total_input),
@@ -132,8 +164,28 @@ def estimate_cost(articles: list[dict]) -> dict:
     }
 
 
-def run(articles: list[dict] | None = None, dry_run: bool = False) -> dict:
-    """Run the psychoanalytic profile analysis."""
+# ---------------------------------------------------------------------------
+# Main entry point
+# ---------------------------------------------------------------------------
+
+def run(
+    articles: list[dict] | None = None,
+    dry_run: bool = False,
+    router: str = "conductor_local",  # "conductor_local" | "conductor_remote"
+    corpus_fingerprint: str = "",
+) -> dict:
+    """Run the psychoanalytic profile analysis.
+
+    Args:
+        articles: Pre-loaded article list, or None to load from disk.
+        dry_run: Estimate cost only, no API calls.
+        router: "conductor_local" (Tier 2, free) or "conductor_remote" (Tier 3).
+    """
+    if router not in ("conductor_local", "conductor_remote"):
+        raise ValueError(
+            f"router must be 'conductor_local' or 'conductor_remote', got {router!r}"
+        )
+
     if articles is None:
         articles = load_articles()
 
@@ -142,51 +194,68 @@ def run(articles: list[dict] | None = None, dry_run: bool = False) -> dict:
 
     cost = estimate_cost(articles)
     print(f"Psychoprofile analysis: {len(articles)} articles in {cost['num_batches']} batches")
-    print(f"Estimated cost: ~${cost['est_cost_usd']:.2f}")
+
+    if router == "conductor_local":
+        print("Routing: conductor Tier 2 (local LLM) — cost: ~$0.00")
+    else:
+        print(
+            f"Routing: conductor Tier 3 (remote) — est. ~${cost['est_cost_usd']:.2f} "
+            f"(depends on T3 chain pick)"
+        )
 
     if dry_run:
         print("Dry run — no API calls made.")
         return {"dry_run": True, **cost}
 
-    client = _get_client()
-    batches = _batch_articles(articles)
+    tier = 2 if router == "conductor_local" else 3
+    client = _get_conductor_client()
+    models_used: set[str] = set()
 
-    # Map phase: analyze each batch
+    def call(prompt: str, max_tokens: int) -> tuple[str, int, int]:
+        text, in_tok, out_tok, model_used = _call_conductor(
+            client, prompt, max_tokens, tier
+        )
+        models_used.add(model_used)
+        return text, in_tok, out_tok
+
+    run_start = time.time()
+    batches = _batch_articles(articles)
+    total_input_tokens = 0
+    total_output_tokens = 0
     all_analyses = []
+
+    # Map phase
     for i, batch in enumerate(batches, 1):
-        print(f"  Map phase: batch {i}/{len(batches)} ({len(batch)} articles)...")
+        print(f"  Map phase: batch {i}/{len(batches)} ({len(batch)} articles)...", flush=True)
         formatted = _format_batch(batch)
         prompt = MAP_PROMPT.format(articles=formatted)
 
-        response = client.messages.create(
-            model=MODEL,
-            max_tokens=4096,
-            messages=[{"role": "user", "content": prompt}],
-        )
+        response_text, in_tok, out_tok = call(prompt, 4096)
+        total_input_tokens += in_tok
+        total_output_tokens += out_tok
 
-        response_text = response.content[0].text
+        batch_cost = (in_tok * 3 + out_tok * 15) / 1_000_000
+        running_cost = (total_input_tokens * 3 + total_output_tokens * 15) / 1_000_000
+        print(f"    tokens: {in_tok:,} in / {out_tok:,} out"
+              f"  batch: ${batch_cost:.4f}  running: ${running_cost:.4f}", flush=True)
 
-        # Try to parse as JSON
         try:
-            # Find JSON array in response
             start = response_text.index("[")
             end = response_text.rindex("]") + 1
             batch_analyses = json.loads(response_text[start:end])
             all_analyses.extend(batch_analyses)
         except (ValueError, json.JSONDecodeError):
-            # Store as raw text if not parseable
             all_analyses.append({"raw": response_text, "batch": i})
-            print(f"    Warning: batch {i} response not valid JSON, stored as raw text")
+            print(f"    Warning: batch {i} response not valid JSON, stored as raw text", flush=True)
 
-    # Reduce phase: synthesize profile
-    print("  Reduce phase: synthesizing profile...")
+    print(f"\n  Map phase complete: {total_input_tokens:,} in / {total_output_tokens:,} out tokens", flush=True)
 
-    # Date range
+    # Reduce phase
+    print("  Reduce phase: synthesizing profile...", flush=True)
     dates = [a.get("date", "") for a in articles if a.get("date")]
     date_range = f"{min(dates)[:10]} to {max(dates)[:10]}" if dates else "unknown"
 
     analyses_text = json.dumps(all_analyses, indent=2)
-    # Truncate if too long (keep within context window)
     if len(analyses_text) > 150_000:
         analyses_text = analyses_text[:150_000] + "\n... (truncated)"
 
@@ -196,33 +265,52 @@ def run(articles: list[dict] | None = None, dry_run: bool = False) -> dict:
         analyses=analyses_text,
     )
 
-    response = client.messages.create(
-        model=MODEL,
-        max_tokens=8192,
-        messages=[{"role": "user", "content": reduce_prompt}],
-    )
+    profile_text, in_tok, out_tok = call(reduce_prompt, 8192)
+    total_input_tokens += in_tok
+    total_output_tokens += out_tok
+    total_cost = (total_input_tokens * 3 + total_output_tokens * 15) / 1_000_000
+    run_duration = round(time.time() - run_start, 1)
 
-    profile_text = response.content[0].text
+    print(f"  Reduce phase: {in_tok:,} in / {out_tok:,} out", flush=True)
+    print(f"\n  === TOTAL: ${total_cost:.4f} ({total_input_tokens:,} in / {total_output_tokens:,} out) in {run_duration}s ===\n", flush=True)
 
-    # Try to extract structured scores from the response
+    # Extract dimension scores
     dimensions = {}
+    import re
     for dim in ["curiosity", "contrarianism", "technical depth", "polemicism",
-                 "empathy", "rigor", "wit", "urgency"]:
-        import re
+                "empathy", "rigor", "wit", "urgency"]:
         pattern = rf"{dim}[:\s]*(\d+)"
         match = re.search(pattern, profile_text, re.IGNORECASE)
         if match:
             dimensions[dim.replace(" ", "_")] = int(match.group(1))
 
+    model_used_str = ", ".join(sorted(models_used)) if models_used else "unknown"
+
     result = {
-        "model": MODEL,
+        "model": model_used_str,
+        "router": router,
         "num_articles": len(articles),
         "date_range": date_range,
         "profile_narrative": profile_text,
         "dimensions": dimensions,
         "per_article_analyses": all_analyses,
         "cost_estimate": cost,
+        "actual_cost_usd": round(total_cost, 4),
     }
+
+    # Log run
+    _log_run({
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "module": "psychoprofile",
+        "router": router,
+        "model": model_used_str,
+        "num_articles": len(articles),
+        "input_tokens": total_input_tokens,
+        "output_tokens": total_output_tokens,
+        "cost_usd": round(total_cost, 4),
+        "duration_s": run_duration,
+        "corpus_fingerprint": corpus_fingerprint,
+    })
 
     # Save JSON
     path = save_analysis("psychoprofile.json", result)
@@ -232,7 +320,7 @@ def run(articles: list[dict] | None = None, dry_run: bool = False) -> dict:
     md_path = ANALYSIS_DIR / "psychoprofile.md"
     md_content = f"# Psychoanalytic Author Profile: Dr. George Calhoun\n\n"
     md_content += f"*Based on analysis of {len(articles)} Forbes articles ({date_range})*\n\n"
-    md_content += f"*Model: {MODEL}*\n\n---\n\n"
+    md_content += f"*Model: {model_used_str} via {router}*\n\n---\n\n"
     md_content += profile_text
     if dimensions:
         md_content += "\n\n---\n\n## Personality Dimensions\n\n"

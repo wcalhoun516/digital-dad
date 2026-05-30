@@ -1,6 +1,6 @@
 {
-  "last_updated": "2026-03-26T01:27:28.680630+00:00",
-  "total_articles": 3,
+  "last_updated": "2026-04-10T23:31:31.385866+00:00",
+  "total_articles": 196,
   "articles": [
     {
       "slug": "europes-hamiltonian-moment-what-is-it-really",
@@ -28,6 +28,1771 @@
       "tags": [],
       "word_count": 2178,
       "file": "raw/why-china-stopped-the-ant-groups-ipo-part-2-ants-dangerous-business-model.json"
+    },
+    {
+      "slug": "gamestop-the-second-surge-anatomy-of-a-gamma-swarm",
+      "title": "GameStop – The Second Surge: Anatomy Of A “Gamma Swarm”",
+      "date": "2021-03-10",
+      "url": "http://www.forbes.com/sites/georgecalhoun/2021/03/10/gamestop-the-second-surgeanatomy-of-a-gamma-swarm/",
+      "tags": [],
+      "word_count": 2464,
+      "file": "raw/gamestop-the-second-surge-anatomy-of-a-gamma-swarm.json"
+    },
+    {
+      "slug": "the-inflation-scare-doesnt-match-reality",
+      "title": "The Inflation Scare Doesn’t Match Reality",
+      "date": "2021-05-01",
+      "url": "http://www.forbes.com/sites/georgecalhoun/2021/05/01/the-inflation-scare-doesnt-match-reality/",
+      "tags": [],
+      "word_count": 1539,
+      "file": "raw/the-inflation-scare-doesnt-match-reality.json"
+    },
+    {
+      "slug": "the-inflation-bump-is-not-real-it-is-a-statistical-artifact",
+      "title": "The Inflation “Bump” Is Not Real. It Is A Statistical Artifact.",
+      "date": "2021-05-12",
+      "url": "http://www.forbes.com/sites/georgecalhoun/2021/05/12/the-inflation-bump-is-not-real-it-is-a-statistical-artifact/",
+      "tags": [],
+      "word_count": 1402,
+      "file": "raw/the-inflation-bump-is-not-real-it-is-a-statistical-artifact.json"
+    },
+    {
+      "slug": "what-really-happened-to-jack-ma",
+      "title": "What Really Happened To Jack Ma?",
+      "date": "2021-06-24",
+      "url": "http://www.forbes.com/sites/georgecalhoun/2021/06/24/what-really-happened-to-jack-ma/",
+      "tags": [],
+      "word_count": 2019,
+      "file": "raw/what-really-happened-to-jack-ma.json"
+    },
+    {
+      "slug": "there-is-no-inflation-the-june-cpi-headline-head-fake",
+      "title": "There Is No Inflation: The June CPI Headline Head Fake",
+      "date": "2021-07-14",
+      "url": "http://www.forbes.com/sites/georgecalhoun/2021/07/14/there-is-no-inflation-the-june-cpi-headline-head-fake/",
+      "tags": [],
+      "word_count": 1247,
+      "file": "raw/there-is-no-inflation-the-june-cpi-headline-head-fake.json"
+    },
+    {
+      "slug": "the-semiconductor-scoreboard-part-1-the-basic-value-chain-who-adds-the-value",
+      "title": "The Semiconductor Scoreboard: Part 1, The Basic Value-Chain – Who Adds The Value?",
+      "date": "2021-09-30",
+      "url": "http://www.forbes.com/sites/georgecalhoun/2021/09/30/the-semiconductor-scoreboard-part-1-the-basic-value-chain-and-the-value-added/",
+      "tags": [],
+      "word_count": 1104,
+      "file": "raw/the-semiconductor-scoreboard-part-1-the-basic-value-chain-who-adds-the-value.json"
+    },
+    {
+      "slug": "semiconductors-the-chips-act-what-it-is-part-1",
+      "title": "Semiconductors – The CHIPS Act: What It Is (Part 1)",
+      "date": "2021-11-23",
+      "url": "http://www.forbes.com/sites/georgecalhoun/2021/11/23/semiconductors--the-chips-act-why-it-is-what-it-is-part-1/",
+      "tags": [],
+      "word_count": 1549,
+      "file": "raw/semiconductors-the-chips-act-what-it-is-part-1.json"
+    },
+    {
+      "slug": "two-pseudo-facts-about-semiconductors-that-could-distort-the-chips-act-part-4",
+      "title": "Two ‘Pseudo-Facts’ About Semiconductors That Could Distort The CHIPS Act (Part 4)",
+      "date": "2021-11-30",
+      "url": "http://www.forbes.com/sites/georgecalhoun/2021/11/30/two-pseudo-facts-about-semiconductors-that-could-distort-the-chips-act/",
+      "tags": [],
+      "word_count": 1207,
+      "file": "raw/two-pseudo-facts-about-semiconductors-that-could-distort-the-chips-act-part-4.json"
+    },
+    {
+      "slug": "the-stock-split-anomaly-how-apple-tesla-created-powerful-alpha-last-month",
+      "title": "The Stock-Split Anomaly: How Apple, Tesla Created Powerful Alpha Last Month",
+      "date": "2020-09-21",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2020/09/21/the-stock-split-anomaly-how-apple-tesla-created-powerful-alpha-last-month/amp/",
+      "tags": [],
+      "word_count": 1666,
+      "file": "raw/the-stock-split-anomaly-how-apple-tesla-created-powerful-alpha-last-month.json"
+    },
+    {
+      "slug": "the-european-unions-next-step-a-hamiltonian-commonwealth",
+      "title": "The European Union’s Next Step: A Hamiltonian Commonwealth",
+      "date": "2020-09-28",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2020/09/28/the-european-unions-next-step-a-hamiltonian-commonwealth/amp/",
+      "tags": [],
+      "word_count": 1820,
+      "file": "raw/the-european-unions-next-step-a-hamiltonian-commonwealth.json"
+    },
+    {
+      "slug": "jack-ma-reappears-but-what-does-the-market-see",
+      "title": "Jack Ma Reappears –  But What Does The Market See?",
+      "date": "2021-01-22",
+      "url": "http://www.forbes.com/sites/georgecalhoun/2021/01/22/jack-ma-reappears--but-what-does-the-market-see/",
+      "tags": [],
+      "word_count": 1128,
+      "file": "raw/jack-ma-reappears-but-what-does-the-market-see.json"
+    },
+    {
+      "slug": "covid-19-testing-free-with-insurance-a-new-form-of-health-care-fraud",
+      "title": "Covid-19 Testing ‘Free With Insurance’ – A New Form Of Health Care Fraud",
+      "date": "2021-06-03",
+      "url": "http://www.forbes.com/sites/georgecalhoun/2021/06/03/covid-19-testing-free-with-insurance-a-new-form-of-health-care-fraud/",
+      "tags": [],
+      "word_count": 1970,
+      "file": "raw/covid-19-testing-free-with-insurance-a-new-form-of-health-care-fraud.json"
+    },
+    {
+      "slug": "inflation-the-media-screams-but-the-market-is-unfazed",
+      "title": "Inflation:  The Media Screams, But The Market Is Unfazed",
+      "date": "2021-06-20",
+      "url": "http://www.forbes.com/sites/georgecalhoun/2021/06/20/inflation--the-media-screams-but-the-market-is-unfazed/",
+      "tags": [],
+      "word_count": 2312,
+      "file": "raw/inflation-the-media-screams-but-the-market-is-unfazed.json"
+    },
+    {
+      "slug": "the-biggest-crypto-fantasy-of-all",
+      "title": "The Biggest Crypto Fantasy Of All",
+      "date": "2022-09-18",
+      "url": "http://www.forbes.com/sites/georgecalhoun/2022/09/18/the-biggest-crypto-fantasy-of-all/",
+      "tags": [],
+      "word_count": 1449,
+      "file": "raw/the-biggest-crypto-fantasy-of-all.json"
+    },
+    {
+      "slug": "the-recession-meme-is-intense-but-can-the-market-see-around-the-corner",
+      "title": "The Recession Meme Is Intense: But Can The Market See Around The Corner?",
+      "date": "2022-10-19",
+      "url": "http://www.forbes.com/sites/georgecalhoun/2022/10/19/the-recession-meme-is-intense-but-can-the-market-see-around-the-corner/",
+      "tags": [],
+      "word_count": 2093,
+      "file": "raw/the-recession-meme-is-intense-but-can-the-market-see-around-the-corner.json"
+    },
+    {
+      "slug": "when-is-a-cycle-not-a-cycle-the-economist-magazine-flunks-semiconductors",
+      "title": "When Is A Cycle Not A Cycle: The Economist Magazine Flunks Semiconductors",
+      "date": "2022-10-31",
+      "url": "http://www.forbes.com/sites/georgecalhoun/2022/10/31/when-is-a-cycle-not-a-cycle-the-economist-magazine-flunks-semiconductors/",
+      "tags": [],
+      "word_count": 1427,
+      "file": "raw/when-is-a-cycle-not-a-cycle-the-economist-magazine-flunks-semiconductors.json"
+    },
+    {
+      "slug": "ftx-and-esg-a-panorama-of-failed-governance-pt-1-the-internal-failures",
+      "title": "FTX And ESG: A Panorama Of Failed Governance (Pt 1 – The Internal Failures)",
+      "date": "2022-11-21",
+      "url": "http://www.forbes.com/sites/georgecalhoun/2022/11/21/ftx-and-esg-a-panorama-of-failed-governance-pt-1--the-internal-failures/",
+      "tags": [],
+      "word_count": 1559,
+      "file": "raw/ftx-and-esg-a-panorama-of-failed-governance-pt-1-the-internal-failures.json"
+    },
+    {
+      "slug": "why-the-federal-reserve-gets-inflation-wrong-and-why-monetary-policy-is-always-l",
+      "title": "Why The Federal Reserve Gets Inflation Wrong – And Why Monetary Policy Is Always Late",
+      "date": "2022-12-29",
+      "url": "http://www.forbes.com/sites/georgecalhoun/2022/12/29/why-the-federal-reserve-gets-inflation-wrong--and-monetary-policy-is-always-late/",
+      "tags": [],
+      "word_count": 1521,
+      "file": "raw/why-the-federal-reserve-gets-inflation-wrong-and-why-monetary-policy-is-always-l.json"
+    },
+    {
+      "slug": "how-covid-19-will-change-finance-fear-federalism-and-fixed-income",
+      "title": "How COVID-19 Will Change Finance: Fear, Federalism, And Fixed Income",
+      "date": "2020-04-13",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2020/04/13/how-covid-19-will-change-finance-fear-federalism-and-fixed-income/",
+      "tags": [],
+      "word_count": 1720,
+      "file": "raw/how-covid-19-will-change-finance-fear-federalism-and-fixed-income.json"
+    },
+    {
+      "slug": "how-covid-19-will-change-finance-ford-the-fed-and-the-bond-market",
+      "title": "How COVID-19 Will Change Finance: Ford, The Fed, And The Bond Market",
+      "date": "2020-04-21",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2020/04/21/how-covid-19-will-change-the-financial-world-ford-the-fed-and-the-bond-market/",
+      "tags": [],
+      "word_count": 2097,
+      "file": "raw/how-covid-19-will-change-finance-ford-the-fed-and-the-bond-market.json"
+    },
+    {
+      "slug": "how-covid-19-will-change-finance-whatever-it-takes-vs-full-faith-and-credit",
+      "title": "How COVID-19 Will Change Finance: “Whatever It Takes” Vs “Full Faith And Credit”",
+      "date": "2020-04-27",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2020/04/27/how-covid-19-will-change-finance-whatever-it-takes-vs-full-faith-and-credit/",
+      "tags": [],
+      "word_count": 2058,
+      "file": "raw/how-covid-19-will-change-finance-whatever-it-takes-vs-full-faith-and-credit.json"
+    },
+    {
+      "slug": "whatever-it-takes-or-whatever-germany-allows",
+      "title": "“Whatever It Takes” Or “Whatever Germany Allows”",
+      "date": "2020-05-05",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2020/05/05/whatever-it-takes-or-whatever-germany-allows/",
+      "tags": [],
+      "word_count": 1901,
+      "file": "raw/whatever-it-takes-or-whatever-germany-allows.json"
+    },
+    {
+      "slug": "does-inflation-still-exist-does-anyone-really-know",
+      "title": "Does Inflation Still Exist? Does Anyone Really Know?",
+      "date": "2020-05-20",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2020/05/20/does-inflation-still-exist-does-anyone-really-know/",
+      "tags": [],
+      "word_count": 1997,
+      "file": "raw/does-inflation-still-exist-does-anyone-really-know.json"
+    },
+    {
+      "slug": "europes-hamiltonian-moment-what-is-it-really",
+      "title": "Europe’s Hamiltonian Moment – What Is It Really?",
+      "date": "2020-05-26",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2020/05/26/europes-hamiltonian-moment--what-is-it-really/",
+      "tags": [],
+      "word_count": 1804,
+      "file": "raw/europes-hamiltonian-moment-what-is-it-really.json"
+    },
+    {
+      "slug": "carthage-must-be-destroyed-or-will-covid-19-kill-huawei",
+      "title": "“Carthage Must Be Destroyed” —  Or — Will Covid-19 Kill Huawei?",
+      "date": "2020-05-29",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2020/05/29/carthage-must-be-destroyed----or---will-covid-19-kill-huawei/",
+      "tags": [],
+      "word_count": 1494,
+      "file": "raw/carthage-must-be-destroyed-or-will-covid-19-kill-huawei.json"
+    },
+    {
+      "slug": "the-other-epidemic-a-cluster-of-historic-blunders-exhibit-1-the-saudirussia-oil-",
+      "title": "The Other Epidemic: A Cluster Of Historic Blunders — Exhibit 1: The Saudi/Russia Oil Price War",
+      "date": "2020-06-03",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2020/06/03/the-other-epidemic-a-cluster-of-historic-blunders---exhibit-1-the-saudirussia-oil-price-war/",
+      "tags": [],
+      "word_count": 1912,
+      "file": "raw/the-other-epidemic-a-cluster-of-historic-blunders-exhibit-1-the-saudirussia-oil-.json"
+    },
+    {
+      "slug": "huawei-is-happy-with-crappy-why-are-their-customers",
+      "title": "Huawei Is “Happy With Crappy” – Why Are Their Customers?",
+      "date": "2020-06-04",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2020/06/04/huawei-is-happy-with-crappy--why-are-their-customers/",
+      "tags": [],
+      "word_count": 1178,
+      "file": "raw/huawei-is-happy-with-crappy-why-are-their-customers.json"
+    },
+    {
+      "slug": "how-does-huawei-acquire-customers-it-buys-them-with-cheap-credit",
+      "title": "How Does Huawei Acquire Customers? It Buys Them With Cheap Credit",
+      "date": "2020-06-06",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2020/06/06/how-does-huawei-acquire-customers-mostly-it-buys-them/",
+      "tags": [],
+      "word_count": 1412,
+      "file": "raw/how-does-huawei-acquire-customers-it-buys-them-with-cheap-credit.json"
+    },
+    {
+      "slug": "george-floyd-robert-e-lee-blm-global-and-the-economics-of-diversity",
+      "title": "George Floyd, Robert E. Lee, BLM Global – And The Economics Of Diversity",
+      "date": "2020-06-25",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2020/06/25/george-floyd-robert-e-lee-blm-global--and-the-economics-of-diversity/",
+      "tags": [],
+      "word_count": 2803,
+      "file": "raw/george-floyd-robert-e-lee-blm-global-and-the-economics-of-diversity.json"
+    },
+    {
+      "slug": "the-hierarchy-of-financial-superpowers-whos-really-on-top",
+      "title": "The Hierarchy Of Financial Superpowers – Who’s Really On Top?",
+      "date": "2020-06-29",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2020/06/29/the-hierarchy-of-financial-superpowers--whos-really-on-top/",
+      "tags": [],
+      "word_count": 2446,
+      "file": "raw/the-hierarchy-of-financial-superpowers-whos-really-on-top.json"
+    },
+    {
+      "slug": "the-fed-doesnt-just-print-money-it-also-prints-alpha",
+      "title": "The Fed Doesn’t Just Print Money, It Also Prints Alpha",
+      "date": "2020-07-06",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2020/07/06/the-fed-doesnt-just-print-money-it-also-prints-alpha/",
+      "tags": [],
+      "word_count": 2434,
+      "file": "raw/the-fed-doesnt-just-print-money-it-also-prints-alpha.json"
+    },
+    {
+      "slug": "5g-risk-huawei-is-small-potatoes-compared-to-tsmc-who",
+      "title": "5G Risk? Huawei Is Small Potatoes Compared To TSMC (Who?)",
+      "date": "2020-07-12",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2020/07/12/5g-risk-huawei-is-small-potatoes-compared-to-tsmc-who/",
+      "tags": [],
+      "word_count": 2281,
+      "file": "raw/5g-risk-huawei-is-small-potatoes-compared-to-tsmc-who.json"
+    },
+    {
+      "slug": "how-huawei-could-save-itself-a-five-point-plan",
+      "title": "How Huawei Could Save Itself: A Five-Point Plan",
+      "date": "2020-07-23",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2020/07/23/how-huawei-could-save-itself-a-five-point-plan/",
+      "tags": [],
+      "word_count": 2241,
+      "file": "raw/how-huawei-could-save-itself-a-five-point-plan.json"
+    },
+    {
+      "slug": "is-the-uk-ban-on-huawei-the-endgame-for-free-trade",
+      "title": "Is The UK Ban On Huawei The “Endgame” For Free Trade?",
+      "date": "2020-07-24",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2020/07/24/is-the-uk-ban-on-huawei-the-endgame-for-free-trade/",
+      "tags": [],
+      "word_count": 1345,
+      "file": "raw/is-the-uk-ban-on-huawei-the-endgame-for-free-trade.json"
+    },
+    {
+      "slug": "intel-nvidia-et-al-and-american-semiconductor-hegemony",
+      "title": "Intel, Nvidia, Et Al., And American Semiconductor Hegemony",
+      "date": "2020-08-02",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2020/08/02/intel-nvidia-et-al-and-american-semiconductor-hegemony/",
+      "tags": [],
+      "word_count": 1426,
+      "file": "raw/intel-nvidia-et-al-and-american-semiconductor-hegemony.json"
+    },
+    {
+      "slug": "a-huawei-recovery-plan-step-1-playing-peekaboo-pcaob-compliance",
+      "title": "A Huawei Recovery Plan, Step 1: Playing “Peekaboo” (PCAOB Compliance)",
+      "date": "2020-08-09",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2020/08/09/a-huawei-recovery-plan-step-1-playing-peekaboo-pcaob-compliance/",
+      "tags": [],
+      "word_count": 1901,
+      "file": "raw/a-huawei-recovery-plan-step-1-playing-peekaboo-pcaob-compliance.json"
+    },
+    {
+      "slug": "what-happens-if-chinese-firms-are-kicked-out-of-the-us-stock-market",
+      "title": "What Happens If Chinese Firms Are Kicked Out Of The U.S. Stock Market",
+      "date": "2020-08-11",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2020/08/11/what-happens-if-chinese-firms-are-kicked-out-of-the-us-stock-market/",
+      "tags": [],
+      "word_count": 2665,
+      "file": "raw/what-happens-if-chinese-firms-are-kicked-out-of-the-us-stock-market.json"
+    },
+    {
+      "slug": "why-do-chinese-companies-list-their-shares-in-new-york",
+      "title": "Why Do Chinese Companies List Their Shares In New York?",
+      "date": "2020-08-14",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2020/08/14/why-do-chinese-companies-list-their-shares-in-new-york/",
+      "tags": [],
+      "word_count": 1784,
+      "file": "raw/why-do-chinese-companies-list-their-shares-in-new-york.json"
+    },
+    {
+      "slug": "a-strange-new-bubble-in-chinese-a-shares-a-is-for-arbitrage",
+      "title": "A Strange New Bubble In Chinese A-Shares (A Is For Arbitrage)",
+      "date": "2020-08-30",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2020/08/30/a-strange-new-bubble-in-chinese-a-shares-a-is-for-arbitrage/",
+      "tags": [],
+      "word_count": 2505,
+      "file": "raw/a-strange-new-bubble-in-chinese-a-shares-a-is-for-arbitrage.json"
+    },
+    {
+      "slug": "after-apple-and-tesla-berkshire-and-amazon-should-split-their-shares-too",
+      "title": "After Apple And Tesla, Berkshire And Amazon Should Split Their Shares, Too",
+      "date": "2020-09-26",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2020/09/26/after-apple-and-tesla-berkshire-and-amazon-should-split-their-shares-too/",
+      "tags": [],
+      "word_count": 1898,
+      "file": "raw/after-apple-and-tesla-berkshire-and-amazon-should-split-their-shares-too.json"
+    },
+    {
+      "slug": "the-european-unions-next-step-a-hamiltonian-commonwealth",
+      "title": "The European Union’s Next Step: A Hamiltonian Commonwealth",
+      "date": "2020-09-28",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2020/09/28/the-european-unions-next-step-a-hamiltonian-commonwealth/",
+      "tags": [],
+      "word_count": 1838,
+      "file": "raw/the-european-unions-next-step-a-hamiltonian-commonwealth.json"
+    },
+    {
+      "slug": "the-small-investors-only-advantage-and-how-to-capture-it",
+      "title": "The Small Investor’s [Only] Advantage – And How To Capture It",
+      "date": "2020-09-30",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2020/09/30/the-small-investors-only-advantage--and-how-to-capture-it/",
+      "tags": [],
+      "word_count": 1400,
+      "file": "raw/the-small-investors-only-advantage-and-how-to-capture-it.json"
+    },
+    {
+      "slug": "buffett-takes-on-japan-but-does-value-still-exist",
+      "title": "Buffett Takes On Japan: But Does “Value” Still Exist?",
+      "date": "2020-10-05",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2020/10/05/buffett-takes-on-japan-but-does-value-still-exist/",
+      "tags": [],
+      "word_count": 2224,
+      "file": "raw/buffett-takes-on-japan-but-does-value-still-exist.json"
+    },
+    {
+      "slug": "will-electoral-chaos-wreck-the-market",
+      "title": "Will Electoral Chaos Wreck The Market?",
+      "date": "2020-10-12",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2020/10/12/will-electoral-chaos-wreck-the-market/",
+      "tags": [],
+      "word_count": 1490,
+      "file": "raw/will-electoral-chaos-wreck-the-market.json"
+    },
+    {
+      "slug": "is-the-stock-market-at-risk-from-another-contested-election",
+      "title": "Is The Stock Market At Risk From Another Contested Election?",
+      "date": "2020-10-16",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2020/10/16/is-the-stock-market-at-risk-from-another-contested-election/",
+      "tags": [],
+      "word_count": 1885,
+      "file": "raw/is-the-stock-market-at-risk-from-another-contested-election.json"
+    },
+    {
+      "slug": "the-presidential-election-cycle-and-the-stock-market-a-classic-calendar-anomaly",
+      "title": "The Presidential Election Cycle And The Stock Market: A Classic Calendar Anomaly",
+      "date": "2020-10-30",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2020/10/30/the-presidential-election-cycle-and-the-stock-market-a-classic-calendar-anomaly/",
+      "tags": [],
+      "word_count": 1595,
+      "file": "raw/the-presidential-election-cycle-and-the-stock-market-a-classic-calendar-anomaly.json"
+    },
+    {
+      "slug": "the-american-election-calendar-drives-foreign-stock-markets-too",
+      "title": "The American Election Calendar Drives Foreign Stock Markets, Too",
+      "date": "2020-10-31",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2020/10/31/the-american-election-calendar-drives-foreign-stock-markets-too/",
+      "tags": [],
+      "word_count": 1205,
+      "file": "raw/the-american-election-calendar-drives-foreign-stock-markets-too.json"
+    },
+    {
+      "slug": "why-china-stepped-on-the-ant-group-part-1-a-bubble-looming",
+      "title": "Why China Stepped On The Ant Group – (Part 1) A Bubble Looming",
+      "date": "2020-11-08",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2020/11/08/why-china-stepped-on-the-ant-group-part-1-a-bubble-looming/",
+      "tags": [],
+      "word_count": 1796,
+      "file": "raw/why-china-stepped-on-the-ant-group-part-1-a-bubble-looming.json"
+    },
+    {
+      "slug": "why-china-stopped-the-ant-groups-ipo-part-2-ants-dangerous-business-model",
+      "title": "Why China Stopped The Ant Group’s IPO (Part 2): Ant’s Dangerous Business Model",
+      "date": "2020-11-16",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2020/11/16/why-china-stopped-the-ant-groups-ipopart-2-ants-dangerous-business-model/",
+      "tags": [],
+      "word_count": 2178,
+      "file": "raw/why-china-stopped-the-ant-groups-ipo-part-2-ants-dangerous-business-model.json"
+    },
+    {
+      "slug": "ants-botched-ipo-part-3-the-regulators-performed-a-radical-value-ectomy",
+      "title": "Ant’s Botched IPO (Part 3): The Regulators Performed A Radical Value-Ectomy",
+      "date": "2020-11-21",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2020/11/21/ants-botched-ipopart-3-the-regulators-performed-a-radical-value-ectomy/",
+      "tags": [],
+      "word_count": 2518,
+      "file": "raw/ants-botched-ipo-part-3-the-regulators-performed-a-radical-value-ectomy.json"
+    },
+    {
+      "slug": "the-ant-group-part-4-fintech-or-bank-why-it-matters",
+      "title": "The Ant Group (Part 4): FinTech Or Bank? Why It Matters",
+      "date": "2020-11-27",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2020/11/27/the-ant-group-part-4-fintech-or-bank-why-it-matters/",
+      "tags": [],
+      "word_count": 1412,
+      "file": "raw/the-ant-group-part-4-fintech-or-bank-why-it-matters.json"
+    },
+    {
+      "slug": "chinas-ipo-problem-why-cant-shanghai-run-a-public-offering",
+      "title": "China’s IPO Problem: Why Can’t Shanghai Run A Public Offering?",
+      "date": "2020-11-29",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2020/11/29/chinas-ipo-problem-why-cant-shanghai-run-a-public-offering/",
+      "tags": [],
+      "word_count": 1588,
+      "file": "raw/chinas-ipo-problem-why-cant-shanghai-run-a-public-offering.json"
+    },
+    {
+      "slug": "salesforce-to-buy-slack-a-case-study-in-value-destruction-part-1",
+      "title": "Salesforce To Buy Slack – A Case Study In Value Destruction? (Part 1)",
+      "date": "2020-12-09",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2020/12/09/salesforce-to-buy-slack--a-case-study-in-value-destruction-part-1/",
+      "tags": [],
+      "word_count": 1640,
+      "file": "raw/salesforce-to-buy-slack-a-case-study-in-value-destruction-part-1.json"
+    },
+    {
+      "slug": "a-check-on-market-sentiment-has-the-pandemic-changed-the-signal",
+      "title": "A Check On Market Sentiment: Has The Pandemic Changed The Signal?",
+      "date": "2020-12-16",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2020/12/16/a-check-on-market-sentiment-has-the-pandemic-changed-the-signal/",
+      "tags": [],
+      "word_count": 2500,
+      "file": "raw/a-check-on-market-sentiment-has-the-pandemic-changed-the-signal.json"
+    },
+    {
+      "slug": "will-tesla-break-the-sp-500part-2-the-mechanics-of-market-turmoil",
+      "title": "Will Tesla Break The S&P 500?(Part 2) – The Mechanics Of Market Turmoil",
+      "date": "2021-01-04",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/01/04/will-tesla-break-the-sp-500part-2--the-mechanics-of-market-turmoil/",
+      "tags": [],
+      "word_count": 2354,
+      "file": "raw/will-tesla-break-the-sp-500part-2-the-mechanics-of-market-turmoil.json"
+    },
+    {
+      "slug": "financial-regulation-chinese-style-and-where-is-jack-ma",
+      "title": "Financial Regulation, Chinese Style (And Where Is Jack Ma?)",
+      "date": "2021-01-19",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/01/19/financial-regulation-chinese-style-and-where-is-jack-ma/",
+      "tags": [],
+      "word_count": 1851,
+      "file": "raw/financial-regulation-chinese-style-and-where-is-jack-ma.json"
+    },
+    {
+      "slug": "jack-mas-hostage-video-fake-news-the-old-fashioned-way",
+      "title": "Jack Ma’s Hostage Video – Fake News, The Old-Fashioned Way",
+      "date": "2021-01-20",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/01/20/jack-mas-hostage-video-fake-news-the-old-fashioned-way/",
+      "tags": [],
+      "word_count": 1168,
+      "file": "raw/jack-mas-hostage-video-fake-news-the-old-fashioned-way.json"
+    },
+    {
+      "slug": "jack-ma-reappears-but-what-does-the-market-see",
+      "title": "Jack Ma Reappears –  But What Does The Market See?",
+      "date": "2021-01-22",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/01/22/jack-ma-reappears--but-what-does-the-market-see/",
+      "tags": [],
+      "word_count": 1128,
+      "file": "raw/jack-ma-reappears-but-what-does-the-market-see.json"
+    },
+    {
+      "slug": "will-tesla-break-the-sp-500-pt-4-managing-insane-trading-volume",
+      "title": "Will Tesla Break The S&P 500? (Pt 4) – Managing “Insane” Trading Volume",
+      "date": "2021-01-30",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/01/30/will-tesla-break-the-sp-500-pt-4--managing-insane-trading-volume/",
+      "tags": [],
+      "word_count": 1869,
+      "file": "raw/will-tesla-break-the-sp-500-pt-4-managing-insane-trading-volume.json"
+    },
+    {
+      "slug": "gamestop-the-screenplay-5-hollywood-projects-3-competing-morality-tales",
+      "title": "Gamestop (The Screenplay): 5 Hollywood Projects, 3 Competing Morality Tales",
+      "date": "2021-02-06",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/02/06/gamestop-the-screenplay-5-hollywood-projects-3-competing-morality-tales/",
+      "tags": [],
+      "word_count": 2050,
+      "file": "raw/gamestop-the-screenplay-5-hollywood-projects-3-competing-morality-tales.json"
+    },
+    {
+      "slug": "gamestop-tesla-do-asset-bubbles-exist-can-they-be-managed",
+      "title": "GameStop, Tesla: Do Asset-Bubbles Exist? Can They Be Managed?",
+      "date": "2021-02-17",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/02/17/gamestop-tesla-do-asset-bubbles-exist-can-they-be-managed/",
+      "tags": [],
+      "word_count": 1692,
+      "file": "raw/gamestop-tesla-do-asset-bubbles-exist-can-they-be-managed.json"
+    },
+    {
+      "slug": "gamestopgamestonk-has-nothing-to-do-with-the-madness-of-crowds",
+      "title": "“GameStop/Gamestonk” Has Nothing To Do With The Madness Of Crowds",
+      "date": "2021-03-05",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/03/05/gamestopgamestonk-has-nothing-to-do-with-the-madness-of-crowds/",
+      "tags": [],
+      "word_count": 2278,
+      "file": "raw/gamestopgamestonk-has-nothing-to-do-with-the-madness-of-crowds.json"
+    },
+    {
+      "slug": "gamestop-were-the-short-sellers-routed-does-it-matter-beware-the-gamma",
+      "title": "GameStop: Were The Short Sellers Routed? Does It Matter? (Beware The ‘Gamma’)",
+      "date": "2021-03-19",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/03/19/gamestop-were-the-short-sellers-routed-does-it-matter-beware-the-gamma/",
+      "tags": [],
+      "word_count": 2553,
+      "file": "raw/gamestop-were-the-short-sellers-routed-does-it-matter-beware-the-gamma.json"
+    },
+    {
+      "slug": "media-negativity-is-the-bond-rout-real-should-we-panic-over-inflation",
+      "title": "Media Negativity: Is The ‘Bond Rout’ Real? Should We Panic Over Inflation?",
+      "date": "2021-03-28",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/03/28/media-negativity-is-the-bond-rout-real-should-we-panic-over-inflation/",
+      "tags": [],
+      "word_count": 1858,
+      "file": "raw/media-negativity-is-the-bond-rout-real-should-we-panic-over-inflation.json"
+    },
+    {
+      "slug": "the-new-inflation-scare-is-the-economy-really-in-danger",
+      "title": "The New Inflation Scare: Is The Economy Really In Danger?",
+      "date": "2021-03-31",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/03/31/the-new-inflation-scare-is-the-economy-really-in-danger/",
+      "tags": [],
+      "word_count": 2216,
+      "file": "raw/the-new-inflation-scare-is-the-economy-really-in-danger.json"
+    },
+    {
+      "slug": "what-are-the-true-fundamentals-behind-the-treasury-bond-rout",
+      "title": "What Are The True Fundamentals Behind The Treasury Bond ‘Rout’?",
+      "date": "2021-04-08",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/04/08/what-are-the-true-fundamentals-behind-the-treasury-bond-rout/",
+      "tags": [],
+      "word_count": 1717,
+      "file": "raw/what-are-the-true-fundamentals-behind-the-treasury-bond-rout.json"
+    },
+    {
+      "slug": "janet-yellen-forgets-how-to-do-fedspeak-or-whats-that-floating-in-the-punchbowl",
+      "title": "Janet Yellen Forgets How To Do Fedspeak (Or, What’s That Floating In The Punchbowl?)",
+      "date": "2021-05-10",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/05/10/janet-yellen-forgets-how-to-do-fedspeak-or-whats-that-floating-in-the-punchbowl/",
+      "tags": [],
+      "word_count": 2375,
+      "file": "raw/janet-yellen-forgets-how-to-do-fedspeak-or-whats-that-floating-in-the-punchbowl.json"
+    },
+    {
+      "slug": "the-inflation-figures-are-grossly-inflated-heres-how",
+      "title": "The “Inflation” Figures Are Grossly Inflated – Here’s How",
+      "date": "2021-05-22",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/05/22/the-inflation-figures-are-grossly-inflated--heres-how/",
+      "tags": [],
+      "word_count": 2125,
+      "file": "raw/the-inflation-figures-are-grossly-inflated-heres-how.json"
+    },
+    {
+      "slug": "the-media-is-trying-to-rebrand-the-recovery-as-inflation-pressure",
+      "title": "The Media Is Trying To Rebrand The Recovery As… ‘Inflation Pressure’",
+      "date": "2021-05-26",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/05/26/the-media-is-trying-to-rebrand-the-recovery-as-inflation-pressure/",
+      "tags": [],
+      "word_count": 1719,
+      "file": "raw/the-media-is-trying-to-rebrand-the-recovery-as-inflation-pressure.json"
+    },
+    {
+      "slug": "covid-19-testing-free-with-insurance-a-new-form-of-health-care-fraud",
+      "title": "Covid-19 Testing ‘Free With Insurance’ – A New Form Of Health Care Fraud",
+      "date": "2021-06-03",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/06/03/covid-19-testing-free-with-insurance-a-new-form-of-health-care-fraud/",
+      "tags": [],
+      "word_count": 1970,
+      "file": "raw/covid-19-testing-free-with-insurance-a-new-form-of-health-care-fraud.json"
+    },
+    {
+      "slug": "the-sad-end-of-jack-ma-inc",
+      "title": "The Sad End Of Jack Ma Inc.",
+      "date": "2021-06-07",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/06/07/the-sad-end-of-jack-ma-inc/",
+      "tags": [],
+      "word_count": 1542,
+      "file": "raw/the-sad-end-of-jack-ma-inc.json"
+    },
+    {
+      "slug": "get-ready-for-more-inflation-panic-porn-the-may-cpi-release",
+      "title": "Get Ready For More Inflation ‘Panic Porn’ – The May CPI Release",
+      "date": "2021-06-09",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/06/09/get-ready-for-more-inflation-panic-porn--the-may-cpi-release/",
+      "tags": [],
+      "word_count": 1326,
+      "file": "raw/get-ready-for-more-inflation-panic-porn-the-may-cpi-release.json"
+    },
+    {
+      "slug": "inflation-the-media-screams-but-the-market-is-unfazed",
+      "title": "Inflation:  The Media Screams, But The Market Is Unfazed",
+      "date": "2021-06-20",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/06/20/inflation--the-media-screams-but-the-market-is-unfazed/",
+      "tags": [],
+      "word_count": 2312,
+      "file": "raw/inflation-the-media-screams-but-the-market-is-unfazed.json"
+    },
+    {
+      "slug": "what-really-happened-to-jack-ma",
+      "title": "What Really Happened To Jack Ma?",
+      "date": "2021-06-24",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/06/24/what-really-happened-to-jack-ma/",
+      "tags": [],
+      "word_count": 2019,
+      "file": "raw/what-really-happened-to-jack-ma.json"
+    },
+    {
+      "slug": "what-is-the-bond-market-telling-us-now-maybe-nothing-at-all",
+      "title": "What Is The Bond Market Telling Us Now? Maybe Nothing At All",
+      "date": "2021-07-10",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/07/10/what-is-the-bond-market-telling-us-now-maybe-nothing-at-all/",
+      "tags": [],
+      "word_count": 1456,
+      "file": "raw/what-is-the-bond-market-telling-us-now-maybe-nothing-at-all.json"
+    },
+    {
+      "slug": "there-is-no-inflation-the-june-cpi-headline-head-fake",
+      "title": "There Is No Inflation: The June CPI Headline Head Fake",
+      "date": "2021-07-14",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/07/14/there-is-no-inflation-the-june-cpi-headline-head-fake/",
+      "tags": [],
+      "word_count": 1247,
+      "file": "raw/there-is-no-inflation-the-june-cpi-headline-head-fake.json"
+    },
+    {
+      "slug": "didi-means-war-a-financial-cold-war-with-china",
+      "title": "DiDi Means War – A Financial Cold War With China",
+      "date": "2021-07-19",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/07/19/didi-means-war--a-financial-cold-war-with-china/",
+      "tags": [],
+      "word_count": 2411,
+      "file": "raw/didi-means-war-a-financial-cold-war-with-china.json"
+    },
+    {
+      "slug": "beijing-embraces-moral-hazard-the-huarong-bailout-was-the-right-move",
+      "title": "Beijing Embraces ‘Moral Hazard’ – The Huarong Bailout Was The Right Move",
+      "date": "2021-08-23",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/08/23/beijing-embraces-moral-hazard--the-huarong-bailout-was-the-right-move/",
+      "tags": [],
+      "word_count": 2672,
+      "file": "raw/beijing-embraces-moral-hazard-the-huarong-bailout-was-the-right-move.json"
+    },
+    {
+      "slug": "can-the-euro-survive-the-progressive-critique-joseph-stiglitz-part-1",
+      "title": "Can The Euro Survive? – The Progressive Critique (Joseph Stiglitz, Part 1)",
+      "date": "2021-08-25",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/08/25/can-the-euro-survive-the-progressive-critique-joseph-stiglitz-part-1/",
+      "tags": [],
+      "word_count": 1681,
+      "file": "raw/can-the-euro-survive-the-progressive-critique-joseph-stiglitz-part-1.json"
+    },
+    {
+      "slug": "how-not-to-think-about-the-euro-joseph-stiglitz-part-2",
+      "title": "How (Not) To Think About The Euro (Joseph Stiglitz, Part 2)",
+      "date": "2021-08-27",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/08/27/how-not-to-think-about-the-euro-joseph-stiglitz-part-2/",
+      "tags": [],
+      "word_count": 930,
+      "file": "raw/how-not-to-think-about-the-euro-joseph-stiglitz-part-2.json"
+    },
+    {
+      "slug": "why-a-liberal-arts-education-is-the-best-foundation-for-a-career-in-finance",
+      "title": "Why A Liberal Arts Education Is The Best Foundation For A Career In Finance",
+      "date": "2021-08-30",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/08/30/why-a-liberal-arts-education-is-the-best-foundation-for-a-career-in-finance/",
+      "tags": [],
+      "word_count": 2271,
+      "file": "raw/why-a-liberal-arts-education-is-the-best-foundation-for-a-career-in-finance.json"
+    },
+    {
+      "slug": "jackson-hole-the-federal-reserve-does-shark-week-for-the-markets",
+      "title": "Jackson Hole: The Federal Reserve Does ‘Shark Week’ For The Markets",
+      "date": "2021-08-31",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/08/31/jackson-hole-the-federal-reserve-does-shark-week-for-the-markets/",
+      "tags": [],
+      "word_count": 1685,
+      "file": "raw/jackson-hole-the-federal-reserve-does-shark-week-for-the-markets.json"
+    },
+    {
+      "slug": "war-with-china-the-economic-factor-that-could-trigger-it",
+      "title": "War With China? The Economic Factor That Could Trigger It",
+      "date": "2021-09-12",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/09/12/war-with-china-the-economic-factor-that-could-trigger-it/",
+      "tags": [],
+      "word_count": 1813,
+      "file": "raw/war-with-china-the-economic-factor-that-could-trigger-it.json"
+    },
+    {
+      "slug": "tapering-talking-tightening-the-federal-reserves-masterful-messaging",
+      "title": "Tapering, Talking, Tightening: The Federal Reserve’s Masterful Messaging",
+      "date": "2021-09-23",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/09/23/tapering-talking-tightening-the-federal-reserves-masterful-messaging/",
+      "tags": [],
+      "word_count": 2480,
+      "file": "raw/tapering-talking-tightening-the-federal-reserves-masterful-messaging.json"
+    },
+    {
+      "slug": "the-huawei-hostage-crisis-is-not-over-it-has-escalated",
+      "title": "The Huawei Hostage Crisis Is Not Over – It Has Escalated",
+      "date": "2021-09-27",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/09/27/the-huawei-hostage-crisis-is-not-over-it-has-escalated/",
+      "tags": [],
+      "word_count": 1921,
+      "file": "raw/the-huawei-hostage-crisis-is-not-over-it-has-escalated.json"
+    },
+    {
+      "slug": "the-us-still-dominates-in-semiconductors-china-is-vulnerable-pt-2",
+      "title": "The U.S. Still Dominates In Semiconductors; China Is Vulnerable (Pt 2)",
+      "date": "2021-10-11",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/10/11/the-us-still-dominates-in-semiconductors-china-is-vulnerable-pt-2/",
+      "tags": [],
+      "word_count": 1726,
+      "file": "raw/the-us-still-dominates-in-semiconductors-china-is-vulnerable-pt-2.json"
+    },
+    {
+      "slug": "semiconductors-more-us-leverage-more-bad-news-for-beijing-part-3",
+      "title": "Semiconductors: More U.S. Leverage, More Bad News For Beijing (Part 3)",
+      "date": "2021-10-23",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/10/23/semiconductors-more-us-leverage-more-bad-news-for-beijing-part-3/",
+      "tags": [],
+      "word_count": 1767,
+      "file": "raw/semiconductors-more-us-leverage-more-bad-news-for-beijing-part-3.json"
+    },
+    {
+      "slug": "in-semiconductors-china-is-in-commodity-hell-part-4",
+      "title": "In Semiconductors, China Is In Commodity Hell (Part 4)",
+      "date": "2021-10-27",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/10/27/in-semiconductors-china-is-in-commodity-hell-part-4/",
+      "tags": [],
+      "word_count": 1824,
+      "file": "raw/in-semiconductors-china-is-in-commodity-hell-part-4.json"
+    },
+    {
+      "slug": "beijings-jack-ma-kabuki-play-continues-is-alibaba-a-value-play",
+      "title": "Beijing’s Jack Ma Kabuki Play Continues... Is Alibaba A Value Play?",
+      "date": "2021-10-31",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/10/31/beijings-jack-ma-kabuki-play-continues-is-alibaba-a-value-play/",
+      "tags": [],
+      "word_count": 1789,
+      "file": "raw/beijings-jack-ma-kabuki-play-continues-is-alibaba-a-value-play.json"
+    },
+    {
+      "slug": "alibaba-is-a-spring-loaded-value-play-ready-to-explode",
+      "title": "Alibaba Is A Spring-Loaded Value Play Ready To Explode",
+      "date": "2021-11-07",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/11/07/alibaba-is-a-spring-loaded-value-play-ready-to-explode/",
+      "tags": [],
+      "word_count": 1593,
+      "file": "raw/alibaba-is-a-spring-loaded-value-play-ready-to-explode.json"
+    },
+    {
+      "slug": "semiconductors-the-chips-act-what-it-is-part-1",
+      "title": "Semiconductors – The CHIPS Act: What It Is (Part 1)",
+      "date": "2021-11-23",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/11/23/semiconductors--the-chips-act-why-it-is-what-it-is-part-1/",
+      "tags": [],
+      "word_count": 1549,
+      "file": "raw/semiconductors-the-chips-act-what-it-is-part-1.json"
+    },
+    {
+      "slug": "the-chips-act-good-questions-bad-questions-bad-bets-part-2",
+      "title": "The CHIPS Act: Good Questions, Bad Questions, Bad Bets? (Part 2)",
+      "date": "2021-11-27",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/11/27/the-chips-act-good-questions-bad-questions-bad-bets-part-2/",
+      "tags": [],
+      "word_count": 1968,
+      "file": "raw/the-chips-act-good-questions-bad-questions-bad-bets-part-2.json"
+    },
+    {
+      "slug": "semiconductors-the-chips-act-is-it-really-necessary-part-3",
+      "title": "Semiconductors: The CHIPS Act – Is It Really Necessary? (Part 3)",
+      "date": "2021-11-29",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/11/29/semiconductors-the-chips-act--is-it-really-necessary-part-3/",
+      "tags": [],
+      "word_count": 1617,
+      "file": "raw/semiconductors-the-chips-act-is-it-really-necessary-part-3.json"
+    },
+    {
+      "slug": "two-pseudo-facts-about-semiconductors-that-could-distort-the-chips-act-part-4",
+      "title": "Two ‘Pseudo-Facts’ About Semiconductors That Could Distort The CHIPS Act (Part 4)",
+      "date": "2021-11-30",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/11/30/two-pseudo-facts-about-semiconductors-that-could-distort-the-chips-act/",
+      "tags": [],
+      "word_count": 1207,
+      "file": "raw/two-pseudo-facts-about-semiconductors-that-could-distort-the-chips-act-part-4.json"
+    },
+    {
+      "slug": "alibaba-update-whoops-is-this-stock-really-a-value-trap",
+      "title": "Alibaba Update: Whoops! Is This Stock Really A Value Trap?",
+      "date": "2021-12-06",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/12/06/alibaba-update-whoops-is-this-stock-really-a-value-trap/",
+      "tags": [],
+      "word_count": 1913,
+      "file": "raw/alibaba-update-whoops-is-this-stock-really-a-value-trap.json"
+    },
+    {
+      "slug": "will-tesla-break-the-sp-500-index-part-1",
+      "title": "Will Tesla Break The S&P 500 Index? (Part 1)",
+      "date": "2021-12-28",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/12/28/will-tesla-break-the-sp-500-index-part-1/",
+      "tags": [],
+      "word_count": 2699,
+      "file": "raw/will-tesla-break-the-sp-500-index-part-1.json"
+    },
+    {
+      "slug": "beijing-is-intentionally-underreporting-chinas-covid-death-rate-part-2",
+      "title": "Beijing Is Intentionally Underreporting China’s Covid Death Rate (Part 2)",
+      "date": "2022-01-05",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2022/01/05/beijing-is-intentionally-underreporting-chinas-covid-death-rate-part-2/",
+      "tags": [],
+      "word_count": 2342,
+      "file": "raw/beijing-is-intentionally-underreporting-chinas-covid-death-rate-part-2.json"
+    },
+    {
+      "slug": "part-3-anomalies-in-the-chinese-covid-data-evidence-of-manipulation",
+      "title": "Part 3: Anomalies In The Chinese Covid Data – Evidence Of Manipulation?",
+      "date": "2022-01-11",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2022/01/11/part-3-anomalies-in-the-chinese-covid-data--evidence-of-manipulation/",
+      "tags": [],
+      "word_count": 1961,
+      "file": "raw/part-3-anomalies-in-the-chinese-covid-data-evidence-of-manipulation.json"
+    },
+    {
+      "slug": "chinas-manipulation-of-covid-data-the-two-smoking-guns",
+      "title": "China’s Manipulation Of Covid Data : The Two ‘Smoking Guns’",
+      "date": "2022-01-17",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2022/01/17/chinas-manipulation-of-covid-data--the-two-smoking-guns/",
+      "tags": [],
+      "word_count": 1285,
+      "file": "raw/chinas-manipulation-of-covid-data-the-two-smoking-guns.json"
+    },
+    {
+      "slug": "chinas-covid-data-gaps-and-inaccuracies-new-reports-from-science-and-nature",
+      "title": "China’s Covid Data Gaps And Inaccuracies: New Reports From Science And Nature",
+      "date": "2022-01-25",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2022/01/25/chinas-covid-data-gaps-and-inaccuracies-new-reports-from-science-and-nature/",
+      "tags": [],
+      "word_count": 1892,
+      "file": "raw/chinas-covid-data-gaps-and-inaccuracies-new-reports-from-science-and-nature.json"
+    },
+    {
+      "slug": "would-you-buy-a-used-car-from-this-economist-is-inflation-real",
+      "title": "Would You Buy A Used Car From This Economist? (Is “Inflation” Real?)",
+      "date": "2022-02-20",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2022/02/20/would-you-buy-a-used-car-from-this-economist-is-inflation-real/",
+      "tags": [],
+      "word_count": 2388,
+      "file": "raw/would-you-buy-a-used-car-from-this-economist-is-inflation-real.json"
+    },
+    {
+      "slug": "the-31-flavors-of-inflation-do-we-really-understand-these-numbers",
+      "title": "The 31 Flavors Of “Inflation” –Do We Really Understand These Numbers?",
+      "date": "2022-02-23",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2022/02/23/the-31-flavors-of-inflation-do-we-really-understand-these-numbers/",
+      "tags": [],
+      "word_count": 2046,
+      "file": "raw/the-31-flavors-of-inflation-do-we-really-understand-these-numbers.json"
+    },
+    {
+      "slug": "problems-with-the-inflation-figures-the-cpi-has-a-kink-in-it",
+      "title": "Problems With The “Inflation” Figures – The CPI Has A Kink In It",
+      "date": "2022-02-25",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2022/02/25/problems-with-the-inflation-figures--the-cpi-has-a-kink-in-it/",
+      "tags": [],
+      "word_count": 1452,
+      "file": "raw/problems-with-the-inflation-figures-the-cpi-has-a-kink-in-it.json"
+    },
+    {
+      "slug": "germanys-pearl-harbor-moment-the-wars-weightiest-consequence",
+      "title": "Germany’s Pearl Harbor Moment: The War’s Weightiest Consequence",
+      "date": "2022-02-27",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2022/02/27/germanys-pearl-harbor-moment-the-wars-weightiest-consequence/",
+      "tags": [],
+      "word_count": 1161,
+      "file": "raw/germanys-pearl-harbor-moment-the-wars-weightiest-consequence.json"
+    },
+    {
+      "slug": "more-problems-with-inflation-coping-with-volatility",
+      "title": "More Problems With “Inflation” – Coping With Volatility",
+      "date": "2022-02-28",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2022/02/28/more-problems-with-inflation-coping-with-volatility/",
+      "tags": [],
+      "word_count": 1363,
+      "file": "raw/more-problems-with-inflation-coping-with-volatility.json"
+    },
+    {
+      "slug": "alibaba-update-its-down-75-is-it-still-a-value-play",
+      "title": "Alibaba Update: It’s Down 75%. Is It Still A Value Play?",
+      "date": "2022-06-01",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2022/06/01/alibaba-update-its-down-75-is-it-still-a-value-play/",
+      "tags": [],
+      "word_count": 1713,
+      "file": "raw/alibaba-update-its-down-75-is-it-still-a-value-play.json"
+    },
+    {
+      "slug": "media-laziness-in-evaluating-economic-data-inflation-gas-prices-china-russia",
+      "title": "Media Laziness In Evaluating Economic Data: Inflation, Gas Prices, China, Russia",
+      "date": "2022-09-06",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2022/09/06/media-laziness-in-evaluating-economic-data-inflation-gas-prices-china-russia/",
+      "tags": [],
+      "word_count": 1979,
+      "file": "raw/media-laziness-in-evaluating-economic-data-inflation-gas-prices-china-russia.json"
+    },
+    {
+      "slug": "the-biggest-crypto-fantasy-of-all",
+      "title": "The Biggest Crypto Fantasy Of All",
+      "date": "2022-09-18",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2022/09/18/the-biggest-crypto-fantasy-of-all/",
+      "tags": [],
+      "word_count": 1449,
+      "file": "raw/the-biggest-crypto-fantasy-of-all.json"
+    },
+    {
+      "slug": "the-putcall-ratio-says-get-in-the-market-now",
+      "title": "The  Put/Call Ratio Says ‘Get In The Market Now!’",
+      "date": "2022-09-27",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2022/09/27/the--putcall-ratio-says-get-in-the-market-now/",
+      "tags": [],
+      "word_count": 1447,
+      "file": "raw/the-putcall-ratio-says-get-in-the-market-now.json"
+    },
+    {
+      "slug": "what-is-really-driving-inflation-today",
+      "title": "What Is Really Driving “Inflation” Today",
+      "date": "2022-09-30",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2022/09/30/what-is-really-driving-inflation-today/",
+      "tags": [],
+      "word_count": 1758,
+      "file": "raw/what-is-really-driving-inflation-today.json"
+    },
+    {
+      "slug": "shortages-gluts-deflation-the-bottlenecks-in-the-economy-are-breaking",
+      "title": "Shortages, Gluts, Deflation: The Bottlenecks In The Economy Are Breaking",
+      "date": "2022-10-03",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2022/10/03/shortages-gluts-deflation-the-bottlenecks-in-the-economy-are-breaking/",
+      "tags": [],
+      "word_count": 1846,
+      "file": "raw/shortages-gluts-deflation-the-bottlenecks-in-the-economy-are-breaking.json"
+    },
+    {
+      "slug": "the-ethics-of-crypto-sorting-out-good-intentions-and-bad-actors",
+      "title": "The Ethics Of Crypto: Sorting Out Good Intentions And Bad Actors",
+      "date": "2022-10-11",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2022/10/11/the-ethics-of-crypto-sorting-out-good-intentions-and-bad-actors/",
+      "tags": [],
+      "word_count": 2049,
+      "file": "raw/the-ethics-of-crypto-sorting-out-good-intentions-and-bad-actors.json"
+    },
+    {
+      "slug": "the-recession-meme-is-intense-but-can-the-market-see-around-the-corner",
+      "title": "The Recession Meme Is Intense: But Can The Market See Around The Corner?",
+      "date": "2022-10-19",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2022/10/19/the-recession-meme-is-intense-but-can-the-market-see-around-the-corner/",
+      "tags": [],
+      "word_count": 2093,
+      "file": "raw/the-recession-meme-is-intense-but-can-the-market-see-around-the-corner.json"
+    },
+    {
+      "slug": "the-inflation-narrative-falters-instead-we-have-gluts-now-and-soon-deflation",
+      "title": "The ‘Inflation’ Narrative Falters:  Instead, We Have Gluts Now; And Soon – Deflation",
+      "date": "2022-10-31",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2022/10/31/the-inflation-narrative-falters--instead-we-have-gluts-now-and-soon--deflation/",
+      "tags": [],
+      "word_count": 1232,
+      "file": "raw/the-inflation-narrative-falters-instead-we-have-gluts-now-and-soon-deflation.json"
+    },
+    {
+      "slug": "when-is-a-cycle-not-a-cycle-the-economist-magazine-flunks-semiconductors",
+      "title": "When Is A Cycle Not A Cycle: The Economist Magazine Flunks Semiconductors",
+      "date": "2022-10-31",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2022/10/31/when-is-a-cycle-not-a-cycle-the-economist-magazine-flunks-semiconductors/",
+      "tags": [],
+      "word_count": 1427,
+      "file": "raw/when-is-a-cycle-not-a-cycle-the-economist-magazine-flunks-semiconductors.json"
+    },
+    {
+      "slug": "the-un-wisdom-of-crowds-prediction-markets-failed-their-midterm-exams",
+      "title": "The Un-Wisdom Of Crowds: Prediction Markets Failed Their Midterm Exams",
+      "date": "2022-11-14",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2022/11/14/the-un-wisdom-of-crowds-prediction-markets-failed-their-midterm-exams/",
+      "tags": [],
+      "word_count": 2412,
+      "file": "raw/the-un-wisdom-of-crowds-prediction-markets-failed-their-midterm-exams.json"
+    },
+    {
+      "slug": "the-putcall-ratio-of-market-sentiment-went-crazy-in-november-what-can-it-mean",
+      "title": "The Put/Call Ratio Of Market Sentiment Went Crazy In November: What Can It Mean?",
+      "date": "2022-12-05",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2022/12/05/the-putcall-ratio-of-market-sentiment-went-crazy-in-november-what-can-it-mean/",
+      "tags": [],
+      "word_count": 1201,
+      "file": "raw/the-putcall-ratio-of-market-sentiment-went-crazy-in-november-what-can-it-mean.json"
+    },
+    {
+      "slug": "dissecting-the-consumer-price-index-pt-1-inflation-is-over",
+      "title": "Dissecting The Consumer Price Index, Pt 1: ‘Inflation’ Is Over",
+      "date": "2022-12-14",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2022/12/14/dissecting-the-consumer-price-index-pt-1-inflation-is-over/",
+      "tags": [],
+      "word_count": 1209,
+      "file": "raw/dissecting-the-consumer-price-index-pt-1-inflation-is-over.json"
+    },
+    {
+      "slug": "why-the-federal-reserve-gets-inflation-wrong-and-why-monetary-policy-is-always-l",
+      "title": "Why The Federal Reserve Gets Inflation Wrong – And Why Monetary Policy Is Always Late",
+      "date": "2022-12-29",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2022/12/29/why-the-federal-reserve-gets-inflation-wrong--and-monetary-policy-is-always-late/",
+      "tags": [],
+      "word_count": 1521,
+      "file": "raw/why-the-federal-reserve-gets-inflation-wrong-and-why-monetary-policy-is-always-l.json"
+    },
+    {
+      "slug": "the-impact-of-chinas-zero-covid-exit-is-china-really-vaccinated",
+      "title": "The Impact Of China’s Zero-Covid Exit: Is China Really Vaccinated?",
+      "date": "2022-12-31",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2022/12/31/the-impact-of-chinas-zero-covid-exit-is-china-really-vaccinated/",
+      "tags": [],
+      "word_count": 1219,
+      "file": "raw/the-impact-of-chinas-zero-covid-exit-is-china-really-vaccinated.json"
+    },
+    {
+      "slug": "the-federal-reserve-has-an-egg-problem-and-a-chicken-and-egg-problem",
+      "title": "The Federal Reserve Has An Egg Problem – And A ‘Chicken-And-Egg’ Problem",
+      "date": "2023-01-17",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2023/01/17/the-federal-reserve-has-an-egg-problem--and-a-chicken-and-egg-problem/",
+      "tags": [],
+      "word_count": 1545,
+      "file": "raw/the-federal-reserve-has-an-egg-problem-and-a-chicken-and-egg-problem.json"
+    },
+    {
+      "slug": "is-inflation-created-by-corporate-greed-evidence-from-the-current-egg-flation-ep",
+      "title": "Is Inflation Created By Corporate Greed? Evidence From The Current Egg-Flation Episode",
+      "date": "2023-01-21",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2023/01/21/is-inflation-created-by-corporate-greed-evidence-from-the-current-egg-flation-episode/",
+      "tags": [],
+      "word_count": 2062,
+      "file": "raw/is-inflation-created-by-corporate-greed-evidence-from-the-current-egg-flation-ep.json"
+    },
+    {
+      "slug": "a-deflation-alert-hidden-in-the-latest-consumer-price-indicators",
+      "title": "A Deflation Alert Hidden In The Latest Consumer Price Indicators",
+      "date": "2023-01-28",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2023/01/28/a-deflation-alert-hidden-in-the-latest-consumer-price-indicators/",
+      "tags": [],
+      "word_count": 1569,
+      "file": "raw/a-deflation-alert-hidden-in-the-latest-consumer-price-indicators.json"
+    },
+    {
+      "slug": "the-egg-crisis-another-pseudo-inflation-phenomenon",
+      "title": "The ‘Egg Crisis’ – Another Pseudo-Inflation Phenomenon",
+      "date": "2023-02-05",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2023/02/05/the-egg-crisis--another-pseudo-inflation-phenomenon/",
+      "tags": [],
+      "word_count": 2614,
+      "file": "raw/the-egg-crisis-another-pseudo-inflation-phenomenon.json"
+    },
+    {
+      "slug": "what-is-transitory-inflation-1-the-facts",
+      "title": "What Is Transitory Inflation? (1) The Facts",
+      "date": "2023-03-06",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2023/03/06/what-is-transitory-inflation-1-the-facts/",
+      "tags": [],
+      "word_count": 2340,
+      "file": "raw/what-is-transitory-inflation-1-the-facts.json"
+    },
+    {
+      "slug": "chinas-covid-exit-wave-2-is-it-over",
+      "title": "China’s Covid ‘Exit Wave’: (2) Is It Over?",
+      "date": "2023-03-19",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2023/03/19/chinas-covid-exit-wave-2-is-it-over/",
+      "tags": [],
+      "word_count": 1348,
+      "file": "raw/chinas-covid-exit-wave-2-is-it-over.json"
+    },
+    {
+      "slug": "chinas-covid-exit-wave-3-what-other-countries-zero-covid-exits-show",
+      "title": "China’s Covid ‘Exit Wave’: (3) What Other Countries’ Zero-Covid Exits Show",
+      "date": "2023-03-27",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2023/03/27/chinas-covid-exit-wave-3-what-other-countries-zero-covid-exits-show/",
+      "tags": [],
+      "word_count": 2195,
+      "file": "raw/chinas-covid-exit-wave-3-what-other-countries-zero-covid-exits-show.json"
+    },
+    {
+      "slug": "the-bias-that-has-compromised-elite-science-reporting-on-the-covid-origins-story",
+      "title": "The Bias That Has Compromised Elite Science Reporting On The Covid Origins Story",
+      "date": "2023-04-18",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2023/04/18/the-bias-that-has-compromised-elite-science-reporting-on-the-covid-origins-story/",
+      "tags": [],
+      "word_count": 2048,
+      "file": "raw/the-bias-that-has-compromised-elite-science-reporting-on-the-covid-origins-story.json"
+    },
+    {
+      "slug": "the-long-and-variable-lag-a-dangerous-monetary-policy-myth",
+      "title": "The “Long And Variable Lag” – A Dangerous Monetary Policy Myth",
+      "date": "2023-07-08",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2023/07/08/the-long-and-variable-lag--a-dangerous-monetary-policy-myth/",
+      "tags": [],
+      "word_count": 1388,
+      "file": "raw/the-long-and-variable-lag-a-dangerous-monetary-policy-myth.json"
+    },
+    {
+      "slug": "does-raising-the-fed-funds-rate-tame-inflation-is-there-collateral-damage",
+      "title": "Does Raising The Fed Funds Rate ‘Tame’ Inflation? Is There Collateral Damage?",
+      "date": "2023-07-17",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2023/07/17/does-raising-the-fed-funds-rate-tame-inflation-is-there-collateral-damage/",
+      "tags": [],
+      "word_count": 1817,
+      "file": "raw/does-raising-the-fed-funds-rate-tame-inflation-is-there-collateral-damage.json"
+    },
+    {
+      "slug": "chinas-covid-catastrophe-5-the-unvaxxed-elderly-are-a-deadly-accelerant",
+      "title": "China’s Covid Catastrophe: (5) The Unvaxxed Elderly Are A Deadly ‘Accelerant’",
+      "date": "2023-08-01",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2023/08/01/chinas-covid-catastrophe-5-the-unvaxxed-elderly-are-a-deadly-accelerant/",
+      "tags": [],
+      "word_count": 1650,
+      "file": "raw/chinas-covid-catastrophe-5-the-unvaxxed-elderly-are-a-deadly-accelerant.json"
+    },
+    {
+      "slug": "the-case-for-intel-an-illustration-of-the-value-investing-mindset",
+      "title": "The Case For Intel: An Illustration Of The ‘Value’ Investing Mindset",
+      "date": "2023-08-09",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2023/08/09/the-case-for-intel-an-illustration-of-the-value-investing-mindset/",
+      "tags": [],
+      "word_count": 3277,
+      "file": "raw/the-case-for-intel-an-illustration-of-the-value-investing-mindset.json"
+    },
+    {
+      "slug": "the-flawed-cpi-the-fallacy-of-year-over-year-inflation-reporting",
+      "title": "The Flawed CPI: The Fallacy Of Year-Over-Year Inflation Reporting",
+      "date": "2023-09-18",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2023/09/18/the-flawed-cpi-the-fallacy-of-year-over-year-inflation-reporting/",
+      "tags": [],
+      "word_count": 2249,
+      "file": "raw/the-flawed-cpi-the-fallacy-of-year-over-year-inflation-reporting.json"
+    },
+    {
+      "slug": "what-is-structural-inflation-pt-1-a-compelling-case-study",
+      "title": "What Is “Structural” Inflation? Pt 1: A Compelling Case Study",
+      "date": "2023-09-24",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2023/09/24/what-is-structural-inflation-pt-1-a-compelling-case-study/",
+      "tags": [],
+      "word_count": 2249,
+      "file": "raw/what-is-structural-inflation-pt-1-a-compelling-case-study.json"
+    },
+    {
+      "slug": "inflation-is-over-what-comes-next",
+      "title": "Inflation Is Over – What Comes Next?",
+      "date": "2023-10-07",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2023/10/07/inflation-is-over--what-comes-next/",
+      "tags": [],
+      "word_count": 1862,
+      "file": "raw/inflation-is-over-what-comes-next.json"
+    },
+    {
+      "slug": "decoding-the-inflation-signals-how-to-read-and-correct-the-latest-cpi-figure",
+      "title": "Decoding The Inflation Signals: How To Read (And Correct) The Latest CPI Figure",
+      "date": "2023-10-13",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2023/10/13/decoding-the-inflation-signals-how-to-read-and-correct-the-latest-cpi-figure/",
+      "tags": [],
+      "word_count": 1002,
+      "file": "raw/decoding-the-inflation-signals-how-to-read-and-correct-the-latest-cpi-figure.json"
+    },
+    {
+      "slug": "the-market-fears-the-fed-more-than-hamas",
+      "title": "The Market Fears The Fed More Than Hamas",
+      "date": "2023-11-08",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2023/11/08/the-market-fears-the-fed-more-than-hamas/",
+      "tags": [],
+      "word_count": 1758,
+      "file": "raw/the-market-fears-the-fed-more-than-hamas.json"
+    },
+    {
+      "slug": "the-markets-big-fear-is-not-geopolitics-it-is-the-federal-reserve",
+      "title": "The Market’s Big Fear Is Not Geopolitics – It Is The Federal Reserve",
+      "date": "2023-11-08",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2023/11/08/why-the-stock-markets-greatest-fear-is-the-federal-reserve/",
+      "tags": [],
+      "word_count": 2608,
+      "file": "raw/the-markets-big-fear-is-not-geopolitics-it-is-the-federal-reserve.json"
+    },
+    {
+      "slug": "the-verdict-on-the-2021-2023-inflation-transitory-on-all-counts",
+      "title": "The Verdict On The 2021-2023 Inflation:  ‘Transitory,’ On All Counts",
+      "date": "2024-02-05",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2024/02/05/the-verdict-on-the-2021-2023-inflation--transitory-on-all-counts/",
+      "tags": [],
+      "word_count": 1338,
+      "file": "raw/the-verdict-on-the-2021-2023-inflation-transitory-on-all-counts.json"
+    },
+    {
+      "slug": "inflation-is-a-fever-is-it-a-common-cold-or-economic-leukemia",
+      "title": "Inflation Is A Fever – Is It A Common Cold, Or Economic Leukemia?",
+      "date": "2024-02-13",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2024/02/13/inflation-is-a-fever--is-it-a-common-cold-or-economic-leukemia/",
+      "tags": [],
+      "word_count": 2154,
+      "file": "raw/inflation-is-a-fever-is-it-a-common-cold-or-economic-leukemia.json"
+    },
+    {
+      "slug": "inflation-is-a-fever-is-it-as-mild-as-a-common-cold-or-something-more-serious",
+      "title": "Inflation Is A Fever. Is It As Mild As A Common Cold Or Something More Serious?",
+      "date": "2024-02-13",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2024/02/13/inflation-is-a-fever-is-it-as-mild-as-a-common-cold-or-something-more-serious/",
+      "tags": [],
+      "word_count": 2222,
+      "file": "raw/inflation-is-a-fever-is-it-as-mild-as-a-common-cold-or-something-more-serious.json"
+    },
+    {
+      "slug": "the-feds-two-pronged-monetary-blitzkrieg-pt-1-surveying-the-damage",
+      "title": "The Fed’s Two-Pronged Monetary Blitzkrieg, Pt 1 – Surveying The Damage",
+      "date": "2024-03-07",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2024/03/07/the-feds-2-pronged-monetary-blitzkrieg-pt-1--surveying-the-damage/",
+      "tags": [],
+      "word_count": 1350,
+      "file": "raw/the-feds-two-pronged-monetary-blitzkrieg-pt-1-surveying-the-damage.json"
+    },
+    {
+      "slug": "collateral-damage-from-fed-policy-part-2-a-broken-housing-market",
+      "title": "Collateral Damage From Fed Policy, Part 2: A Broken Housing Market",
+      "date": "2024-03-13",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2024/03/13/collateral-damage-from-fed-policy-part-2-a-broken-housing-market/",
+      "tags": [],
+      "word_count": 2469,
+      "file": "raw/collateral-damage-from-fed-policy-part-2-a-broken-housing-market.json"
+    },
+    {
+      "slug": "collateral-damage-from-fed-policy-3-money-market-funds-a-powder-keg",
+      "title": "Collateral Damage From Fed Policy (3) – Money Market Funds, A ‘Powder Keg’?",
+      "date": "2024-03-26",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2024/03/26/collateral-damage-from-fed-policy-3-money-market-funds-a-powder-keg/",
+      "tags": [],
+      "word_count": 2396,
+      "file": "raw/collateral-damage-from-fed-policy-3-money-market-funds-a-powder-keg.json"
+    },
+    {
+      "slug": "the-missing-factor-in-explanations-of-chinas-economic-distress-covid-part-1-the-",
+      "title": "The Missing Factor In Explanations Of China’s Economic Distress: Covid (Part 1: The Cover-Up)",
+      "date": "2024-05-04",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2024/05/04/the-missing-factor-in-explanations-of-chinas-economic-distress-covid-part-1-the-cover-up/",
+      "tags": [],
+      "word_count": 2555,
+      "file": "raw/the-missing-factor-in-explanations-of-chinas-economic-distress-covid-part-1-the-.json"
+    },
+    {
+      "slug": "the-missing-factor-in-explanations-of-chinas-economic-distress-covid-part-2-esti",
+      "title": "The Missing Factor In Explanations Of China’s Economic Distress: COVID  – Part 2: Estimating The True Death Toll",
+      "date": "2024-05-12",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2024/05/12/the-missing-factor-in-explanations-of-chinas-economic-distress-covid---part-2-estimating-the-true-death-toll/",
+      "tags": [],
+      "word_count": 1899,
+      "file": "raw/the-missing-factor-in-explanations-of-chinas-economic-distress-covid-part-2-esti.json"
+    },
+    {
+      "slug": "the-feds-rate-cut-a-soft-landing-or-fake-news",
+      "title": "The Fed’s Rate Cut:  A ‘Soft Landing’ – Or ‘Fake News’?",
+      "date": "2024-09-26",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2024/09/26/the-feds-rate-cut--a-soft-landing--or-fake-news/",
+      "tags": [],
+      "word_count": 2225,
+      "file": "raw/the-feds-rate-cut-a-soft-landing-or-fake-news.json"
+    },
+    {
+      "slug": "update-on-interest-rates-is-the-federal-reserve-shooting-blanks",
+      "title": "Update On Interest Rates: Is The Federal Reserve Shooting Blanks?",
+      "date": "2024-10-07",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2024/10/07/update-on-interest-rates-is-the-federal-reserve-shooting-blanks/",
+      "tags": [],
+      "word_count": 1211,
+      "file": "raw/update-on-interest-rates-is-the-federal-reserve-shooting-blanks.json"
+    },
+    {
+      "slug": "prediction-markets-how-reliable-are-they-really-part-1",
+      "title": "Prediction Markets: How Reliable Are They Really? (Part 1)",
+      "date": "2024-10-23",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2024/10/23/prediction-markets-how-reliable-are-they-really-part-1/",
+      "tags": [],
+      "word_count": 2132,
+      "file": "raw/prediction-markets-how-reliable-are-they-really-part-1.json"
+    },
+    {
+      "slug": "is-price-gouging-real-whos-doing-it-is-it-driving-inflation",
+      "title": "Is Price Gouging Real? Who’s Doing It? Is It Driving Inflation?",
+      "date": "2024-11-14",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2024/11/14/is-price-gouging-real-whos-doing-it-is-it-driving-inflation/",
+      "tags": [],
+      "word_count": 2824,
+      "file": "raw/is-price-gouging-real-whos-doing-it-is-it-driving-inflation.json"
+    },
+    {
+      "slug": "chinas-economic-problem-isnt-just-japanification-it-may-be-worse",
+      "title": "China’s Economic Problem Isn’t Just ‘Japanification’ – It May Be Worse",
+      "date": "2025-02-06",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2025/02/06/chinas-economic-problem-isnt-just-japanification--it-may-be-worse/",
+      "tags": [],
+      "word_count": 1622,
+      "file": "raw/chinas-economic-problem-isnt-just-japanification-it-may-be-worse.json"
+    },
+    {
+      "slug": "chinas-economic-crisis-is-tracking-japans-downturn-in-the-1990s",
+      "title": "China’s Economic Crisis Is Tracking Japan’s Downturn In The 1990’s",
+      "date": "2025-02-15",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2025/02/15/chinas-economic-crisis-is-tracking-japans-downturn-in-the-1990s/",
+      "tags": [],
+      "word_count": 1708,
+      "file": "raw/chinas-economic-crisis-is-tracking-japans-downturn-in-the-1990s.json"
+    },
+    {
+      "slug": "tariffs-first-consider-the-certainties",
+      "title": "Tariffs: First, Consider The Certainties",
+      "date": "2025-04-11",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2025/04/11/tariffs-first-consider-the-certainties/",
+      "tags": [],
+      "word_count": 2147,
+      "file": "raw/tariffs-first-consider-the-certainties.json"
+    },
+    {
+      "slug": "tariff-uncertainties-part-2-the-link-to-inflation",
+      "title": "Tariff Uncertainties – Part 2: The Link To Inflation",
+      "date": "2025-04-30",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2025/04/30/tariff-uncertainties--part-2-the-link-to-inflation/",
+      "tags": [],
+      "word_count": 3138,
+      "file": "raw/tariff-uncertainties-part-2-the-link-to-inflation.json"
+    },
+    {
+      "slug": "tariff-uncertainties-part-3-the-bond-markets",
+      "title": "Tariff Uncertainties, Part 3: The Bond Markets",
+      "date": "2025-05-25",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2025/05/25/tariff-uncertainties-part-3-the-bond-markets/",
+      "tags": [],
+      "word_count": 3193,
+      "file": "raw/tariff-uncertainties-part-3-the-bond-markets.json"
+    },
+    {
+      "slug": "tariff-uncertainties-part-4-a-little-qa-trump-trade-china",
+      "title": "Tariff Uncertainties, Part 4: A Little Q&A (Trump, Trade, China)",
+      "date": "2025-05-31",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2025/05/31/tariff-uncertainties-part-4-a-little-qa/",
+      "tags": [],
+      "word_count": 1767,
+      "file": "raw/tariff-uncertainties-part-4-a-little-qa-trump-trade-china.json"
+    },
+    {
+      "slug": "tariff-uncertainties-pt-5-the-big-one-will-it-cause-a-recession",
+      "title": "Tariff Uncertainties, Pt 5: The Big One – Will It Cause A Recession?",
+      "date": "2025-07-17",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2025/07/17/tariff-uncertainties-pt-5-the-big-one--will-it-cause-a-recession/",
+      "tags": [],
+      "word_count": 2360,
+      "file": "raw/tariff-uncertainties-pt-5-the-big-one-will-it-cause-a-recession.json"
+    },
+    {
+      "slug": "the-false-promises-of-economic-forecasting-newly-exposed-by-the-tariff-whiplash",
+      "title": "The False Promises Of Economic Forecasting (Newly Exposed By The ‘Tariff Whiplash’)",
+      "date": "2025-07-30",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2025/07/30/the-false-promises-of-economic-forecasting-newly-exposed-by-the-tariff-whiplash/",
+      "tags": [],
+      "word_count": 2171,
+      "file": "raw/the-false-promises-of-economic-forecasting-newly-exposed-by-the-tariff-whiplash.json"
+    },
+    {
+      "slug": "a-long-overdue-reckoning-for-the-bureau-of-labor-statistics",
+      "title": "A Long-Overdue Reckoning For The Bureau Of Labor Statistics",
+      "date": "2025-08-13",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2025/08/13/a-long-overdue-reckoning-for-the-bureau-of-labor-statistics/",
+      "tags": [],
+      "word_count": 1888,
+      "file": "raw/a-long-overdue-reckoning-for-the-bureau-of-labor-statistics.json"
+    },
+    {
+      "slug": "will-the-fed-cut-interest-rates-does-it-matter-recent-history-says-no",
+      "title": "Will The Fed Cut Interest Rates? Does It Matter? Recent History Says No.",
+      "date": "2025-08-28",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2025/08/28/will-the-fed-cut-interest-rates-does-it-matter-recent-history-says-no/",
+      "tags": [],
+      "word_count": 1922,
+      "file": "raw/will-the-fed-cut-interest-rates-does-it-matter-recent-history-says-no.json"
+    },
+    {
+      "slug": "the-tariff-scorecard-did-we-miss-the-apocalypse-or-was-it-just-postponed",
+      "title": "The Tariff Scorecard: Did We Miss The Apocalypse? Or Was It Just Postponed?",
+      "date": "2025-09-07",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2025/09/07/the-tariff-scorecard-did-we-miss-the-apocalypse-or-was-it-just-postponed/",
+      "tags": [],
+      "word_count": 2681,
+      "file": "raw/the-tariff-scorecard-did-we-miss-the-apocalypse-or-was-it-just-postponed.json"
+    },
+    {
+      "slug": "the-case-against-quarterly-reporting-part-2-the-dysfunctional-earnings-game",
+      "title": "The Case Against Quarterly Reporting – Part 2, The Dysfunctional Earnings Game",
+      "date": "2025-11-30",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2025/11/30/the-case-against-quarterly-reporting--part-2-the-earnings-game/",
+      "tags": [],
+      "word_count": 1823,
+      "file": "raw/the-case-against-quarterly-reporting-part-2-the-dysfunctional-earnings-game.json"
+    },
+    {
+      "slug": "make-venezuela-great-again-pt-1-what-happened-the-rise-and-fall",
+      "title": "Make Venezuela Great Again? Pt 1: What Happened – The Rise And Fall",
+      "date": "2026-02-02",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2026/02/02/make-venezuela-great-again-pt-1-what-happened--the-rise-and-fall/",
+      "tags": [],
+      "word_count": 1682,
+      "file": "raw/make-venezuela-great-again-pt-1-what-happened-the-rise-and-fall.json"
+    },
+    {
+      "slug": "venezuela-great-again-pt-2-the-inevitability-of-a-failed-petrostate",
+      "title": "Venezuela Great Again? Pt 2: The Inevitability Of A Failed Petrostate",
+      "date": "2026-02-24",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2026/02/24/venezuela-great-again-pt-2-the-inevitability-of-a-failed-petrostate/",
+      "tags": [],
+      "word_count": 2902,
+      "file": "raw/venezuela-great-again-pt-2-the-inevitability-of-a-failed-petrostate.json"
+    },
+    {
+      "slug": "hedge-funds-got-clipped-by-epic-fury-they-forgot-to-hedge",
+      "title": "‘Hedge Funds’ Got Clipped By Epic Fury. They Forgot To ‘Hedge’?",
+      "date": "2026-03-20",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2026/03/20/hedge-funds-got-clipped-by-epic-fury-they-forgot-to-hedge/",
+      "tags": [],
+      "word_count": 2330,
+      "file": "raw/hedge-funds-got-clipped-by-epic-fury-they-forgot-to-hedge.json"
+    },
+    {
+      "slug": "dissecting-the-consumer-price-index-pt-1-inflation-is-over",
+      "title": "Dissecting The Consumer Price Index, Pt 1: ‘Inflation’ Is Over",
+      "date": "2022-12-14",
+      "url": "http://www.forbes.com/sites/georgecalhoun/2022/12/14/dissecting-the-consumer-price-index-pt-1-inflation-is-over/",
+      "tags": [],
+      "word_count": 1209,
+      "file": "raw/dissecting-the-consumer-price-index-pt-1-inflation-is-over.json",
+      "content_hash": "2a6735d0a7e9b4e664425ab025a82bf4"
+    },
+    {
+      "slug": "the-federal-reserve-has-an-egg-problem-and-a-chicken-and-egg-problem",
+      "title": "The Federal Reserve Has An Egg Problem – And A ‘Chicken-And-Egg’ Problem",
+      "date": "2023-01-17",
+      "url": "http://www.forbes.com/sites/georgecalhoun/2023/01/17/the-federal-reserve-has-an-egg-problem--and-a-chicken-and-egg-problem/",
+      "tags": [],
+      "word_count": 1545,
+      "file": "raw/the-federal-reserve-has-an-egg-problem-and-a-chicken-and-egg-problem.json",
+      "content_hash": "5354a1536d06db25c8119460e92b7f4f"
+    },
+    {
+      "slug": "george-calhoun",
+      "title": "George Calhoun",
+      "date": "",
+      "url": "http://www.forbes.com/sites/georgecalhoun/archive/",
+      "tags": [],
+      "word_count": 267,
+      "file": "raw/george-calhoun.json",
+      "content_hash": "02e0a1dea47e8c982ba2c5757af17b17"
+    },
+    {
+      "slug": "gradually-then-suddenly-clarity-comes-to-the-eu",
+      "title": "Gradually, Then Suddenly… Clarity Comes To The EU",
+      "date": "2020-05-24",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2020/05/24/gradually-then-suddenly-clarity-comes-to-the-eu/",
+      "tags": [],
+      "word_count": 1313,
+      "file": "raw/gradually-then-suddenly-clarity-comes-to-the-eu.json",
+      "content_hash": "03df34f10e610219f5ac9fb14b9d1723"
+    },
+    {
+      "slug": "the-hong-kong-crackdown-is-a-financial-disaster-for-china-is-it-time-to-fire-the",
+      "title": "The Hong Kong Crackdown Is A Financial Disaster For China: Is It Time To Fire The CEO?",
+      "date": "2020-07-19",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2020/07/19/the-hong-kong-crackdown-is-a-financial-disaster-for-china-is-it-time-to-fire-the-ceo/",
+      "tags": [],
+      "word_count": 2113,
+      "file": "raw/the-hong-kong-crackdown-is-a-financial-disaster-for-china-is-it-time-to-fire-the.json",
+      "content_hash": "5cb53e77464a83aa9204d8be85fbd339"
+    },
+    {
+      "slug": "the-real-warren-buffett-anomaly-and-how-to-profit-from-it",
+      "title": "The Real Warren Buffett Anomaly, And How To Profit From It",
+      "date": "2020-09-13",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2020/09/13/the-real-warren-buffett-anomaly-and-how-to-profit-from-it/",
+      "tags": [],
+      "word_count": 3030,
+      "file": "raw/the-real-warren-buffett-anomaly-and-how-to-profit-from-it.json",
+      "content_hash": "e91af5c99becd1aad4e6e00de8ae93d4"
+    },
+    {
+      "slug": "the-stock-split-anomaly-how-apple-tesla-created-powerful-alpha-last-month",
+      "title": "The Stock-Split Anomaly: How Apple, Tesla Created Powerful Alpha Last Month",
+      "date": "2020-09-21",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2020/09/21/the-stock-split-anomaly-how-apple-tesla-created-powerful-alpha-last-month/",
+      "tags": [],
+      "word_count": 1777,
+      "file": "raw/the-stock-split-anomaly-how-apple-tesla-created-powerful-alpha-last-month.json",
+      "content_hash": "b3dd8f185a22eca4612cdfa9cfc7a8df"
+    },
+    {
+      "slug": "will-tesla-break-the-sp500-pt-3-did-the-way-it-was-added-help-create-a-bubble",
+      "title": "Will Tesla Break The S&P500? (Pt 3) – Did The Way It Was Added Help Create A Bubble?",
+      "date": "2021-01-10",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/01/10/will-tesla-break-the-sp500-pt-3--did-the-way-it-was-added-help-create-a-bubble/",
+      "tags": [],
+      "word_count": 1989,
+      "file": "raw/will-tesla-break-the-sp500-pt-3-did-the-way-it-was-added-help-create-a-bubble.json",
+      "content_hash": "a4acc7613df337763c5555244587d611"
+    },
+    {
+      "slug": "kill-chicken-scare-monkey-杀鸡儆猴-beijings-philosophy-of-regulation-wont-work",
+      "title": "Kill Chicken Scare Monkey (杀鸡儆猴) – Beijing’s Philosophy Of Regulation Won’t Work",
+      "date": "2021-02-22",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/02/22/kill-chicken-scare-monkey---beijings-philosophy-of-regulation-wont-work/",
+      "tags": [],
+      "word_count": 2074,
+      "file": "raw/kill-chicken-scare-monkey-杀鸡儆猴-beijings-philosophy-of-regulation-wont-work.json",
+      "content_hash": "5befdc95280f385b22167fb1fc6afb88"
+    },
+    {
+      "slug": "gamestop-the-second-surge-anatomy-of-a-gamma-swarm",
+      "title": "GameStop – The Second Surge: Anatomy Of A “Gamma Swarm”",
+      "date": "2021-03-10",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/03/10/gamestop-the-second-surgeanatomy-of-a-gamma-swarm/",
+      "tags": [],
+      "word_count": 2464,
+      "file": "raw/gamestop-the-second-surge-anatomy-of-a-gamma-swarm.json",
+      "content_hash": "f2ab40da522df9c6d4756391132f658a"
+    },
+    {
+      "slug": "the-inflation-scare-doesnt-match-reality",
+      "title": "The Inflation Scare Doesn’t Match Reality",
+      "date": "2021-05-01",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/05/01/the-inflation-scare-doesnt-match-reality/",
+      "tags": [],
+      "word_count": 1539,
+      "file": "raw/the-inflation-scare-doesnt-match-reality.json",
+      "content_hash": "c3f5e8f825cb197bc66010caba9acb99"
+    },
+    {
+      "slug": "commodity-price-increases-do-not-create-inflation",
+      "title": "Commodity Price Increases Do Not Create Inflation",
+      "date": "2021-05-05",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/05/05/commodity-price-increases-do-not-create-inflation/",
+      "tags": [],
+      "word_count": 1893,
+      "file": "raw/commodity-price-increases-do-not-create-inflation.json",
+      "content_hash": "54b367ac9af1dfd10f693d20915b5152"
+    },
+    {
+      "slug": "the-inflation-bump-is-not-real-it-is-a-statistical-artifact",
+      "title": "The Inflation “Bump” Is Not Real. It Is A Statistical Artifact.",
+      "date": "2021-05-12",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/05/12/the-inflation-bump-is-not-real-it-is-a-statistical-artifact/",
+      "tags": [],
+      "word_count": 1402,
+      "file": "raw/the-inflation-bump-is-not-real-it-is-a-statistical-artifact.json",
+      "content_hash": "9097c6dbc1212f16bac980795aaca97b"
+    },
+    {
+      "slug": "suggested-reading-a-world-without-work-by-david-susskind-part-1",
+      "title": "Suggested Reading: ‘A World Without Work,’ By David Susskind (Part 1)",
+      "date": "2021-07-28",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/07/28/suggested-reading-a-world-without-work-by-david-susskind-part-1/",
+      "tags": [],
+      "word_count": 1834,
+      "file": "raw/suggested-reading-a-world-without-work-by-david-susskind-part-1.json",
+      "content_hash": "6bd07840622c3533772ec3efb30cb4c4"
+    },
+    {
+      "slug": "review-of-a-world-without-work-part-2-what-doesnt-work",
+      "title": "Review Of ‘A World Without Work’ (Part 2) – What Doesn’t (!) Work",
+      "date": "2021-07-31",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/07/31/review-of-a-world-without-work-part-2--what-doesnt--work/",
+      "tags": [],
+      "word_count": 1227,
+      "file": "raw/review-of-a-world-without-work-part-2-what-doesnt-work.json",
+      "content_hash": "91c06f05d2daa6c76c3183533f36fbbc"
+    },
+    {
+      "slug": "why-china-probably-wont-go-to-war-over-taiwans-semiconductor-riches",
+      "title": "Why China (Probably) Won’t Go To War Over Taiwan’s Semiconductor Riches",
+      "date": "2021-09-29",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/09/29/why-china-probably-wont-go-to-war-over-taiwans-semiconductor-riches/",
+      "tags": [],
+      "word_count": 1983,
+      "file": "raw/why-china-probably-wont-go-to-war-over-taiwans-semiconductor-riches.json",
+      "content_hash": "3c63b079f7962ad2db1413427536910e"
+    },
+    {
+      "slug": "the-latest-jack-ma-sighting-is-it-for-real",
+      "title": "The Latest Jack Ma ‘Sighting’ – Is It For Real?",
+      "date": "2021-10-18",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/10/18/the-latest-jack-ma-sighting-is-it-for-real/",
+      "tags": [],
+      "word_count": 1681,
+      "file": "raw/the-latest-jack-ma-sighting-is-it-for-real.json",
+      "content_hash": "5ada6f82fe59f44ffaecb110aade7a62"
+    },
+    {
+      "slug": "beijing-is-intentionally-underreporting-chinas-covid-death-rate-part-1",
+      "title": "Beijing Is Intentionally Underreporting China’s Covid Death Rate (Part 1)",
+      "date": "2022-01-02",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2022/01/02/beijing-is-intentionally-underreporting-chinas-covid-death-rate-part-1/",
+      "tags": [],
+      "word_count": 2043,
+      "file": "raw/beijing-is-intentionally-underreporting-chinas-covid-death-rate-part-1.json",
+      "content_hash": "4a651476267e4670e9436882325a5a50"
+    },
+    {
+      "slug": "chinas-covid-catastrophe-contextual-evidence-part-1-demography-economics",
+      "title": "China’s Covid Catastrophe: Contextual Evidence (Part 1: Demography, Economics)",
+      "date": "2022-09-12",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2022/09/12/chinas-covid-catastrophe-contextual-evidence-part-1-demography-economics/",
+      "tags": [],
+      "word_count": 1913,
+      "file": "raw/chinas-covid-catastrophe-contextual-evidence-part-1-demography-economics.json",
+      "content_hash": "aebefd300df884f159a3709dbaf97fc0"
+    },
+    {
+      "slug": "ftx-and-esg-a-panorama-of-failed-governance-pt-1-the-internal-failures",
+      "title": "FTX And ESG: A Panorama Of Failed Governance (Pt 1 – The Internal Failures)",
+      "date": "2022-11-21",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2022/11/21/ftx-and-esg-a-panorama-of-failed-governance-pt-1--the-internal-failures/",
+      "tags": [],
+      "word_count": 1559,
+      "file": "raw/ftx-and-esg-a-panorama-of-failed-governance-pt-1-the-internal-failures.json",
+      "content_hash": "a60b016e138531651b57b421273bb1ca"
+    },
+    {
+      "slug": "yes-todays-inflation-is-transitory-the-pundits-have-it-wrong",
+      "title": "Yes, Today’s Inflation Is Transitory! The Pundits Have It Wrong.",
+      "date": "2022-12-11",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2022/12/11/yes-todays-inflation-is-transitory-the-pundits-have-it-wrong/",
+      "tags": [],
+      "word_count": 789,
+      "file": "raw/yes-todays-inflation-is-transitory-the-pundits-have-it-wrong.json",
+      "content_hash": "ad3505b135befefc1ddb0ed9a92c5ba9"
+    },
+    {
+      "slug": "what-is-transitory-inflation-2-the-politics",
+      "title": "What Is Transitory Inflation? (2) The Politics",
+      "date": "2023-03-16",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2023/03/16/what-is-transitory-inflation-2-the-politics/",
+      "tags": [],
+      "word_count": 1519,
+      "file": "raw/what-is-transitory-inflation-2-the-politics.json",
+      "content_hash": "054425995ce9a1bfef662dfd418ae052"
+    },
+    {
+      "slug": "chinas-covid-exit-wave-4-flattening-the-curve",
+      "title": "China’s Covid ‘Exit Wave’: (4) Flattening The Curve?",
+      "date": "2023-03-31",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2023/03/31/chinas-covid-exit-wave-4-flattening-the-curve/",
+      "tags": [],
+      "word_count": 1538,
+      "file": "raw/chinas-covid-exit-wave-4-flattening-the-curve.json",
+      "content_hash": "0fe16d4b8168b045f1bea3805c857abd"
+    },
+    {
+      "slug": "is-chinas-economy-entering-historical-garbage-time-part-1",
+      "title": "Is China’s Economy Entering ‘Historical Garbage Time’?  Part 1",
+      "date": "2025-01-27",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2025/01/27/is-chinas-economy-entering-historical-garbage-time--part-1/",
+      "tags": [],
+      "word_count": 2176,
+      "file": "raw/is-chinas-economy-entering-historical-garbage-time-part-1.json",
+      "content_hash": "5e0f3ae1b85076f5367ac5f2e19cda87"
+    },
+    {
+      "slug": "universities-face-a-reckoning-over-federal-rd-funding-pt-1",
+      "title": "Universities Face A  Reckoning Over Federal R&D Funding (Pt 1)",
+      "date": "2025-02-26",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2025/02/26/universities-face-a--reckoning-over-federal-rd-funding-pt-1/",
+      "tags": [],
+      "word_count": 1825,
+      "file": "raw/universities-face-a-reckoning-over-federal-rd-funding-pt-1.json",
+      "content_hash": "5b68acdbd56efb7678f010022ca88fbd"
+    },
+    {
+      "slug": "the-case-against-quarterly-reporting-by-public-companies-part-1-the-fundamentals",
+      "title": "The Case Against Quarterly Reporting By Public Companies– Part 1, The Fundamentals",
+      "date": "2025-11-02",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2025/11/02/the-case-against-quarterly-reporting-by-public-companies-part-1-the-fundamentals/",
+      "tags": [],
+      "word_count": 2530,
+      "file": "raw/the-case-against-quarterly-reporting-by-public-companies-part-1-the-fundamentals.json",
+      "content_hash": "f265117b4a65cb4adf0d051e4991b29e"
+    },
+    {
+      "slug": "to-price-in-hormuz-markets-must-recognize-two-economic-risks",
+      "title": "To ‘Price In’ Hormuz, Markets Must Recognize Two Economic Risks",
+      "date": "2026-04-01",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2026/04/01/to-price-in-hormuz-markets-must-recognize-two-economic-risks/",
+      "tags": [],
+      "word_count": 2151,
+      "file": "raw/to-price-in-hormuz-markets-must-recognize-two-economic-risks.json",
+      "content_hash": "989e30017b091df44c247128eda2dc34"
+    },
+    {
+      "slug": "george-calhoun",
+      "title": "George Calhoun",
+      "date": "",
+      "url": "https://www.forbes.com/sites/georgecalhoun/archive/",
+      "tags": [],
+      "word_count": 267,
+      "file": "raw/george-calhoun.json",
+      "content_hash": "02e0a1dea47e8c982ba2c5757af17b17"
     }
   ]
 }
