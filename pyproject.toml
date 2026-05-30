@@ -18,12 +18,23 @@ analyze = [
     "openai>=1.50",
     "numpy>=1.26",
 ]
+dev = [
+    "pytest>=8",
+    "ruff>=0.6",
+]
 all = [
-    "digital-dad[scrape,analyze]",
+    "digital-dad[scrape,analyze,dev]",
 ]
 
 [tool.setuptools.packages.find]
 include = ["scraper*", "analysis*", "viz*", "training*"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
 
 [build-system]
 requires = ["setuptools>=75.0"]
