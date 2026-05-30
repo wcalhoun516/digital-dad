@@ -1,6 +1,6 @@
 """Characterization tests for scraper/utils.py pure helpers."""
 
-from scraper.utils import is_article_url, slugify
+from scraper.utils import is_article_url, normalize_url, slugify
 
 
 class TestSlugify:
@@ -48,3 +48,14 @@ class TestIsArticleUrl:
     def test_rejects_pagination_path(self):
         url = "https://www.forbes.com/sites/georgecalhoun/2"
         assert is_article_url(url) is False
+
+
+class TestNormalizeUrl:
+    def test_strips_query_and_fragment_and_adds_trailing_slash(self):
+        url = "https://www.forbes.com/sites/georgecalhoun/2024/01/15/slug?utm=x#top"
+        expected = "https://www.forbes.com/sites/georgecalhoun/2024/01/15/slug/"
+        assert normalize_url(url) == expected
+
+    def test_idempotent(self):
+        url = "https://www.forbes.com/sites/georgecalhoun/2024/01/15/slug/"
+        assert normalize_url(normalize_url(url)) == normalize_url(url)
