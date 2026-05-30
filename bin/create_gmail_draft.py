@@ -17,6 +17,23 @@ from pathlib import Path
 
 EMAIL_DIR = Path(__file__).resolve().parent.parent / "data" / "cron" / "emails"
 LOG_PATH = Path(__file__).resolve().parent.parent / "data" / "cron" / "on_this_day.jsonl"
+RECIPIENTS_PATH = Path(__file__).resolve().parent.parent / "data" / "cron" / "recipients.txt"
+
+
+def read_recipients():
+    """Read the recipient list (one address per line; '#' lines ignored).
+
+    Falls back to an empty list if the file is missing — copy
+    data/cron/recipients.example.txt to recipients.txt to configure.
+    """
+    if not RECIPIENTS_PATH.exists():
+        return []
+    recipients = []
+    for line in RECIPIENTS_PATH.read_text().splitlines():
+        line = line.strip()
+        if line and not line.startswith("#"):
+            recipients.append(line)
+    return recipients
 
 
 def get_latest():
@@ -53,8 +70,11 @@ def main():
         print("No On This Day emails found. Run: make on-this-day")
         sys.exit(1)
 
+    recipients = read_recipients()
+
     if args.json:
         print(json.dumps({
+            "to": recipients,
             "subject": meta.get("subject", "From the archive") if meta else "From the archive",
             "html_body": html,
             "headline": meta.get("headline", "") if meta else "",
@@ -62,6 +82,7 @@ def main():
         }))
     else:
         subject = meta.get("subject", "From the archive") if meta else "From the archive"
+        print(f"To: {', '.join(recipients) if recipients else '(none configured — see data/cron/recipients.example.txt)'}")
         print(f"Subject: {subject}")
         print(f"Headline: {meta.get('headline', 'N/A') if meta else 'N/A'}")
         print(f"Matched: {meta.get('matched_article', 'N/A') if meta else 'N/A'}")

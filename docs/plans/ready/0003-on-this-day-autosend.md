@@ -13,6 +13,14 @@ that gap while keeping a person in the loop.
 - Existing pieces to reuse: `analysis/on_this_day.py` (generates the email + logs to
   `data/cron/on_this_day.jsonl`), `bin/create_gmail_draft.py` (MCP draft helper),
   `bin/weekly_run.sh` (the Sunday cron that already calls `make on-this-day`).
+- **Recipient list already exists:** `data/cron/recipients.txt` (gitignored; one address
+  per line, `#` comments ignored; committed example at `recipients.example.txt`).
+  `bin/create_gmail_draft.py` already reads it via `read_recipients()` and emits a `to`
+  field. It currently holds the owner's address only — the owner adds family members over
+  time by editing that file. Reuse this; do not invent a second recipient mechanism.
+- **Owner's delivery preference:** Gmail draft via the Gmail MCP, addressed to the recipient
+  list, which the owner reviews and sends — *not* unattended SMTP. Honor this unless the
+  owner explicitly asks for automatic SMTP later.
 - **Decision D9** (see `docs/decisions.md`): email is intentionally a Gmail-MCP *draft*, not
   SMTP — to keep a human in the loop and avoid storing mail credentials. This plan should
   *extend* that posture, not silently bypass it.

@@ -1,0 +1,4 @@
+# On This Day email recipients — one address per line.
+# Lines starting with # are ignored. Copy this to recipients.txt and edit.
+# Start with just yourself; add family members as you like.
+you@example.com

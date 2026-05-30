@@ -18,6 +18,9 @@ data/cron/*.jsonl
 # Daily product-dev agent logs
 logs/
 
+# On This Day recipient list (personal addresses; example is committed)
+data/cron/recipients.txt
+
 # Claude Code local config (launch.json is shared; these are machine-local)
 .claude/settings.local.json
 .claude/worktrees/
