@@ -5,14 +5,15 @@
     <key>Label</key>
     <string>com.calhoun.digitaldad-weekly</string>
 
+    <!-- ProgramArguments points at the trampoline STAGED ON THE SYSTEM DISK so
+         the job can launch before the external volume mounts. The installer
+         substitutes __TRAMPOLINE_PATH__ with the real staged path. The
+         trampoline waits for the volume, then runs bin/weekly_run.sh. -->
     <key>ProgramArguments</key>
     <array>
         <string>/bin/bash</string>
-        <string>/Volumes/FamilyWorkDrive/development/digital-dad/bin/weekly_run.sh</string>
+        <string>__TRAMPOLINE_PATH__</string>
     </array>
-
-    <key>WorkingDirectory</key>
-    <string>/Volumes/FamilyWorkDrive/development/digital-dad</string>
 
     <!-- Sunday at 03:00 local time. macOS launchd runs missed jobs on next
          wake, so this is robust to the Mac mini being asleep at 3am. -->
@@ -32,10 +33,14 @@
     <key>KeepAlive</key>
     <false/>
 
+    <!-- Logs stay on /tmp (system disk), NEVER the external volume. A volume
+         path here makes launchd recreate /Volumes/FamilyWorkDrive as a squatter
+         dir when the job fires unmounted, renaming the real mount. The real
+         run log still lands in data/cron/weekly.log via weekly_run.sh. -->
     <key>StandardOutPath</key>
-    <string>/Volumes/FamilyWorkDrive/development/digital-dad/data/cron/launchd.out</string>
+    <string>/tmp/digitaldad_weekly.out.log</string>
 
     <key>StandardErrorPath</key>
-    <string>/Volumes/FamilyWorkDrive/development/digital-dad/data/cron/launchd.err</string>
+    <string>/tmp/digitaldad_weekly.err.log</string>
 </dict>
 </plist>

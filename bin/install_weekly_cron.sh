@@ -1,48 +1,20 @@
 #!/bin/bash
-# Idempotent installer for the digital-dad weekly launchd agent.
+# DEPRECATED. The weekly agent moved to the system-disk trampoline pattern.
 #
-# Copies the committed plist into ~/Library/LaunchAgents/, unloads any
-# existing version, then bootstraps the new one. Safe to re-run.
+# The old version of this script installed bin/com.calhoun.digitaldad-weekly.plist
+# verbatim — and that plist pointed launchd's StandardOut/ErrorPath at
+# .../digital-dad/data/cron/ on the external volume. When the job fired while the
+# volume was unmounted, launchd recreated /Volumes/FamilyWorkDrive as a real
+# directory on the boot disk, renaming the real mount to "FamilyWorkDrive 1" and
+# breaking every absolute path on the drive.
+#
+# Use the trampoline-based installer instead:
+#     scripts/launchd/install_weekly.sh
+#
+# This shim just forwards to it so old muscle memory / docs still work.
 
 set -euo pipefail
-
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-LABEL="com.calhoun.digitaldad-weekly"
-SRC_PLIST="$SCRIPT_DIR/$LABEL.plist"
-DEST_DIR="$HOME/Library/LaunchAgents"
-DEST_PLIST="$DEST_DIR/$LABEL.plist"
-GUI_DOMAIN="gui/$(id -u)"
-
-if [ ! -f "$SRC_PLIST" ]; then
-  echo "Error: source plist not found at $SRC_PLIST" >&2
-  exit 1
-fi
-
-# Make sure the cron log dir exists before launchd points its
-# StandardOutPath/StandardErrorPath at it.
-mkdir -p "$PROJECT_ROOT/data/cron"
-
-mkdir -p "$DEST_DIR"
-cp "$SRC_PLIST" "$DEST_PLIST"
-echo "Installed plist → $DEST_PLIST"
-
-# Unload any prior version (silent if not loaded).
-launchctl bootout "$GUI_DOMAIN/$LABEL" 2>/dev/null || true
-
-launchctl bootstrap "$GUI_DOMAIN" "$DEST_PLIST"
-launchctl enable "$GUI_DOMAIN/$LABEL" 2>/dev/null || true
-
-echo ""
-echo "Installed and bootstrapped: $LABEL"
-echo ""
-echo "Next scheduled run:"
-launchctl print "$GUI_DOMAIN/$LABEL" 2>/dev/null \
-  | grep -E "next|state|last exit code" \
-  || echo "  (run 'launchctl print $GUI_DOMAIN/$LABEL' for details)"
-echo ""
-echo "Logs: $PROJECT_ROOT/data/cron/weekly.log"
-echo "      $PROJECT_ROOT/data/cron/launchd.{out,err}"
-echo ""
-echo "Run manually:    bash $SCRIPT_DIR/weekly_run.sh"
-echo "Uninstall:       launchctl bootout $GUI_DOMAIN/$LABEL"
+echo "install_weekly_cron.sh is deprecated → running scripts/launchd/install_weekly.sh" >&2
+exec /bin/bash "$PROJECT_ROOT/scripts/launchd/install_weekly.sh"
