@@ -1,0 +1,41 @@
+name: verify
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install dev dependencies
+        run: pip install -e ".[dev]"
+
+      - name: Check required make targets exist
+        run: |
+          for t in lint test; do
+            if ! make -n "$t" >/dev/null 2>&1; then
+              echo "::error::Makefile target '$t' is missing. This CI depends on plan 0001 (make lint/test/verify); base this branch on top of it or merge 0001 first."
+              exit 1
+            fi
+          done
+
+      # The Makefile defaults PYTHON to .venv/bin/python (local dev). CI installs into the
+      # runner's interpreter, so override PYTHON=python. Tests import only stdlib-only utils,
+      # so the [dev] extra is sufficient — no network, conductor, or scraped data needed.
+      - name: Lint
+        run: make lint PYTHON=python
+
+      - name: Test
+        run: make test PYTHON=python
