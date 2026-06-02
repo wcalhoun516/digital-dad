@@ -15,8 +15,11 @@
 set -u
 
 # --- Configuration ----------------------------------------------------------
-PROJECT_ROOT="${DIGITAL_DAD_ROOT:-/Volumes/FamilyWorkDrive/development/digital-dad}"
-VOLUME_ROOT="/Volumes/FamilyWorkDrive"
+# PROJECT_ROOT is resolved by glob below so a remount under an alternate name
+# (e.g. "FamilyWorkDrive 1" if a squatter dir ever bumps the canonical name)
+# still works. DIGITAL_DAD_ROOT overrides resolution entirely when set.
+PROJECT_ROOT="${DIGITAL_DAD_ROOT:-}"
+PROJECT_GLOB="/Volumes/FamilyWorkDrive*/development/digital-dad"
 PROMPT_REL="scripts/daily_routine_prompt.md"
 CLAUDE_MODEL="claude-opus-4-8"
 CLAUDE_EFFORT="high"
@@ -26,10 +29,17 @@ MOUNT_WAIT_SECONDS=90
 export PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 
 # --- Wait for the external volume to mount ----------------------------------
+# Resolve by glob each iteration: when the volume isn't mounted the pattern
+# stays literal (the -d test fails) and we wait; once it mounts under any
+# FamilyWorkDrive* name, the first match that actually contains the project wins.
 waited=0
-while [ ! -d "$VOLUME_ROOT" ] || [ ! -d "$PROJECT_ROOT" ]; do
+while [ -z "$PROJECT_ROOT" ] || [ ! -d "$PROJECT_ROOT" ]; do
+  for cand in $PROJECT_GLOB; do
+    [ -d "$cand" ] && { PROJECT_ROOT="$cand"; break; }
+  done
+  [ -n "$PROJECT_ROOT" ] && [ -d "$PROJECT_ROOT" ] && break
   if [ "$waited" -ge "$MOUNT_WAIT_SECONDS" ]; then
-    echo "ERROR: $PROJECT_ROOT not available after ${MOUNT_WAIT_SECONDS}s — volume not mounted?" >&2
+    echo "ERROR: no $PROJECT_GLOB after ${MOUNT_WAIT_SECONDS}s — volume not mounted?" >&2
     exit 1
   fi
   sleep 3
@@ -55,9 +65,27 @@ command -v claude >/dev/null 2>&1 || fail "'claude' not found on PATH ($PATH)"
 command -v gh     >/dev/null 2>&1 || fail "'gh' not found on PATH ($PATH)"
 log "claude: $(command -v claude)    gh: $(command -v gh)"
 
-if ! gh auth status >/dev/null 2>&1; then
-  fail "'gh auth status' is not green — GitHub auth missing/expired"
+# GitHub auth, robust under headless launchd. The login keychain that holds the
+# gh keyring token is often locked at 01:00, so the check used to flap (see the
+# 2026-05-31 abort). Prefer an explicit token if one is provided — that bypasses
+# the keychain entirely — then retry the status check to ride out a keychain
+# that's slow to unlock. To make this bulletproof, drop a PAT (scopes: repo,
+# workflow) into $GH_TOKEN_FILE with 600 perms; otherwise it falls back to the
+# keyring with retries.
+GH_TOKEN_FILE="${GH_TOKEN_FILE:-$HOME/.config/digital-dad/gh_token}"
+if [ -z "${GH_TOKEN:-}" ] && [ -z "${GITHUB_TOKEN:-}" ] && [ -f "$GH_TOKEN_FILE" ]; then
+  GH_TOKEN="$(tr -d '[:space:]' < "$GH_TOKEN_FILE")"
+  export GH_TOKEN
+  log "gh auth: using token from $GH_TOKEN_FILE"
 fi
+
+gh_ok=0
+for attempt in 1 2 3 4 5; do
+  if gh auth status >/dev/null 2>&1; then gh_ok=1; break; fi
+  log "gh auth: not ready (attempt $attempt/5) — retrying in 5s"
+  sleep 5
+done
+[ "$gh_ok" = 1 ] || fail "'gh auth status' not green after 5 tries — populate $GH_TOKEN_FILE or unlock the login keychain"
 log "gh auth: OK"
 
 [ -f "$PROJECT_ROOT/$PROMPT_REL" ] || fail "prompt file missing: $PROMPT_REL"
