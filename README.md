@@ -1,5 +1,7 @@
 # Digital Dad
 
+[![verify](https://github.com/wcalhoun516/digital-dad/actions/workflows/verify.yml/badge.svg)](https://github.com/wcalhoun516/digital-dad/actions/workflows/verify.yml)
+
 **Preserving a father's intellectual legacy.**
 
 Dr. George Calhoun has spent years writing for Forbes — hundreds of articles on

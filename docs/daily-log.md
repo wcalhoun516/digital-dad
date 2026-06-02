@@ -48,6 +48,13 @@ Format:
 
 <!-- entries below -->
 
+### 2026-06-02 — infra — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/3
+- Source: plan:ready/0002
+- Summary: Added `.github/workflows/verify.yml` (runs `make lint`/`make test` on PRs + pushes
+  to main, with a guard that fails loudly if 0001's make targets are missing) and a CI status
+  badge in `README.md`. Plan moved to `plans/done/`.
+
 ### 2026-05-30 — infra — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/1
 - Source: plan:ready/0001
