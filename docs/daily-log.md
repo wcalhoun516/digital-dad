@@ -48,6 +48,14 @@ Format:
 
 <!-- entries below -->
 
+### 2026-06-03 — family — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/5
+- Source: plan:ready/0003
+- Summary: On This Day approval-gated delivery (approach 1, per D9). New
+  `analysis/delivery.py` (recipient parsing + payload + dry-run, TDD'd with 14 tests),
+  refactored `bin/create_gmail_draft.py` onto it with `--dry-run`, added
+  `make send-on-this-day` owner approval gate + README docs. Plan moved to `plans/done/`.
+
 ### 2026-06-02 — infra — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/3
 - Source: plan:ready/0002
