@@ -209,9 +209,19 @@ voice, and saves it as an HTML email.
 # Generate manually
 make on-this-day
 
+# Approval gate — show who/what the latest email would go to (sends nothing)
+make send-on-this-day
+
 # Create a Gmail draft (via Claude Code with Gmail MCP)
 python bin/create_gmail_draft.py
 ```
+
+**Delivery is approval-gated** (Decision D9): the email is never sent automatically
+and no mail credentials are stored. Recipients live in `data/cron/recipients.txt`
+(gitignored; one address per line, `#` comments ignored — copy
+`data/cron/recipients.example.txt` to start). The owner runs `make send-on-this-day`
+to review the recipient list and matched article, then has Claude Code create the
+Gmail draft via the Gmail MCP and sends it from Gmail — a human stays in the loop.
 
 The email turns the static archive into a living thing — once a week, the family
 gets a small artifact: dad explaining the present through something he wrote in

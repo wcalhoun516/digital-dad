@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
-"""Create a Gmail draft from the latest On This Day email.
+"""Approval-gated delivery for the latest On This Day email.
 
-This script reads the most recent On This Day email from data/cron/emails/
-and prints instructions for creating a Gmail draft. When used with the
-Gmail MCP in Claude Code, the draft can be created automatically.
+Reads the most recent rendered email + the gitignored recipient list and prepares
+it for the Gmail MCP, which the owner reviews and sends — per Decision D9 (email
+stays a human-reviewed *draft*, no SMTP, no stored credentials). This script never
+sends mail itself; the actual draft is created through the Gmail MCP in a Claude
+session.
 
 Usage:
-    python bin/create_gmail_draft.py          # show latest email info
-    python bin/create_gmail_draft.py --json   # output JSON for programmatic use
+    python bin/create_gmail_draft.py             # show recipients/subject + MCP instruction
+    python bin/create_gmail_draft.py --dry-run   # summarize what a send would do (sends nothing)
+    python bin/create_gmail_draft.py --json       # emit the MCP-ready payload as JSON
 """
 
 import argparse
@@ -15,79 +18,41 @@ import json
 import sys
 from pathlib import Path
 
-EMAIL_DIR = Path(__file__).resolve().parent.parent / "data" / "cron" / "emails"
-LOG_PATH = Path(__file__).resolve().parent.parent / "data" / "cron" / "on_this_day.jsonl"
-RECIPIENTS_PATH = Path(__file__).resolve().parent.parent / "data" / "cron" / "recipients.txt"
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-
-def read_recipients():
-    """Read the recipient list (one address per line; '#' lines ignored).
-
-    Falls back to an empty list if the file is missing — copy
-    data/cron/recipients.example.txt to recipients.txt to configure.
-    """
-    if not RECIPIENTS_PATH.exists():
-        return []
-    recipients = []
-    for line in RECIPIENTS_PATH.read_text().splitlines():
-        line = line.strip()
-        if line and not line.startswith("#"):
-            recipients.append(line)
-    return recipients
-
-
-def get_latest():
-    """Get the latest On This Day email and metadata."""
-    if not EMAIL_DIR.exists():
-        return None, None
-
-    emails = sorted(EMAIL_DIR.glob("on_this_day_*.html"), reverse=True)
-    if not emails:
-        return None, None
-
-    html = emails[0].read_text()
-
-    # Get metadata from log
-    meta = None
-    if LOG_PATH.exists():
-        for line in reversed(LOG_PATH.read_text().splitlines()):
-            try:
-                meta = json.loads(line)
-                break
-            except json.JSONDecodeError:
-                continue
-
-    return html, meta
+from analysis.delivery import format_dry_run, latest_email_payload  # noqa: E402
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Show latest On This Day email")
-    parser.add_argument("--json", action="store_true", help="Output JSON")
+    parser = argparse.ArgumentParser(description="Prepare the latest On This Day email for the Gmail MCP")
+    parser.add_argument("--json", action="store_true", help="Output the MCP-ready payload as JSON")
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Summarize recipients/subject/article without sending or emitting payload",
+    )
     args = parser.parse_args()
 
-    html, meta = get_latest()
-    if not html:
+    payload = latest_email_payload()
+    if not payload:
         print("No On This Day emails found. Run: make on-this-day")
         sys.exit(1)
 
-    recipients = read_recipients()
+    if args.dry_run:
+        print(format_dry_run(payload))
+        return
 
     if args.json:
-        print(json.dumps({
-            "to": recipients,
-            "subject": meta.get("subject", "From the archive") if meta else "From the archive",
-            "html_body": html,
-            "headline": meta.get("headline", "") if meta else "",
-            "matched_article": meta.get("matched_article", "") if meta else "",
-        }))
-    else:
-        subject = meta.get("subject", "From the archive") if meta else "From the archive"
-        print(f"To: {', '.join(recipients) if recipients else '(none configured — see data/cron/recipients.example.txt)'}")
-        print(f"Subject: {subject}")
-        print(f"Headline: {meta.get('headline', 'N/A') if meta else 'N/A'}")
-        print(f"Matched: {meta.get('matched_article', 'N/A') if meta else 'N/A'}")
-        print(f"\nTo create a Gmail draft, use Claude Code with the Gmail MCP:")
-        print(f"  'Create a Gmail draft with the latest On This Day email'")
+        print(json.dumps(payload))
+        return
+
+    recipients = payload["to"]
+    print(f"To: {', '.join(recipients) if recipients else '(none configured — see data/cron/recipients.example.txt)'}")
+    print(f"Subject: {payload['subject']}")
+    print(f"Headline: {payload['headline'] or 'N/A'}")
+    print(f"Matched: {payload['matched_article'] or 'N/A'}")
+    print("\nTo create a Gmail draft, use Claude Code with the Gmail MCP:")
+    print("  'Create a Gmail draft with the latest On This Day email'")
 
 
 if __name__ == "__main__":
