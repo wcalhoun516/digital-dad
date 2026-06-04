@@ -48,10 +48,15 @@ Format:
 
 <!-- entries below -->
 
-### 2026-06-04 — analysis — in-progress
-- PR: (opening)
+### 2026-06-04 — analysis — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/6
 - Source: plan:ready/0004
-- Summary: Track Record adjudication layer (plan 0004 steps 2+3) — in progress.
+- Summary: Track Record human-adjudication layer (plan 0004 steps 2-4). New
+  `analysis/adjudicate.py` — status precedence (human > llm > status), `apply_adjudication`
+  writeback, resumable `python -m analysis.adjudicate` CLI + `make adjudicate`, TDD'd with 24
+  tests. Dashboard now lets a family ruling win (family-confirmed marker). Deepened with
+  confidence calibration (`calibration_report` + `conviction_boards`, `--report`, roadmap #12).
+  Plan 0004 left in `ready/` — step 1 (web-search verdict backfill) is a future run.
 
 ### 2026-06-03 — family — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/5
