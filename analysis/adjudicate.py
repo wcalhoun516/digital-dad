@@ -103,6 +103,69 @@ def adjudication_summary(predictions: list[dict]) -> dict:
     }
 
 
+# Verdicts that count as "resolved" for calibration (a real outcome we can score).
+_RESOLVED = ("vindicated", "wrong", "mixed")
+_CONFIDENCE_BUCKETS = ("hedged", "confident", "certain")
+_HIGH_CONVICTION = ("confident", "certain")
+_CONVICTION_RANK = {"certain": 0, "confident": 1, "hedged": 2}
+
+
+def calibration_report(predictions: list[dict]) -> dict:
+    """Hit-rate by how confidently he phrased each call.
+
+    For each confidence bucket, tally resolved effective verdicts and an accuracy score:
+    ``(vindicated + 0.5 * mixed) / resolved``. Pending/unfalsifiable are not resolved and
+    are excluded. Accuracy is ``None`` when a bucket has nothing resolved.
+    """
+    by_confidence = {
+        b: {"vindicated": 0, "wrong": 0, "mixed": 0, "resolved": 0, "accuracy": None}
+        for b in _CONFIDENCE_BUCKETS
+    }
+    resolved_total = 0
+    for p in predictions:
+        bucket = by_confidence.get(p.get("confidence_language"))
+        if bucket is None:
+            continue
+        v = effective_verdict(p)
+        if v not in _RESOLVED:
+            continue
+        bucket[v] += 1
+        bucket["resolved"] += 1
+        resolved_total += 1
+    for bucket in by_confidence.values():
+        if bucket["resolved"]:
+            score = bucket["vindicated"] + 0.5 * bucket["mixed"]
+            bucket["accuracy"] = round(score / bucket["resolved"], 3)
+    return {"by_confidence": by_confidence, "resolved_total": resolved_total}
+
+
+def conviction_boards(predictions: list[dict], limit: int = 5) -> dict:
+    """High-conviction hits and misses — bold calls (confident/certain) he nailed or blew.
+
+    Returns ``{"most_right": [...], "most_wrong": [...]}``, each a list of compact prediction
+    dicts sorted by conviction (certain before confident), capped at ``limit``.
+    """
+    def _board(target_verdict: str) -> list[dict]:
+        rows = [
+            p for p in predictions
+            if p.get("confidence_language") in _HIGH_CONVICTION
+            and effective_verdict(p) == target_verdict
+        ]
+        rows.sort(key=lambda p: _CONVICTION_RANK.get(p.get("confidence_language"), 9))
+        return [
+            {
+                "claim": p.get("claim", ""),
+                "topic": p.get("topic", ""),
+                "confidence_language": p.get("confidence_language", ""),
+                "article_date": p.get("article_date", ""),
+                "article_url": p.get("article_url", ""),
+            }
+            for p in rows[:limit]
+        ]
+
+    return {"most_right": _board("vindicated"), "most_wrong": _board("wrong")}
+
+
 def load_predictions(path: Path = DEFAULT_PATH) -> dict:
     """Load the predictions file as its full top-level dict."""
     return json.loads(Path(path).read_text())
@@ -147,6 +210,30 @@ def _prompt_verdict(prediction: dict) -> tuple[str, str] | None | str:
     return verdict, note
 
 
+def print_report(predictions: list[dict]) -> None:
+    """Print the calibration report + conviction boards to stdout."""
+    report = calibration_report(predictions)
+    print("\nCalibration — accuracy by confidence language "
+          "(vindicated + ½·mixed, over resolved):")
+    for bucket in _CONFIDENCE_BUCKETS:
+        row = report["by_confidence"][bucket]
+        acc = "n/a" if row["accuracy"] is None else f"{row['accuracy']:.0%}"
+        print(f"  {bucket:>9}: {acc:>4}  "
+              f"(✓{row['vindicated']} ✗{row['wrong']} ~{row['mixed']}, "
+              f"resolved {row['resolved']})")
+    print(f"  resolved total: {report['resolved_total']}")
+
+    boards = conviction_boards(predictions)
+    for label, key in (("Bold calls he nailed", "most_right"),
+                       ("Bold calls he missed", "most_wrong")):
+        rows = boards[key]
+        print(f"\n{label}:")
+        if not rows:
+            print("  (none yet)")
+        for r in rows:
+            print(f"  [{r['confidence_language']}] {r['claim'][:90]}")
+
+
 def run_cli(path: Path = DEFAULT_PATH, limit: int | None = None) -> int:
     """Interactive adjudication loop. Writes back after every ruling (resumable)."""
     path = Path(path)
@@ -180,6 +267,7 @@ def run_cli(path: Path = DEFAULT_PATH, limit: int | None = None) -> int:
     final = adjudication_summary(predictions)
     print(f"\nDone. {final['adjudicated']}/{final['total']} adjudicated "
           f"this session: +{done}.")
+    print_report(predictions)
     return 0
 
 
@@ -196,7 +284,17 @@ def main(argv: list[str] | None = None) -> int:
         "--limit", type=int, default=None,
         help="Adjudicate at most N predictions this session.",
     )
+    parser.add_argument(
+        "--report", action="store_true",
+        help="Print the calibration report (hit-rate by confidence) and exit; adjudicate nothing.",
+    )
     args = parser.parse_args(argv)
+    if args.report:
+        if not args.input.exists():
+            print(f"No predictions file at {args.input}. Run `make analyze` first.")
+            return 1
+        print_report(load_predictions(args.input).get("predictions", []))
+        return 0
     return run_cli(path=args.input, limit=args.limit)
 
 

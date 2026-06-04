@@ -11,6 +11,8 @@ from analysis.adjudicate import (
     VALID_VERDICTS,
     adjudication_summary,
     apply_adjudication,
+    calibration_report,
+    conviction_boards,
     effective_source,
     effective_verdict,
     iter_unadjudicated,
@@ -121,6 +123,74 @@ class TestAdjudicationSummary:
         assert summary["by_verdict"]["vindicated"] == 1
         assert summary["by_verdict"]["mixed"] == 1
         assert summary["by_verdict"]["pending"] == 1
+
+
+class TestCalibrationReport:
+    def _preds(self):
+        return [
+            {"claim": "1", "confidence_language": "certain", "llm_verdict": "vindicated"},
+            {"claim": "2", "confidence_language": "certain", "llm_verdict": "wrong"},
+            {"claim": "3", "confidence_language": "certain", "llm_verdict": "mixed"},
+            {"claim": "4", "confidence_language": "hedged", "llm_verdict": "vindicated"},
+            {"claim": "5", "confidence_language": "hedged", "llm_verdict": "pending"},
+            {"claim": "6", "confidence_language": "hedged", "llm_verdict": "unfalsifiable"},
+        ]
+
+    def test_accuracy_uses_vindicated_plus_half_mixed_over_resolved(self):
+        report = calibration_report(self._preds())
+        # certain: vindicated=1, wrong=1, mixed=1 -> resolved=3, acc=(1+0.5)/3=0.5
+        certain = report["by_confidence"]["certain"]
+        assert certain["resolved"] == 3
+        assert certain["vindicated"] == 1
+        assert certain["wrong"] == 1
+        assert certain["mixed"] == 1
+        assert certain["accuracy"] == 0.5
+
+    def test_excludes_pending_and_unfalsifiable_from_resolved(self):
+        report = calibration_report(self._preds())
+        # hedged: vindicated=1 resolved, pending+unfalsifiable excluded
+        hedged = report["by_confidence"]["hedged"]
+        assert hedged["resolved"] == 1
+        assert hedged["accuracy"] == 1.0
+
+    def test_accuracy_none_when_nothing_resolved(self):
+        report = calibration_report(
+            [{"claim": "x", "confidence_language": "confident", "llm_verdict": "pending"}]
+        )
+        assert report["by_confidence"]["confident"]["accuracy"] is None
+
+    def test_human_verdict_overrides_llm_in_calibration(self):
+        preds = [
+            {"claim": "1", "confidence_language": "certain",
+             "llm_verdict": "vindicated", "human_verdict": "wrong"},
+        ]
+        certain = calibration_report(preds)["by_confidence"]["certain"]
+        assert certain["wrong"] == 1
+        assert certain["vindicated"] == 0
+        assert certain["accuracy"] == 0.0
+
+
+class TestConvictionBoards:
+    def test_high_conviction_hits_and_misses_only(self):
+        preds = [
+            {"claim": "bold-right", "confidence_language": "certain", "llm_verdict": "vindicated"},
+            {"claim": "bold-wrong", "confidence_language": "confident", "llm_verdict": "wrong"},
+            {"claim": "hedged-wrong", "confidence_language": "hedged", "llm_verdict": "wrong"},
+            {"claim": "hedged-right", "confidence_language": "hedged", "llm_verdict": "vindicated"},
+        ]
+        boards = conviction_boards(preds)
+        right_claims = [p["claim"] for p in boards["most_right"]]
+        wrong_claims = [p["claim"] for p in boards["most_wrong"]]
+        assert right_claims == ["bold-right"]
+        assert wrong_claims == ["bold-wrong"]
+
+    def test_limit_caps_each_board(self):
+        preds = [
+            {"claim": f"w{i}", "confidence_language": "certain", "llm_verdict": "wrong"}
+            for i in range(10)
+        ]
+        boards = conviction_boards(preds, limit=3)
+        assert len(boards["most_wrong"]) == 3
 
 
 class TestLoadSavePredictions:
