@@ -48,6 +48,11 @@ Format:
 
 <!-- entries below -->
 
+### 2026-06-04 — analysis — in-progress
+- PR: (opening)
+- Source: plan:ready/0004
+- Summary: Track Record adjudication layer (plan 0004 steps 2+3) — in progress.
+
 ### 2026-06-03 — family — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/5
 - Source: plan:ready/0003
