@@ -4,7 +4,7 @@ PYTHON := .venv/bin/python
 # ruff findings (broadening the scope is a follow-up roadmap item, #1-3/cleanup).
 LINT_PATHS := tests
 
-.PHONY: scrape analyze training dashboard all serve search on-this-day send-on-this-day clean test lint fmt verify
+.PHONY: scrape analyze training dashboard all serve search on-this-day send-on-this-day adjudicate clean test lint fmt verify
 
 scrape:
 	$(PYTHON) -m scraper $(ARGS)
@@ -34,6 +34,11 @@ on-this-day:
 # After reviewing, create the Gmail draft via the Gmail MCP in Claude Code.
 send-on-this-day:
 	$(PYTHON) bin/create_gmail_draft.py --dry-run
+
+# Interactive: walk pending predictions, confirm/override the advisory LLM verdict.
+# Human verdicts win and are written back after each ruling (resumable). ARGS e.g. --limit 20.
+adjudicate:
+	$(PYTHON) -m analysis.adjudicate $(ARGS)
 
 test:
 	$(PYTHON) -m pytest -q

@@ -477,6 +477,22 @@ h3 {
   border-left: 2px solid var(--border);
 }
 
+.pred-verdict-human {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: rgba(140,192,132,0.12);
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 0.8em;
+  color: var(--text);
+  border-left: 2px solid #8cc084;
+}
+
+.pred-source-human {
+  color: #8cc084;
+  font-weight: 600;
+}
+
 /* ===== FOOTER ===== */
 footer {
   text-align: center;
@@ -1745,10 +1761,14 @@ function renderTrackRecord() {
   const predictions = PREDICTIONS_DATA.predictions;
   const agg = PREDICTIONS_DATA.aggregate || {};
 
+  // Effective verdict precedence: a family member's ruling wins over the advisory
+  // LLM verdict, which in turn wins over the raw pending status.
+  const effectiveVerdict = p => p.human_verdict || p.llm_verdict || p.status || 'pending';
+
   // Stats cards
   const verdictCounts = {};
   predictions.forEach(p => {
-    const v = p.llm_verdict || p.status || 'pending';
+    const v = effectiveVerdict(p);
     verdictCounts[v] = (verdictCounts[v] || 0) + 1;
   });
 
@@ -1784,7 +1804,7 @@ function renderTrackRecord() {
     const confidence = document.getElementById('prediction-confidence-filter').value;
     return predictions.filter(p => {
       if (topic && p.topic !== topic) return false;
-      if (verdict && (p.llm_verdict || p.status || 'pending') !== verdict) return false;
+      if (verdict && effectiveVerdict(p) !== verdict) return false;
       if (confidence && p.confidence_language !== confidence) return false;
       if (q && !(
         (p.claim || '').toLowerCase().includes(q) ||
@@ -1802,7 +1822,8 @@ function renderTrackRecord() {
       return;
     }
     listEl.innerHTML = items.map(p => {
-      const verdict = p.llm_verdict || p.status || 'pending';
+      const verdict = effectiveVerdict(p);
+      const isHuman = !!p.human_verdict;
       const confLabel = p.confidence_language || '';
       const date = (p.article_date || '').slice(0, 10);
       const horizon = p.target_date_or_horizon || '';
@@ -1815,10 +1836,19 @@ function renderTrackRecord() {
         </div>`;
       }
 
+      let humanNote = '';
+      if (isHuman) {
+        const note = p.human_verdict_note ? `: ${p.human_verdict_note}` : '';
+        humanNote = `<div class="pred-verdict-human">
+          <strong>Family ruling (final)${note}</strong>
+        </div>`;
+      }
+
       return `<div class="prediction-card">
         <div class="pred-claim">"${(p.claim || '').replace(/</g,'&lt;')}"</div>
         <div class="pred-meta">
           <span class="pred-pill ${verdict}">${verdict}</span>
+          ${isHuman ? '<span class="pred-source-human" title="Confirmed by a family member">✓ family-confirmed</span>' : ''}
           ${confLabel ? `<span title="Confidence language">${confLabel}</span>` : ''}
           ${horizon ? `<span title="Target horizon">Horizon: ${horizon}</span>` : ''}
           <span title="Prediction made on">Made: ${date}</span>
@@ -1826,6 +1856,7 @@ function renderTrackRecord() {
           <a href="${p.article_url || '#'}" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none" title="${p.article_title || ''}">${(p.article_title || '').slice(0, 50)}${(p.article_title || '').length > 50 ? '...' : ''}</a>
         </div>
         ${p.context ? `<div style="font-size:0.85em;color:var(--text-muted);margin-top:6px;font-style:italic">${p.context}</div>` : ''}
+        ${humanNote}
         ${llmNote}
       </div>`;
     }).join('');
