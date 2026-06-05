@@ -86,8 +86,9 @@ def format_evidence(sources: list[dict]) -> str:
 
 def build_prompt(prediction: dict, sources: list[dict], current_date: str) -> str:
     """Assemble the single-prediction, evidence-grounded verdict prompt."""
+    pred_date = prediction.get("prediction_date") or prediction.get("article_date", "unknown")
     return BACKFILL_PROMPT.format(
-        prediction_date=prediction.get("prediction_date") or prediction.get("article_date", "unknown"),
+        prediction_date=pred_date,
         current_date=current_date,
         topic=prediction.get("topic", ""),
         claim=prediction.get("claim", ""),
