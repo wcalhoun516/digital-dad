@@ -1761,9 +1761,9 @@ function renderTrackRecord() {
   const predictions = PREDICTIONS_DATA.predictions;
   const agg = PREDICTIONS_DATA.aggregate || {};
 
-  // Effective verdict precedence: a family member's ruling wins over the advisory
-  // LLM verdict, which in turn wins over the raw pending status.
-  const effectiveVerdict = p => p.human_verdict || p.llm_verdict || p.status || 'pending';
+  // Effective verdict precedence: a family member's ruling wins over the evidence-grounded
+  // verdict, which outranks the ungrounded LLM verdict, which wins over the raw status.
+  const effectiveVerdict = p => p.human_verdict || p.evidence_verdict || p.llm_verdict || p.status || 'pending';
 
   // Stats cards
   const verdictCounts = {};
@@ -1828,6 +1828,21 @@ function renderTrackRecord() {
       const date = (p.article_date || '').slice(0, 10);
       const horizon = p.target_date_or_horizon || '';
 
+      let evidenceNote = '';
+      if (p.evidence_verdict && p.evidence_verdict_reasoning) {
+        const srcs = (p.evidence_sources || []).filter(s => s && s.url);
+        const srcLinks = srcs.length
+          ? `<div style="margin-top:4px;font-size:0.85em">Sources: ${srcs.map((s, i) =>
+              `<a href="${s.url}" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none">[${i + 1}]</a>`
+            ).join(' ')}</div>`
+          : '';
+        evidenceNote = `<div class="pred-verdict-llm" style="border-left-color:#6ba3d6">
+          <strong>Evidence-grounded verdict (advisory):</strong> ${p.evidence_verdict_reasoning}
+          <span style="opacity:0.6"> — confidence: ${p.evidence_verdict_confidence || 'low'}</span>
+          ${srcLinks}
+        </div>`;
+      }
+
       let llmNote = '';
       if (p.llm_verdict && p.llm_verdict_reasoning) {
         llmNote = `<div class="pred-verdict-llm">
@@ -1849,6 +1864,7 @@ function renderTrackRecord() {
         <div class="pred-meta">
           <span class="pred-pill ${verdict}">${verdict}</span>
           ${isHuman ? '<span class="pred-source-human" title="Confirmed by a family member">✓ family-confirmed</span>' : ''}
+          ${!isHuman && p.evidence_verdict ? '<span class="pred-source-human" title="Grounded in external evidence (advisory)" style="color:#6ba3d6">⊕ evidence-grounded</span>' : ''}
           ${confLabel ? `<span title="Confidence language">${confLabel}</span>` : ''}
           ${horizon ? `<span title="Target horizon">Horizon: ${horizon}</span>` : ''}
           <span title="Prediction made on">Made: ${date}</span>
@@ -1857,6 +1873,7 @@ function renderTrackRecord() {
         </div>
         ${p.context ? `<div style="font-size:0.85em;color:var(--text-muted);margin-top:6px;font-style:italic">${p.context}</div>` : ''}
         ${humanNote}
+        ${evidenceNote}
         ${llmNote}
       </div>`;
     }).join('');
