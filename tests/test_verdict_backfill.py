@@ -216,3 +216,38 @@ class TestConstants:
     def test_verdict_and_confidence_vocab(self):
         assert "vindicated" in VALID_VERDICTS
         assert set(VALID_CONFIDENCE) == {"low", "medium", "high"}
+
+
+class TestEvidenceFromFile:
+    def test_maps_claim_to_supplied_sources(self, tmp_path):
+        from analysis.verdict_backfill import _evidence_from_file
+
+        ev = tmp_path / "ev.json"
+        ev.write_text(json.dumps({"claim A": [{"title": "t", "url": "u"}]}))
+        gather = _evidence_from_file(ev)
+        assert gather({"claim": "claim A"}) == [{"title": "t", "url": "u"}]
+        assert gather({"claim": "unknown"}) == []
+
+
+class TestCliGate:
+    def _write_preds(self, tmp_path):
+        path = tmp_path / "predictions.json"
+        path.write_text(json.dumps({"predictions": [{"claim": "a"}]}))
+        return path
+
+    def test_aborts_when_conductor_down_and_writes_nothing(self, tmp_path, monkeypatch):
+        from analysis import verdict_backfill as vb
+
+        path = self._write_preds(tmp_path)
+        before = path.read_text()
+        monkeypatch.setattr(vb, "_conductor_up", lambda *a, **k: False)
+        rc = vb.main(["--input", str(path)])
+        assert rc == 2
+        assert path.read_text() == before  # untouched — no paid calls, no writeback
+
+    def test_missing_input_returns_one(self, tmp_path, monkeypatch):
+        from analysis import verdict_backfill as vb
+
+        monkeypatch.setattr(vb, "_conductor_up", lambda *a, **k: True)
+        rc = vb.main(["--input", str(tmp_path / "nope.json")])
+        assert rc == 1
