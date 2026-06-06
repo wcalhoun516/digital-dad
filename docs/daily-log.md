@@ -48,11 +48,15 @@ Format:
 
 <!-- entries below -->
 
-### 2026-06-06 — dashboard — in-progress
-- PR: (pending)
+### 2026-06-06 — dashboard — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/8
 - Source: plan:ready/0005
-- Summary: Ask Dad polish — chat persistence (localStorage + transcript export) and citation
-  deep-links into the Raw Corpus tab. In flight.
+- Summary: Ask Dad polish (plan 0005, complete → moved to `plans/done/`). Chat persistence
+  (versioned localStorage, restore-on-load, Clear + Export-to-Markdown) and clickable citation
+  deep-links that jump to the article's row in the Raw Corpus tab and flash-highlight it.
+  Deepened with a 200-turn history cap + Export/Clear disabled-when-empty. Verified via build +
+  65-test suite + lint + JS delimiter balance; **live browser UI test not run** (headless, no
+  browser tooling) — reviewer should do the interaction pass before merging.
 
 ### 2026-06-04 — analysis — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/6
