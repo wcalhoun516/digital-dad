@@ -48,6 +48,12 @@ Format:
 
 <!-- entries below -->
 
+### 2026-06-06 — dashboard — in-progress
+- PR: (pending)
+- Source: plan:ready/0005
+- Summary: Ask Dad polish — chat persistence (localStorage + transcript export) and citation
+  deep-links into the Raw Corpus tab. In flight.
+
 ### 2026-06-04 — analysis — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/6
 - Source: plan:ready/0004
