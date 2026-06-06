@@ -358,6 +358,29 @@ h3 {
   text-decoration: underline;
 }
 
+.chat-util-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-family: var(--mono);
+  font-size: 0.75em;
+  padding: 4px 12px;
+  cursor: pointer;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.chat-util-btn:hover { color: var(--accent); border-color: var(--accent); }
+.chat-util-btn:disabled { opacity: 0.4; cursor: default; }
+
+@keyframes corpus-row-flash {
+  0%   { background: rgba(201, 168, 76, 0.45); }
+  100% { background: transparent; }
+}
+.corpus-table tbody tr.corpus-row-target {
+  animation: corpus-row-flash 2.4s ease-out;
+}
+
 .chat-input-row {
   display: flex;
   gap: 12px;
@@ -655,6 +678,10 @@ footer {
         </button>
       </div>
       <div id="chat-cost-info" style="font-family:var(--mono);font-size:0.75em;color:var(--text-muted)"></div>
+      <div style="display:flex;gap:8px;margin-left:auto">
+        <button id="chat-export" class="chat-util-btn" title="Download this conversation as Markdown">Export</button>
+        <button id="chat-clear" class="chat-util-btn" title="Clear saved conversation">Clear</button>
+      </div>
     </div>
     <div style="font-family:var(--mono);font-size:0.7em;color:var(--text-muted);margin-top:6px">
       RAG over <span id="chat-article-count">0</span> articles &middot; Requires local-llm-conductor on port 8080
@@ -1276,6 +1303,7 @@ function renderCorpus() {
     tbody.innerHTML = '';
     list.forEach(a => {
       const tr = document.createElement('tr');
+      tr.dataset.slug = a.slug || '';
       tr.innerHTML = `
         <td class="date-cell">${(a.date || '').slice(0, 10)}</td>
         <td class="title-cell"><a href="${a.url}" target="_blank" rel="noopener">${a.title || a.slug}</a></td>
@@ -1443,6 +1471,47 @@ function renderSearch() {
   }
 }
 
+// Deep-link from an Ask Dad citation into the Raw Corpus tab: switch tabs, clear any active
+// corpus filters so the target is present, scroll to its row, and flash-highlight it. The
+// Raw Corpus tab is a metadata table (not a full-text reader), so we highlight the article's
+// row rather than an in-body passage — full-passage highlighting belongs to the Reading Room (#21).
+function deepLinkToCorpus(slug, title) {
+  const corpusBtn = document.querySelector('nav button[data-tab="corpus"]');
+  if (corpusBtn) corpusBtn.click(); // toggles active tab + triggers lazy render (~50ms)
+
+  let tries = 0;
+  (function reveal() {
+    const tbody = document.getElementById('corpus-tbody');
+    if ((!tbody || !tbody.children.length) && tries++ < 20) { setTimeout(reveal, 50); return; }
+    if (!tbody || !tbody.children.length) return;
+
+    // Reset corpus filters so a currently-filtered target is guaranteed in the DOM.
+    const cs = document.getElementById('corpus-search');
+    const yf = document.getElementById('corpus-year-filter');
+    const tf = document.getElementById('corpus-theme-filter');
+    let changed = false;
+    if (cs && cs.value) { cs.value = ''; cs.dispatchEvent(new Event('input')); changed = true; }
+    if (yf && yf.value) { yf.value = ''; yf.dispatchEvent(new Event('change')); changed = true; }
+    if (tf && tf.value) { tf.value = ''; tf.dispatchEvent(new Event('change')); changed = true; }
+
+    setTimeout(() => {
+      const esc = (window.CSS && CSS.escape) ? CSS.escape(slug || '') : (slug || '');
+      let row = slug ? tbody.querySelector(`tr[data-slug="${esc}"]`) : null;
+      if (!row && title) {
+        row = Array.from(tbody.querySelectorAll('tr')).find(tr => {
+          const a = tr.querySelector('.title-cell a');
+          return a && a.textContent.trim() === title.trim();
+        });
+      }
+      if (!row) return;
+      row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      row.classList.remove('corpus-row-target');
+      void row.offsetWidth; // force reflow so the animation restarts on repeat clicks
+      row.classList.add('corpus-row-target');
+    }, changed ? 30 : 0);
+  })();
+}
+
 // ===== TAB 8: ASK DAD (RAG Chat) =====
 function renderAskDad() {
   const messagesEl = document.getElementById('chat-messages');
@@ -1457,6 +1526,116 @@ function renderAskDad() {
 
   countEl.textContent = EMBEDDINGS_DATA.slugs.length;
   const hasSnippets = EMBEDDINGS_DATA.snippets && EMBEDDINGS_DATA.snippets.some(s => s);
+
+  // ----- Chat persistence (localStorage, versioned) -----
+  const CHAT_STORAGE_KEY = 'digitaldad_askdad_v1';
+  const CHAT_SCHEMA_VERSION = 1;
+  let transcript = [];
+
+  function loadTranscript() {
+    try {
+      const raw = localStorage.getItem(CHAT_STORAGE_KEY);
+      if (!raw) return [];
+      const data = JSON.parse(raw);
+      // Guard on the schema version so an old/foreign payload is ignored, not crashed on.
+      if (!data || data.version !== CHAT_SCHEMA_VERSION || !Array.isArray(data.turns)) return [];
+      return data.turns;
+    } catch { return []; }
+  }
+  function saveTranscript() {
+    try {
+      localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify({ version: CHAT_SCHEMA_VERSION, turns: transcript }));
+    } catch {}
+  }
+  function markdownish(text) {
+    return (text || '').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+  }
+  // Persist only what display + deep-link need (title/date/url/slug) — never the full snippet,
+  // which is large and only needed at query time for the system prompt.
+  function leanSources(sources) {
+    return (sources || []).map(s => ({ title: s.title, date: s.date, url: s.url, slug: s.slug }));
+  }
+  function makeSourcesEl(sources) {
+    const div = document.createElement('div');
+    div.className = 'chat-sources';
+    div.appendChild(document.createTextNode('Sources: '));
+    sources.forEach((s, i) => {
+      if (i > 0) div.appendChild(document.createTextNode(' · '));
+      const a = document.createElement('a');
+      a.href = '#';
+      a.textContent = `[${i + 1}] ${s.title} (${(s.date || '').slice(0, 4)})`;
+      a.title = 'Open in Raw Corpus';
+      a.addEventListener('click', e => { e.preventDefault(); deepLinkToCorpus(s.slug, s.title); });
+      div.appendChild(a);
+      if (s.url && s.url !== '#') {
+        div.appendChild(document.createTextNode(' '));
+        const ext = document.createElement('a');
+        ext.href = s.url; ext.target = '_blank'; ext.rel = 'noopener';
+        ext.textContent = '↗'; ext.title = 'Open original on Forbes';
+        div.appendChild(ext);
+      }
+    });
+    return div;
+  }
+  function appendUserMsg(text) {
+    const d = document.createElement('div');
+    d.className = 'chat-msg user';
+    const b = document.createElement('div');
+    b.className = 'chat-bubble';
+    b.textContent = text;
+    d.appendChild(b);
+    messagesEl.appendChild(d);
+    return d;
+  }
+  function appendAssistantMsg(text, sources) {
+    const d = document.createElement('div');
+    d.className = 'chat-msg assistant';
+    const b = document.createElement('div');
+    b.className = 'chat-bubble';
+    b.innerHTML = markdownish(text);
+    d.appendChild(b);
+    if (sources && sources.length) d.appendChild(makeSourcesEl(sources));
+    messagesEl.appendChild(d);
+    return d;
+  }
+
+  // Restore prior conversation (greeting stays as the first child).
+  transcript = loadTranscript();
+  transcript.forEach(t => {
+    if (t.role === 'user') appendUserMsg(t.text);
+    else appendAssistantMsg(t.text, t.sources || []);
+  });
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+
+  const exportBtn = document.getElementById('chat-export');
+  const clearBtn = document.getElementById('chat-clear');
+  function exportTranscript() {
+    if (!transcript.length) return;
+    const today = new Date().toISOString().slice(0, 10);
+    let md = `# Ask Dad — transcript\n\n_Exported ${today} from the Digital Dad archive._\n\n`;
+    transcript.forEach(t => {
+      if (t.role === 'user') { md += `## Q: ${t.text}\n\n`; return; }
+      md += `${t.text}\n\n`;
+      if (t.sources && t.sources.length) {
+        md += 'Sources:\n';
+        t.sources.forEach((s, i) => { md += `${i + 1}. ${s.title} (${(s.date || '').slice(0, 4)}) — ${s.url || ''}\n`; });
+        md += '\n';
+      }
+    });
+    const blob = new Blob([md], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `ask-dad-transcript-${today}.md`;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  }
+  function clearTranscript() {
+    transcript = [];
+    try { localStorage.removeItem(CHAT_STORAGE_KEY); } catch {}
+    while (messagesEl.children.length > 1) messagesEl.removeChild(messagesEl.lastChild);
+  }
+  if (exportBtn) exportBtn.addEventListener('click', exportTranscript);
+  if (clearBtn) clearBtn.addEventListener('click', clearTranscript);
 
   // Tier toggle state
   let chatTier = 2;
@@ -1534,10 +1713,7 @@ function renderAskDad() {
     sendBtn.disabled = true;
 
     // Add user message
-    const userDiv = document.createElement('div');
-    userDiv.className = 'chat-msg user';
-    userDiv.innerHTML = `<div class="chat-bubble">${query.replace(/</g,'&lt;')}</div>`;
-    messagesEl.appendChild(userDiv);
+    appendUserMsg(query);
     messagesEl.scrollTop = messagesEl.scrollHeight;
 
     // Embed query and retrieve top-8 using hybrid approach:
@@ -1677,7 +1853,7 @@ function renderAskDad() {
             const delta = parsed.choices?.[0]?.delta?.content;
             if (delta) {
               fullText += delta;
-              bubbleDiv.innerHTML = fullText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+              bubbleDiv.innerHTML = markdownish(fullText);
               messagesEl.scrollTop = messagesEl.scrollHeight;
             }
           } catch {}
@@ -1690,7 +1866,7 @@ function renderAskDad() {
         try {
           responseData = JSON.parse(rawChunks);
           fullText = responseData.choices?.[0]?.message?.content || 'No response received.';
-          bubbleDiv.innerHTML = fullText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+          bubbleDiv.innerHTML = markdownish(fullText);
         } catch {}
       }
 
@@ -1727,13 +1903,13 @@ function renderAskDad() {
         costInfo.textContent = costLine + ' · Check openrouter.ai/activity for exact cost';
       }
 
-      // Add source footnotes
-      const sourcesDiv = document.createElement('div');
-      sourcesDiv.className = 'chat-sources';
-      sourcesDiv.innerHTML = 'Sources: ' + sources.map((s, i) =>
-        `<a href="${s.url}" target="_blank" rel="noopener">[${i + 1}] ${s.title} (${(s.date || '').slice(0, 4)})</a>`
-      ).join(' · ');
-      assistantDiv.appendChild(sourcesDiv);
+      // Add source footnotes (clickable: deep-link into the Raw Corpus tab)
+      assistantDiv.appendChild(makeSourcesEl(sources));
+
+      // Persist this completed exchange so a refresh restores it.
+      transcript.push({ role: 'user', text: query });
+      transcript.push({ role: 'assistant', text: fullText, sources: leanSources(sources) });
+      saveTranscript();
 
     } catch (err) {
       bubbleDiv.innerHTML = `<span style="color:var(--accent)">Error: ${err.message}. Make sure the local-llm-conductor is running.</span>`;
