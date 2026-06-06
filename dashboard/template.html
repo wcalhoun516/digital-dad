@@ -1530,6 +1530,7 @@ function renderAskDad() {
   // ----- Chat persistence (localStorage, versioned) -----
   const CHAT_STORAGE_KEY = 'digitaldad_askdad_v1';
   const CHAT_SCHEMA_VERSION = 1;
+  const CHAT_MAX_TURNS = 200; // cap stored history so localStorage can't grow unbounded
   let transcript = [];
 
   function loadTranscript() {
@@ -1539,13 +1540,22 @@ function renderAskDad() {
       const data = JSON.parse(raw);
       // Guard on the schema version so an old/foreign payload is ignored, not crashed on.
       if (!data || data.version !== CHAT_SCHEMA_VERSION || !Array.isArray(data.turns)) return [];
-      return data.turns;
+      return data.turns.slice(-CHAT_MAX_TURNS);
     } catch { return []; }
   }
   function saveTranscript() {
+    if (transcript.length > CHAT_MAX_TURNS) transcript = transcript.slice(-CHAT_MAX_TURNS);
     try {
       localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify({ version: CHAT_SCHEMA_VERSION, turns: transcript }));
     } catch {}
+    updateChatControls();
+  }
+  function updateChatControls() {
+    const empty = !transcript.length;
+    const exp = document.getElementById('chat-export');
+    const clr = document.getElementById('chat-clear');
+    if (exp) exp.disabled = empty;
+    if (clr) clr.disabled = empty;
   }
   function markdownish(text) {
     return (text || '').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
@@ -1633,9 +1643,11 @@ function renderAskDad() {
     transcript = [];
     try { localStorage.removeItem(CHAT_STORAGE_KEY); } catch {}
     while (messagesEl.children.length > 1) messagesEl.removeChild(messagesEl.lastChild);
+    updateChatControls();
   }
   if (exportBtn) exportBtn.addEventListener('click', exportTranscript);
   if (clearBtn) clearBtn.addEventListener('click', clearTranscript);
+  updateChatControls();
 
   // Tier toggle state
   let chatTier = 2;
