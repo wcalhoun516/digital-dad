@@ -189,6 +189,27 @@ make analyze ARGS="predictions --remote"
 source article, topic, confidence language, and LLM verdict with reasoning.
 Aggregate stats show the breakdown by verdict, topic, and year.
 
+**Evidence-grounded verdicts (optional, owner-run):** Beyond the from-memory LLM
+verdict, an evidence-augmented pass can ground each ruling in external sources and
+record the receipts. It makes paid T3 calls and refuses to run if the conductor is
+down, so it's an explicit owner command — never automation:
+
+```bash
+# Backfill grounded verdicts for a handful of predictions (resumable, saves every 10)
+make backfill-verdicts ARGS="--limit 20"
+
+# Or ground them against evidence you curate by hand (fully offline, deterministic)
+make backfill-verdicts ARGS="--evidence-file evidence.json"
+```
+
+It writes `evidence_verdict` / `evidence_verdict_reasoning` / `evidence_sources`
+fields. Verdict precedence is **human > evidence > llm > status**: the grounded
+verdict outranks the from-memory one, but a family `make adjudicate` ruling always
+wins. The dashboard marks grounded cards with an "evidence-grounded" badge and links
+the sources. Wiring a live web-search evidence provider is the owner's integration
+step (confirm the conductor's search contract first); the default pass supplies no
+evidence and lets the model rule from its own knowledge.
+
 ## "On This Day" Weekly Email
 
 Every Sunday, the weekly cron picks the most thematically relevant article from

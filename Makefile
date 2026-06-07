@@ -4,7 +4,7 @@ PYTHON := .venv/bin/python
 # ruff findings (broadening the scope is a follow-up roadmap item, #1-3/cleanup).
 LINT_PATHS := tests
 
-.PHONY: scrape analyze training dashboard all serve search on-this-day send-on-this-day adjudicate clean test lint fmt verify
+.PHONY: scrape analyze training dashboard all serve search on-this-day send-on-this-day adjudicate backfill-verdicts clean test lint fmt verify
 
 scrape:
 	$(PYTHON) -m scraper $(ARGS)
@@ -39,6 +39,12 @@ send-on-this-day:
 # Human verdicts win and are written back after each ruling (resumable). ARGS e.g. --limit 20.
 adjudicate:
 	$(PYTHON) -m analysis.adjudicate $(ARGS)
+
+# Owner-gated: evidence-augmented verdict backfill. Makes paid T3 calls and refuses to run
+# if the conductor is down, so run it deliberately (NOT from automation). Resumable +
+# incremental. ARGS e.g. --limit 20 or --evidence-file evidence.json. Adjudicate afterwards.
+backfill-verdicts:
+	$(PYTHON) -m analysis.verdict_backfill $(ARGS)
 
 test:
 	$(PYTHON) -m pytest -q

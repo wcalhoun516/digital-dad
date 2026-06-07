@@ -5,8 +5,9 @@ prediction but deliberately leaves ``status`` at ``pending`` — an LLM guess is
 authoritative ruling on how Dr. Calhoun's bets turned out. This module lets the family
 confirm or override those guesses by hand. A human ruling always wins.
 
-Precedence for a prediction's effective verdict: ``human_verdict`` > ``llm_verdict`` >
-``status`` > ``"pending"``. Adjudicating writes ``human_verdict`` (plus a free-text note
+Precedence for a prediction's effective verdict: ``human_verdict`` > ``evidence_verdict``
+> ``llm_verdict`` > ``status`` > ``"pending"`` (the evidence-grounded verdict from
+``verdict_backfill`` outranks the ungrounded one). Adjudicating writes ``human_verdict`` (plus a free-text note
 and timestamp), mirrors it into ``status``, and stamps ``verdict_source = "human"`` so the
 dashboard can show who decided.
 
@@ -40,9 +41,11 @@ _KEYMAP = {
 def effective_verdict(prediction: dict) -> str:
     """Resolve a prediction's effective verdict by precedence.
 
-    human_verdict > llm_verdict > status > "pending". Empty/missing values are skipped.
+    human_verdict > evidence_verdict > llm_verdict > status > "pending". The
+    evidence-grounded verdict (from ``verdict_backfill``) outranks the ungrounded
+    ``llm_verdict`` but a human ruling still wins. Empty/missing values are skipped.
     """
-    for key in ("human_verdict", "llm_verdict", "status"):
+    for key in ("human_verdict", "evidence_verdict", "llm_verdict", "status"):
         value = prediction.get(key)
         if value:
             return value
@@ -50,9 +53,11 @@ def effective_verdict(prediction: dict) -> str:
 
 
 def effective_source(prediction: dict) -> str:
-    """Return who the effective verdict came from: "human", "llm", or "pending"."""
+    """Return who the effective verdict came from: "human", "evidence", "llm", or "pending"."""
     if prediction.get("human_verdict"):
         return "human"
+    if prediction.get("evidence_verdict"):
+        return "evidence"
     if prediction.get("llm_verdict"):
         return "llm"
     return "pending"
