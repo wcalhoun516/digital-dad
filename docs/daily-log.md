@@ -48,15 +48,17 @@ Format:
 
 <!-- entries below -->
 
-### 2026-06-06 — dashboard — ready-for-review
-- PR: https://github.com/wcalhoun516/digital-dad/pull/8
-- Source: plan:ready/0005
-- Summary: Ask Dad polish (plan 0005, complete → moved to `plans/done/`). Chat persistence
-  (versioned localStorage, restore-on-load, Clear + Export-to-Markdown) and clickable citation
-  deep-links that jump to the article's row in the Raw Corpus tab and flash-highlight it.
-  Deepened with a 200-turn history cap + Export/Clear disabled-when-empty. Verified via build +
-  65-test suite + lint + JS delimiter balance; **live browser UI test not run** (headless, no
-  browser tooling) — reviewer should do the interaction pass before merging.
+### 2026-06-07 — dashboard — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/9
+- Source: plan:ready/0006
+- Summary: Mobile-responsive dashboard, first slice (plan 0006 step 1). Added the dashboard's
+  first `@media` layer to `dashboard/template.html`: scrollable 9-tab nav, fluid header/padding
+  + scaled type at 768/480px, single-column chart grid, horizontally-scrollable wide tables.
+  Deepened by giving the fixed 400×400 radar a `viewBox` so it scales on phones, and recorded
+  the CSS-foundation-first approach (D3 resize deferred to step 2) as ADR D13. TDD'd with 6
+  tests (`tests/test_dashboard_responsive.py`); verified via `make verify` (lint + 71 tests +
+  dashboard build). **Live phone-width browser pass not run** (headless, no preview tooling) —
+  reviewer should eyeball ~375px before merging. Plan left in `ready/` (only step 1 done).
 
 ### 2026-06-04 — analysis — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/6

@@ -79,3 +79,14 @@ whole codebase — nothing is off-limits to *edit*. Safety comes from git/proces
 other `daily/*` branches, leave the human-curated roadmap/changelog alone), not from
 file bans.
 **Implication:** review the draft PR each day — that's the safety net, by design.
+
+### D13 — Mobile-responsive is CSS-foundation-first; D3 chart resize deferred
+**Why:** the family opens the dashboard on phones (roadmap #20). The cheap, low-risk,
+high-coverage win is a media-query layer (scrollable tab bar, fluid padding/type, single-
+column grids, horizontally-scrollable tables) plus making fixed-size SVGs scale via `viewBox`.
+The theme-map and linguistic charts already size from their container; only the radar was
+fixed (now `viewBox`-scaled). Re-rendering D3 charts on resize/orientation change is a
+separate, heavier slice (plan 0006 step 2) that genuinely needs live-browser verification.
+**Implication:** the CSS layer lives behind `@media` guards in `dashboard/template.html`
+(no desktop regression) and is locked in by `tests/test_dashboard_responsive.py`. A future
+run does step 2 (container-driven re-render) with real device/preview screenshots.
