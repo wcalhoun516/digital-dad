@@ -54,8 +54,18 @@ proceed to §3+.
 List open `daily/*` PRs and read their bodies (the `**Status:**` and `**Last update:**` keys
 from §8).
 - If any has `**Status:** in-progress` **and** `**Last update:**` is **< 3 days** old:
-  **resume that PR** — check out its branch, re-read its `## Where I left off`, and continue
-  its plan from §7. Prefer the most recently updated one. Do **not** start new work today.
+  **resume that PR** — check out its branch, then **bring it current with `main` before doing
+  anything else.** A resumed branch can be days old, and merging it as-is can silently revert
+  files that landed on `main` in the meantime (this has regressed the launchd trampoline twice).
+  Rebase, don't merge:
+  ```
+  git fetch origin && git rebase origin/main
+  ```
+  On conflict, keep `origin/main`'s version for any file **outside today's task scope** — only
+  retain your branch's version of files you intentionally changed for this task. Then
+  `git push --force-with-lease` (allowed on your own `daily/*` branch — see §11). Now re-read
+  its `## Where I left off` and continue its plan from §7. Prefer the most recently updated one.
+  Do **not** start new work today.
 - If an in-progress PR's `**Last update:**` is **≥ 3 days** old: flip it to
   `**Status:** blocked — stale` via `gh pr edit` (update `**Last update:**` too), note it in
   the run history, and do **not** auto-resume it (a human should look). Then continue to §4 to
@@ -107,6 +117,12 @@ Before writing any code:
    gh pr create --draft --base main --title "daily/<date> <task>" --body-file <tmp body>
    ```
    Keep a clean way to update it (`gh pr edit <num> --body-file …`).
+4. **Before flipping the PR to `ready-for-review` (§9), rebase onto `main` one more time** so
+   the merge is a clean fast-forward and can't clobber anything that landed during the day:
+   ```
+   git fetch origin && git rebase origin/main && git push --force-with-lease
+   ```
+   Resolve conflicts the same way as §3 (keep `origin/main` for out-of-scope files).
 
 ## §7 — Execution loop (small, verified, always-pushed)
 
@@ -197,8 +213,13 @@ your branch, and push (so it's part of the PR). Format:
 The owner has said no product file is off-limits to *edit* — you may work anywhere in the
 codebase. Safety is enforced structurally. You **MUST NOT**:
 - merge any PR, or mark a PR non-draft to trigger auto-merge;
-- push to `main` (or any non-`daily/*` branch), or `git push --force` / `--force-with-lease`;
-- `git reset --hard`, `git rebase`, or otherwise rewrite shared history;
+- push to `main` or any non-`daily/*` branch; or force-push (`--force` / `--force-with-lease`)
+  **any branch other than your own current `daily/*` branch**;
+- rewrite history on `main` or any branch other than your own current `daily/*` branch.
+  *(You **may and should** `git rebase origin/main` and `git push --force-with-lease` on your
+  own current `daily/*` branch to keep it current — it is a single-author draft branch, so this
+  is safe and is the required way to prevent the stale-merge regressions described in §3/§6.
+  Never `git reset --hard` in a way that discards committed work you can't recover.)*
 - edit your own scheduler or anyone's: `scripts/launchd/**`, `scripts/daily_routine_prompt.md`,
   installed LaunchAgents in `~/Library/LaunchAgents/`, or the weekly cron under `bin/**`;
 - edit `docs/roadmap.md` or `docs/changelog.md` (read-only to you — humans curate them);
