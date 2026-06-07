@@ -29,6 +29,7 @@ must-haves, ordered for family/emotional payoff. Each plan is sized to *deepen o
 | 5 | `plans/ready/0005-ask-dad-polish.md` | #18 → #19 (persistence + citation deep-links) |
 | 6 | `plans/ready/0006-mobile-responsive-dashboard.md` | #20 (phones) |
 | 7 | `plans/ready/0007-rag-faithfulness-eval.md` | #25 (trust / voice baseline) |
+| 8 | `plans/ready/0008-geo-llm-finetune.md` | #26a–26f (Geo LLM fine-tune experiments) |
 
 **After the queue drains**, the cold path resumes with an **emotional / family-payoff**
 emphasis — prefer family items (reading room #21, year-in-review #23, anthology #24) before
@@ -103,8 +104,24 @@ the analytical-depth and ops items.
 
 25. **P1 · M · training** — RAG faithfulness eval harness: held-out articles, measure Ask Dad
     citation accuracy and hallucination rate. Establishes the baseline before any fine-tune. *(queued: ready/0007)*
-26. **P2 · L · training** — finish `notebooks/finetune_qlora.ipynb` → a reproducible training
-    script + voice-fidelity eval vs the RAG baseline.
+26. **P2 · L · training — "Geo LLM": fine-tune a George-Calhoun-voice model.** The big one,
+    broken into bite-size, individually-shippable experiments so it fits the daily cadence.
+    Each lands as its own small PR; the ladder is sequenced in `plans/ready/0008-geo-llm-finetune.md`.
+    Builds on the existing `notebooks/finetune_qlora.ipynb` + `training/prepare.py`, and is
+    measured against the #25 RAG baseline. *(queued: ready/0008)*
+    - **26a · S** — Dataset builder: corpus → instruction/chat pairs in his voice + a held-out
+      split (extends `training/prepare.py`; writes `data/training/{train,heldout}.jsonl`).
+    - **26b · S** — Capture the pre-fine-tune **baseline** numbers (RAG voice + factuality from
+      #25) as the bar any fine-tune must beat. One JSON + a short writeup.
+    - **26c · M** — Smallest viable QLoRA run on a small local base (e.g. Qwen2.5-3B / Llama-3.2-3B)
+      via the existing notebook → produce an adapter + a handful of smoke generations. The "is
+      this even tractable on the M4?" experiment.
+    - **26d · M** — Voice-fidelity eval harness: blind A/B (RAG vs fine-tuned vs real excerpts)
+      scored by a judge model through the conductor (T3), plus simple style metrics. Reusable.
+    - **26e · S** — Register the adapter/merged model in the conductor (`models.yaml`) as a
+      tier/function so Ask Dad can *optionally* answer via the fine-tune behind a flag.
+    - **26f · S** — Compare & decide: fine-tune vs RAG on faithfulness + voice; record the call
+      (and cost) in `docs/decisions.md`.
 27. **P3 · M · training** — embedding-model comparison before ever changing the pinned model (D2).
 
 ## docs
