@@ -48,17 +48,15 @@ Format:
 
 <!-- entries below -->
 
-### 2026-06-05 — analysis — ready-for-review
-- PR: https://github.com/wcalhoun516/digital-dad/pull/7
-- Source: plan:ready/0004
-- Summary: Track Record verdict backfill (plan 0004 **step 1**, the last step — completes the
-  plan). New `analysis/verdict_backfill.py` — evidence-augmented grounded-verdict pass with
-  injectable `gather_evidence` + `chat` seams (resumable, saves every N), TDD'd offline with
-  30 tests. Adjudication precedence now `human > evidence > llm > status`; dashboard surfaces
-  grounded verdicts + numbered source links + an "evidence-grounded" badge. Owner-gated
-  `make backfill-verdicts` refuses to run when the conductor is down (paid T3). Conductor was
-  **down** this run, so the live paid backfill was not executed — built + verified the
-  machinery only. Plan 0004 moved to `plans/done/`.
+### 2026-06-06 — dashboard — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/8
+- Source: plan:ready/0005
+- Summary: Ask Dad polish (plan 0005, complete → moved to `plans/done/`). Chat persistence
+  (versioned localStorage, restore-on-load, Clear + Export-to-Markdown) and clickable citation
+  deep-links that jump to the article's row in the Raw Corpus tab and flash-highlight it.
+  Deepened with a 200-turn history cap + Export/Clear disabled-when-empty. Verified via build +
+  65-test suite + lint + JS delimiter balance; **live browser UI test not run** (headless, no
+  browser tooling) — reviewer should do the interaction pass before merging.
 
 ### 2026-06-04 — analysis — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/6
