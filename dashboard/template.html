@@ -502,6 +502,58 @@ footer {
   font-size: 0.75em;
   color: var(--text-muted);
 }
+
+/* ===== RESPONSIVE / MOBILE (plan 0006, step 1) =====
+   Foundation layer only: layout, type scale, and a scrollable tab bar.
+   D3 charts still render at their JS-driven sizes — making them resize to
+   their container is a separate slice (plan 0006 step 2). */
+@media (max-width: 768px) {
+  header { padding: 36px 16px 24px; }
+  header h1 { font-size: 2.1em; }
+
+  /* The 9-tab nav can't fit centered on a phone — scroll it horizontally
+     instead of wrapping or overflowing the viewport. */
+  nav {
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  nav::-webkit-scrollbar { display: none; }
+  nav button { padding: 14px 16px; white-space: nowrap; }
+
+  .tab-content { padding: 24px 14px; }
+
+  /* Desktop uses minmax(400px,1fr), which overflows a ~375px screen. */
+  .chart-grid { grid-template-columns: 1fr; }
+  .chart-card { padding: 18px; }
+
+  /* Contain oversized content rather than scrolling the whole page. */
+  .radar-container { overflow-x: auto; }
+  .tooltip { max-width: 80vw; }
+
+  /* Wide data tables become horizontally scrollable blocks. */
+  .corpus-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (max-width: 480px) {
+  body { font-size: 14px; }
+  header { padding: 28px 14px 18px; }
+  header h1 { font-size: 1.7em; }
+  h2 { font-size: 1.45em; }
+
+  /* Send button drops below the input on the narrowest screens. */
+  .chat-input-row { flex-wrap: wrap; }
+  .chat-input-row button { width: 100%; }
+
+  .prediction-stats { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); }
+}
 </style>
 </head>
 <body>
