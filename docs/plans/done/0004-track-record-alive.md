@@ -47,3 +47,20 @@ emotionally resonant piece — a fair audit of how his bets actually turned out.
 
 - Comparing his hit-rate to other columnists; automated truth-checking without any human
   review (the family adjudication step is the point).
+
+---
+
+## Status — done (2026-06-05)
+
+- **Steps 2–4** shipped in PR #6 (2026-06-04): `analysis/adjudicate.py`, status precedence,
+  calibration report + conviction boards.
+- **Step 1** shipped in PR #7 (2026-06-05): `analysis/verdict_backfill.py` — the
+  evidence-augmented grounded-verdict pass with injectable `gather_evidence` + `chat` seams
+  (resumable, incremental), the `human > evidence > llm > status` precedence, dashboard
+  surfacing of grounded verdicts + sources, and an owner-gated `make backfill-verdicts`.
+  The conductor was **down** during the unattended run, so the *live* paid backfill was not
+  executed — the CLI is owner-gated and refuses to run when the conductor is unreachable.
+  Verified offline with 30 unit tests (fakes for the search + chat seams). **Owner follow-up:**
+  start the conductor and run `make backfill-verdicts ARGS="--limit 20"` (or supply
+  `--evidence-file`), then `make adjudicate` to confirm/override, and wire a real web-search
+  evidence provider if desired.
