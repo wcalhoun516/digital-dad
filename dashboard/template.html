@@ -182,6 +182,9 @@ h3 {
   margin: 40px 0;
 }
 
+/* viewBox lets the radar scale down on narrow screens; on desktop it stays 400px. */
+#radar-svg { max-width: 100%; height: auto; }
+
 .pull-quote {
   border-left: 3px solid var(--accent);
   padding: 12px 24px;
@@ -602,7 +605,7 @@ footer {
 <div class="tab-content" id="tab-psychoprofile">
   <h2>Psychoanalytic Profile</h2>
   <p class="section-desc">An AI-generated portrait of the mind behind the articles.</p>
-  <div class="radar-container"><svg id="radar-svg" width="400" height="400"></svg></div>
+  <div class="radar-container"><svg id="radar-svg" width="400" height="400" viewBox="0 0 400 400"></svg></div>
   <div class="profile-narrative" id="profile-text"></div>
 </div>
 

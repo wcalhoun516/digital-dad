@@ -48,3 +48,11 @@ def test_chart_grid_collapses_on_mobile(template_html: str):
 def test_wide_tables_scroll_on_mobile(template_html: str):
     block = template_html.split("RESPONSIVE / MOBILE", 1)[1]
     assert ".corpus-table" in block
+
+
+def test_radar_svg_scales(template_html: str):
+    # The radar is the one fixed-size (400x400) chart; a viewBox + max-width
+    # rule lets it shrink to fit a phone instead of forcing horizontal scroll.
+    assert 'id="radar-svg"' in template_html
+    assert 'viewBox="0 0 400 400"' in template_html
+    assert "#radar-svg { max-width: 100%; height: auto; }" in template_html
