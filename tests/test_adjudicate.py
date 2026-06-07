@@ -30,6 +30,12 @@ class TestEffectiveVerdict:
         p = {"llm_verdict": "vindicated", "status": "pending"}
         assert effective_verdict(p) == "vindicated"
 
+    def test_evidence_verdict_wins_over_llm_but_not_human(self):
+        p = {"human_verdict": "wrong", "evidence_verdict": "mixed", "llm_verdict": "vindicated"}
+        assert effective_verdict(p) == "wrong"
+        p2 = {"evidence_verdict": "mixed", "llm_verdict": "vindicated", "status": "pending"}
+        assert effective_verdict(p2) == "mixed"
+
     def test_falls_back_to_status_when_no_human_or_llm(self):
         p = {"status": "unfalsifiable"}
         assert effective_verdict(p) == "unfalsifiable"
@@ -48,6 +54,12 @@ class TestEffectiveSource:
 
     def test_llm_when_only_llm_verdict(self):
         assert effective_source({"llm_verdict": "mixed"}) == "llm"
+
+    def test_evidence_when_evidence_present_without_human(self):
+        assert effective_source({"evidence_verdict": "mixed", "llm_verdict": "wrong"}) == "evidence"
+
+    def test_human_still_wins_over_evidence(self):
+        assert effective_source({"human_verdict": "wrong", "evidence_verdict": "mixed"}) == "human"
 
     def test_pending_when_neither(self):
         assert effective_source({"status": "pending"}) == "pending"
