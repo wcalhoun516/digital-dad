@@ -112,3 +112,18 @@ def test_timeline_toggle_does_not_stack_listeners(template_html: str):
     # The sentiment toggle must use onclick assignment, not addEventListener,
     # so repeated redraws don't pile up duplicate click handlers.
     assert "toggleBtn.onclick" in template_html
+
+
+def test_current_tab_tracked_before_render_guard(template_html: str):
+    # currentTab must be assigned before the `if (rendered[name]) return` short-circuit;
+    # otherwise switching to an already-rendered tab wouldn't update the redraw target.
+    body = template_html.split("function renderTab(name)", 1)[1]
+    assign = body.index("currentTab = name")
+    guard = body.index("if (rendered[name]) return")
+    assert assign < guard
+
+
+def test_resize_redraw_forces_fresh_render(redraw_block: str):
+    # The handler must clear the once-only guard so the chart actually re-renders
+    # rather than being skipped as already-rendered.
+    assert "rendered[currentTab] = false" in redraw_block
