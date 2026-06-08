@@ -838,12 +838,14 @@ function renderThemeMap() {
   const articles = THEME_DATA.articles;
   const clusters = THEME_DATA.clusters || [];
   const svg = d3.select('#theme-map-svg');
+  svg.selectAll('*').remove();  // idempotent: a resize redraw must not stack nodes
   const width = svg.node().parentElement.clientWidth;
   const height = Math.max(500, width * 0.6);
   svg.attr('width', width).attr('height', height).attr('viewBox', `0 0 ${width} ${height}`);
 
   // Legend
   const legend = document.getElementById('cluster-legend');
+  legend.innerHTML = '';  // idempotent: rebuild from scratch on every (re)render
   clusters.forEach(c => {
     const item = document.createElement('div');
     item.className = 'item';
@@ -927,6 +929,7 @@ function renderTimeline() {
 
   const container = document.getElementById('timeline-container');
   const svg = d3.select('#timeline-svg');
+  svg.selectAll('*').remove();  // idempotent: a resize redraw must not stack axes
   const margin = { top: 30, right: 30, bottom: 50, left: 40 };
   const width = Math.max(container.clientWidth, articles.length * 12);
   const height = 350;
@@ -989,11 +992,13 @@ function renderTimeline() {
   const toggleBtn = document.getElementById('timeline-color-toggle');
   if (hasSentiment && toggleBtn) {
     toggleBtn.style.display = 'inline-block';
-    toggleBtn.addEventListener('click', () => {
+    // onclick (not addEventListener): a resize redraw re-runs this function, and
+    // assignment replaces the handler instead of stacking a duplicate each time.
+    toggleBtn.onclick = () => {
       colorBySentiment = !colorBySentiment;
       toggleBtn.textContent = `Color by: ${colorBySentiment ? 'Sentiment' : 'Theme'}`;
       circles.attr('fill', d => getColor(d));
-    });
+    };
   } else if (toggleBtn) {
     toggleBtn.style.display = 'none';
   }
@@ -2131,7 +2136,9 @@ function renderTrackRecord() {
   document.getElementById('prediction-confidence-filter').addEventListener('change', () => renderList(getFiltered()));
 }
 
+let currentTab = null;
 function renderTab(name) {
+  currentTab = name;  // tracked even for cached tabs, so resize redraw knows the target
   if (rendered[name]) return;
   rendered[name] = true;
   switch(name) {
@@ -2159,6 +2166,24 @@ window.addEventListener('DOMContentLoaded', () => {
   // Render the initially active tab
   const activeBtn = document.querySelector('nav button.active');
   if (activeBtn) renderTab(activeBtn.dataset.tab);
+});
+
+// ===== RESPONSIVE REDRAW (plan 0006, step 2) =====
+// The pixel-sized D3 charts measure their container only at render time. When the
+// viewport changes (window resize / phone orientation flip), those charts keep stale
+// dimensions. Re-render the active chart tab so it re-measures and refits — debounced
+// so a drag-resize fires once. Restricted to the stateless chart tabs: re-rendering an
+// interactive tab (Ask Dad chat, Corpus filters) would wipe the user's in-flight state.
+const RESIZE_REDRAW_TABS = new Set(['themes', 'timeline']);
+let _resizeTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(_resizeTimer);
+  _resizeTimer = setTimeout(() => {
+    if (currentTab && RESIZE_REDRAW_TABS.has(currentTab)) {
+      rendered[currentTab] = false;  // bypass the once-only guard for a fresh redraw
+      renderTab(currentTab);
+    }
+  }, 200);
 });
 </script>
 </body>
