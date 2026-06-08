@@ -48,6 +48,11 @@ Format:
 
 <!-- entries below -->
 
+### 2026-06-08 — dashboard — in-progress
+- PR: (opening)
+- Source: plan:ready/0006
+- Summary: Plan 0006 step 2 — responsive D3 charts (resize-redraw). In progress.
+
 ### 2026-06-07 — dashboard — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/9
 - Source: plan:ready/0006
