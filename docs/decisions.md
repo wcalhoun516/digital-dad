@@ -90,3 +90,21 @@ separate, heavier slice (plan 0006 step 2) that genuinely needs live-browser ver
 **Implication:** the CSS layer lives behind `@media` guards in `dashboard/template.html`
 (no desktop regression) and is locked in by `tests/test_dashboard_responsive.py`. A future
 run does step 2 (container-driven re-render) with real device/preview screenshots.
+
+### D14 — D3 resize-redraw re-renders the active tab; only the stateless chart tabs
+**Why:** plan 0006 step 2. The pixel-sized charts (theme map, timeline) read their container
+width once, at render time, so a window resize / phone orientation flip left them at stale
+dimensions. Rather than teach each chart a bespoke "update geometry" path, a single debounced
+`resize` handler just re-renders the active tab (it already measures the container on entry).
+Two consequences had to be designed for: (1) re-rendering must be **idempotent**, so each
+chart now clears its SVG (`selectAll('*').remove()`) and rebuilds its legend, and the timeline
+toggle uses `onclick =` (assignment replaces) instead of `addEventListener` (which would stack
+a duplicate handler per redraw); (2) redraw is **restricted to a `RESIZE_REDRAW_TABS` set
+(`themes`, `timeline`)** — re-rendering an interactive tab (Ask Dad chat, Corpus filters) would
+wipe the user's in-flight state. The radar and linguistic charts already scale via `viewBox`
+(D13), so they're intentionally left out of the redraw set.
+**Implication:** locked in by `tests/test_dashboard_responsive.py`. Adding a new chart tab that
+needs resize behavior means making its render idempotent first, then adding it to the set.
+**Still pending:** a live phone-width browser pass (headless run, no preview tooling) — a
+reviewer should rotate/resize a real viewport before merging. Plan 0006 steps 3–4 (table
+reflow, dual-breakpoint device verification) remain.

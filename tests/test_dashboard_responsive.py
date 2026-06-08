@@ -56,3 +56,74 @@ def test_radar_svg_scales(template_html: str):
     assert 'id="radar-svg"' in template_html
     assert 'viewBox="0 0 400 400"' in template_html
     assert "#radar-svg { max-width: 100%; height: auto; }" in template_html
+
+
+# ===== plan 0006, step 2: D3 charts resize to their container =====
+# The pixel-sized D3 charts (theme map, timeline) measure their container only
+# at first render. On a viewport change (window resize / phone orientation flip)
+# they keep stale dimensions, so the family sees a chart that doesn't fit. These
+# guard the resize-redraw layer.
+
+REDRAW_MARKER = "RESPONSIVE REDRAW"
+
+
+@pytest.fixture(scope="module")
+def redraw_block(template_html: str) -> str:
+    assert REDRAW_MARKER in template_html, "resize-redraw layer is missing"
+    return template_html.split(REDRAW_MARKER, 1)[1]
+
+
+def test_charts_redraw_on_window_resize(redraw_block: str):
+    # A window resize must trigger a re-render of the active chart.
+    assert "window.addEventListener('resize'" in redraw_block
+
+
+def test_resize_redraw_is_debounced(redraw_block: str):
+    # A drag-resize fires dozens of events; debounce so we redraw once.
+    assert "clearTimeout" in redraw_block
+    assert "setTimeout" in redraw_block
+
+
+def test_resize_redraw_only_redraws_stateless_chart_tabs(redraw_block: str):
+    # Re-rendering must be restricted to the stateless chart tabs. Redrawing an
+    # interactive tab (Ask Dad chat, Corpus filters) would wipe in-flight state.
+    set_line = next(
+        line for line in redraw_block.splitlines() if "RESIZE_REDRAW_TABS" in line and "=" in line
+    )
+    assert "'themes'" in set_line
+    assert "'timeline'" in set_line
+    assert "askdad" not in set_line
+    assert "corpus" not in set_line
+
+
+def test_theme_map_clears_legend_before_redraw(template_html: str):
+    # renderThemeMap appends legend items; without clearing first, a redraw
+    # duplicates the whole legend. Must reset it to be idempotent.
+    assert "legend.innerHTML = ''" in template_html
+
+
+def test_chart_renders_clear_svg_before_redraw(template_html: str):
+    # Both pixel-sized charts must wipe their SVG before drawing so a redraw
+    # doesn't stack duplicate axes/nodes. Expect a clear in each.
+    assert template_html.count("selectAll('*').remove()") >= 2
+
+
+def test_timeline_toggle_does_not_stack_listeners(template_html: str):
+    # The sentiment toggle must use onclick assignment, not addEventListener,
+    # so repeated redraws don't pile up duplicate click handlers.
+    assert "toggleBtn.onclick" in template_html
+
+
+def test_current_tab_tracked_before_render_guard(template_html: str):
+    # currentTab must be assigned before the `if (rendered[name]) return` short-circuit;
+    # otherwise switching to an already-rendered tab wouldn't update the redraw target.
+    body = template_html.split("function renderTab(name)", 1)[1]
+    assign = body.index("currentTab = name")
+    guard = body.index("if (rendered[name]) return")
+    assert assign < guard
+
+
+def test_resize_redraw_forces_fresh_render(redraw_block: str):
+    # The handler must clear the once-only guard so the chart actually re-renders
+    # rather than being skipped as already-rendered.
+    assert "rendered[currentTab] = false" in redraw_block

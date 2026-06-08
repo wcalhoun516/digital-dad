@@ -48,6 +48,22 @@ Format:
 
 <!-- entries below -->
 
+### 2026-06-08 — dashboard — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/13
+- Source: plan:ready/0006
+- Summary: Plan 0006 step 2 — D3 charts re-render on viewport change. Added a debounced
+  window `resize` handler that re-renders the active chart tab so the pixel-sized charts
+  (theme map, timeline) re-measure their container after a resize / phone rotation. Made
+  `renderThemeMap`/`renderTimeline` idempotent (clear SVG + legend; sentiment toggle uses
+  `onclick =` not `addEventListener`) so a redraw can't stack duplicate nodes/axes/listeners.
+  Redraw is limited to a `RESIZE_REDRAW_TABS` set (themes, timeline) so interactive tabs
+  (Ask Dad, Corpus) keep in-flight state; radar/linguistic already scale via viewBox (D13).
+  TDD'd with 8 new structural tests (`tests/test_dashboard_responsive.py`); recorded the
+  approach as ADR D14. Verified via `make verify` (ruff + 112 tests + dashboard build).
+  **Live phone-width browser pass not run** (headless, no preview tooling) — reviewer should
+  rotate/resize a real ~375px viewport before merging. Plan 0006 left in `ready/` (steps 3–4
+  — table reflow + dual-breakpoint device verification — remain).
+
 ### 2026-06-07 — dashboard — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/9
 - Source: plan:ready/0006
