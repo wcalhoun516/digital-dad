@@ -624,6 +624,9 @@ footer {
     color: var(--accent);
   }
   .corpus-table .tag-cell { flex-wrap: wrap; justify-content: flex-end; }
+  /* Articles with no theme/tags leave an empty <td>; hide it so its
+     data-label doesn't render as an orphan label with no value. */
+  .corpus-table td:empty { display: none; }
 }
 </style>
 </head>

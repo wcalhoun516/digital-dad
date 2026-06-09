@@ -171,3 +171,13 @@ def test_card_reflow_lets_titles_wrap(small_phone_block: str):
     # the card layer must override it so long titles wrap inside the card.
     block = small_phone_block.split(REFLOW_MARKER, 1)[1]
     assert "white-space: normal" in block
+
+
+def test_card_reflow_hides_empty_cells(small_phone_block: str):
+    # Many articles have no cluster_label (and some no tags), so those <td>s are
+    # empty. In card mode an empty cell would still render its data-label via
+    # ::before — an orphan "Theme"/"Tags" label with no value. Hide empty cells.
+    block = small_phone_block.split(REFLOW_MARKER, 1)[1]
+    assert ".corpus-table td:empty" in block
+    empty_rule = block.split(".corpus-table td:empty", 1)[1].split("}", 1)[0]
+    assert "display: none" in empty_rule
