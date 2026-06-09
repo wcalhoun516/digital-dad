@@ -48,6 +48,22 @@ Format:
 
 <!-- entries below -->
 
+### 2026-06-09 — dashboard — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/14
+- Source: plan:ready/0006
+- Summary: Plan 0006 step 3 — the Raw Corpus table (the one remaining wide
+  `<table>`; Track Record already renders as cards) now reflows into labelled
+  cards at ≤480px instead of forcing a horizontal scroll. Header visually hidden,
+  cells block-level, each field name drawn from a new `data-label` via
+  `td::before`; long titles wrap, and empty theme/tags cells are hidden
+  (`td:empty`) so a card never shows an orphan label. Gives a 3-step ladder:
+  desktop table → ≤768px scroll → ≤480px cards. TDD'd with 5 new tests
+  (`tests/test_dashboard_responsive.py`, now 117 total). Verified via `make verify`
+  (ruff + 117 tests + dashboard build) and confirmed the built index.html carries
+  the change. **Live phone-width browser pass not run** (headless, no preview
+  tooling) — reviewer should eyeball ~375px Raw Corpus before merging. Plan 0006
+  left in `ready/` (step 4 — dual-breakpoint device verification — remains).
+
 ### 2026-06-08 — dashboard — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/13
 - Source: plan:ready/0006
