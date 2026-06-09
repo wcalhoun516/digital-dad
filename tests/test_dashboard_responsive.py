@@ -127,3 +127,57 @@ def test_resize_redraw_forces_fresh_render(redraw_block: str):
     # The handler must clear the once-only guard so the chart actually re-renders
     # rather than being skipped as already-rendered.
     assert "rendered[currentTab] = false" in redraw_block
+
+
+# ===== plan 0006, step 3: wide tables reflow into cards on phones =====
+# The Raw Corpus table is the one remaining wide <table> (Track Record already
+# renders as .prediction-card). Horizontal scroll (step 1) is awkward at ~375px:
+# the title truncates and you scroll a 5-column grid sideways. At the small-phone
+# breakpoint each row should instead stack into a labelled card.
+
+REFLOW_MARKER = "CORPUS CARD REFLOW"
+
+
+@pytest.fixture(scope="module")
+def small_phone_block(template_html: str) -> str:
+    # Everything after the small-phone breakpoint opens.
+    assert "@media (max-width: 480px)" in template_html
+    return template_html.split("@media (max-width: 480px)", 1)[1]
+
+
+def test_corpus_cells_carry_data_labels(template_html: str):
+    # Each card cell shows its column name via td::before { content: attr(data-label) },
+    # so the JS row builder must stamp a data-label on every <td>.
+    for label in ("Date", "Title", "Words", "Tags", "Theme"):
+        assert f'data-label="{label}"' in template_html
+
+
+def test_corpus_table_reflows_to_cards_on_small_phone(small_phone_block: str):
+    # The reflow layer must be discoverable and pull its label text from data-label.
+    assert REFLOW_MARKER in small_phone_block
+    assert "content: attr(data-label)" in small_phone_block
+
+
+def test_card_reflow_stacks_cells_as_blocks(small_phone_block: str):
+    # Cells/rows must become block-level so each row stacks into a card instead of
+    # staying a single horizontally-scrolled table row.
+    block = small_phone_block.split(REFLOW_MARKER, 1)[1]
+    assert ".corpus-table td" in block
+    assert "display: block" in block
+
+
+def test_card_reflow_lets_titles_wrap(small_phone_block: str):
+    # Step 1's <=768px rule sets white-space: nowrap for the scroll treatment;
+    # the card layer must override it so long titles wrap inside the card.
+    block = small_phone_block.split(REFLOW_MARKER, 1)[1]
+    assert "white-space: normal" in block
+
+
+def test_card_reflow_hides_empty_cells(small_phone_block: str):
+    # Many articles have no cluster_label (and some no tags), so those <td>s are
+    # empty. In card mode an empty cell would still render its data-label via
+    # ::before — an orphan "Theme"/"Tags" label with no value. Hide empty cells.
+    block = small_phone_block.split(REFLOW_MARKER, 1)[1]
+    assert ".corpus-table td:empty" in block
+    empty_rule = block.split(".corpus-table td:empty", 1)[1].split("}", 1)[0]
+    assert "display: none" in empty_rule

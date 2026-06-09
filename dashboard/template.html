@@ -579,6 +579,54 @@ footer {
   .chat-input-row button { width: 100%; }
 
   .prediction-stats { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); }
+
+  /* ===== CORPUS CARD REFLOW (plan 0006, step 3) =====
+     At ~375px the <=768px horizontal-scroll treatment forces you to drag a
+     5-column grid sideways with the title truncated. Reflow each row into a
+     labelled card instead: hide the header, stack cells as blocks, and pull
+     each cell's field name from its data-label via ::before. */
+  .corpus-table thead {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    border: 0;
+  }
+  .corpus-table, .corpus-table tbody, .corpus-table tr, .corpus-table td {
+    display: block;
+    width: auto;
+    white-space: normal;
+  }
+  .corpus-table tr {
+    margin-bottom: 14px;
+    padding: 8px 14px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--bg-card);
+  }
+  .corpus-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 14px;
+    padding: 6px 0;
+    border-bottom: none;
+    text-align: right;
+  }
+  .corpus-table td::before {
+    content: attr(data-label);
+    flex: 0 0 auto;
+    font-family: var(--mono);
+    font-size: 0.7em;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+  }
+  .corpus-table .tag-cell { flex-wrap: wrap; justify-content: flex-end; }
+  /* Articles with no theme/tags leave an empty <td>; hide it so its
+     data-label doesn't render as an orphan label with no value. */
+  .corpus-table td:empty { display: none; }
 }
 </style>
 </head>
@@ -1365,11 +1413,11 @@ function renderCorpus() {
       const tr = document.createElement('tr');
       tr.dataset.slug = a.slug || '';
       tr.innerHTML = `
-        <td class="date-cell">${(a.date || '').slice(0, 10)}</td>
-        <td class="title-cell"><a href="${a.url}" target="_blank" rel="noopener">${a.title || a.slug}</a></td>
-        <td class="wc-cell">${(a.word_count || 0).toLocaleString()}</td>
-        <td class="tag-cell">${(a.tags || []).map(t => `<span class="tag">${t}</span>`).join(' ')}</td>
-        <td class="tag-cell">${a.cluster_label ? `<span class="tag">${a.cluster_label}</span>` : ''}</td>
+        <td class="date-cell" data-label="Date">${(a.date || '').slice(0, 10)}</td>
+        <td class="title-cell" data-label="Title"><a href="${a.url}" target="_blank" rel="noopener">${a.title || a.slug}</a></td>
+        <td class="wc-cell" data-label="Words">${(a.word_count || 0).toLocaleString()}</td>
+        <td class="tag-cell" data-label="Tags">${(a.tags || []).map(t => `<span class="tag">${t}</span>`).join(' ')}</td>
+        <td class="tag-cell" data-label="Theme">${a.cluster_label ? `<span class="tag">${a.cluster_label}</span>` : ''}</td>
       `;
       tbody.appendChild(tr);
     });
