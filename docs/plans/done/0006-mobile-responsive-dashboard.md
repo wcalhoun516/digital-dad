@@ -35,3 +35,19 @@ at ~375px wide without horizontal scrolling or broken layouts.
 
 - A separate native app, PWA/offline, or a full visual redesign — this is responsiveness, not
   restyling.
+
+## Status — done (2026-06-10)
+
+- **Step 1** (responsive CSS layer + scrollable tab bar) shipped in PR #9 (2026-06-07).
+- **Step 2** (D3 charts re-render on resize/orientation, debounced) shipped in PR #13 (2026-06-08).
+- **Step 3** (Raw Corpus table reflows into labelled cards at ≤480px) shipped in PR #14 (2026-06-09).
+- **Step 4** (don't regress desktop; verify both breakpoints) shipped in PR #15 (2026-06-10).
+  Prior steps each flagged "live phone-width browser pass not run (no preview tooling)";
+  Playwright + Chromium are in fact available in `.venv`, so this step added
+  `viz/verify_responsive.py` (run via `make verify-responsive`) — a headless-browser harness
+  that renders the *built* `dashboard/index.html` at desktop (1280×900) and phone (375×812),
+  asserting no horizontal overflow, a clean JS console, the corpus table staying a real table
+  on desktop while reflowing to cards on a phone, and the step-2 resize-redraw surviving a
+  live desktop→phone transition. **10/10 checks passed**; screenshots confirm the card reflow.
+  Kept out of `make verify` because CI has no browser (the script SKIPs cleanly when Chromium
+  is absent).
