@@ -119,6 +119,35 @@ def _check_viewport(page, label: str, width: int, height: int, corpus_is_table: 
     )
 
 
+def _check_resize_redraw(page):
+    """Validate plan 0006 step 2 live: a desktop→phone resize re-renders the active
+    D3 chart (debounced) without throwing and refits it to the narrower container."""
+    console_errors: list[str] = []
+    page.on("console", lambda m: console_errors.append(m.text) if m.type == "error" else None)
+    page.on("pageerror", lambda e: console_errors.append(f"pageerror: {e}"))
+
+    page.set_viewport_size({"width": 1280, "height": 900})
+    page.goto(INDEX.as_uri(), wait_until="networkidle")
+    page.wait_for_selector("#theme-map svg, svg", timeout=5000)
+    page.wait_for_timeout(400)
+
+    # Simulate a phone rotation / resize; the handler debounces at 200ms.
+    page.set_viewport_size({"width": 375, "height": 812})
+    page.wait_for_timeout(700)
+
+    sw = page.evaluate("document.documentElement.scrollWidth")
+    yield Finding(
+        "resize desktop→phone: no horizontal overflow after redraw",
+        sw <= 375 + OVERFLOW_TOLERANCE_PX,
+        f"scrollWidth {sw} vs innerWidth 375",
+    )
+    yield Finding(
+        "resize desktop→phone: clean console through redraw",
+        not console_errors,
+        "no console errors" if not console_errors else "; ".join(console_errors[:5]),
+    )
+
+
 def run_checks() -> list[Finding]:
     from playwright.sync_api import sync_playwright
 
@@ -129,6 +158,7 @@ def run_checks() -> list[Finding]:
             for label, width, height, corpus_is_table in VIEWPORTS:
                 page = browser.new_context().new_page()
                 findings.extend(_check_viewport(page, label, width, height, corpus_is_table))
+            findings.extend(_check_resize_redraw(browser.new_context().new_page()))
         finally:
             browser.close()
     return findings
