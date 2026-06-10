@@ -48,6 +48,21 @@ Format:
 
 <!-- entries below -->
 
+### 2026-06-10 — dashboard — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/15
+- Source: plan:ready/0006
+- Summary: Plan 0006 step 4 (don't regress desktop; verify both breakpoints) — the live
+  phone-width browser pass that steps 1–3 each deferred as "no preview tooling." Playwright +
+  Chromium turned out to be available in `.venv`, so added `viz/verify_responsive.py` (run via
+  `make verify-responsive`): a headless-Chromium harness that renders the *built* index.html at
+  desktop (1280×900) and phone (375×812) and asserts no horizontal overflow, a clean JS console,
+  the corpus table staying a real table on desktop while reflowing to labelled cards on a phone,
+  and step-2's resize-redraw surviving a live desktop→phone transition. **10/10 checks passed**;
+  screenshots confirm the card reflow. Pure pass/fail report logic TDD'd (3 tests, 120 total);
+  harness kept out of `make verify` (CI has no browser; it SKIPs cleanly when Chromium is absent).
+  This **completes plan 0006** — moved to `docs/plans/done/`. The whole `plans/ready/` queue now
+  has 0007 (RAG faithfulness eval) as the next hot-path item.
+
 ### 2026-06-09 — dashboard — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/14
 - Source: plan:ready/0006
