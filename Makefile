@@ -4,7 +4,7 @@ PYTHON := .venv/bin/python
 # ruff findings (broadening the scope is a follow-up roadmap item, #1-3/cleanup).
 LINT_PATHS := tests
 
-.PHONY: scrape analyze training dashboard all serve search on-this-day send-on-this-day adjudicate backfill-verdicts clean test lint fmt verify
+.PHONY: scrape analyze training dashboard all serve search on-this-day send-on-this-day adjudicate backfill-verdicts clean test lint fmt verify verify-responsive
 
 scrape:
 	$(PYTHON) -m scraper $(ARGS)
@@ -57,6 +57,12 @@ fmt:
 
 verify: lint test
 	$(MAKE) dashboard
+
+# Live both-breakpoint dashboard check (plan 0006 step 4). Needs a headless browser,
+# so it is deliberately NOT part of `verify` (CI has no Chromium); it SKIPs cleanly when
+# Chromium is unavailable. Build the dashboard first so it checks the real artifact.
+verify-responsive: dashboard
+	$(PYTHON) -m viz.verify_responsive
 
 clean:
 	rm -f data/raw/*.json
