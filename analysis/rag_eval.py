@@ -219,6 +219,11 @@ def aggregate(records: list[dict]) -> dict:
     cited_any = sum(1 for r in answerable if r.get("cited_present"))
     citation_coverage = (cited_any / len(answerable)) if answerable else 0.0
 
+    # Over-refusal: abstaining on a question the corpus *can* answer (a retrieval or
+    # grounding failure that looks safe but hides a real miss).
+    false_abstain = sum(1 for r in answerable if r.get("abstained"))
+    false_abstention_rate = (false_abstain / len(answerable)) if answerable else 0.0
+
     return {
         "n_questions": n,
         "n_answerable": len(answerable),
@@ -228,6 +233,7 @@ def aggregate(records: list[dict]) -> dict:
         "grounding_rate": round(grounding_rate, 4),
         "hallucination_rate": round(1.0 - grounding_rate, 4),
         "abstention_accuracy": round(abstention_accuracy, 4),
+        "false_abstention_rate": round(false_abstention_rate, 4),
         "citation_coverage": round(citation_coverage, 4),
     }
 

@@ -48,6 +48,26 @@ Format:
 
 <!-- entries below -->
 
+### 2026-06-11 — training — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/16
+- Source: plan:ready/0007
+- Summary: Built the RAG faithfulness eval harness (plan 0007, all four steps) — the trust
+  baseline any future voice fine-tune (#26) must beat. New `eval/questions.json` (10
+  corpus-grounded answerable questions + 4 deliberately-unanswerable for abstention) and
+  `analysis/rag_eval.py`, which mirrors the injected-seam architecture of `verdict_backfill`:
+  pure, offline-testable scorers (abstention detection, retrieved-title citation matching,
+  tolerant LLM-judge JSON parser) + an `evaluate/aggregate/write_report` loop fed by
+  injected retrieve/generate/judge seams. The conductor-gated CLI (`make rag-eval`) reuses
+  production retrieval (`semantic_search.search`) and the Ask Dad prompt, runs a T3 judge
+  scoring claim grounding, and writes `data/analysis/rag_eval.json`. Headline metrics:
+  grounding/hallucination rate, abstention accuracy, false-abstention (over-refusal) rate,
+  citation coverage. TDD'd with 22 new tests (141 total); `make verify` green (lint + tests
+  + dashboard build); harness smoke-run end-to-end offline with fakes. Documented in README.
+  **Live baseline numbers not captured** — the judge pass makes paid T3 calls, so it's
+  owner-gated (refuses to run if the conductor is down) and deliberately not run from this
+  automation; the owner runs `make rag-eval` once to capture the real baseline. Plan 0007
+  moved to `docs/plans/done/`; `plans/ready/` now has only 0008 (Geo LLM fine-tune) left.
+
 ### 2026-06-10 — dashboard — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/15
 - Source: plan:ready/0006

@@ -189,12 +189,28 @@ class TestAggregate:
         assert abs(agg["hallucination_rate"] - 0.25) < 1e-9
         # abstention accuracy on unanswerable: 1 of 2
         assert abs(agg["abstention_accuracy"] - 0.5) < 1e-9
+        # neither answerable question abstained → no false abstentions
+        assert agg["false_abstention_rate"] == 0.0
+
+    def test_false_abstention_counts_over_refusal_on_answerable(self):
+        records = [
+            {"id": "a01", "answerable": True, "abstained": True,
+             "claims_total": 0, "claims_grounded": 0,
+             "cited_present": [], "cited_absent": [], "abstention_correct": None},
+            {"id": "a02", "answerable": True, "abstained": False,
+             "claims_total": 2, "claims_grounded": 2,
+             "cited_present": ["T"], "cited_absent": [], "abstention_correct": None},
+        ]
+        agg = aggregate(records)
+        # one of two answerable questions wrongly refused
+        assert abs(agg["false_abstention_rate"] - 0.5) < 1e-9
 
     def test_empty_records_safe(self):
         agg = aggregate([])
         assert agg["n_questions"] == 0
         assert agg["grounding_rate"] == 0.0
         assert agg["abstention_accuracy"] == 0.0
+        assert agg["false_abstention_rate"] == 0.0
 
 
 class TestWriteReport:
