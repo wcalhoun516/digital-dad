@@ -48,6 +48,28 @@ Format:
 
 <!-- entries below -->
 
+### 2026-06-12 — training — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/17
+- Source: plan:ready/0008
+- Summary: Plan 0008 step 1 (**26a — dataset builder**), the first slice toward "Geo LLM"
+  (roadmap #26). Extended `training/prepare.py` to emit `data/training/{train,heldout}.jsonl`
+  from the quality-filtered instruct records, with a **deterministic** partition (stable slug
+  hash) and a **leakage-free** contract against the #25 RAG eval: articles a question in
+  `eval/questions.json` is grounded in are reserved out of *both* splits, so the future voice
+  fine-tune can't memorize the faithfulness eval's answers. Refactored the inline instruct
+  shaping into a tested `build_instruct_record`; added `eval_grounded_slugs` (normalized,
+  punctuation-robust title→question matching) and `split_articles`. TDD'd with 12 new tests on
+  fixtures (132 total); `make verify` green (lint + tests + dashboard). Ran end-to-end on the
+  real corpus: 172 unique quality articles → train (138) + heldout (34); demonstrated the
+  exclusion against the real plan-0007 questions (5 eval-grounded articles matched, 0 leak into
+  either split). Outputs are gitignored (extended `.gitignore` + `make clean`); documented in a
+  new `training/README.md`. **Sequencing note:** `eval/questions.json` lives on PR #16 (plan
+  0007) and isn't on `main` yet, so the builder reads it when present and warns+skips the
+  exclusion when absent — the pure logic is fixture-tested independently. **Surprising find:**
+  the manifest has 23 duplicate slugs (~12% of 196 entries) — same articles re-discovered via
+  different scraper tiers; the split de-dups by slug, but a human may want to look at why the
+  manifest carries dupes. Plan 0008 left in `ready/` (steps 26b–26f remain).
+
 ### 2026-06-10 — dashboard — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/15
 - Source: plan:ready/0006
