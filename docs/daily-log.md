@@ -48,6 +48,28 @@ Format:
 
 <!-- entries below -->
 
+### 2026-06-13 — scraper — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/18
+- Source: roadmap:#8
+- Summary: Roadmap **#8 — manifest integrity checker** (`scraper/manifest_check.py` + `make
+  manifest-check`). **Cold-path pick:** the hot-path queue is stalled — plans 0007/0008 are
+  done-pending-merge on PRs #16/#17, and 0008's next step (26b baseline capture) is blocked on
+  those merges *and* an owner-gated paid eval, so nothing in `plans/ready/` is runnable unattended
+  without duplicating PRs #16/#17. Picked the least-recently-worked category (last 7 runs:
+  dashboard×4, training/analysis/family×1; scraper/docs/infra never appeared) and chose scraper #8
+  because it directly addresses PR #17's surprising find. Pure `audit_manifest` (TDD'd offline)
+  detects duplicate slug/url/content_hash, missing content_hash, manifest↔disk drift
+  (missing/orphaned files), and total_articles count drift; `run()` adds `--json` (machine output)
+  and `--strict` (exit 1 on issues, for a future CI/pre-commit gate — #5) while staying report-only
+  (exit 0) by default so it never turns `make verify` red. 25 new tests (145 total); `make verify`
+  green. **On the real corpus it confirms PR #17 exactly: 23 duplicate slugs** — root cause is the
+  scraper de-duping manifest entries by **URL not slug** (`scraper/__main__.py`), so an article
+  rediscovered under a variant URL appends a second entry. Also surfaced **1 duplicate
+  content_hash** (the `george-calhoun` author-listing page scraped twice) and **168 entries
+  missing `content_hash`** (scraped before that field existed); no missing/orphaned files.
+  Documented findings + root cause in a new `scraper/README.md`. The checker only *reports* — the
+  manifest de-dup + content_hash backfill it exposes are separate owner-reviewed follow-ups.
+
 ### 2026-06-10 — dashboard — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/15
 - Source: plan:ready/0006
