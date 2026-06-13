@@ -1,0 +1,89 @@
+{
+  "description": "Held-out question set for the Ask Dad RAG faithfulness eval (plan 0007). 'answerable' questions are grounded in topics Dr. Calhoun actually wrote about (the Forbes corpus: COVID & finance, the Fed, inflation, Europe's fiscal union, Huawei, semiconductors, Hong Kong, China-listed shares). 'unanswerable' questions are deliberately outside the archive so the eval can check that Ask Dad abstains ('I haven't written about that specifically') instead of inventing. topic_hint is a human note for spot-checking retrieval, not used by the scorers.",
+  "questions": [
+    {
+      "id": "a01",
+      "question": "What did you argue COVID-19 would change about finance and the bond market?",
+      "answerable": true,
+      "topic_hint": "How COVID-19 Will Change Finance series, 2020"
+    },
+    {
+      "id": "a02",
+      "question": "Does inflation still exist, and can anyone really measure it?",
+      "answerable": true,
+      "topic_hint": "Does Inflation Still Exist? Does Anyone Really Know? (2020)"
+    },
+    {
+      "id": "a03",
+      "question": "What do you mean when you say the Fed prints alpha, not just money?",
+      "answerable": true,
+      "topic_hint": "The Fed Doesn't Just Print Money, It Also Prints Alpha (2020)"
+    },
+    {
+      "id": "a04",
+      "question": "What is Europe's 'Hamiltonian moment' and is it really one?",
+      "answerable": true,
+      "topic_hint": "Europe's Hamiltonian Moment - What Is It Really? (2020)"
+    },
+    {
+      "id": "a05",
+      "question": "Why do you think Huawei was vulnerable despite its scale?",
+      "answerable": true,
+      "topic_hint": "Huawei series, 2020 (cheap credit, customer acquisition, recovery plan)"
+    },
+    {
+      "id": "a06",
+      "question": "How does Huawei acquire its customers?",
+      "answerable": true,
+      "topic_hint": "How Does Huawei Acquire Customers? It Buys Them With Cheap Credit (2020)"
+    },
+    {
+      "id": "a07",
+      "question": "Is Huawei really the biggest semiconductor risk, or is TSMC?",
+      "answerable": true,
+      "topic_hint": "5G Risk? Huawei Is Small Potatoes Compared To TSMC (2020)"
+    },
+    {
+      "id": "a08",
+      "question": "What were the financial consequences of the Hong Kong crackdown for China?",
+      "answerable": true,
+      "topic_hint": "The Hong Kong Crackdown Is A Financial Disaster For China (2020)"
+    },
+    {
+      "id": "a09",
+      "question": "Why do Chinese companies list their shares in New York?",
+      "answerable": true,
+      "topic_hint": "Why Do Chinese Companies List Their Shares In New York? (2020)"
+    },
+    {
+      "id": "a10",
+      "question": "What does 'Whatever It Takes' versus 'Full Faith And Credit' mean for the EU?",
+      "answerable": true,
+      "topic_hint": "'Whatever It Takes' Vs 'Full Faith And Credit' (2020)"
+    },
+    {
+      "id": "u01",
+      "question": "What is your favorite recipe for sourdough bread?",
+      "answerable": false,
+      "topic_hint": "outside the corpus - cooking - should abstain"
+    },
+    {
+      "id": "u02",
+      "question": "Which team do you predict will win the 2026 FIFA World Cup?",
+      "answerable": false,
+      "topic_hint": "outside the corpus - sports - should abstain"
+    },
+    {
+      "id": "u03",
+      "question": "Can you give me step-by-step instructions to replace a car's alternator?",
+      "answerable": false,
+      "topic_hint": "outside the corpus - auto repair - should abstain"
+    },
+    {
+      "id": "u04",
+      "question": "What is your personal advice for treating chronic back pain?",
+      "answerable": false,
+      "topic_hint": "outside the corpus - medical advice - should abstain"
+    }
+  ]
+}
