@@ -4,10 +4,16 @@ PYTHON := .venv/bin/python
 # ruff findings (broadening the scope is a follow-up roadmap item, #1-3/cleanup).
 LINT_PATHS := tests
 
-.PHONY: scrape analyze training dashboard all serve search on-this-day send-on-this-day adjudicate backfill-verdicts rag-eval clean test lint fmt verify verify-responsive
+.PHONY: scrape manifest-check analyze training dashboard all serve search on-this-day send-on-this-day adjudicate backfill-verdicts clean test lint fmt verify verify-responsive
 
 scrape:
 	$(PYTHON) -m scraper $(ARGS)
+
+# Audit data/manifest.json against data/raw/*.json: duplicate slugs/urls/content_hash,
+# missing content_hash, and manifest/disk drift. Report-only by default (exit 0); pass
+# ARGS=--strict to exit non-zero on issues (for CI), or ARGS=--json for machine output.
+manifest-check:
+	$(PYTHON) -m scraper.manifest_check $(ARGS)
 
 analyze:
 	$(PYTHON) -m analysis $(ARGS)

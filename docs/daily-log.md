@@ -48,27 +48,27 @@ Format:
 
 <!-- entries below -->
 
-### 2026-06-12 — training — ready-for-review
-- PR: https://github.com/wcalhoun516/digital-dad/pull/17
-- Source: plan:ready/0008
-- Summary: Plan 0008 step 1 (**26a — dataset builder**), the first slice toward "Geo LLM"
-  (roadmap #26). Extended `training/prepare.py` to emit `data/training/{train,heldout}.jsonl`
-  from the quality-filtered instruct records, with a **deterministic** partition (stable slug
-  hash) and a **leakage-free** contract against the #25 RAG eval: articles a question in
-  `eval/questions.json` is grounded in are reserved out of *both* splits, so the future voice
-  fine-tune can't memorize the faithfulness eval's answers. Refactored the inline instruct
-  shaping into a tested `build_instruct_record`; added `eval_grounded_slugs` (normalized,
-  punctuation-robust title→question matching) and `split_articles`. TDD'd with 12 new tests on
-  fixtures (132 total); `make verify` green (lint + tests + dashboard). Ran end-to-end on the
-  real corpus: 172 unique quality articles → train (138) + heldout (34); demonstrated the
-  exclusion against the real plan-0007 questions (5 eval-grounded articles matched, 0 leak into
-  either split). Outputs are gitignored (extended `.gitignore` + `make clean`); documented in a
-  new `training/README.md`. **Sequencing note:** `eval/questions.json` lives on PR #16 (plan
-  0007) and isn't on `main` yet, so the builder reads it when present and warns+skips the
-  exclusion when absent — the pure logic is fixture-tested independently. **Surprising find:**
-  the manifest has 23 duplicate slugs (~12% of 196 entries) — same articles re-discovered via
-  different scraper tiers; the split de-dups by slug, but a human may want to look at why the
-  manifest carries dupes. Plan 0008 left in `ready/` (steps 26b–26f remain).
+### 2026-06-13 — scraper — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/18
+- Source: roadmap:#8
+- Summary: Roadmap **#8 — manifest integrity checker** (`scraper/manifest_check.py` + `make
+  manifest-check`). **Cold-path pick:** the hot-path queue is stalled — plans 0007/0008 are
+  done-pending-merge on PRs #16/#17, and 0008's next step (26b baseline capture) is blocked on
+  those merges *and* an owner-gated paid eval, so nothing in `plans/ready/` is runnable unattended
+  without duplicating PRs #16/#17. Picked the least-recently-worked category (last 7 runs:
+  dashboard×4, training/analysis/family×1; scraper/docs/infra never appeared) and chose scraper #8
+  because it directly addresses PR #17's surprising find. Pure `audit_manifest` (TDD'd offline)
+  detects duplicate slug/url/content_hash, missing content_hash, manifest↔disk drift
+  (missing/orphaned files), and total_articles count drift; `run()` adds `--json` (machine output)
+  and `--strict` (exit 1 on issues, for a future CI/pre-commit gate — #5) while staying report-only
+  (exit 0) by default so it never turns `make verify` red. 25 new tests (145 total); `make verify`
+  green. **On the real corpus it confirms PR #17 exactly: 23 duplicate slugs** — root cause is the
+  scraper de-duping manifest entries by **URL not slug** (`scraper/__main__.py`), so an article
+  rediscovered under a variant URL appends a second entry. Also surfaced **1 duplicate
+  content_hash** (the `george-calhoun` author-listing page scraped twice) and **168 entries
+  missing `content_hash`** (scraped before that field existed); no missing/orphaned files.
+  Documented findings + root cause in a new `scraper/README.md`. The checker only *reports* — the
+  manifest de-dup + content_hash backfill it exposes are separate owner-reviewed follow-ups.
 
 ### 2026-06-10 — dashboard — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/15
