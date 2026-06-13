@@ -48,25 +48,27 @@ Format:
 
 <!-- entries below -->
 
-### 2026-06-11 — training — ready-for-review
-- PR: https://github.com/wcalhoun516/digital-dad/pull/16
-- Source: plan:ready/0007
-- Summary: Built the RAG faithfulness eval harness (plan 0007, all four steps) — the trust
-  baseline any future voice fine-tune (#26) must beat. New `eval/questions.json` (10
-  corpus-grounded answerable questions + 4 deliberately-unanswerable for abstention) and
-  `analysis/rag_eval.py`, which mirrors the injected-seam architecture of `verdict_backfill`:
-  pure, offline-testable scorers (abstention detection, retrieved-title citation matching,
-  tolerant LLM-judge JSON parser) + an `evaluate/aggregate/write_report` loop fed by
-  injected retrieve/generate/judge seams. The conductor-gated CLI (`make rag-eval`) reuses
-  production retrieval (`semantic_search.search`) and the Ask Dad prompt, runs a T3 judge
-  scoring claim grounding, and writes `data/analysis/rag_eval.json`. Headline metrics:
-  grounding/hallucination rate, abstention accuracy, false-abstention (over-refusal) rate,
-  citation coverage. TDD'd with 22 new tests (141 total); `make verify` green (lint + tests
-  + dashboard build); harness smoke-run end-to-end offline with fakes. Documented in README.
-  **Live baseline numbers not captured** — the judge pass makes paid T3 calls, so it's
-  owner-gated (refuses to run if the conductor is down) and deliberately not run from this
-  automation; the owner runs `make rag-eval` once to capture the real baseline. Plan 0007
-  moved to `docs/plans/done/`; `plans/ready/` now has only 0008 (Geo LLM fine-tune) left.
+### 2026-06-12 — training — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/17
+- Source: plan:ready/0008
+- Summary: Plan 0008 step 1 (**26a — dataset builder**), the first slice toward "Geo LLM"
+  (roadmap #26). Extended `training/prepare.py` to emit `data/training/{train,heldout}.jsonl`
+  from the quality-filtered instruct records, with a **deterministic** partition (stable slug
+  hash) and a **leakage-free** contract against the #25 RAG eval: articles a question in
+  `eval/questions.json` is grounded in are reserved out of *both* splits, so the future voice
+  fine-tune can't memorize the faithfulness eval's answers. Refactored the inline instruct
+  shaping into a tested `build_instruct_record`; added `eval_grounded_slugs` (normalized,
+  punctuation-robust title→question matching) and `split_articles`. TDD'd with 12 new tests on
+  fixtures (132 total); `make verify` green (lint + tests + dashboard). Ran end-to-end on the
+  real corpus: 172 unique quality articles → train (138) + heldout (34); demonstrated the
+  exclusion against the real plan-0007 questions (5 eval-grounded articles matched, 0 leak into
+  either split). Outputs are gitignored (extended `.gitignore` + `make clean`); documented in a
+  new `training/README.md`. **Sequencing note:** `eval/questions.json` lives on PR #16 (plan
+  0007) and isn't on `main` yet, so the builder reads it when present and warns+skips the
+  exclusion when absent — the pure logic is fixture-tested independently. **Surprising find:**
+  the manifest has 23 duplicate slugs (~12% of 196 entries) — same articles re-discovered via
+  different scraper tiers; the split de-dups by slug, but a human may want to look at why the
+  manifest carries dupes. Plan 0008 left in `ready/` (steps 26b–26f remain).
 
 ### 2026-06-10 — dashboard — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/15

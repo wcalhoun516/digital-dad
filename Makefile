@@ -75,5 +75,6 @@ clean:
 	rm -f data/raw/*.json
 	rm -f data/analysis/*.json data/analysis/*.md
 	rm -f data/training/finetune.jsonl data/training/corpus.txt data/training/metadata.csv
+	rm -f data/training/instruct.jsonl data/training/train.jsonl data/training/heldout.jsonl
 	rm -f dashboard/index.html
 	rm -f data/manifest.json
