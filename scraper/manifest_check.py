@@ -11,7 +11,15 @@ raw files present on disk) so it is unit-testable offline with no filesystem or 
 manifest-check``.
 """
 
+import argparse
+import json
+import sys
 from collections import Counter
+from pathlib import Path
+
+DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+MANIFEST_PATH = DATA_DIR / "manifest.json"
+RAW_DIR = DATA_DIR / "raw"
 
 
 def audit_manifest(manifest: dict, raw_files_on_disk: set[str]) -> dict:
@@ -136,3 +144,74 @@ def format_report(report: dict) -> str:
             f"{', '.join(report['orphaned_files'])}"
         )
     return "\n".join(lines)
+
+
+def scan_raw_files(raw_dir: Path) -> set[str]:
+    """Return the set of ``raw/<name>.json`` paths present in ``raw_dir`` (matching the
+    ``file`` field convention in manifest entries). Missing dir → empty set."""
+    raw_dir = Path(raw_dir)
+    if not raw_dir.is_dir():
+        return set()
+    return {f"raw/{p.name}" for p in raw_dir.glob("*.json")}
+
+
+def load_manifest(path: Path) -> dict:
+    """Load a manifest JSON file into a dict."""
+    return json.loads(Path(path).read_text())
+
+
+def run(
+    manifest_path: Path = MANIFEST_PATH,
+    raw_dir: Path = RAW_DIR,
+    *,
+    as_json: bool = False,
+    strict: bool = False,
+) -> int:
+    """Audit the manifest at ``manifest_path`` against ``raw_dir`` and print the result.
+
+    Returns 0 normally; returns 1 when the manifest is missing, or when ``strict`` is set
+    and the audit found issues (so it can gate CI / pre-commit).
+    """
+    manifest_path = Path(manifest_path)
+    if not manifest_path.exists():
+        print(f"No manifest at {manifest_path}. Run `make scrape` first.")
+        return 1
+
+    report = audit_manifest(load_manifest(manifest_path), scan_raw_files(raw_dir))
+    if as_json:
+        print(json.dumps(report, indent=2, ensure_ascii=False))
+    else:
+        print(format_report(report))
+
+    if strict and not report["ok"]:
+        return 1
+    return 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(
+        prog="python -m scraper.manifest_check",
+        description="Check data/manifest.json for drift against data/raw/*.json.",
+    )
+    parser.add_argument(
+        "--manifest", type=Path, default=MANIFEST_PATH,
+        help="Path to manifest.json (default: data/manifest.json).",
+    )
+    parser.add_argument(
+        "--raw-dir", type=Path, default=RAW_DIR,
+        help="Directory of raw article JSON (default: data/raw).",
+    )
+    parser.add_argument(
+        "--json", action="store_true", dest="as_json",
+        help="Emit the report as JSON instead of a human summary.",
+    )
+    parser.add_argument(
+        "--strict", action="store_true",
+        help="Exit non-zero when integrity issues are found (for CI / pre-commit).",
+    )
+    args = parser.parse_args(argv)
+    return run(args.manifest, args.raw_dir, as_json=args.as_json, strict=args.strict)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

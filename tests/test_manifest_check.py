@@ -1,6 +1,13 @@
 """Tests for scraper/manifest_check.py — the manifest integrity checker (roadmap #8)."""
 
-from scraper.manifest_check import audit_manifest, format_report
+import json
+
+from scraper.manifest_check import (
+    audit_manifest,
+    format_report,
+    run,
+    scan_raw_files,
+)
 
 
 def _entry(slug, *, url=None, file=None, content_hash="h-" + "x", **extra):
@@ -151,3 +158,60 @@ class TestFormatReport:
         text = format_report(audit_manifest(_manifest(entries), _disk(entries)))
         assert "dup" in text
         assert "slug" in text.lower()
+
+
+class TestScanRawFiles:
+    def test_returns_relative_raw_paths(self, tmp_path):
+        raw = tmp_path / "raw"
+        raw.mkdir()
+        (raw / "a.json").write_text("{}")
+        (raw / "b.json").write_text("{}")
+        (raw / "notes.txt").write_text("ignore me")  # non-json ignored
+        assert scan_raw_files(raw) == {"raw/a.json", "raw/b.json"}
+
+    def test_missing_dir_returns_empty(self, tmp_path):
+        assert scan_raw_files(tmp_path / "does-not-exist") == set()
+
+
+def _write_corpus(tmp_path, entries, *, total=None, on_disk=None):
+    """Write a manifest.json + raw/*.json under tmp_path; return (manifest_path, raw_dir)."""
+    raw = tmp_path / "raw"
+    raw.mkdir()
+    files = on_disk if on_disk is not None else [e["file"] for e in entries]
+    for f in files:
+        (tmp_path / f).write_text("{}")
+    manifest_path = tmp_path / "manifest.json"
+    manifest_path.write_text(json.dumps(_manifest(entries, total=total)))
+    return manifest_path, raw
+
+
+class TestRun:
+    def test_clean_returns_zero(self, tmp_path, capsys):
+        entries = [_entry("a", content_hash="h1")]
+        mp, raw = _write_corpus(tmp_path, entries)
+        assert run(mp, raw) == 0
+        assert "OK" in capsys.readouterr().out
+
+    def test_non_strict_returns_zero_even_with_issues(self, tmp_path, capsys):
+        entries = [_entry("a", content_hash="h1")]
+        mp, raw = _write_corpus(tmp_path, entries, total=42)  # count drift
+        assert run(mp, raw, strict=False) == 0
+
+    def test_strict_returns_one_on_issues(self, tmp_path, capsys):
+        entries = [_entry("a", content_hash="h1")]
+        mp, raw = _write_corpus(tmp_path, entries, total=42)  # count drift
+        assert run(mp, raw, strict=True) == 1
+
+    def test_missing_manifest_returns_one(self, tmp_path, capsys):
+        assert run(tmp_path / "absent.json", tmp_path / "raw") == 1
+
+    def test_json_output_is_valid_and_machine_readable(self, tmp_path, capsys):
+        entries = [
+            _entry("dup", url="https://forbes.com/a/", content_hash="h1"),
+            _entry("dup", url="https://forbes.com/b/", content_hash="h1"),
+        ]
+        mp, raw = _write_corpus(tmp_path, entries)
+        run(mp, raw, as_json=True)
+        data = json.loads(capsys.readouterr().out)
+        assert data["duplicate_slugs"] == {"dup": 2}
+        assert data["ok"] is False
