@@ -150,6 +150,24 @@ curl http://127.0.0.1:8080/v1/chat/completions \
        "stream":true, "tier":2, "function":"text"}'
 ```
 
+**Is it trustworthy? (RAG faithfulness eval)** — `analysis/rag_eval.py` measures whether
+Ask Dad answers from real passages, cites them correctly, and abstains instead of
+inventing. It runs the production retrieval (`semantic_search.search`) + a grounded
+generation over a held-out question set (`eval/questions.json` — questions answerable from
+the corpus plus deliberately-unanswerable ones), then an LLM judge (T3) scores how many
+claims are grounded. Headline metrics: **grounding / hallucination rate**, **abstention
+accuracy** on unanswerable questions, **false-abstention rate** (over-refusal on answerable
+ones), and **citation coverage**. This is the baseline any future voice fine-tune (#26)
+must beat.
+
+```bash
+# Owner-gated: the judge pass makes paid T3 calls, so it refuses to run if the conductor
+# is down. Writes data/analysis/rag_eval.json. Run deliberately, not from automation.
+make rag-eval                       # full question set
+make rag-eval ARGS="--limit 5"      # quick smoke
+make rag-eval ARGS="--judge-tier 2" # free local judge (lower-quality scores)
+```
+
 ## The Calhoun Track Record — Prediction Tracker
 
 Extracts every falsifiable prediction Dr. Calhoun made across his entire corpus,

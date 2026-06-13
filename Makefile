@@ -4,7 +4,7 @@ PYTHON := .venv/bin/python
 # ruff findings (broadening the scope is a follow-up roadmap item, #1-3/cleanup).
 LINT_PATHS := tests
 
-.PHONY: scrape analyze training dashboard all serve search on-this-day send-on-this-day adjudicate backfill-verdicts clean test lint fmt verify verify-responsive
+.PHONY: scrape analyze training dashboard all serve search on-this-day send-on-this-day adjudicate backfill-verdicts rag-eval clean test lint fmt verify verify-responsive
 
 scrape:
 	$(PYTHON) -m scraper $(ARGS)
@@ -45,6 +45,13 @@ adjudicate:
 # incremental. ARGS e.g. --limit 20 or --evidence-file evidence.json. Adjudicate afterwards.
 backfill-verdicts:
 	$(PYTHON) -m analysis.verdict_backfill $(ARGS)
+
+# RAG faithfulness eval baseline for Ask Dad (plan 0007). Owner-gated: the generation +
+# judge passes make conductor calls (judge defaults to paid T3), so it refuses to run if
+# the conductor is down. Writes data/analysis/rag_eval.json. ARGS e.g. --limit 5 or
+# --judge-tier 2. Run deliberately (NOT from automation).
+rag-eval:
+	$(PYTHON) -m analysis.rag_eval $(ARGS)
 
 test:
 	$(PYTHON) -m pytest -q
