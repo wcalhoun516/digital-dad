@@ -215,3 +215,25 @@ class TestRun:
         data = json.loads(capsys.readouterr().out)
         assert data["duplicate_slugs"] == {"dup": 2}
         assert data["ok"] is False
+
+
+class TestEdgeCases:
+    def test_empty_manifest_is_clean(self):
+        report = audit_manifest(_manifest([], total=0), set())
+        assert report["ok"] is True
+        assert report["article_count"] == 0
+
+    def test_malformed_manifest_missing_keys_flags_count_drift(self):
+        # No "articles" and no "total_articles" — declared None != 0 entries.
+        report = audit_manifest({}, set())
+        assert report["count_drift"] is True
+        assert report["ok"] is False
+
+    def test_report_is_json_serializable(self):
+        # The --json path dumps the report verbatim, so it must round-trip.
+        entries = [
+            _entry("dup", url="https://forbes.com/a/", content_hash="same"),
+            _entry("dup", url="https://forbes.com/b/", content_hash="same"),
+        ]
+        report = audit_manifest(_manifest(entries, total=9), _disk(entries))
+        assert json.loads(json.dumps(report)) == report
