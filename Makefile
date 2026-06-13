@@ -52,6 +52,13 @@ adjudicate:
 backfill-verdicts:
 	$(PYTHON) -m analysis.verdict_backfill $(ARGS)
 
+# RAG faithfulness eval baseline for Ask Dad (plan 0007). Owner-gated: the generation +
+# judge passes make conductor calls (judge defaults to paid T3), so it refuses to run if
+# the conductor is down. Writes data/analysis/rag_eval.json. ARGS e.g. --limit 5 or
+# --judge-tier 2. Run deliberately (NOT from automation).
+rag-eval:
+	$(PYTHON) -m analysis.rag_eval $(ARGS)
+
 test:
 	$(PYTHON) -m pytest -q
 
@@ -74,5 +81,6 @@ clean:
 	rm -f data/raw/*.json
 	rm -f data/analysis/*.json data/analysis/*.md
 	rm -f data/training/finetune.jsonl data/training/corpus.txt data/training/metadata.csv
+	rm -f data/training/instruct.jsonl data/training/train.jsonl data/training/heldout.jsonl
 	rm -f dashboard/index.html
 	rm -f data/manifest.json
