@@ -11,6 +11,7 @@ from analysis.geo_baseline import (
     HIGHER_IS_BETTER,
     LOWER_IS_BETTER,
     build_baseline,
+    compare_to_targets,
     load_rag_summary,
     render_markdown,
 )
@@ -76,6 +77,61 @@ class TestBuildBaseline:
     def test_roundtrips_as_json(self):
         # the artifact must be serializable as-is
         json.dumps(self._baseline())
+
+
+class TestBuildBaselinePartial:
+    def test_omits_targets_for_absent_metrics(self):
+        partial = {"generated_at": "2026-06-13T00:00:00+00:00", "summary": {"grounding_rate": 0.9}}
+        b = build_baseline(partial, captured_at="2026-06-14T00:00:00+00:00")
+        # only the present metric gets a target; no KeyError on the missing ones
+        assert set(b["targets"]) == {"grounding_rate"}
+        assert b["factuality"] == {"grounding_rate": 0.9}
+
+
+class TestCompareToTargets:
+    def _baseline(self):
+        return build_baseline(FIXTURE_RAG_EVAL, captured_at="2026-06-14T00:00:00+00:00")
+
+    def test_strictly_better_passes_all(self):
+        candidate = {
+            "grounding_rate": 0.90,       # > 0.8533
+            "hallucination_rate": 0.10,   # < 0.1467
+            "abstention_accuracy": 1.0,   # must strictly beat 1.0 -> impossible, see next test
+            "false_abstention_rate": 0.05,
+        }
+        result = compare_to_targets(self._baseline(), candidate)
+        # abstention can't strictly beat a perfect 1.0, so not all_passed here
+        assert result["per_metric"]["grounding_rate"]["passed"] is True
+        assert result["per_metric"]["hallucination_rate"]["passed"] is True
+        assert result["per_metric"]["abstention_accuracy"]["passed"] is False
+
+    def test_matching_the_bar_does_not_count_as_beating(self):
+        candidate = {
+            "grounding_rate": 0.8533,
+            "hallucination_rate": 0.1467,
+            "abstention_accuracy": 1.0,
+            "false_abstention_rate": 0.1,
+        }
+        result = compare_to_targets(self._baseline(), candidate)
+        assert all(not m["passed"] for m in result["per_metric"].values())
+        assert result["all_passed"] is False
+
+    def test_signed_deltas(self):
+        candidate = {
+            "grounding_rate": 0.90,
+            "hallucination_rate": 0.10,
+            "abstention_accuracy": 1.0,
+            "false_abstention_rate": 0.05,
+        }
+        per = compare_to_targets(self._baseline(), candidate)["per_metric"]
+        assert round(per["grounding_rate"]["delta"], 4) == round(0.90 - 0.8533, 4)
+        assert round(per["false_abstention_rate"]["delta"], 4) == round(0.05 - 0.1, 4)
+
+    def test_missing_candidate_metric_blocks_pass(self):
+        candidate = {"grounding_rate": 0.99}  # the rest absent
+        result = compare_to_targets(self._baseline(), candidate)
+        assert "hallucination_rate" in result["missing"]
+        assert result["all_passed"] is False
 
 
 class TestRenderMarkdown:

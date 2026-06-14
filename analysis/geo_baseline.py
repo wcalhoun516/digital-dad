@@ -111,6 +111,37 @@ def build_baseline(rag_eval: dict, *, captured_at: str | None = None) -> dict:
     }
 
 
+def compare_to_targets(baseline: dict, candidate: dict) -> dict:
+    """Score a candidate model's metrics against the baseline's must-beat targets.
+
+    ``candidate`` is a flat ``{metric: value}`` dict (e.g. a later run's summary). For
+    each target a fine-tune must **beat** (strictly — matching the bar is not beating it)
+    in the right direction. A metric the candidate didn't report can't be claimed as a
+    win, so it lands in ``missing`` and forces ``all_passed`` False. Pure: 26d/26f reuse
+    this to decide fine-tune vs RAG without re-deriving the comparison.
+    """
+    per_metric: dict[str, dict] = {}
+    missing: list[str] = []
+    for metric, target in baseline.get("targets", {}).items():
+        if metric not in candidate:
+            missing.append(metric)
+            continue
+        base = target["baseline"]
+        cand = candidate[metric]
+        if target["direction"] == HIGHER_IS_BETTER:
+            passed = cand > base
+        else:
+            passed = cand < base
+        per_metric[metric] = {
+            "baseline": base,
+            "candidate": cand,
+            "delta": cand - base,
+            "passed": passed,
+        }
+    all_passed = bool(per_metric) and not missing and all(m["passed"] for m in per_metric.values())
+    return {"per_metric": per_metric, "missing": missing, "all_passed": all_passed}
+
+
 def _pct(value) -> str:
     return f"{value * 100:.1f}%"
 
