@@ -4,7 +4,7 @@ PYTHON := .venv/bin/python
 # ruff findings (broadening the scope is a follow-up roadmap item, #1-3/cleanup).
 LINT_PATHS := tests
 
-.PHONY: scrape manifest-check analyze training dashboard all serve search on-this-day send-on-this-day adjudicate backfill-verdicts clean test lint fmt verify verify-responsive
+.PHONY: scrape manifest-check analyze training finetune-prep dashboard all serve search on-this-day send-on-this-day adjudicate backfill-verdicts clean test lint fmt verify verify-responsive
 
 scrape:
 	$(PYTHON) -m scraper $(ARGS)
@@ -20,6 +20,12 @@ analyze:
 
 training:
 	$(PYTHON) -m training
+
+# Stage mlx-lm's train.jsonl/valid.jsonl in data/finetune_run/ from 26a's leakage-free
+# split (plan 0008 step 26c). Offline + free; the actual QLoRA run lives in
+# notebooks/finetune_qlora.ipynb. Run `make training` first to produce the split.
+finetune-prep:
+	$(PYTHON) -m training.finetune_config
 
 dashboard:
 	$(PYTHON) viz/build_dashboard.py
