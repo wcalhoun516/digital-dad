@@ -48,6 +48,26 @@ Format:
 
 <!-- entries below -->
 
+### 2026-06-15 — training — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/20
+- Source: plan:ready/0008
+- Summary: Plan 0008 **step 26c — first unattended slice: make the QLoRA notebook reproducible
+  and leakage-safe.** Hot-path pick (0008 is the only plan in `ready/`); 26c's actual MLX
+  training run isn't unattended-friendly (model download + Metal compute, exceeds the compute
+  cap, unverifiable headless), so I did the verifiable scaffolding half. **Found a real bug:**
+  `notebooks/finetune_qlora.ipynb` ignored 26a's leakage-free split — it loaded `instruct.jsonl`
+  (ALL quality articles, including the ones reserved out of the #25 RAG eval) and re-split it with
+  an ad-hoc `random.shuffle`, silently re-introducing the eval leakage 26a was built to prevent
+  and making the run non-reproducible. New `training/finetune_config.py` (TDD'd, 17 tests, 196
+  total): `QLoRAConfig` + `SMALL_BASES` registry, leakage-safe `prepare_mlx_data()` (stages
+  mlx-lm's train/valid verbatim from 26a's `train.jsonl`/`heldout.jsonl`), deterministic
+  `eval_prompts()`, and a shared `style_metrics()` (reused by 26d). Added `make finetune-prep`
+  (offline/free; live run staged 138 train / 34 held-out), rewired the notebook to a single
+  config source of truth (incl. `run_summary.json`), gitignored `data/finetune_run/`, and
+  documented it in `training/README.md`. `make verify` green. **Not done in 26c:** the actual
+  adapter training + smoke gens + runtime/memory footprint (interactive owner session). Plan 0008
+  stays in `plans/ready/` (26c partial, 26d–26f remain). NB: builds on #19 (26b), still unmerged.
+
 ### 2026-06-13 — scraper — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/18
 - Source: roadmap:#8
