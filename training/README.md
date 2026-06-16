@@ -41,3 +41,29 @@ held-out set without contaminating the #25 RAG faithfulness eval:
 
 The shaping/splitting/overlap logic lives in `prepare.py` and is unit-tested in
 `tests/test_prepare.py`.
+
+## QLoRA fine-tune layer (plan 0008, step 26c)
+
+`finetune_config.py` is the reproducible layer the fine-tune notebook
+(`notebooks/finetune_qlora.ipynb`) imports, so the run is deterministic and
+**leakage-safe**:
+
+- **`QLoRAConfig`** — one frozen dataclass of hyperparameters (base model, LoRA
+  rank/layers, iters, batch size, …) with sensible 16GB-M4 defaults. Swap bases by
+  alias via `QLoRAConfig.for_base("qwen2.5-3b", train_iters=400)`; aliases are in
+  `SMALL_BASES`.
+- **`prepare_mlx_data()`** (`make finetune-prep`) — stages mlx-lm's expected
+  `train.jsonl` / `valid.jsonl` in `data/finetune_run/` straight from 26a's
+  `train.jsonl` / `heldout.jsonl`. **This replaces the notebook's old ad-hoc
+  `random.shuffle` of `instruct.jsonl`**, which re-split *all* quality articles
+  (including the ones 26a reserved out of the #25 RAG eval) and silently
+  re-introduced eval leakage. Validation is now the leakage-free held-out set,
+  verbatim.
+- **`eval_prompts()`** — deterministic held-out prompts for the smoke generations.
+- **`style_metrics()`** — the cheap style heuristics (TTR, sentence length, Calhoun
+  "fingerprint" word rate), shared with the 26d voice eval.
+
+These deterministic pieces are unit-tested in `tests/test_finetune_config.py`. The
+actual MLX training run (model download + Metal compute) stays in the notebook —
+it is not part of the offline test/verify path. `data/finetune_run/` (adapters,
+fused weights, staged data) is gitignored.

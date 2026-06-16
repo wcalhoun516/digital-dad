@@ -48,24 +48,25 @@ Format:
 
 <!-- entries below -->
 
-### 2026-06-14 — training — ready-for-review
-- PR: https://github.com/wcalhoun516/digital-dad/pull/19
+### 2026-06-15 — training — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/20
 - Source: plan:ready/0008
-- Summary: Plan 0008 **step 26b — baseline capture.** Froze the pre-fine-tune RAG numbers as
-  the "bar to beat" for the Geo LLM. The blocker the 06-13 run flagged is gone: PRs #16/#17
-  merged **and** the owner has run `make rag-eval` (so `data/analysis/rag_eval.json` exists
-  with real numbers), so 26b is doable fully offline — no conductor, no paid T3 calls. New
-  `analysis/geo_baseline.py` + `make geo-baseline` snapshots that #25 harness output into a
-  curated `data/analysis/geo_llm_baseline.json` (committed) + `docs/geo_llm_baseline.md`, with
-  a machine-readable `targets` block (direction + must-beat value) and a `voice` slot left
-  **pending** for 26d. Headline baseline: grounding 85.3%, hallucination 14.7%, abstention
-  100% on 4 unanswerables, false-abstention 10%, citation coverage 60% (14 held-out Qs, run
-  2026-06-13). Deepened (§8.5) with `compare_to_targets()` — the executable other half (strict
-  beat, signed deltas, missing-metric guard) that 26d/26f reuse to decide fine-tune vs RAG.
-  TDD'd with 14 tests (193 total); `make verify` green (lint + tests + dashboard). **Note:** this
-  branch was opened for 26a, but **26a already shipped in #17** — re-oriented to the next undone
-  step after a fetch revealed main was ahead of the session's start snapshot. Plan 0008 stays in
-  `plans/ready/` (26c–26f remain). `rag_eval.json` left untracked (owner's local eval artifact).
+- Summary: Plan 0008 **step 26c — first unattended slice: make the QLoRA notebook reproducible
+  and leakage-safe.** Hot-path pick (0008 is the only plan in `ready/`); 26c's actual MLX
+  training run isn't unattended-friendly (model download + Metal compute, exceeds the compute
+  cap, unverifiable headless), so I did the verifiable scaffolding half. **Found a real bug:**
+  `notebooks/finetune_qlora.ipynb` ignored 26a's leakage-free split — it loaded `instruct.jsonl`
+  (ALL quality articles, including the ones reserved out of the #25 RAG eval) and re-split it with
+  an ad-hoc `random.shuffle`, silently re-introducing the eval leakage 26a was built to prevent
+  and making the run non-reproducible. New `training/finetune_config.py` (TDD'd, 17 tests, 196
+  total): `QLoRAConfig` + `SMALL_BASES` registry, leakage-safe `prepare_mlx_data()` (stages
+  mlx-lm's train/valid verbatim from 26a's `train.jsonl`/`heldout.jsonl`), deterministic
+  `eval_prompts()`, and a shared `style_metrics()` (reused by 26d). Added `make finetune-prep`
+  (offline/free; live run staged 138 train / 34 held-out), rewired the notebook to a single
+  config source of truth (incl. `run_summary.json`), gitignored `data/finetune_run/`, and
+  documented it in `training/README.md`. `make verify` green. **Not done in 26c:** the actual
+  adapter training + smoke gens + runtime/memory footprint (interactive owner session). Plan 0008
+  stays in `plans/ready/` (26c partial, 26d–26f remain). NB: builds on #19 (26b), still unmerged.
 
 ### 2026-06-13 — scraper — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/18
