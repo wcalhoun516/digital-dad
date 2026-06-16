@@ -15,6 +15,7 @@ from analysis.voice_eval import (
     evaluate,
     load_trials,
     parse_ranking,
+    render_markdown,
     unblind_ranking,
     write_report,
 )
@@ -78,6 +79,13 @@ class TestParseRanking:
 
     def test_returns_none_without_parseable_object(self):
         assert parse_ranking("no json here", ["A", "B"]) is None
+
+    def test_returns_none_when_ranking_is_not_a_list(self):
+        assert parse_ranking('{"ranking": "A then B"}', ["A", "B"]) is None
+
+    def test_completes_ranking_when_judge_returns_empty_list(self):
+        # an empty ranking is still a list — complete it to the canonical order
+        assert parse_ranking('{"ranking": []}', ["A", "B"]) == ["A", "B"]
 
 
 class TestUnblindRanking:
@@ -182,6 +190,31 @@ class TestAggregate:
         assert summary["n_trials"] == 2
         assert summary["n_judged"] == 1
         assert summary["sources"]["finetuned"]["wins"] == 1
+
+    def test_handles_no_judged_records(self):
+        summary = aggregate([{"ranking": [], "winner": None}])
+        assert summary["n_judged"] == 0
+        assert summary["sources"] == {}
+        assert summary["pairwise"] == {}
+
+
+class TestRenderMarkdown:
+    def test_includes_counts_and_per_source_rows(self):
+        summary = aggregate(
+            [
+                {"ranking": ["finetuned", "rag", "real"], "winner": "finetuned"},
+                {"ranking": ["real", "finetuned", "rag"], "winner": "real"},
+            ]
+        )
+        md = render_markdown(summary)
+        assert "# Geo-LLM voice-fidelity eval" in md
+        assert "2/2 judged" in md
+        # every source appears in the per-source table
+        assert "finetuned" in md and "rag" in md and "real" in md
+
+    def test_notes_when_nothing_was_judged(self):
+        md = render_markdown(aggregate([{"ranking": [], "winner": None}]))
+        assert "0/1 judged" in md
 
 
 class TestWriteReport:

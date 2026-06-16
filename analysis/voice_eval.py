@@ -203,6 +203,38 @@ def aggregate(records: list[dict]) -> dict:
     }
 
 
+def render_markdown(summary: dict) -> str:
+    """Human-readable summary of an :func:`aggregate` result (companion to the JSON)."""
+    lines = [
+        "# Geo-LLM voice-fidelity eval",
+        "",
+        f"{summary['n_judged']}/{summary['n_trials']} judged "
+        "(blind A/B/C ranking by a T3 judge; plan 0008 step 26d).",
+        "",
+    ]
+    sources = summary.get("sources", {})
+    if sources:
+        lines += [
+            "| source | win-rate | avg rank | wins | appearances |",
+            "|--------|----------|----------|------|-------------|",
+        ]
+        for source in sorted(sources, key=lambda s: sources[s]["avg_rank"]):
+            s = sources[source]
+            lines.append(
+                f"| {source} | {s['win_rate']:.0%} | {s['avg_rank']:.2f} | "
+                f"{s['wins']} | {s['appearances']} |"
+            )
+        lines.append("")
+    pairwise = summary.get("pairwise", {})
+    if pairwise:
+        lines.append("## Head-to-head (fraction of shared trials the first source won)")
+        lines.append("")
+        for key in sorted(pairwise):
+            lines.append(f"- `{key}`: {pairwise[key]:.0%}")
+        lines.append("")
+    return "\n".join(lines)
+
+
 def write_report(records: list[dict], path: Path = REPORT_PATH) -> dict:
     """Write ``{generated_at, summary, records}`` JSON; return the summary."""
     summary = aggregate(records)
@@ -300,13 +332,15 @@ def main(argv: list[str] | None = None) -> int:
         log=lambda m: print(m, flush=True),
     )
     summary = write_report(records, args.output)
+    note_path = args.output.with_suffix(".md")
+    note_path.write_text(render_markdown(summary) + "\n")
     ft = summary["sources"].get("finetuned", {})
     print(
         f"\nVoice eval ({summary['n_judged']}/{summary['n_trials']} judged): "
         f"finetuned win-rate {ft.get('win_rate', 0):.0%}, "
         f"avg rank {ft.get('avg_rank', 0):.2f}. "
         f"finetuned-over-rag {summary['pairwise'].get('finetuned_over_rag', 0):.0%}.\n"
-        f"Report → {args.output}"
+        f"Report → {args.output}  (note → {note_path})"
     )
     return 0
 
