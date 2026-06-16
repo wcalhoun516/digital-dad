@@ -48,6 +48,25 @@ Format:
 
 <!-- entries below -->
 
+### 2026-06-14 — training — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/19
+- Source: plan:ready/0008
+- Summary: Plan 0008 **step 26b — baseline capture.** Froze the pre-fine-tune RAG numbers as
+  the "bar to beat" for the Geo LLM. The blocker the 06-13 run flagged is gone: PRs #16/#17
+  merged **and** the owner has run `make rag-eval` (so `data/analysis/rag_eval.json` exists
+  with real numbers), so 26b is doable fully offline — no conductor, no paid T3 calls. New
+  `analysis/geo_baseline.py` + `make geo-baseline` snapshots that #25 harness output into a
+  curated `data/analysis/geo_llm_baseline.json` (committed) + `docs/geo_llm_baseline.md`, with
+  a machine-readable `targets` block (direction + must-beat value) and a `voice` slot left
+  **pending** for 26d. Headline baseline: grounding 85.3%, hallucination 14.7%, abstention
+  100% on 4 unanswerables, false-abstention 10%, citation coverage 60% (14 held-out Qs, run
+  2026-06-13). Deepened (§8.5) with `compare_to_targets()` — the executable other half (strict
+  beat, signed deltas, missing-metric guard) that 26d/26f reuse to decide fine-tune vs RAG.
+  TDD'd with 14 tests (193 total); `make verify` green (lint + tests + dashboard). **Note:** this
+  branch was opened for 26a, but **26a already shipped in #17** — re-oriented to the next undone
+  step after a fetch revealed main was ahead of the session's start snapshot. Plan 0008 stays in
+  `plans/ready/` (26c–26f remain). `rag_eval.json` left untracked (owner's local eval artifact).
+
 ### 2026-06-13 — scraper — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/18
 - Source: roadmap:#8

@@ -1,0 +1,47 @@
+{
+  "description": "Pre-fine-tune baseline for the Geo LLM (#26). These are the numbers any fine-tuned George-Calhoun-voice model must beat on faithfulness; the voice half is filled in by the 26d voice-fidelity harness.",
+  "captured_at": "2026-06-14T05:09:47.678432+00:00",
+  "source": {
+    "harness": "analysis.rag_eval (#25, plan 0007)",
+    "rag_eval_generated_at": "2026-06-13T12:44:12.396902+00:00",
+    "n_questions": 14
+  },
+  "factuality": {
+    "n_questions": 14,
+    "n_answerable": 10,
+    "n_unanswerable": 4,
+    "total_claims": 75,
+    "grounded_claims": 64,
+    "grounding_rate": 0.8533,
+    "hallucination_rate": 0.1467,
+    "abstention_accuracy": 1.0,
+    "false_abstention_rate": 0.1,
+    "citation_coverage": 0.6
+  },
+  "voice": {
+    "status": "pending",
+    "note": "Populated by the 26d voice-fidelity eval harness (blind A/B vs RAG and real excerpts)."
+  },
+  "targets": {
+    "grounding_rate": {
+      "baseline": 0.8533,
+      "direction": "higher_is_better",
+      "must_beat": 0.8533
+    },
+    "hallucination_rate": {
+      "baseline": 0.1467,
+      "direction": "lower_is_better",
+      "must_beat": 0.1467
+    },
+    "abstention_accuracy": {
+      "baseline": 1.0,
+      "direction": "higher_is_better",
+      "must_beat": 1.0
+    },
+    "false_abstention_rate": {
+      "baseline": 0.1,
+      "direction": "lower_is_better",
+      "must_beat": 0.1
+    }
+  }
+}
