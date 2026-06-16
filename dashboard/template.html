@@ -648,6 +648,7 @@ footer {
   <button data-tab="search">Search</button>
   <button data-tab="askdad">Ask Dad</button>
   <button data-tab="trackrecord">Track Record</button>
+  <button data-tab="geollm">Geo-LLM</button>
 </nav>
 
 <!-- Tab 1: Theme Map -->
@@ -820,6 +821,47 @@ footer {
   <div id="prediction-list"></div>
 </div>
 
+<!-- Tab: Geo-LLM (insight-only; auto-fills from GEO_LLM_DATA) -->
+<div class="tab-content" id="tab-geollm">
+  <h2>Geo-LLM &mdash; bringing Dad's voice back</h2>
+  <p class="section-desc">Teaching a small open model to write like Dr. George Calhoun &mdash; not by feeding it facts, but by steeping it in millions of Geo Tokens until the cadence, the contrarianism, and the turns of phrase are his. A companion to &ldquo;Ask Dad&rdquo;: where that <em>quotes</em> him, this aims to <em>sound</em> like him.</p>
+
+  <h3 style="color:var(--accent);font-size:1.05em;margin:32px 0 8px">How the fine-tuning works (QLoRA)</h3>
+  <p style="color:var(--text-muted);font-size:0.9em;margin:0 0 16px;max-width:62ch">We don't retrain the whole model &mdash; that needs a data center. We freeze it and bolt on a tiny, trainable &ldquo;adapter&rdquo; that learns just his style.</p>
+  <div style="display:flex;align-items:stretch;gap:12px;flex-wrap:wrap;margin-bottom:14px">
+    <div style="flex:1;min-width:150px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:14px">
+      <div style="font-family:var(--mono);font-size:0.8em;color:var(--text-muted);margin-bottom:6px">&#128274; base model &mdash; frozen</div>
+      <div style="font-size:0.85em"><span id="geo-qlora-base">a small open model</span>. Its billions of weights stay locked.</div>
+    </div>
+    <div style="display:flex;align-items:center;color:var(--text-muted);font-size:1.3em">+</div>
+    <div style="flex:1;min-width:150px;background:var(--accent-dim);border:1px solid var(--accent);border-radius:8px;padding:14px">
+      <div style="font-family:var(--mono);font-size:0.8em;color:var(--accent);margin-bottom:6px">LoRA adapter &mdash; trainable</div>
+      <div style="font-size:0.85em">A few million new weights &mdash; learns his voice from the dataset below.</div>
+    </div>
+    <div style="display:flex;align-items:center;color:var(--text-muted);font-size:1.3em">&rarr;</div>
+    <div style="flex:1;min-width:130px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:14px">
+      <div style="font-family:var(--mono);font-size:0.8em;color:var(--text-muted);margin-bottom:6px">Geo-LLM</div>
+      <div style="font-size:0.85em">Writes in his voice.</div>
+    </div>
+  </div>
+  <div style="display:flex;height:14px;border-radius:6px;overflow:hidden;border:1px solid var(--border)">
+    <div id="geo-qlora-frozen" style="width:98.5%;background:var(--border)"></div>
+    <div id="geo-qlora-trainable" style="width:1.5%;background:var(--accent)"></div>
+  </div>
+  <p id="geo-qlora-caption" style="font-size:0.8em;color:var(--text-muted);margin:6px 0 0">Most of the model frozen; only the tiny adapter is trained &mdash; cheap enough to run on the Mac mini.</p>
+
+  <h3 style="color:var(--accent);font-size:1.05em;margin:32px 0 12px">The pipeline so far</h3>
+  <div id="geo-pipeline"></div>
+
+  <h3 style="color:var(--accent);font-size:1.05em;margin:32px 0 12px">The dataset at a glance</h3>
+  <div id="geo-dataset-metrics" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px"></div>
+  <div id="geo-sample-pair"></div>
+
+  <h3 style="color:var(--accent);font-size:1.05em;margin:32px 0 4px">The scoreboard</h3>
+  <p class="section-desc">Can the fine-tune beat retrieval on faithfulness <em>and</em> voice?</p>
+  <div id="geo-scoreboard" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px"></div>
+</div>
+
 <footer>
   Digital Dad &middot; A project about preserving intellectual legacy &middot; Built with D3.js, Python, and the local-llm-conductor
 </footer>
@@ -836,6 +878,88 @@ const MANIFEST_DATA = /*__MANIFEST_DATA__*/;
 const ENTITY_DATA = /*__ENTITY_DATA__*/;
 const EMBEDDINGS_DATA = /*__EMBEDDINGS_DATA__*/;
 const PREDICTIONS_DATA = /*__PREDICTIONS_DATA__*/;
+const GEO_LLM_DATA = /*__GEO_LLM_DATA__*/;
+</script>
+
+<script>
+// ===== GEO-LLM TAB (insight-only render from GEO_LLM_DATA) =====
+(function renderGeoLLM() {
+  const d = GEO_LLM_DATA;
+  if (!d) return;
+  const esc = s => (s || '').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  const fmt = n => (n == null ? '—' : n.toLocaleString());
+  const pct = v => (v == null ? '—' : Math.round(v * 100) + '%');
+  const row = (l, v) => `<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:0.9em"><span style="color:var(--text-muted)">${l}</span><span style="color:var(--accent)">${v}</span></div>`;
+  const card = (inner, hi) => `<div style="background:var(--bg-card);border:1px solid ${hi ? 'var(--accent)' : 'var(--border)'};border-radius:8px;padding:16px 20px">${inner}</div>`;
+
+  if (d.qlora) {
+    const base = document.getElementById('geo-qlora-base');
+    if (base && d.qlora.base_model) base.textContent = d.qlora.base_model;
+    const fz = document.getElementById('geo-qlora-frozen');
+    const tr = document.getElementById('geo-qlora-trainable');
+    if (fz && d.qlora.frozen_pct != null) fz.style.width = d.qlora.frozen_pct + '%';
+    if (tr && d.qlora.trainable_pct != null) tr.style.width = d.qlora.trainable_pct + '%';
+    const cap = document.getElementById('geo-qlora-caption');
+    if (cap && d.qlora.frozen_pct != null) cap.textContent =
+      `~${Math.round(d.qlora.frozen_pct)}% of the model frozen · only the ~${d.qlora.trainable_pct}% adapter is trained — cheap enough to run on the Mac mini.`;
+  }
+
+  const STAT = {done: {c: '#6db86d', t: 'done'}, next: {c: 'var(--accent)', t: 'next'}, upcoming: {c: 'var(--text-muted)', t: 'upcoming'}};
+  const pl = document.getElementById('geo-pipeline');
+  if (pl && d.pipeline && d.pipeline.length) {
+    pl.innerHTML = d.pipeline.map(s => {
+      const st = STAT[s.status] || STAT.upcoming;
+      return `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">
+        <span style="width:10px;height:10px;border-radius:50%;background:${st.c};flex:none"></span>
+        <span style="font-family:var(--mono);color:var(--text-muted);font-size:0.85em">${esc(s.id)}</span>
+        <span style="flex:1">${esc(s.label)}</span>
+        <span style="font-family:var(--mono);font-size:0.72em;text-transform:uppercase;letter-spacing:0.05em;color:${st.c}">${st.t}</span></div>`;
+    }).join('');
+  }
+
+  const dm = document.getElementById('geo-dataset-metrics');
+  if (dm && d.dataset) {
+    const ds = d.dataset;
+    const cards = [
+      ['voice examples', fmt(ds.n_examples)],
+      ['train / held-out', `${fmt(ds.n_train)} / ${fmt(ds.n_heldout)}`],
+      ['source columns', fmt(ds.n_columns)],
+      ['Geo Tokens', fmt(ds.geo_tokens)],
+      ['corpus', ds.corpus_bytes ? (ds.corpus_bytes / 1048576).toFixed(1) + ' MB' : '—'],
+    ];
+    dm.innerHTML = cards.map(([l, v]) => `<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:16px">
+      <div style="color:var(--text-muted);font-size:0.8em;margin-bottom:6px">${l}</div>
+      <div style="font-family:var(--mono);font-size:1.5em;color:var(--accent)">${v}</div></div>`).join('');
+  }
+
+  const sp = document.getElementById('geo-sample-pair');
+  if (sp) {
+    sp.innerHTML = d.sample_pair ? `<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:16px 20px;margin-top:14px">
+      <div style="color:var(--text-muted);font-size:0.75em;margin-bottom:8px">sample training pair</div>
+      <p style="margin:0 0 8px;font-size:0.9em"><span style="color:var(--text-muted)">prompt &rarr; </span>${esc(d.sample_pair.prompt)}</p>
+      <p style="margin:0;font-style:italic;color:var(--text);font-size:0.9em">${esc(d.sample_pair.answer)}</p></div>` : '';
+  }
+
+  const sb = document.getElementById('geo-scoreboard');
+  if (sb) {
+    let rag = '<div style="color:var(--text-muted);font-size:0.9em">RAG baseline pending</div>';
+    if (d.rag_baseline) {
+      const r = d.rag_baseline;
+      rag = `<div style="color:var(--text-muted);font-size:0.85em;margin-bottom:10px">RAG baseline &middot; the bar</div>` +
+        row('grounding', pct(r.grounding)) + row('citation coverage', pct(r.citation_coverage)) + row('refusal accuracy', pct(r.abstention_accuracy));
+    }
+    let ft;
+    if (d.voice_eval && Object.keys(d.voice_eval).length) {
+      ft = `<div style="color:var(--text-muted);font-size:0.85em;margin-bottom:10px">Geo-LLM fine-tune</div>` +
+        Object.entries(d.voice_eval).map(([k, v]) =>
+          row(esc(k.replace(/_/g, ' ')), (typeof v === 'number' && v <= 1 && v >= 0) ? pct(v) : esc(String(v)))).join('');
+    } else {
+      ft = `<div style="color:var(--text-muted);font-size:0.85em;margin-bottom:10px">Geo-LLM fine-tune</div>
+        <div style="color:var(--text-muted);text-align:center;padding:18px 0">awaiting first voice-eval<br><span style="font-size:0.8em">(unlocks at 26e)</span></div>`;
+    }
+    sb.innerHTML = card(rag, false) + card(ft, !!(d.voice_eval && Object.keys(d.voice_eval).length));
+  }
+})();
 </script>
 
 <!-- D3.js (loaded from CDN; works when served, fallback message if file://) -->
