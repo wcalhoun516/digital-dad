@@ -1,5 +1,5 @@
 {
-  "total_articles_analyzed": 196,
+  "total_articles_analyzed": 199,
   "top_organizations": [
     {
       "name": "Fed",
@@ -159,8 +159,8 @@
     },
     {
       "name": "EU",
-      "count": 95,
-      "article_count": 22,
+      "count": 96,
+      "article_count": 23,
       "articles": [
         "can-the-euro-survive-the-progressive-critique-joseph-stiglitz-part-1",
         "carthage-must-be-destroyed-or-will-covid-19-kill-huawei",
@@ -219,8 +219,8 @@
     },
     {
       "name": "Apple",
-      "count": 67,
-      "article_count": 21,
+      "count": 68,
+      "article_count": 22,
       "articles": [
         "5g-risk-huawei-is-small-potatoes-compared-to-tsmc-who",
         "a-strange-new-bubble-in-chinese-a-shares-a-is-for-arbitrage",
@@ -290,23 +290,23 @@
       ]
     },
     {
-      "name": "FTX",
-      "count": 36,
-      "article_count": 1,
-      "articles": [
-        "ftx-and-esg-a-panorama-of-failed-governance-pt-1-the-internal-failures"
-      ]
-    },
-    {
       "name": "Congress",
-      "count": 35,
-      "article_count": 25,
+      "count": 36,
+      "article_count": 26,
       "articles": [
         "5g-risk-huawei-is-small-potatoes-compared-to-tsmc-who",
         "a-huawei-recovery-plan-step-1-playing-peekaboo-pcaob-compliance",
         "a-long-overdue-reckoning-for-the-bureau-of-labor-statistics",
         "carthage-must-be-destroyed-or-will-covid-19-kill-huawei",
         "didi-means-war-a-financial-cold-war-with-china"
+      ]
+    },
+    {
+      "name": "FTX",
+      "count": 36,
+      "article_count": 1,
+      "articles": [
+        "ftx-and-esg-a-panorama-of-failed-governance-pt-1-the-internal-failures"
       ]
     },
     {
@@ -564,15 +564,15 @@
       ]
     },
     {
-      "name": "the Bureau of Labor Statistics",
+      "name": "CCP",
       "count": 18,
-      "article_count": 13,
+      "article_count": 10,
       "articles": [
-        "a-long-overdue-reckoning-for-the-bureau-of-labor-statistics",
-        "decoding-the-inflation-signals-how-to-read-and-correct-the-latest-cpi-figure",
-        "inflation-the-media-screams-but-the-market-is-unfazed",
-        "media-laziness-in-evaluating-economic-data-inflation-gas-prices-china-russia",
-        "more-problems-with-inflation-coping-with-volatility"
+        "5g-risk-huawei-is-small-potatoes-compared-to-tsmc-who",
+        "a-huawei-recovery-plan-step-1-playing-peekaboo-pcaob-compliance",
+        "beijings-jack-ma-kabuki-play-continues-is-alibaba-a-value-play",
+        "didi-means-war-a-financial-cold-war-with-china",
+        "how-huawei-could-save-itself-a-five-point-plan"
       ]
     }
   ],
@@ -603,8 +603,8 @@
     },
     {
       "name": "Jack Ma",
-      "count": 99,
-      "article_count": 16,
+      "count": 100,
+      "article_count": 17,
       "articles": [
         "alibaba-is-a-spring-loaded-value-play-ready-to-explode",
         "alibaba-update-its-down-75-is-it-still-a-value-play",
@@ -891,6 +891,17 @@
       ]
     },
     {
+      "name": "Xi",
+      "count": 13,
+      "article_count": 4,
+      "articles": [
+        "alibaba-update-its-down-75-is-it-still-a-value-play",
+        "beijings-jack-ma-kabuki-play-continues-is-alibaba-a-value-play",
+        "the-hong-kong-crackdown-is-a-financial-disaster-for-china-is-it-time-to-fire-the",
+        "who-won-the-xitrump-summit"
+      ]
+    },
+    {
       "name": "Berkshire Hathaway",
       "count": 12,
       "article_count": 6,
@@ -1077,16 +1088,6 @@
       ]
     },
     {
-      "name": "Xi",
-      "count": 9,
-      "article_count": 3,
-      "articles": [
-        "alibaba-update-its-down-75-is-it-still-a-value-play",
-        "beijings-jack-ma-kabuki-play-continues-is-alibaba-a-value-play",
-        "the-hong-kong-crackdown-is-a-financial-disaster-for-china-is-it-time-to-fire-the"
-      ]
-    },
-    {
       "name": "Berkshire",
       "count": 9,
       "article_count": 3,
@@ -1094,6 +1095,15 @@
         "after-apple-and-tesla-berkshire-and-amazon-should-split-their-shares-too",
         "buffett-takes-on-japan-but-does-value-still-exist",
         "the-real-warren-buffett-anomaly-and-how-to-profit-from-it"
+      ]
+    },
+    {
+      "name": "Hormuz",
+      "count": 9,
+      "article_count": 2,
+      "articles": [
+        "is-there-price-gouging-in-the-gasoline-market",
+        "to-price-in-hormuz-markets-must-recognize-two-economic-risks"
       ]
     },
     {
@@ -1128,18 +1138,6 @@
         "janet-yellen-forgets-how-to-do-fedspeak-or-whats-that-floating-in-the-punchbowl",
         "the-fed-doesnt-just-print-money-it-also-prints-alpha",
         "will-the-fed-cut-interest-rates-does-it-matter-recent-history-says-no"
-      ]
-    },
-    {
-      "name": "Lai Xiaomin",
-      "count": 8,
-      "article_count": 5,
-      "articles": [
-        "beijing-embraces-moral-hazard-the-huarong-bailout-was-the-right-move",
-        "financial-regulation-chinese-style-and-where-is-jack-ma",
-        "kill-chicken-scare-monkey-杀鸡儆猴-beijings-philosophy-of-regulation-wont-work",
-        "the-latest-jack-ma-sighting-is-it-for-real",
-        "the-sad-end-of-jack-ma-inc"
       ]
     }
   ],
@@ -9193,6 +9191,50 @@
       ]
     },
     {
+      "slug": "which-companies-add-the-most-value-in-the-semiconductor-industry-part-1",
+      "date": "2021-09-30",
+      "orgs": [
+        [
+          "Foundry",
+          2
+        ],
+        [
+          "Lexus",
+          1
+        ],
+        [
+          "Congress",
+          1
+        ],
+        [
+          "the Really Big Numbers",
+          1
+        ],
+        [
+          "Apple",
+          1
+        ],
+        [
+          "Designer",
+          1
+        ],
+        [
+          "the Boston Consulting Group",
+          1
+        ],
+        [
+          "the Semiconductor Industry Association",
+          1
+        ]
+      ],
+      "people": [
+        [
+          "Packager",
+          1
+        ]
+      ]
+    },
+    {
       "slug": "the-us-still-dominates-in-semiconductors-china-is-vulnerable-pt-2",
       "date": "2021-10-11",
       "orgs": [
@@ -16512,6 +16554,122 @@
         ],
         [
           "Ras Laffan",
+          1
+        ]
+      ]
+    },
+    {
+      "slug": "is-there-price-gouging-in-the-gasoline-market",
+      "date": "2026-04-23",
+      "orgs": [
+        [
+          "FTC",
+          6
+        ],
+        [
+          "thePeople’s Answer",
+          1
+        ],
+        [
+          "The Federal Department of Energy",
+          1
+        ],
+        [
+          "The Federal Trade Commission",
+          1
+        ],
+        [
+          "Gasoline",
+          1
+        ],
+        [
+          "academicstudyof",
+          1
+        ],
+        [
+          "Following Epic Fury",
+          1
+        ],
+        [
+          "CBS Newsreported",
+          1
+        ],
+        [
+          "U.S.,there",
+          1
+        ]
+      ],
+      "people": [
+        [
+          "Hormuz",
+          1
+        ],
+        [
+          "Rita",
+          1
+        ]
+      ]
+    },
+    {
+      "slug": "who-won-the-xitrump-summit",
+      "date": "2026-05-25",
+      "orgs": [
+        [
+          "SOE",
+          2
+        ],
+        [
+          "The Washington Postlanded",
+          1
+        ],
+        [
+          "the White House",
+          1
+        ],
+        [
+          "the Secret Service",
+          1
+        ],
+        [
+          "Boeing",
+          1
+        ],
+        [
+          "Thucydides",
+          1
+        ],
+        [
+          "2024World Bank",
+          1
+        ],
+        [
+          "TheRhodium Groupestimates",
+          1
+        ],
+        [
+          "OECD",
+          1
+        ],
+        [
+          "theWall Street Journal",
+          1
+        ]
+      ],
+      "people": [
+        [
+          "Xi",
+          4
+        ],
+        [
+          "thePostactually",
+          1
+        ],
+        [
+          "Economisthas",
+          1
+        ],
+        [
+          "Jack Ma",
           1
         ]
       ]

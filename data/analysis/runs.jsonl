@@ -4,3 +4,9 @@
 {"timestamp": "2026-04-10T23:31:33.915863+00:00", "module": "themes", "corpus_fingerprint": "cd52f0bb2493a555cb51c1e99d4bd0a9"}
 {"timestamp": "2026-04-13T21:40:57.923627+00:00", "module": "semantic_search", "corpus_fingerprint": "cd52f0bb2493a555cb51c1e99d4bd0a9"}
 {"timestamp": "2026-04-13T21:42:22.800011+00:00", "module": "entities", "corpus_fingerprint": "cd52f0bb2493a555cb51c1e99d4bd0a9"}
+{"timestamp": "2026-06-14T07:31:34.953154+00:00", "module": "linguistic", "corpus_fingerprint": "5930793387722d80a0e476687b14dc88"}
+{"timestamp": "2026-06-14T07:31:41.481539+00:00", "module": "themes", "corpus_fingerprint": "5930793387722d80a0e476687b14dc88"}
+{"timestamp": "2026-06-14T07:32:28.467830+00:00", "module": "entities", "corpus_fingerprint": "5930793387722d80a0e476687b14dc88"}
+{"timestamp": "2026-06-14T07:55:45.371994+00:00", "module": "psychoprofile", "router": "conductor_local", "model": "gemma4:12b-it-qat", "num_articles": 199, "input_tokens": 165195, "output_tokens": 1332, "cost_usd": 0.5156, "duration_s": 1396.5, "corpus_fingerprint": "5930793387722d80a0e476687b14dc88"}
+{"timestamp": "2026-06-14T07:56:05.009818+00:00", "module": "semantic_search", "corpus_fingerprint": "5930793387722d80a0e476687b14dc88"}
+{"timestamp": "2026-06-14T10:21:39.809745+00:00", "module": "predictions", "corpus_fingerprint": "5930793387722d80a0e476687b14dc88"}

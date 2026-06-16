@@ -46,3 +46,60 @@ def test_dataset_stats_all_missing(tmp_path):
     assert s["n_columns"] == 0
     assert s["corpus_bytes"] == 0
     assert s["geo_tokens"] == 0
+
+
+def test_sample_pair_extracts_user_and_assistant(tmp_path):
+    f = tmp_path / "instruct.jsonl"
+    rec = {"messages": [
+        {"role": "system", "content": "sys"},
+        {"role": "user", "content": "What of the bond market?"},
+        {"role": "assistant", "content": "The truth comes in layers..."}]}
+    f.write_text(json.dumps(rec) + "\n")
+    sp = g.sample_pair(f)
+    assert sp["prompt"] == "What of the bond market?"
+    assert sp["answer"].startswith("The truth")
+
+
+def test_sample_pair_missing(tmp_path):
+    assert g.sample_pair(tmp_path / "nope.jsonl") is None
+
+
+def test_sample_pair_incomplete_returns_none(tmp_path):
+    f = tmp_path / "instruct.jsonl"
+    f.write_text(json.dumps({"messages": [{"role": "user", "content": "q"}]}) + "\n")
+    assert g.sample_pair(f) is None
+
+
+def test_rag_summary_reads_summary_block(tmp_path):
+    f = tmp_path / "rag_eval.json"
+    f.write_text(json.dumps({"summary": {
+        "grounding_rate": 0.85, "citation_coverage": 0.6, "abstention_accuracy": 1.0}}))
+    assert g.rag_summary(f) == {
+        "grounding": 0.85, "citation_coverage": 0.6, "abstention_accuracy": 1.0}
+
+
+def test_rag_summary_missing(tmp_path):
+    assert g.rag_summary(tmp_path / "nope.json") is None
+
+
+def test_voice_summary_passes_through_block(tmp_path):
+    f = tmp_path / "voice_eval.json"
+    f.write_text(json.dumps({"summary": {"voice_win_rate": 0.7, "n_trials": 10}}))
+    assert g.voice_summary(f) == {"voice_win_rate": 0.7, "n_trials": 10}
+
+
+def test_voice_summary_missing(tmp_path):
+    assert g.voice_summary(tmp_path / "nope.json") is None
+
+
+def test_pipeline_status_marks_done_then_next_then_upcoming():
+    flags = {"dataset": True, "rag": True, "notebook": False,
+             "voice_harness": False, "adapter": False, "voice_results": False}
+    steps = g.pipeline_status(flags)
+    by_id = {s["id"]: s["status"] for s in steps}
+    assert by_id["26a"] == "done"
+    assert by_id["26b"] == "done"
+    assert by_id["26c"] == "next"       # first not-done becomes "next"
+    assert by_id["26d"] == "upcoming"
+    assert by_id["26f"] == "upcoming"
+    assert [s["id"] for s in steps] == ["26a", "26b", "26c", "26d", "26e", "26f"]
