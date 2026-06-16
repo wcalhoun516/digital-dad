@@ -103,3 +103,42 @@ def test_pipeline_status_marks_done_then_next_then_upcoming():
     assert by_id["26d"] == "upcoming"
     assert by_id["26f"] == "upcoming"
     assert [s["id"] for s in steps] == ["26a", "26b", "26c", "26d", "26e", "26f"]
+
+
+def _setup_dirs(tmp_path, monkeypatch, *, with_instruct=True):
+    tdir = tmp_path / "training"
+    tdir.mkdir()
+    if with_instruct:
+        rec = {"messages": [
+            {"role": "user", "content": "q"}, {"role": "assistant", "content": "a"}]}
+        (tdir / "instruct.jsonl").write_text(json.dumps(rec) + "\n")
+        (tdir / "corpus.txt").write_text("a b")
+    adir = tmp_path / "analysis"
+    adir.mkdir()
+    monkeypatch.setattr(g, "TRAINING_DIR", tdir)
+    monkeypatch.setattr(g, "ANALYSIS_DIR", adir)
+    monkeypatch.setattr(g, "FINETUNE_RUN_DIR", tmp_path / "no_run")
+    return tdir, adir
+
+
+def test_build_status_shape_dataset_only(tmp_path, monkeypatch):
+    _setup_dirs(tmp_path, monkeypatch)
+    status = g.build_status()
+    assert set(status) == {
+        "dataset", "sample_pair", "qlora", "pipeline", "rag_baseline", "voice_eval"}
+    assert status["rag_baseline"] is None
+    assert status["voice_eval"] is None
+    assert len(status["pipeline"]) == 6
+    assert status["pipeline"][0]["status"] == "done"      # dataset present → 26a done
+    assert status["pipeline"][1]["status"] == "next"      # no rag baseline yet
+    assert status["sample_pair"] == {"prompt": "q", "answer": "a"}
+
+
+def test_write_status_creates_file(tmp_path, monkeypatch):
+    _setup_dirs(tmp_path, monkeypatch)
+    out = tmp_path / "analysis" / "geo_llm.json"
+    returned = g.write_status(out)
+    assert out.exists()
+    on_disk = json.loads(out.read_text())
+    assert on_disk == returned
+    assert on_disk["dataset"]["n_examples"] == 1

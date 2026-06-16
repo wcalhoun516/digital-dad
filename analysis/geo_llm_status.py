@@ -118,3 +118,50 @@ def pipeline_status(flags: dict) -> list[dict]:
             status = "upcoming"
         steps.append({"id": sid, "label": label, "status": status})
     return steps
+
+
+# Illustrative until the 26c run config surfaces real values; labeled as such in the UI.
+QLORA_DEFAULT = {"base_model": "Qwen2.5-3B", "frozen_pct": 98.5, "trainable_pct": 1.5}
+
+
+def build_status() -> dict:
+    """Assemble the full Geo-LLM tab snapshot from whatever artifacts exist."""
+    ds = dataset_stats(TRAINING_DIR)
+    rag = rag_summary(ANALYSIS_DIR / "rag_eval.json")
+    voice = voice_summary(ANALYSIS_DIR / "voice_eval.json")
+    flags = {
+        "dataset": ds["n_examples"] > 0,
+        "rag": rag is not None,
+        "notebook": (FINETUNE_RUN_DIR / "train.jsonl").exists(),
+        "voice_harness": Path(__file__).with_name("voice_eval.py").exists(),
+        "adapter": False,  # flip true once 26e registers a trained adapter
+        "voice_results": voice is not None,
+    }
+    return {
+        "dataset": ds,
+        "sample_pair": sample_pair(TRAINING_DIR / "instruct.jsonl"),
+        "qlora": QLORA_DEFAULT,
+        "pipeline": pipeline_status(flags),
+        "rag_baseline": rag,
+        "voice_eval": voice,
+    }
+
+
+def write_status(path: Path = REPORT_PATH) -> dict:
+    """Write the snapshot to *path* and return it."""
+    status = build_status()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(status, indent=2, ensure_ascii=False) + "\n")
+    return status
+
+
+def main(argv=None) -> int:
+    status = write_status()
+    done = sum(1 for s in status["pipeline"] if s["status"] == "done")
+    print(f"Wrote {REPORT_PATH} — {status['dataset']['n_examples']} examples, "
+          f"{done}/6 steps done.")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
