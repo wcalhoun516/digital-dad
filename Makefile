@@ -65,6 +65,13 @@ backfill-verdicts:
 rag-eval:
 	$(PYTHON) -m analysis.rag_eval $(ARGS)
 
+# Geo LLM baseline snapshot (plan 0008 step 26b). Offline + free: reads the existing
+# rag-eval output (data/analysis/rag_eval.json) and curates the pre-fine-tune "bar to
+# beat" into data/analysis/geo_llm_baseline.json + docs/geo_llm_baseline.md. Run
+# `make rag-eval` once first to capture the numbers it snapshots.
+geo-baseline:
+	$(PYTHON) -m analysis.geo_baseline
+
 test:
 	$(PYTHON) -m pytest -q
 
@@ -88,5 +95,6 @@ clean:
 	rm -f data/analysis/*.json data/analysis/*.md
 	rm -f data/training/finetune.jsonl data/training/corpus.txt data/training/metadata.csv
 	rm -f data/training/instruct.jsonl data/training/train.jsonl data/training/heldout.jsonl
+	rm -f docs/geo_llm_baseline.md
 	rm -f dashboard/index.html
 	rm -f data/manifest.json
