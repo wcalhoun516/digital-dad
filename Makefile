@@ -4,7 +4,7 @@ PYTHON := .venv/bin/python
 # ruff findings (broadening the scope is a follow-up roadmap item, #1-3/cleanup).
 LINT_PATHS := tests
 
-.PHONY: scrape manifest-check analyze training dashboard all serve search on-this-day send-on-this-day adjudicate backfill-verdicts clean test lint fmt verify verify-responsive
+.PHONY: scrape manifest-check analyze training dashboard all serve search on-this-day send-on-this-day adjudicate backfill-verdicts rag-eval voice-eval clean test lint fmt verify verify-responsive
 
 scrape:
 	$(PYTHON) -m scraper $(ARGS)
@@ -58,6 +58,14 @@ backfill-verdicts:
 # --judge-tier 2. Run deliberately (NOT from automation).
 rag-eval:
 	$(PYTHON) -m analysis.rag_eval $(ARGS)
+
+# Voice-fidelity blind-A/B eval for the Geo-LLM fine-tune (plan 0008 step 26d). Owner-gated:
+# the judge pass makes conductor calls (defaults to paid T3), so it refuses to run if the
+# conductor is down. Reads eval/voice_trials.json (owner-produced once 26c's adapter exists),
+# writes data/analysis/voice_eval.json. ARGS e.g. --judge-tier 2. Run deliberately (NOT from
+# automation).
+voice-eval:
+	$(PYTHON) -m analysis.voice_eval $(ARGS)
 
 test:
 	$(PYTHON) -m pytest -q
