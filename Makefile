@@ -21,6 +21,12 @@ analyze:
 training:
 	$(PYTHON) -m training
 
+# Stage mlx-lm's train.jsonl/valid.jsonl in data/finetune_run/ from 26a's leakage-free
+# split (plan 0008 step 26c). Offline + free; the actual QLoRA run lives in
+# notebooks/finetune_qlora.ipynb. Run `make training` first to produce the split.
+finetune-prep:
+	$(PYTHON) -m training.finetune_config
+
 dashboard:
 	$(PYTHON) viz/build_dashboard.py
 
@@ -90,5 +96,6 @@ clean:
 	rm -f data/analysis/*.json data/analysis/*.md
 	rm -f data/training/finetune.jsonl data/training/corpus.txt data/training/metadata.csv
 	rm -f data/training/instruct.jsonl data/training/train.jsonl data/training/heldout.jsonl
+	rm -f docs/geo_llm_baseline.md
 	rm -f dashboard/index.html
 	rm -f data/manifest.json
