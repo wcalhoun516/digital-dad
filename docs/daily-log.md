@@ -48,6 +48,28 @@ Format:
 
 <!-- entries below -->
 
+### 2026-06-16 — training — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/21
+- Source: plan:ready/0008
+- Summary: Plan 0008 step **26d — voice-fidelity eval harness, first unattended-friendly slice.**
+  Hot-path pick (0008 still the only plan in `ready/`). 26d's live judge (T3) + the `finetuned`
+  candidate both need owner-interactive compute (the 26c adapter isn't trained yet), so — like
+  26b/26c — I shipped the **verifiable deterministic half**: new `analysis/voice_eval.py`, a blind
+  A/B/C ranking harness modeled on `analysis/rag_eval.py`'s injected-seam pattern. For each
+  held-out prompt it anonymizes candidate passages (`real`/`rag`/`finetuned`) to labels A/B/C with
+  a **seeded, reproducible** shuffle, has a judge rank them by Calhoun-voice, then un-blinds and
+  aggregates **win-rate / avg-rank / head-to-head** (`finetuned_over_rag`) per source. TDD'd: 25
+  tests (`blind_candidates`, tolerant `parse_ranking`, `unblind_ranking`, `evaluate`, `aggregate`,
+  `render_markdown`, `write_report`). Live `judge` seam (conductor T3) + `make voice-eval` CLI gated
+  on conductor reachability (paid-call safety, mirrors rag-eval); plus a trials-input template
+  (`eval/voice_trials.example.json`) and a README section. `make verify` green (204 passed +
+  dashboard build). **Deliberately self-contained off `main`:** I *deferred* folding in
+  `style_metrics` (which lives in #20's still-unmerged `training/finetune_config.py`) so this PR has
+  **no dependency on unmerged code** — noted as the next seam for a future slice. **Not done in 26d:**
+  the live A/B run itself (needs the trained adapter + the real `finetuned`/`real`/`rag` candidates,
+  owner-interactive). Plan 0008 stays in `plans/ready/` (26c training + 26d live run remain; 26e–26f
+  after). NB: 26b (#19) and 26c (#20) are still unmerged ahead of this.
+
 ### 2026-06-13 — scraper — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/18
 - Source: roadmap:#8
