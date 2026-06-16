@@ -1,0 +1,23 @@
+{
+  "description": "TEMPLATE input for the Geo-LLM voice-fidelity eval (plan 0008 step 26d). Each trial is one held-out prompt plus the candidate passages to be blind-ranked by a judge model for how well they read like Dr. George Calhoun's voice. 'candidates' maps a SOURCE label to its text. The canonical sources are 'real' (a genuine Calhoun excerpt — the gold reference), 'rag' (the dashboard's Ask Dad answer), and 'finetuned' (the QLoRA model from 26c). The harness anonymizes these to A/B/C before judging so the judge can't tell which is which. Prompts must NOT overlap the #25 RAG eval questions (eval/questions.json) or 26a's held-out split — voice fidelity is measured on fresh prompts. This file is a SHAPE template with illustrative text; the real trials are produced once the 26c adapter exists (owner-interactive) and are not committed.",
+  "trials": [
+    {
+      "id": "v01",
+      "prompt": "Write a short, opinionated paragraph on whether the Federal Reserve has become a market-backstopping institution.",
+      "candidates": {
+        "real": "<paste a genuine George Calhoun excerpt on the Fed here>",
+        "rag": "<paste the Ask Dad RAG answer to this prompt here>",
+        "finetuned": "<paste the 26c fine-tuned model's answer here>"
+      }
+    },
+    {
+      "id": "v02",
+      "prompt": "Give a contrarian take on Europe's path to fiscal union.",
+      "candidates": {
+        "real": "<paste a genuine George Calhoun excerpt on Europe's fiscal union here>",
+        "rag": "<paste the Ask Dad RAG answer to this prompt here>",
+        "finetuned": "<paste the 26c fine-tuned model's answer here>"
+      }
+    }
+  ]
+}

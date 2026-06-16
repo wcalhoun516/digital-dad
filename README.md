@@ -168,6 +168,24 @@ make rag-eval ARGS="--limit 5"      # quick smoke
 make rag-eval ARGS="--judge-tier 2" # free local judge (lower-quality scores)
 ```
 
+**Does the fine-tune sound like him? (voice-fidelity eval)** — `analysis/voice_eval.py`
+(plan 0008 step 26d) is a **blind A/B/C** harness for the "Geo LLM" experiment: for each
+held-out prompt it gathers candidate passages from different sources — a `real` Calhoun
+excerpt, the `rag` (Ask Dad) answer, and the `finetuned` model's answer — anonymizes them
+to labels A/B/C so the judge can't tell which is which, asks a T3 judge to rank them by how
+much they read like his voice, then un-blinds and aggregates **win-rate**, **average rank**,
+and **head-to-head** (e.g. `finetuned_over_rag`) per source. Blinding is seeded, so a run is
+reproducible and auditable. Trials live in `eval/voice_trials.json` (shape:
+`eval/voice_trials.example.json`); the real trials are owner-produced once 26c's adapter
+exists, since the `finetuned` candidate needs the trained model.
+
+```bash
+# Owner-gated: the judge pass makes paid T3 calls, so it refuses to run if the conductor
+# is down. Writes data/analysis/voice_eval.json. Run deliberately, not from automation.
+make voice-eval                       # rank all trials
+make voice-eval ARGS="--judge-tier 2" # free local judge (lower-quality scores)
+```
+
 ## The Calhoun Track Record — Prediction Tracker
 
 Extracts every falsifiable prediction Dr. Calhoun made across his entire corpus,
