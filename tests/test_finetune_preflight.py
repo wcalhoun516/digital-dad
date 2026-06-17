@@ -125,6 +125,18 @@ class TestCheckLengthBudget:
         result = check_length_budget([], max_seq_len=1024)
         assert result["ok"] is True
         assert result["n"] == 0
+        assert result["suggested_max_seq_len"] is None
+
+    def test_suggests_a_power_of_two_seq_len_covering_p95(self):
+        # 95 short + 5 long records: P95 is short, so the suggestion stays modest
+        # and is a clean power of two that covers it.
+        recs = [_rec(f"s{i}", body="word " * 50) for i in range(95)]
+        recs += [_rec(f"l{i}", body="word " * 6000) for i in range(5)]
+        result = check_length_budget(recs, max_seq_len=128, chars_per_token=4)
+        sug = result["suggested_max_seq_len"]
+        assert sug & (sug - 1) == 0  # power of two
+        assert sug >= result["p95_est_tokens"]
+        assert sug < result["max_est_tokens"]  # P95 ignores the 5 outliers
 
 
 class TestPreflight:

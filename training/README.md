@@ -88,5 +88,7 @@ report; `--max-seq-len` / `--base` override the config for what-if runs.
 **Why this matters now:** on the real corpus the preflight passes shape + disjointness
 but **fails the length budget — 100% of records exceed the default `max_seq_len=1024`**
 (est. tokens median ~3,000, max ~5,300), because the assistant turn is a full article
-body. The 26c run must raise `max_seq_len` (or chunk bodies) or it trains on almost
-nothing. The pure checks are unit-tested in `tests/test_finetune_preflight.py`.
+body. The report turns this into an action: it suggests a `max_seq_len` — the smallest
+power of two covering ~95% of records (currently **≈8192**, P95 ≈4,354 tokens) — so the
+26c run either raises the window or chunks bodies instead of training on almost nothing.
+The pure checks are unit-tested in `tests/test_finetune_preflight.py`.

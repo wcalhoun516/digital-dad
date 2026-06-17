@@ -105,6 +105,21 @@ def _record_chars(record: dict) -> int:
     return sum(len(m.get("content") or "") for m in record.get("messages", []))
 
 
+def _percentile(values: list[float], pct: float) -> float:
+    """The ``pct``-th percentile via nearest-rank on the sorted values."""
+    ordered = sorted(values)
+    k = max(0, min(len(ordered) - 1, round(pct / 100 * len(ordered)) - 1))
+    return ordered[k]
+
+
+def _next_pow2(n: int) -> int:
+    """Smallest power of two >= ``n`` (>= 1)."""
+    p = 1
+    while p < n:
+        p *= 2
+    return p
+
+
 def check_length_budget(
     records: list[dict], max_seq_len: int, chars_per_token: int = DEFAULT_CHARS_PER_TOKEN
 ) -> dict:
@@ -118,6 +133,7 @@ def check_length_budget(
     est = [_record_chars(r) / chars_per_token for r in records]
     n_over = sum(1 for t in est if t > max_seq_len)
     n = len(records)
+    p95 = int(_percentile(est, 95)) if est else 0
     return {
         "ok": n_over == 0,
         "n": n,
@@ -125,6 +141,11 @@ def check_length_budget(
         "pct_over": round(100 * n_over / n, 1) if n else 0.0,
         "max_est_tokens": int(max(est)) if est else 0,
         "median_est_tokens": int(statistics.median(est)) if est else 0,
+        "p95_est_tokens": p95,
+        # The smallest power-of-two context that covers ~95% of records — a clean
+        # value to set max_seq_len to (outliers beyond it still get truncated, but
+        # 5% truncation beats 100%).
+        "suggested_max_seq_len": _next_pow2(p95) if est else None,
         "max_seq_len": max_seq_len,
         "chars_per_token": chars_per_token,
     }
@@ -182,8 +203,9 @@ def render_report(report: dict) -> str:
     )
     if not length["ok"]:
         lines.append(
-            "        → raise max_seq_len or chunk article bodies, else these records "
-            "are dropped/truncated by mlx-lm."
+            f"        → set max_seq_len≈{length['suggested_max_seq_len']} "
+            f"(covers ~95% — P95 est {length['p95_est_tokens']} tokens) or chunk "
+            "article bodies, else these records are dropped/truncated by mlx-lm."
         )
 
     return "\n".join(lines)
