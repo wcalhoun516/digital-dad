@@ -10,14 +10,20 @@ import json
 
 from analysis.voice_eval import (
     aggregate,
+    aggregate_style,
     blind_candidates,
     build_judge_prompt,
     evaluate,
+    evaluate_style,
+    load_distinctive_words,
     load_trials,
     parse_ranking,
     render_markdown,
+    render_style_markdown,
+    trial_style,
     unblind_ranking,
     write_report,
+    write_style_report,
 )
 
 
@@ -233,3 +239,179 @@ class TestLoadTrials:
         p = tmp_path / "trials.json"
         p.write_text(json.dumps({"trials": [{"id": "v01", "prompt": "p"}]}))
         assert load_trials(p) == [{"id": "v01", "prompt": "p"}]
+
+
+# --------------------------------------------------------------------------- #
+# Deterministic style companion (plan 0008 step 26d — judge-independent half)
+# --------------------------------------------------------------------------- #
+
+class TestLoadDistinctiveWords:
+    def test_loads_top_n_words(self, tmp_path):
+        p = tmp_path / "linguistics.json"
+        p.write_text(
+            json.dumps(
+                {"distinctive_words": [
+                    {"word": "market"}, {"word": "inflation"}, {"word": "china"},
+                ]}
+            )
+        )
+        assert load_distinctive_words(p, top_n=2) == {"market", "inflation"}
+
+    def test_missing_file_yields_empty_set(self, tmp_path):
+        # absence must not break the harness — style metrics still compute (rate 0)
+        assert load_distinctive_words(tmp_path / "nope.json") == set()
+
+
+class TestTrialStyle:
+    def test_returns_metrics_per_candidate_source(self):
+        trial = {
+            "candidates": {
+                "real": "Inflation and the market punish the market again.",
+                "rag": "The cat sat upon the warm mat in the sun today.",
+            }
+        }
+        style = trial_style(trial, {"inflation", "market"})
+        assert set(style) == {"real", "rag"}
+        for metrics in style.values():
+            assert set(metrics) == {
+                "word_count",
+                "type_token_ratio",
+                "avg_sentence_len",
+                "fingerprint_hits_per_1k",
+            }
+
+    def test_fingerprint_rate_responds_to_distinctive_words(self):
+        trial = {
+            "candidates": {
+                "hits": "Inflation and the market punish the market again here.",
+                "none": "The cat sat upon the warm mat in the sun today.",
+            }
+        }
+        style = trial_style(trial, {"inflation", "market"})
+        assert (
+            style["hits"]["fingerprint_hits_per_1k"]
+            > style["none"]["fingerprint_hits_per_1k"]
+        )
+
+
+class TestEvaluateStyle:
+    def _trials(self):
+        return [
+            {"id": "v01", "prompt": "p1",
+             "candidates": {"real": "Markets move on inflation fears.", "rag": "Hi."}},
+            {"id": "v02", "prompt": "p2",
+             "candidates": {"real": "The market punished China sharply.", "rag": "Yo."}},
+        ]
+
+    def test_carries_id_prompt_sources_and_style(self):
+        rows = evaluate_style(self._trials(), {"market", "inflation"})
+        assert [r["id"] for r in rows] == ["v01", "v02"]
+        assert rows[0]["prompt"] == "p1"
+        assert rows[0]["sources"] == ["rag", "real"]
+        assert set(rows[0]["style"]) == {"rag", "real"}
+
+    def test_is_deterministic(self):
+        dw = {"market", "inflation"}
+        assert evaluate_style(self._trials(), dw) == evaluate_style(self._trials(), dw)
+
+
+class TestAggregateStyle:
+    def _records(self):
+        return [
+            {"style": {
+                "real": {"word_count": 100, "type_token_ratio": 0.5,
+                         "avg_sentence_len": 20.0, "fingerprint_hits_per_1k": 10.0},
+                "finetuned": {"word_count": 80, "type_token_ratio": 0.4,
+                              "avg_sentence_len": 16.0, "fingerprint_hits_per_1k": 6.0},
+            }},
+            {"style": {
+                "real": {"word_count": 200, "type_token_ratio": 0.6,
+                         "avg_sentence_len": 24.0, "fingerprint_hits_per_1k": 12.0},
+                "finetuned": {"word_count": 120, "type_token_ratio": 0.5,
+                              "avg_sentence_len": 20.0, "fingerprint_hits_per_1k": 8.0},
+            }},
+        ]
+
+    def test_means_per_source(self):
+        summary = aggregate_style(self._records())
+        assert summary["n_trials"] == 2
+        assert summary["sources"]["real"]["mean"]["word_count"] == 150.0
+        assert summary["sources"]["finetuned"]["mean"]["fingerprint_hits_per_1k"] == 7.0
+
+    def test_delta_vs_real_for_non_real_sources(self):
+        summary = aggregate_style(self._records())
+        delta = summary["sources"]["finetuned"]["delta_vs_real"]
+        assert delta["fingerprint_hits_per_1k"] == -4.0
+        assert delta["word_count"] == -50.0
+
+    def test_real_has_no_self_delta(self):
+        summary = aggregate_style(self._records())
+        assert not summary["sources"]["real"].get("delta_vs_real")
+
+    def test_ignores_records_without_style(self):
+        assert aggregate_style([{"ranking": ["real"]}]) == {"n_trials": 0, "sources": {}}
+
+
+class TestStyleInJudgedReport:
+    def _trials(self):
+        return [
+            {"id": "v01", "prompt": "p1",
+             "candidates": {"real": "Markets move on inflation fears.", "rag": "Hi."}},
+        ]
+
+    def test_evaluate_attaches_style_when_words_given(self):
+        records = evaluate(
+            self._trials(), lambda p, b: list(b), seed=1,
+            distinctive_words={"market", "inflation"},
+        )
+        assert set(records[0]["style"]) == {"real", "rag"}
+
+    def test_evaluate_omits_style_without_words(self):
+        records = evaluate(self._trials(), lambda p, b: list(b), seed=1)
+        assert "style" not in records[0]
+
+    def test_aggregate_folds_style_when_present(self):
+        records = evaluate(
+            self._trials(), lambda p, b: list(b), seed=1,
+            distinctive_words={"market", "inflation"},
+        )
+        summary = aggregate(records)
+        assert "real" in summary["style"]["sources"]
+
+    def test_aggregate_omits_style_when_absent(self):
+        summary = aggregate([{"ranking": ["real", "rag"], "winner": "real"}])
+        assert "style" not in summary
+
+
+class TestRenderStyleMarkdown:
+    def test_renders_source_rows_and_delta(self):
+        summary = aggregate_style([
+            {"style": {
+                "real": {"word_count": 100, "type_token_ratio": 0.5,
+                         "avg_sentence_len": 20.0, "fingerprint_hits_per_1k": 10.0},
+                "finetuned": {"word_count": 80, "type_token_ratio": 0.4,
+                              "avg_sentence_len": 16.0, "fingerprint_hits_per_1k": 6.0},
+            }},
+        ])
+        md = render_style_markdown(summary)
+        assert "real" in md and "finetuned" in md
+        assert "fingerprint" in md.lower()
+
+    def test_notes_empty_style(self):
+        md = render_style_markdown({"n_trials": 0, "sources": {}})
+        assert "no" in md.lower()
+
+
+class TestWriteStyleReport:
+    def test_writes_summary_and_records(self, tmp_path):
+        records = evaluate_style(
+            [{"id": "v01", "prompt": "p",
+              "candidates": {"real": "Markets move on inflation.", "rag": "Hi there."}}],
+            {"market", "inflation"},
+        )
+        out = tmp_path / "voice_style.json"
+        summary = write_style_report(records, out)
+        payload = json.loads(out.read_text())
+        assert payload["summary"] == summary
+        assert payload["records"] == records
+        assert "generated_at" in payload

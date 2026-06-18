@@ -4,7 +4,7 @@ PYTHON := .venv/bin/python
 # ruff findings (broadening the scope is a follow-up roadmap item, #1-3/cleanup).
 LINT_PATHS := tests
 
-.PHONY: scrape manifest-check analyze training dashboard all serve search on-this-day send-on-this-day adjudicate backfill-verdicts rag-eval voice-eval clean test lint fmt verify verify-responsive
+.PHONY: scrape manifest-check analyze training dashboard all serve search on-this-day send-on-this-day adjudicate backfill-verdicts rag-eval voice-eval voice-style clean test lint fmt verify verify-responsive
 
 scrape:
 	$(PYTHON) -m scraper $(ARGS)
@@ -72,6 +72,13 @@ rag-eval:
 # automation).
 voice-eval:
 	$(PYTHON) -m analysis.voice_eval $(ARGS)
+
+# Deterministic style-metrics companion to the voice eval (plan 0008 step 26d): scores each
+# candidate passage offline (no conductor, no paid calls) and reports per-source means + a
+# delta-vs-real. Reads eval/voice_trials.json, writes data/analysis/voice_style.json. Safe to
+# run unattended.
+voice-style:
+	$(PYTHON) -m analysis.voice_eval --style-only $(ARGS)
 
 test:
 	$(PYTHON) -m pytest -q
