@@ -48,6 +48,13 @@ Format:
 
 <!-- entries below -->
 
+### 2026-06-18 — training — in-progress
+- PR: (opening)
+- Source: plan:ready/0008
+- Summary: Plan 0008 step **26d deterministic companion** — folding the deferred
+  `training.finetune_config.style_metrics` into `analysis/voice_eval.py` as an offline,
+  judge-independent style signal (+ a `--style-only` CLI / `make voice-style`). In progress.
+
 ### 2026-06-16 — training — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/21
 - Source: plan:ready/0008
