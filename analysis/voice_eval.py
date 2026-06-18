@@ -255,19 +255,16 @@ def aggregate_style(records: list[dict]) -> dict:
     return {"n_trials": len(styled), "sources": per_source}
 
 
-def render_style_markdown(summary: dict) -> str:
-    """Human-readable table of an :func:`aggregate_style` result."""
+def _style_table(summary: dict) -> list[str]:
+    """The intro line + markdown table for an :func:`aggregate_style` result.
+
+    Returns ``[]`` when there are no scored sources, so callers can decide whether to
+    emit a section at all.
+    """
     sources = summary.get("sources", {})
     if not sources:
-        lines = [
-            "# Geo-LLM voice — deterministic style metrics",
-            "",
-            "No style metrics (no candidate passages with text).",
-        ]
-        return "\n".join(lines)
+        return []
     lines = [
-        "# Geo-LLM voice — deterministic style metrics",
-        "",
         f"{summary.get('n_trials', 0)} trial(s); judge-independent companion to the "
         "blind A/B ranking (plan 0008 step 26d). `real` is the reference.",
         "",
@@ -284,7 +281,16 @@ def render_style_markdown(summary: dict) -> str:
             f"{m['avg_sentence_len']:.1f} | {m['fingerprint_hits_per_1k']:.1f} | {d_str} |"
         )
     lines.append("")
-    return "\n".join(lines)
+    return lines
+
+
+def render_style_markdown(summary: dict) -> str:
+    """Human-readable table of an :func:`aggregate_style` result."""
+    table = _style_table(summary)
+    header = ["# Geo-LLM voice — deterministic style metrics", ""]
+    if not table:
+        return "\n".join(header + ["No style metrics (no candidate passages with text)."])
+    return "\n".join(header + table)
 
 
 def write_style_report(records: list[dict], path: Path = STYLE_REPORT_PATH) -> dict:
@@ -379,11 +385,11 @@ def render_markdown(summary: dict) -> str:
         for key in sorted(pairwise):
             lines.append(f"- `{key}`: {pairwise[key]:.0%}")
         lines.append("")
-    style = summary.get("style")
-    if style and style.get("sources"):
+    style_table = _style_table(summary.get("style", {}))
+    if style_table:
         lines.append("## Deterministic style metrics (judge-independent)")
         lines.append("")
-        lines.append(render_style_markdown(style).split("\n", 2)[2])
+        lines += style_table
     return "\n".join(lines)
 
 

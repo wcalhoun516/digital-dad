@@ -382,6 +382,35 @@ class TestStyleInJudgedReport:
         summary = aggregate([{"ranking": ["real", "rag"], "winner": "real"}])
         assert "style" not in summary
 
+    def test_render_markdown_includes_style_section_when_present(self):
+        records = evaluate(
+            self._trials(), lambda p, b: list(b), seed=1,
+            distinctive_words={"market", "inflation"},
+        )
+        md = render_markdown(aggregate(records))
+        assert "Deterministic style metrics" in md
+        assert "fingerprint" in md.lower()
+
+
+class TestAggregateStyleEdgeCases:
+    def test_no_delta_when_source_never_pairs_with_real(self):
+        # finetuned and real never appear in the same trial -> no delta_vs_real
+        records = [
+            {"style": {"finetuned": {"word_count": 10, "type_token_ratio": 0.5,
+                                     "avg_sentence_len": 5.0,
+                                     "fingerprint_hits_per_1k": 1.0}}},
+            {"style": {"real": {"word_count": 20, "type_token_ratio": 0.6,
+                                "avg_sentence_len": 6.0,
+                                "fingerprint_hits_per_1k": 2.0}}},
+        ]
+        summary = aggregate_style(records)
+        assert "delta_vs_real" not in summary["sources"]["finetuned"]
+
+    def test_empty_candidates_trial_yields_empty_style(self):
+        rows = evaluate_style([{"id": "v01", "prompt": "p", "candidates": {}}], set())
+        assert rows[0]["style"] == {}
+        assert rows[0]["sources"] == []
+
 
 class TestRenderStyleMarkdown:
     def test_renders_source_rows_and_delta(self):
