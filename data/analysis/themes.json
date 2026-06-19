@@ -1,64 +1,64 @@
 {
-  "num_clusters": 10,
-  "silhouette_score": 0.086,
+  "num_clusters": 9,
+  "silhouette_score": 0.085,
   "clusters": [
     {
       "id": 0,
-      "size": 29,
+      "size": 18,
       "keywords": [
-        "huawei",
-        "semiconductor",
-        "china",
-        "chinese",
-        "industry",
-        "chip",
-        "chips",
-        "semiconductor industry",
-        "ic",
-        "company",
-        "technology",
+        "tesla",
+        "shares",
+        "share",
         "value",
-        "companies",
-        "intel",
-        "business"
+        "split",
+        "price",
+        "stock",
+        "gme",
+        "index",
+        "trading",
+        "buffett",
+        "volume",
+        "options",
+        "company",
+        "splits"
       ],
       "representative_articles": [
         {
-          "slug": "war-with-china-the-economic-factor-that-could-trigger-it",
-          "title": "War With China? The Economic Factor That Could Trigger It",
-          "date": "2021-09-12",
-          "similarity": 0.627
+          "slug": "will-tesla-break-the-sp-500-pt-4-managing-insane-trading-volume",
+          "title": "Will Tesla Break The S&P 500? (Pt 4) – Managing “Insane” Trading Volume",
+          "date": "2021-01-30",
+          "similarity": 0.637
         },
         {
-          "slug": "the-us-still-dominates-in-semiconductors-china-is-vulnerable-pt-2",
-          "title": "The U.S. Still Dominates In Semiconductors; China Is Vulnerable (Pt 2)",
-          "date": "2021-10-11",
-          "similarity": 0.594
+          "slug": "gamestopgamestonk-has-nothing-to-do-with-the-madness-of-crowds",
+          "title": "“GameStop/Gamestonk” Has Nothing To Do With The Madness Of Crowds",
+          "date": "2021-03-05",
+          "similarity": 0.613
         },
         {
-          "slug": "5g-risk-huawei-is-small-potatoes-compared-to-tsmc-who",
-          "title": "5G Risk? Huawei Is Small Potatoes Compared To TSMC (Who?)",
-          "date": "2020-07-12",
-          "similarity": 0.591
+          "slug": "gamestop-the-second-surge-anatomy-of-a-gamma-swarm",
+          "title": "GameStop – The Second Surge: Anatomy Of A “Gamma Swarm”",
+          "date": "2021-03-10",
+          "similarity": 0.601
         },
         {
-          "slug": "intel-nvidia-et-al-and-american-semiconductor-hegemony",
-          "title": "Intel, Nvidia, Et Al., And American Semiconductor Hegemony",
-          "date": "2020-08-02",
-          "similarity": 0.582
+          "slug": "gamestop-the-second-surge-anatomy-of-a-gamma-swarm",
+          "title": "GameStop – The Second Surge: Anatomy Of A “Gamma Swarm”",
+          "date": "2021-03-10",
+          "similarity": 0.601
         },
         {
-          "slug": "the-chips-act-good-questions-bad-questions-bad-bets-part-2",
-          "title": "The CHIPS Act: Good Questions, Bad Questions, Bad Bets? (Part 2)",
-          "date": "2021-11-27",
-          "similarity": 0.568
+          "slug": "will-tesla-break-the-sp-500part-2-the-mechanics-of-market-turmoil",
+          "title": "Will Tesla Break The S&P 500?(Part 2) – The Mechanics Of Market Turmoil",
+          "date": "2021-01-04",
+          "similarity": 0.593
         }
       ],
-      "label": "Huawei / Semiconductor / China"
+      "label": "Tesla / Shares / Share"
     },
     {
       "id": 1,
-      "size": 20,
+      "size": 22,
       "keywords": [
         "ma",
         "ant",
@@ -69,478 +69,424 @@
         "chinese",
         "ipo",
         "company",
-        "video",
         "value",
+        "video",
         "beijing",
+        "financial",
         "ant group",
-        "group",
-        "financial"
+        "group"
       ],
       "representative_articles": [
         {
           "slug": "jack-ma-reappears-but-what-does-the-market-see",
           "title": "Jack Ma Reappears –  But What Does The Market See?",
           "date": "2021-01-22",
-          "similarity": 0.819
+          "similarity": 0.807
         },
         {
           "slug": "jack-ma-reappears-but-what-does-the-market-see",
           "title": "Jack Ma Reappears –  But What Does The Market See?",
           "date": "2021-01-22",
-          "similarity": 0.819
+          "similarity": 0.807
         },
         {
           "slug": "the-sad-end-of-jack-ma-inc",
           "title": "The Sad End Of Jack Ma Inc.",
           "date": "2021-06-07",
-          "similarity": 0.79
+          "similarity": 0.78
         },
         {
           "slug": "beijings-jack-ma-kabuki-play-continues-is-alibaba-a-value-play",
           "title": "Beijing’s Jack Ma Kabuki Play Continues... Is Alibaba A Value Play?",
           "date": "2021-10-31",
-          "similarity": 0.774
+          "similarity": 0.763
         },
         {
-          "slug": "jack-mas-hostage-video-fake-news-the-old-fashioned-way",
-          "title": "Jack Ma’s Hostage Video – Fake News, The Old-Fashioned Way",
-          "date": "2021-01-20",
-          "similarity": 0.766
+          "slug": "why-china-stepped-on-the-ant-group-part-1-a-bubble-looming",
+          "title": "Why China Stepped On The Ant Group – (Part 1) A Bubble Looming",
+          "date": "2020-11-08",
+          "similarity": 0.751
         }
       ],
       "label": "Ma / Ant / Jack"
     },
     {
       "id": 2,
-      "size": 32,
+      "size": 37,
       "keywords": [
-        "inflation",
-        "cpi",
-        "egg",
-        "pce",
-        "price",
-        "supply",
-        "prices",
         "fed",
-        "transitory",
-        "month",
-        "index",
-        "rate",
-        "federal",
-        "eggs",
-        "federal reserve"
-      ],
-      "representative_articles": [
-        {
-          "slug": "what-is-transitory-inflation-1-the-facts",
-          "title": "What Is Transitory Inflation? (1) The Facts",
-          "date": "2023-03-06",
-          "similarity": 0.702
-        },
-        {
-          "slug": "dissecting-the-consumer-price-index-pt-1-inflation-is-over",
-          "title": "Dissecting The Consumer Price Index, Pt 1: ‘Inflation’ Is Over",
-          "date": "2022-12-14",
-          "similarity": 0.693
-        },
-        {
-          "slug": "dissecting-the-consumer-price-index-pt-1-inflation-is-over",
-          "title": "Dissecting The Consumer Price Index, Pt 1: ‘Inflation’ Is Over",
-          "date": "2022-12-14",
-          "similarity": 0.693
-        },
-        {
-          "slug": "the-31-flavors-of-inflation-do-we-really-understand-these-numbers",
-          "title": "The 31 Flavors Of “Inflation” –Do We Really Understand These Numbers?",
-          "date": "2022-02-23",
-          "similarity": 0.662
-        },
-        {
-          "slug": "a-deflation-alert-hidden-in-the-latest-consumer-price-indicators",
-          "title": "A Deflation Alert Hidden In The Latest Consumer Price Indicators",
-          "date": "2023-01-28",
-          "similarity": 0.654
-        }
-      ],
-      "label": "Inflation / Cpi / Egg"
-    },
-    {
-      "id": 3,
-      "size": 16,
-      "keywords": [
-        "covid",
-        "china",
-        "mortality",
-        "zero covid",
-        "chinese",
-        "deaths",
-        "death",
-        "zero",
-        "data",
-        "healthcare",
-        "population",
-        "testing",
-        "health",
-        "hong",
-        "rate"
-      ],
-      "representative_articles": [
-        {
-          "slug": "the-missing-factor-in-explanations-of-chinas-economic-distress-covid-part-1-the-",
-          "title": "The Missing Factor In Explanations Of China’s Economic Distress: Covid (Part 1: The Cover-Up)",
-          "date": "2024-05-04",
-          "similarity": 0.85
-        },
-        {
-          "slug": "the-missing-factor-in-explanations-of-chinas-economic-distress-covid-part-2-esti",
-          "title": "The Missing Factor In Explanations Of China’s Economic Distress: COVID  – Part 2: Estimating The True Death Toll",
-          "date": "2024-05-12",
-          "similarity": 0.805
-        },
-        {
-          "slug": "part-3-anomalies-in-the-chinese-covid-data-evidence-of-manipulation",
-          "title": "Part 3: Anomalies In The Chinese Covid Data – Evidence Of Manipulation?",
-          "date": "2022-01-11",
-          "similarity": 0.8
-        },
-        {
-          "slug": "chinas-covid-catastrophe-contextual-evidence-part-1-demography-economics",
-          "title": "China’s Covid Catastrophe: Contextual Evidence (Part 1: Demography, Economics)",
-          "date": "2022-09-12",
-          "similarity": 0.77
-        },
-        {
-          "slug": "chinas-manipulation-of-covid-data-the-two-smoking-guns",
-          "title": "China’s Manipulation Of Covid Data : The Two ‘Smoking Guns’",
-          "date": "2022-01-17",
-          "similarity": 0.745
-        }
-      ],
-      "label": "Covid / China / Mortality"
-    },
-    {
-      "id": 4,
-      "size": 16,
-      "keywords": [
-        "eu",
-        "hamilton",
-        "european",
-        "debt",
-        "states",
-        "europe",
-        "ecb",
-        "ford",
-        "bonds",
-        "government",
         "financial",
-        "union",
-        "german",
+        "wireless",
+        "eu",
+        "technology",
+        "debt",
+        "stevens",
+        "chairman",
+        "european",
+        "hamilton",
         "federal",
-        "italian"
+        "bond",
+        "bonds",
+        "career",
+        "wireless technology"
       ],
       "representative_articles": [
+        {
+          "slug": "george-calhoun",
+          "title": "George Calhoun",
+          "date": "",
+          "similarity": 0.594
+        },
+        {
+          "slug": "george-calhoun",
+          "title": "George Calhoun",
+          "date": "",
+          "similarity": 0.594
+        },
         {
           "slug": "how-covid-19-will-change-finance-whatever-it-takes-vs-full-faith-and-credit",
           "title": "How COVID-19 Will Change Finance: “Whatever It Takes” Vs “Full Faith And Credit”",
           "date": "2020-04-27",
-          "similarity": 0.646
+          "similarity": 0.55
         },
         {
-          "slug": "how-covid-19-will-change-finance-fear-federalism-and-fixed-income",
-          "title": "How COVID-19 Will Change Finance: Fear, Federalism, And Fixed Income",
-          "date": "2020-04-13",
-          "similarity": 0.635
+          "slug": "the-european-unions-next-step-a-hamiltonian-commonwealth",
+          "title": "The European Union’s Next Step: A Hamiltonian Commonwealth",
+          "date": "2020-09-28",
+          "similarity": 0.534
         },
         {
-          "slug": "europes-hamiltonian-moment-what-is-it-really",
-          "title": "Europe’s Hamiltonian Moment – What Is It Really?",
-          "date": "2020-05-26",
-          "similarity": 0.634
-        },
-        {
-          "slug": "europes-hamiltonian-moment-what-is-it-really",
-          "title": "Europe’s Hamiltonian Moment – What Is It Really?",
-          "date": "2020-05-26",
-          "similarity": 0.634
-        },
-        {
-          "slug": "gradually-then-suddenly-clarity-comes-to-the-eu",
-          "title": "Gradually, Then Suddenly… Clarity Comes To The EU",
-          "date": "2020-05-24",
-          "similarity": 0.631
+          "slug": "the-european-unions-next-step-a-hamiltonian-commonwealth",
+          "title": "The European Union’s Next Step: A Hamiltonian Commonwealth",
+          "date": "2020-09-28",
+          "similarity": 0.534
         }
       ],
-      "label": "Eu / Hamilton / European"
+      "label": "Fed / Financial / Wireless"
     },
     {
-      "id": 5,
-      "size": 16,
-      "keywords": [
-        "fed",
-        "rate",
-        "rates",
-        "inflation",
-        "qt",
-        "ffr",
-        "tightening",
-        "fed funds",
-        "funds rate",
-        "policy",
-        "federal",
-        "stimulus",
-        "reserve",
-        "bond",
-        "federal reserve"
-      ],
-      "representative_articles": [
-        {
-          "slug": "the-market-fears-the-fed-more-than-hamas",
-          "title": "The Market Fears The Fed More Than Hamas",
-          "date": "2023-11-08",
-          "similarity": 0.706
-        },
-        {
-          "slug": "will-the-fed-cut-interest-rates-does-it-matter-recent-history-says-no",
-          "title": "Will The Fed Cut Interest Rates? Does It Matter? Recent History Says No.",
-          "date": "2025-08-28",
-          "similarity": 0.698
-        },
-        {
-          "slug": "the-markets-big-fear-is-not-geopolitics-it-is-the-federal-reserve",
-          "title": "The Market’s Big Fear Is Not Geopolitics – It Is The Federal Reserve",
-          "date": "2023-11-08",
-          "similarity": 0.69
-        },
-        {
-          "slug": "the-feds-rate-cut-a-soft-landing-or-fake-news",
-          "title": "The Fed’s Rate Cut:  A ‘Soft Landing’ – Or ‘Fake News’?",
-          "date": "2024-09-26",
-          "similarity": 0.675
-        },
-        {
-          "slug": "does-raising-the-fed-funds-rate-tame-inflation-is-there-collateral-damage",
-          "title": "Does Raising The Fed Funds Rate ‘Tame’ Inflation? Is There Collateral Damage?",
-          "date": "2023-07-17",
-          "similarity": 0.633
-        }
-      ],
-      "label": "Fed / Rate / Rates"
-    },
-    {
-      "id": 6,
-      "size": 12,
+      "id": 3,
+      "size": 27,
       "keywords": [
         "tariff",
         "tariffs",
+        "crypto",
+        "pcr",
         "recession",
+        "sentiment",
+        "fed",
+        "rate",
+        "bitcoin",
+        "prediction",
+        "qt",
+        "markets",
         "trade",
-        "liberation day",
-        "liberation",
         "economic",
-        "forecasts",
-        "2009",
-        "march 2009",
-        "march",
-        "earnings",
-        "oil",
-        "risk",
-        "day"
+        "price"
       ],
       "representative_articles": [
         {
           "slug": "the-tariff-scorecard-did-we-miss-the-apocalypse-or-was-it-just-postponed",
           "title": "The Tariff Scorecard: Did We Miss The Apocalypse? Or Was It Just Postponed?",
           "date": "2025-09-07",
-          "similarity": 0.723
+          "similarity": 0.589
         },
         {
           "slug": "tariff-uncertainties-pt-5-the-big-one-will-it-cause-a-recession",
           "title": "Tariff Uncertainties, Pt 5: The Big One – Will It Cause A Recession?",
           "date": "2025-07-17",
-          "similarity": 0.692
-        },
-        {
-          "slug": "tariff-uncertainties-part-2-the-link-to-inflation",
-          "title": "Tariff Uncertainties – Part 2: The Link To Inflation",
-          "date": "2025-04-30",
-          "similarity": 0.665
-        },
-        {
-          "slug": "tariffs-first-consider-the-certainties",
-          "title": "Tariffs: First, Consider The Certainties",
-          "date": "2025-04-11",
-          "similarity": 0.639
+          "similarity": 0.565
         },
         {
           "slug": "tariff-uncertainties-part-3-the-bond-markets",
           "title": "Tariff Uncertainties, Part 3: The Bond Markets",
           "date": "2025-05-25",
-          "similarity": 0.574
+          "similarity": 0.512
+        },
+        {
+          "slug": "tariff-uncertainties-part-2-the-link-to-inflation",
+          "title": "Tariff Uncertainties – Part 2: The Link To Inflation",
+          "date": "2025-04-30",
+          "similarity": 0.505
+        },
+        {
+          "slug": "tariffs-first-consider-the-certainties",
+          "title": "Tariffs: First, Consider The Certainties",
+          "date": "2025-04-11",
+          "similarity": 0.457
         }
       ],
-      "label": "Tariff / Tariffs / Recession"
+      "label": "Tariff / Tariffs / Crypto"
     },
     {
-      "id": 7,
-      "size": 24,
+      "id": 4,
+      "size": 5,
       "keywords": [
-        "tesla",
-        "shares",
-        "options",
-        "price",
-        "stock",
-        "share",
-        "value",
-        "trading",
-        "index",
-        "split",
-        "volume",
-        "gme",
-        "pcr",
-        "buffett",
-        "company"
+        "oil",
+        "venezuela",
+        "barrel",
+        "production",
+        "saudi",
+        "venezuelan",
+        "crude",
+        "prices",
+        "risk",
+        "energy",
+        "arabia",
+        "saudi arabia",
+        "oil prices",
+        "million barrels",
+        "price"
       ],
       "representative_articles": [
         {
-          "slug": "will-tesla-break-the-sp-500-pt-4-managing-insane-trading-volume",
-          "title": "Will Tesla Break The S&P 500? (Pt 4) – Managing “Insane” Trading Volume",
-          "date": "2021-01-30",
-          "similarity": 0.599
+          "slug": "make-venezuela-great-again-pt-1-what-happened-the-rise-and-fall",
+          "title": "Make Venezuela Great Again? Pt 1: What Happened – The Rise And Fall",
+          "date": "2026-02-02",
+          "similarity": 0.756
         },
         {
-          "slug": "gamestopgamestonk-has-nothing-to-do-with-the-madness-of-crowds",
-          "title": "“GameStop/Gamestonk” Has Nothing To Do With The Madness Of Crowds",
-          "date": "2021-03-05",
-          "similarity": 0.592
+          "slug": "venezuela-great-again-pt-2-the-inevitability-of-a-failed-petrostate",
+          "title": "Venezuela Great Again? Pt 2: The Inevitability Of A Failed Petrostate",
+          "date": "2026-02-24",
+          "similarity": 0.75
         },
         {
-          "slug": "gamestop-the-second-surge-anatomy-of-a-gamma-swarm",
-          "title": "GameStop – The Second Surge: Anatomy Of A “Gamma Swarm”",
-          "date": "2021-03-10",
-          "similarity": 0.591
+          "slug": "the-other-epidemic-a-cluster-of-historic-blunders-exhibit-1-the-saudirussia-oil-",
+          "title": "The Other Epidemic: A Cluster Of Historic Blunders — Exhibit 1: The Saudi/Russia Oil Price War",
+          "date": "2020-06-03",
+          "similarity": 0.69
         },
         {
-          "slug": "gamestop-the-second-surge-anatomy-of-a-gamma-swarm",
-          "title": "GameStop – The Second Surge: Anatomy Of A “Gamma Swarm”",
-          "date": "2021-03-10",
-          "similarity": 0.591
+          "slug": "to-price-in-hormuz-markets-must-recognize-two-economic-risks",
+          "title": "To ‘Price In’ Hormuz, Markets Must Recognize Two Economic Risks",
+          "date": "2026-04-01",
+          "similarity": 0.609
         },
         {
-          "slug": "gamestop-were-the-short-sellers-routed-does-it-matter-beware-the-gamma",
-          "title": "GameStop: Were The Short Sellers Routed? Does It Matter? (Beware The ‘Gamma’)",
-          "date": "2021-03-19",
-          "similarity": 0.567
+          "slug": "hedge-funds-got-clipped-by-epic-fury-they-forgot-to-hedge",
+          "title": "‘Hedge Funds’ Got Clipped By Epic Fury. They Forgot To ‘Hedge’?",
+          "date": "2026-03-20",
+          "similarity": 0.563
         }
       ],
-      "label": "Tesla / Shares / Options"
+      "label": "Oil / Venezuela / Barrel"
     },
     {
-      "id": 8,
-      "size": 26,
+      "id": 5,
+      "size": 45,
       "keywords": [
         "inflation",
-        "yields",
-        "bond",
-        "technology",
-        "wireless",
-        "oil",
+        "cpi",
+        "price",
         "prices",
-        "stevens",
-        "venezuela",
-        "chairman",
-        "career",
-        "bond yields",
-        "wireless technology",
-        "susskind",
-        "treasury"
+        "fed",
+        "egg",
+        "pce",
+        "rate",
+        "supply",
+        "index",
+        "headline",
+        "month",
+        "transitory",
+        "consumer",
+        "federal"
       ],
       "representative_articles": [
         {
-          "slug": "the-inflation-scare-doesnt-match-reality",
-          "title": "The Inflation Scare Doesn’t Match Reality",
-          "date": "2021-05-01",
-          "similarity": 0.647
+          "slug": "what-is-transitory-inflation-1-the-facts",
+          "title": "What Is Transitory Inflation? (1) The Facts",
+          "date": "2023-03-06",
+          "similarity": 0.675
         },
         {
-          "slug": "the-inflation-scare-doesnt-match-reality",
-          "title": "The Inflation Scare Doesn’t Match Reality",
-          "date": "2021-05-01",
-          "similarity": 0.647
+          "slug": "dissecting-the-consumer-price-index-pt-1-inflation-is-over",
+          "title": "Dissecting The Consumer Price Index, Pt 1: ‘Inflation’ Is Over",
+          "date": "2022-12-14",
+          "similarity": 0.667
+        },
+        {
+          "slug": "dissecting-the-consumer-price-index-pt-1-inflation-is-over",
+          "title": "Dissecting The Consumer Price Index, Pt 1: ‘Inflation’ Is Over",
+          "date": "2022-12-14",
+          "similarity": 0.667
         },
         {
           "slug": "the-new-inflation-scare-is-the-economy-really-in-danger",
           "title": "The New Inflation Scare: Is The Economy Really In Danger?",
           "date": "2021-03-31",
-          "similarity": 0.623
+          "similarity": 0.655
         },
         {
-          "slug": "george-calhoun",
-          "title": "George Calhoun",
-          "date": "",
-          "similarity": 0.618
-        },
-        {
-          "slug": "george-calhoun",
-          "title": "George Calhoun",
-          "date": "",
-          "similarity": 0.618
+          "slug": "a-deflation-alert-hidden-in-the-latest-consumer-price-indicators",
+          "title": "A Deflation Alert Hidden In The Latest Consumer Price Indicators",
+          "date": "2023-01-28",
+          "similarity": 0.636
         }
       ],
-      "label": "Inflation / Yields / Bond"
+      "label": "Inflation / Cpi / Price"
     },
     {
-      "id": 9,
-      "size": 5,
+      "id": 6,
+      "size": 17,
       "keywords": [
-        "crypto",
-        "ftx",
-        "bitcoin",
-        "esg",
-        "ethereum",
-        "transactions",
-        "merge",
-        "crypto currency",
-        "blockchain",
-        "governance",
-        "ratings",
-        "transactions second",
-        "currency",
-        "transaction",
-        "mining"
+        "covid",
+        "china",
+        "chinese",
+        "mortality",
+        "zero covid",
+        "deaths",
+        "zero",
+        "death",
+        "data",
+        "population",
+        "rate",
+        "hong",
+        "kong",
+        "health",
+        "hong kong"
       ],
       "representative_articles": [
         {
-          "slug": "the-biggest-crypto-fantasy-of-all",
-          "title": "The Biggest Crypto Fantasy Of All",
-          "date": "2022-09-18",
+          "slug": "the-missing-factor-in-explanations-of-chinas-economic-distress-covid-part-1-the-",
+          "title": "The Missing Factor In Explanations Of China’s Economic Distress: Covid (Part 1: The Cover-Up)",
+          "date": "2024-05-04",
+          "similarity": 0.849
+        },
+        {
+          "slug": "the-missing-factor-in-explanations-of-chinas-economic-distress-covid-part-2-esti",
+          "title": "The Missing Factor In Explanations Of China’s Economic Distress: COVID  – Part 2: Estimating The True Death Toll",
+          "date": "2024-05-12",
           "similarity": 0.808
         },
         {
-          "slug": "the-biggest-crypto-fantasy-of-all",
-          "title": "The Biggest Crypto Fantasy Of All",
-          "date": "2022-09-18",
-          "similarity": 0.808
+          "slug": "part-3-anomalies-in-the-chinese-covid-data-evidence-of-manipulation",
+          "title": "Part 3: Anomalies In The Chinese Covid Data – Evidence Of Manipulation?",
+          "date": "2022-01-11",
+          "similarity": 0.802
         },
         {
-          "slug": "the-ethics-of-crypto-sorting-out-good-intentions-and-bad-actors",
-          "title": "The Ethics Of Crypto: Sorting Out Good Intentions And Bad Actors",
-          "date": "2022-10-11",
-          "similarity": 0.765
+          "slug": "chinas-covid-catastrophe-contextual-evidence-part-1-demography-economics",
+          "title": "China’s Covid Catastrophe: Contextual Evidence (Part 1: Demography, Economics)",
+          "date": "2022-09-12",
+          "similarity": 0.767
         },
         {
-          "slug": "ftx-and-esg-a-panorama-of-failed-governance-pt-1-the-internal-failures",
-          "title": "FTX And ESG: A Panorama Of Failed Governance (Pt 1 – The Internal Failures)",
-          "date": "2022-11-21",
-          "similarity": 0.735
-        },
-        {
-          "slug": "ftx-and-esg-a-panorama-of-failed-governance-pt-1-the-internal-failures",
-          "title": "FTX And ESG: A Panorama Of Failed Governance (Pt 1 – The Internal Failures)",
-          "date": "2022-11-21",
-          "similarity": 0.735
+          "slug": "chinas-manipulation-of-covid-data-the-two-smoking-guns",
+          "title": "China’s Manipulation Of Covid Data : The Two ‘Smoking Guns’",
+          "date": "2022-01-17",
+          "similarity": 0.761
         }
       ],
-      "label": "Crypto / Ftx / Bitcoin"
+      "label": "Covid / China / Chinese"
+    },
+    {
+      "id": 7,
+      "size": 11,
+      "keywords": [
+        "huawei",
+        "ftx",
+        "chinese",
+        "pcaob",
+        "esg",
+        "company",
+        "crypto",
+        "china",
+        "trust",
+        "technology",
+        "business",
+        "meng",
+        "equipment",
+        "wireless",
+        "companies"
+      ],
+      "representative_articles": [
+        {
+          "slug": "how-huawei-could-save-itself-a-five-point-plan",
+          "title": "How Huawei Could Save Itself: A Five-Point Plan",
+          "date": "2020-07-23",
+          "similarity": 0.792
+        },
+        {
+          "slug": "how-does-huawei-acquire-customers-it-buys-them-with-cheap-credit",
+          "title": "How Does Huawei Acquire Customers? It Buys Them With Cheap Credit",
+          "date": "2020-06-06",
+          "similarity": 0.732
+        },
+        {
+          "slug": "carthage-must-be-destroyed-or-will-covid-19-kill-huawei",
+          "title": "“Carthage Must Be Destroyed” —  Or — Will Covid-19 Kill Huawei?",
+          "date": "2020-05-29",
+          "similarity": 0.707
+        },
+        {
+          "slug": "is-the-uk-ban-on-huawei-the-endgame-for-free-trade",
+          "title": "Is The UK Ban On Huawei The “Endgame” For Free Trade?",
+          "date": "2020-07-24",
+          "similarity": 0.698
+        },
+        {
+          "slug": "huawei-is-happy-with-crappy-why-are-their-customers",
+          "title": "Huawei Is “Happy With Crappy” – Why Are Their Customers?",
+          "date": "2020-06-04",
+          "similarity": 0.693
+        }
+      ],
+      "label": "Huawei / Ftx / Chinese"
+    },
+    {
+      "id": 8,
+      "size": 17,
+      "keywords": [
+        "semiconductor",
+        "chips",
+        "industry",
+        "chip",
+        "semiconductor industry",
+        "china",
+        "intel",
+        "ic",
+        "semiconductors",
+        "segments",
+        "design",
+        "fabrication",
+        "value",
+        "node",
+        "technology"
+      ],
+      "representative_articles": [
+        {
+          "slug": "the-chips-act-good-questions-bad-questions-bad-bets-part-2",
+          "title": "The CHIPS Act: Good Questions, Bad Questions, Bad Bets? (Part 2)",
+          "date": "2021-11-27",
+          "similarity": 0.706
+        },
+        {
+          "slug": "semiconductors-the-chips-act-is-it-really-necessary-part-3",
+          "title": "Semiconductors: The CHIPS Act – Is It Really Necessary? (Part 3)",
+          "date": "2021-11-29",
+          "similarity": 0.683
+        },
+        {
+          "slug": "the-semiconductor-scoreboard-part-1-the-basic-value-chain-who-adds-the-value",
+          "title": "The Semiconductor Scoreboard: Part 1, The Basic Value-Chain – Who Adds The Value?",
+          "date": "2021-09-30",
+          "similarity": 0.679
+        },
+        {
+          "slug": "the-us-still-dominates-in-semiconductors-china-is-vulnerable-pt-2",
+          "title": "The U.S. Still Dominates In Semiconductors; China Is Vulnerable (Pt 2)",
+          "date": "2021-10-11",
+          "similarity": 0.645
+        },
+        {
+          "slug": "two-pseudo-facts-about-semiconductors-that-could-distort-the-chips-act-part-4",
+          "title": "Two ‘Pseudo-Facts’ About Semiconductors That Could Distort The CHIPS Act (Part 4)",
+          "date": "2021-11-30",
+          "similarity": 0.631
+        }
+      ],
+      "label": "Semiconductor / Chips / Industry"
     }
   ],
   "articles": [
@@ -550,8 +496,8 @@
       "date": "",
       "url": "https://www.forbes.com/sites/georgecalhoun/archive/",
       "word_count": 267,
-      "cluster_id": 8,
-      "cluster_label": "Inflation / Yields / Bond"
+      "cluster_id": 2,
+      "cluster_label": "Fed / Financial / Wireless"
     },
     {
       "slug": "george-calhoun",
@@ -559,8 +505,8 @@
       "date": "",
       "url": "https://www.forbes.com/sites/georgecalhoun/archive/",
       "word_count": 267,
-      "cluster_id": 8,
-      "cluster_label": "Inflation / Yields / Bond"
+      "cluster_id": 2,
+      "cluster_label": "Fed / Financial / Wireless"
     },
     {
       "slug": "how-covid-19-will-change-finance-fear-federalism-and-fixed-income",
@@ -568,8 +514,8 @@
       "date": "2020-04-13",
       "url": "https://www.forbes.com/sites/georgecalhoun/2020/04/13/how-covid-19-will-change-finance-fear-federalism-and-fixed-income/",
       "word_count": 1720,
-      "cluster_id": 4,
-      "cluster_label": "Eu / Hamilton / European"
+      "cluster_id": 2,
+      "cluster_label": "Fed / Financial / Wireless"
     },
     {
       "slug": "how-covid-19-will-change-finance-ford-the-fed-and-the-bond-market",
@@ -577,8 +523,8 @@
       "date": "2020-04-21",
       "url": "https://www.forbes.com/sites/georgecalhoun/2020/04/21/how-covid-19-will-change-the-financial-world-ford-the-fed-and-the-bond-market/",
       "word_count": 2097,
-      "cluster_id": 4,
-      "cluster_label": "Eu / Hamilton / European"
+      "cluster_id": 2,
+      "cluster_label": "Fed / Financial / Wireless"
     },
     {
       "slug": "how-covid-19-will-change-finance-whatever-it-takes-vs-full-faith-and-credit",
@@ -586,8 +532,8 @@
       "date": "2020-04-27",
       "url": "https://www.forbes.com/sites/georgecalhoun/2020/04/27/how-covid-19-will-change-finance-whatever-it-takes-vs-full-faith-and-credit/",
       "word_count": 2058,
-      "cluster_id": 4,
-      "cluster_label": "Eu / Hamilton / European"
+      "cluster_id": 2,
+      "cluster_label": "Fed / Financial / Wireless"
     },
     {
       "slug": "whatever-it-takes-or-whatever-germany-allows",
@@ -595,8 +541,8 @@
       "date": "2020-05-05",
       "url": "https://www.forbes.com/sites/georgecalhoun/2020/05/05/whatever-it-takes-or-whatever-germany-allows/",
       "word_count": 1901,
-      "cluster_id": 4,
-      "cluster_label": "Eu / Hamilton / European"
+      "cluster_id": 2,
+      "cluster_label": "Fed / Financial / Wireless"
     },
     {
       "slug": "does-inflation-still-exist-does-anyone-really-know",
@@ -604,8 +550,8 @@
       "date": "2020-05-20",
       "url": "https://www.forbes.com/sites/georgecalhoun/2020/05/20/does-inflation-still-exist-does-anyone-really-know/",
       "word_count": 1997,
-      "cluster_id": 8,
-      "cluster_label": "Inflation / Yields / Bond"
+      "cluster_id": 5,
+      "cluster_label": "Inflation / Cpi / Price"
     },
     {
       "slug": "gradually-then-suddenly-clarity-comes-to-the-eu",
@@ -613,8 +559,8 @@
       "date": "2020-05-24",
       "url": "https://www.forbes.com/sites/georgecalhoun/2020/05/24/gradually-then-suddenly-clarity-comes-to-the-eu/",
       "word_count": 1313,
-      "cluster_id": 4,
-      "cluster_label": "Eu / Hamilton / European"
+      "cluster_id": 2,
+      "cluster_label": "Fed / Financial / Wireless"
     },
     {
       "slug": "europes-hamiltonian-moment-what-is-it-really",
@@ -622,8 +568,8 @@
       "date": "2020-05-26",
       "url": "https://www.forbes.com/sites/georgecalhoun/2020/05/26/europes-hamiltonian-moment--what-is-it-really/",
       "word_count": 1804,
-      "cluster_id": 4,
-      "cluster_label": "Eu / Hamilton / European"
+      "cluster_id": 2,
+      "cluster_label": "Fed / Financial / Wireless"
     },
     {
       "slug": "europes-hamiltonian-moment-what-is-it-really",
@@ -631,8 +577,8 @@
       "date": "2020-05-26",
       "url": "https://www.forbes.com/sites/georgecalhoun/2020/05/26/europes-hamiltonian-moment--what-is-it-really/",
       "word_count": 1804,
-      "cluster_id": 4,
-      "cluster_label": "Eu / Hamilton / European"
+      "cluster_id": 2,
+      "cluster_label": "Fed / Financial / Wireless"
     },
     {
       "slug": "carthage-must-be-destroyed-or-will-covid-19-kill-huawei",
@@ -640,8 +586,8 @@
       "date": "2020-05-29",
       "url": "https://www.forbes.com/sites/georgecalhoun/2020/05/29/carthage-must-be-destroyed----or---will-covid-19-kill-huawei/",
       "word_count": 1494,
-      "cluster_id": 0,
-      "cluster_label": "Huawei / Semiconductor / China"
+      "cluster_id": 7,
+      "cluster_label": "Huawei / Ftx / Chinese"
     },
     {
       "slug": "the-other-epidemic-a-cluster-of-historic-blunders-exhibit-1-the-saudirussia-oil-",
@@ -649,8 +595,8 @@
       "date": "2020-06-03",
       "url": "https://www.forbes.com/sites/georgecalhoun/2020/06/03/the-other-epidemic-a-cluster-of-historic-blunders---exhibit-1-the-saudirussia-oil-price-war/",
       "word_count": 1912,
-      "cluster_id": 8,
-      "cluster_label": "Inflation / Yields / Bond"
+      "cluster_id": 4,
+      "cluster_label": "Oil / Venezuela / Barrel"
     },
     {
       "slug": "huawei-is-happy-with-crappy-why-are-their-customers",
@@ -658,8 +604,8 @@
       "date": "2020-06-04",
       "url": "https://www.forbes.com/sites/georgecalhoun/2020/06/04/huawei-is-happy-with-crappy--why-are-their-customers/",
       "word_count": 1178,
-      "cluster_id": 0,
-      "cluster_label": "Huawei / Semiconductor / China"
+      "cluster_id": 7,
+      "cluster_label": "Huawei / Ftx / Chinese"
     },
     {
       "slug": "how-does-huawei-acquire-customers-it-buys-them-with-cheap-credit",
@@ -667,8 +613,8 @@
       "date": "2020-06-06",
       "url": "https://www.forbes.com/sites/georgecalhoun/2020/06/06/how-does-huawei-acquire-customers-mostly-it-buys-them/",
       "word_count": 1412,
-      "cluster_id": 0,
-      "cluster_label": "Huawei / Semiconductor / China"
+      "cluster_id": 7,
+      "cluster_label": "Huawei / Ftx / Chinese"
     },
     {
       "slug": "george-floyd-robert-e-lee-blm-global-and-the-economics-of-diversity",
@@ -676,8 +622,8 @@
       "date": "2020-06-25",
       "url": "https://www.forbes.com/sites/georgecalhoun/2020/06/25/george-floyd-robert-e-lee-blm-global--and-the-economics-of-diversity/",
       "word_count": 2803,
-      "cluster_id": 4,
-      "cluster_label": "Eu / Hamilton / European"
+      "cluster_id": 2,
+      "cluster_label": "Fed / Financial / Wireless"
     },
     {
       "slug": "the-hierarchy-of-financial-superpowers-whos-really-on-top",
@@ -685,8 +631,8 @@
       "date": "2020-06-29",
       "url": "https://www.forbes.com/sites/georgecalhoun/2020/06/29/the-hierarchy-of-financial-superpowers--whos-really-on-top/",
       "word_count": 2446,
-      "cluster_id": 4,
-      "cluster_label": "Eu / Hamilton / European"
+      "cluster_id": 2,
+      "cluster_label": "Fed / Financial / Wireless"
     },
     {
       "slug": "the-fed-doesnt-just-print-money-it-also-prints-alpha",
@@ -694,8 +640,8 @@
       "date": "2020-07-06",
       "url": "https://www.forbes.com/sites/georgecalhoun/2020/07/06/the-fed-doesnt-just-print-money-it-also-prints-alpha/",
       "word_count": 2434,
-      "cluster_id": 5,
-      "cluster_label": "Fed / Rate / Rates"
+      "cluster_id": 2,
+      "cluster_label": "Fed / Financial / Wireless"
     },
     {
       "slug": "5g-risk-huawei-is-small-potatoes-compared-to-tsmc-who",
@@ -703,8 +649,8 @@
       "date": "2020-07-12",
       "url": "https://www.forbes.com/sites/georgecalhoun/2020/07/12/5g-risk-huawei-is-small-potatoes-compared-to-tsmc-who/",
       "word_count": 2281,
-      "cluster_id": 0,
-      "cluster_label": "Huawei / Semiconductor / China"
+      "cluster_id": 7,
+      "cluster_label": "Huawei / Ftx / Chinese"
     },
     {
       "slug": "the-hong-kong-crackdown-is-a-financial-disaster-for-china-is-it-time-to-fire-the",
@@ -712,8 +658,8 @@
       "date": "2020-07-19",
       "url": "https://www.forbes.com/sites/georgecalhoun/2020/07/19/the-hong-kong-crackdown-is-a-financial-disaster-for-china-is-it-time-to-fire-the-ceo/",
       "word_count": 2113,
-      "cluster_id": 0,
-      "cluster_label": "Huawei / Semiconductor / China"
+      "cluster_id": 1,
+      "cluster_label": "Ma / Ant / Jack"
     },
     {
       "slug": "how-huawei-could-save-itself-a-five-point-plan",
@@ -721,8 +667,8 @@
       "date": "2020-07-23",
       "url": "https://www.forbes.com/sites/georgecalhoun/2020/07/23/how-huawei-could-save-itself-a-five-point-plan/",
       "word_count": 2241,
-      "cluster_id": 0,
-      "cluster_label": "Huawei / Semiconductor / China"
+      "cluster_id": 7,
+      "cluster_label": "Huawei / Ftx / Chinese"
     },
     {
       "slug": "is-the-uk-ban-on-huawei-the-endgame-for-free-trade",
@@ -730,8 +676,8 @@
       "date": "2020-07-24",
       "url": "https://www.forbes.com/sites/georgecalhoun/2020/07/24/is-the-uk-ban-on-huawei-the-endgame-for-free-trade/",
       "word_count": 1345,
-      "cluster_id": 0,
-      "cluster_label": "Huawei / Semiconductor / China"
+      "cluster_id": 7,
+      "cluster_label": "Huawei / Ftx / Chinese"
     },
     {
       "slug": "intel-nvidia-et-al-and-american-semiconductor-hegemony",
@@ -739,8 +685,8 @@
       "date": "2020-08-02",
       "url": "https://www.forbes.com/sites/georgecalhoun/2020/08/02/intel-nvidia-et-al-and-american-semiconductor-hegemony/",
       "word_count": 1426,
-      "cluster_id": 0,
-      "cluster_label": "Huawei / Semiconductor / China"
+      "cluster_id": 8,
+      "cluster_label": "Semiconductor / Chips / Industry"
     },
     {
       "slug": "a-huawei-recovery-plan-step-1-playing-peekaboo-pcaob-compliance",
@@ -748,8 +694,8 @@
       "date": "2020-08-09",
       "url": "https://www.forbes.com/sites/georgecalhoun/2020/08/09/a-huawei-recovery-plan-step-1-playing-peekaboo-pcaob-compliance/",
       "word_count": 1901,
-      "cluster_id": 0,
-      "cluster_label": "Huawei / Semiconductor / China"
+      "cluster_id": 7,
+      "cluster_label": "Huawei / Ftx / Chinese"
     },
     {
       "slug": "what-happens-if-chinese-firms-are-kicked-out-of-the-us-stock-market",
@@ -757,8 +703,8 @@
       "date": "2020-08-11",
       "url": "https://www.forbes.com/sites/georgecalhoun/2020/08/11/what-happens-if-chinese-firms-are-kicked-out-of-the-us-stock-market/",
       "word_count": 2665,
-      "cluster_id": 0,
-      "cluster_label": "Huawei / Semiconductor / China"
+      "cluster_id": 7,
+      "cluster_label": "Huawei / Ftx / Chinese"
     },
     {
       "slug": "why-do-chinese-companies-list-their-shares-in-new-york",
@@ -766,8 +712,8 @@
       "date": "2020-08-14",
       "url": "https://www.forbes.com/sites/georgecalhoun/2020/08/14/why-do-chinese-companies-list-their-shares-in-new-york/",
       "word_count": 1784,
-      "cluster_id": 0,
-      "cluster_label": "Huawei / Semiconductor / China"
+      "cluster_id": 1,
+      "cluster_label": "Ma / Ant / Jack"
     },
     {
       "slug": "a-strange-new-bubble-in-chinese-a-shares-a-is-for-arbitrage",
@@ -775,8 +721,8 @@
       "date": "2020-08-30",
       "url": "https://www.forbes.com/sites/georgecalhoun/2020/08/30/a-strange-new-bubble-in-chinese-a-shares-a-is-for-arbitrage/",
       "word_count": 2505,
-      "cluster_id": 7,
-      "cluster_label": "Tesla / Shares / Options"
+      "cluster_id": 0,
+      "cluster_label": "Tesla / Shares / Share"
     },
     {
       "slug": "the-real-warren-buffett-anomaly-and-how-to-profit-from-it",
@@ -784,8 +730,8 @@
       "date": "2020-09-13",
       "url": "https://www.forbes.com/sites/georgecalhoun/2020/09/13/the-real-warren-buffett-anomaly-and-how-to-profit-from-it/",
       "word_count": 3030,
-      "cluster_id": 7,
-      "cluster_label": "Tesla / Shares / Options"
+      "cluster_id": 0,
+      "cluster_label": "Tesla / Shares / Share"
     },
     {
       "slug": "the-stock-split-anomaly-how-apple-tesla-created-powerful-alpha-last-month",
@@ -793,8 +739,8 @@
       "date": "2020-09-21",
       "url": "https://www.forbes.com/sites/georgecalhoun/2020/09/21/the-stock-split-anomaly-how-apple-tesla-created-powerful-alpha-last-month/",
       "word_count": 1777,
-      "cluster_id": 7,
-      "cluster_label": "Tesla / Shares / Options"
+      "cluster_id": 0,
+      "cluster_label": "Tesla / Shares / Share"
     },
     {
       "slug": "the-stock-split-anomaly-how-apple-tesla-created-powerful-alpha-last-month",
@@ -802,8 +748,8 @@
       "date": "2020-09-21",
       "url": "https://www.forbes.com/sites/georgecalhoun/2020/09/21/the-stock-split-anomaly-how-apple-tesla-created-powerful-alpha-last-month/",
       "word_count": 1777,
-      "cluster_id": 7,
-      "cluster_label": "Tesla / Shares / Options"
+      "cluster_id": 0,
+      "cluster_label": "Tesla / Shares / Share"
     },
     {
       "slug": "after-apple-and-tesla-berkshire-and-amazon-should-split-their-shares-too",
@@ -811,8 +757,8 @@
       "date": "2020-09-26",
       "url": "https://www.forbes.com/sites/georgecalhoun/2020/09/26/after-apple-and-tesla-berkshire-and-amazon-should-split-their-shares-too/",
       "word_count": 1898,
-      "cluster_id": 7,
-      "cluster_label": "Tesla / Shares / Options"
+      "cluster_id": 0,
+      "cluster_label": "Tesla / Shares / Share"
     },
     {
       "slug": "the-european-unions-next-step-a-hamiltonian-commonwealth",
@@ -820,8 +766,8 @@
       "date": "2020-09-28",
       "url": "https://www.forbes.com/sites/georgecalhoun/2020/09/28/the-european-unions-next-step-a-hamiltonian-commonwealth/",
       "word_count": 1838,
-      "cluster_id": 4,
-      "cluster_label": "Eu / Hamilton / European"
+      "cluster_id": 2,
+      "cluster_label": "Fed / Financial / Wireless"
     },
     {
       "slug": "the-european-unions-next-step-a-hamiltonian-commonwealth",
@@ -829,8 +775,8 @@
       "date": "2020-09-28",
       "url": "https://www.forbes.com/sites/georgecalhoun/2020/09/28/the-european-unions-next-step-a-hamiltonian-commonwealth/",
       "word_count": 1838,
-      "cluster_id": 4,
-      "cluster_label": "Eu / Hamilton / European"
+      "cluster_id": 2,
+      "cluster_label": "Fed / Financial / Wireless"
     },
     {
       "slug": "the-small-investors-only-advantage-and-how-to-capture-it",
@@ -838,8 +784,8 @@
       "date": "2020-09-30",
       "url": "https://www.forbes.com/sites/georgecalhoun/2020/09/30/the-small-investors-only-advantage--and-how-to-capture-it/",
       "word_count": 1400,
-      "cluster_id": 8,
-      "cluster_label": "Inflation / Yields / Bond"
+      "cluster_id": 2,
+      "cluster_label": "Fed / Financial / Wireless"
     },
     {
       "slug": "buffett-takes-on-japan-but-does-value-still-exist",
@@ -847,8 +793,8 @@
       "date": "2020-10-05",
       "url": "https://www.forbes.com/sites/georgecalhoun/2020/10/05/buffett-takes-on-japan-but-does-value-still-exist/",
       "word_count": 2224,
-      "cluster_id": 7,
-      "cluster_label": "Tesla / Shares / Options"
+      "cluster_id": 0,
+      "cluster_label": "Tesla / Shares / Share"
     },
     {
       "slug": "buffett-takes-on-japan-but-does-value-still-exist",
@@ -856,8 +802,8 @@
       "date": "2020-10-05",
       "url": "https://www.forbes.com/sites/georgecalhoun/2020/10/05/buffett-takes-on-japan-but-does-value-still-exist/",
       "word_count": 2224,
-      "cluster_id": 7,
-      "cluster_label": "Tesla / Shares / Options"
+      "cluster_id": 0,
+      "cluster_label": "Tesla / Shares / Share"
     },
     {
       "slug": "will-electoral-chaos-wreck-the-market",
@@ -865,8 +811,8 @@
       "date": "2020-10-12",
       "url": "https://www.forbes.com/sites/georgecalhoun/2020/10/12/will-electoral-chaos-wreck-the-market/",
       "word_count": 1490,
-      "cluster_id": 8,
-      "cluster_label": "Inflation / Yields / Bond"
+      "cluster_id": 2,
+      "cluster_label": "Fed / Financial / Wireless"
     },
     {
       "slug": "is-the-stock-market-at-risk-from-another-contested-election",
@@ -874,8 +820,8 @@
       "date": "2020-10-16",
       "url": "https://www.forbes.com/sites/georgecalhoun/2020/10/16/is-the-stock-market-at-risk-from-another-contested-election/",
       "word_count": 1885,
-      "cluster_id": 7,
-      "cluster_label": "Tesla / Shares / Options"
+      "cluster_id": 2,
+      "cluster_label": "Fed / Financial / Wireless"
     },
     {
       "slug": "the-presidential-election-cycle-and-the-stock-market-a-classic-calendar-anomaly",
@@ -883,8 +829,8 @@
       "date": "2020-10-30",
       "url": "https://www.forbes.com/sites/georgecalhoun/2020/10/30/the-presidential-election-cycle-and-the-stock-market-a-classic-calendar-anomaly/",
       "word_count": 1595,
-      "cluster_id": 8,
-      "cluster_label": "Inflation / Yields / Bond"
+      "cluster_id": 2,
+      "cluster_label": "Fed / Financial / Wireless"
     },
     {
       "slug": "the-american-election-calendar-drives-foreign-stock-markets-too",
@@ -892,8 +838,8 @@
       "date": "2020-10-31",
       "url": "https://www.forbes.com/sites/georgecalhoun/2020/10/31/the-american-election-calendar-drives-foreign-stock-markets-too/",
       "word_count": 1205,
-      "cluster_id": 8,
-      "cluster_label": "Inflation / Yields / Bond"
+      "cluster_id": 2,
+      "cluster_label": "Fed / Financial / Wireless"
     },
     {
       "slug": "why-china-stepped-on-the-ant-group-part-1-a-bubble-looming",
@@ -955,8 +901,8 @@
       "date": "2020-12-09",
       "url": "https://www.forbes.com/sites/georgecalhoun/2020/12/09/salesforce-to-buy-slack--a-case-study-in-value-destruction-part-1/",
       "word_count": 1640,
-      "cluster_id": 7,
-      "cluster_label": "Tesla / Shares / Options"
+      "cluster_id": 0,
+      "cluster_label": "Tesla / Shares / Share"
     },
     {
       "slug": "a-check-on-market-sentiment-has-the-pandemic-changed-the-signal",
@@ -964,8 +910,8 @@
       "date": "2020-12-16",
       "url": "https://www.forbes.com/sites/georgecalhoun/2020/12/16/a-check-on-market-sentiment-has-the-pandemic-changed-the-signal/",
       "word_count": 2500,
-      "cluster_id": 7,
-      "cluster_label": "Tesla / Shares / Options"
+      "cluster_id": 3,
+      "cluster_label": "Tariff / Tariffs / Crypto"
     },
     {
       "slug": "will-tesla-break-the-sp-500part-2-the-mechanics-of-market-turmoil",
@@ -973,8 +919,8 @@
       "date": "2021-01-04",
       "url": "https://www.forbes.com/sites/georgecalhoun/2021/01/04/will-tesla-break-the-sp-500part-2--the-mechanics-of-market-turmoil/",
       "word_count": 2354,
-      "cluster_id": 7,
-      "cluster_label": "Tesla / Shares / Options"
+      "cluster_id": 0,
+      "cluster_label": "Tesla / Shares / Share"
     },
     {
       "slug": "will-tesla-break-the-sp500-pt-3-did-the-way-it-was-added-help-create-a-bubble",
@@ -982,8 +928,8 @@
       "date": "2021-01-10",
       "url": "https://www.forbes.com/sites/georgecalhoun/2021/01/10/will-tesla-break-the-sp500-pt-3--did-the-way-it-was-added-help-create-a-bubble/",
       "word_count": 1989,
-      "cluster_id": 7,
-      "cluster_label": "Tesla / Shares / Options"
+      "cluster_id": 0,
+      "cluster_label": "Tesla / Shares / Share"
     },
     {
       "slug": "financial-regulation-chinese-style-and-where-is-jack-ma",
@@ -1027,8 +973,8 @@
       "date": "2021-01-30",
       "url": "https://www.forbes.com/sites/georgecalhoun/2021/01/30/will-tesla-break-the-sp-500-pt-4--managing-insane-trading-volume/",
       "word_count": 1869,
-      "cluster_id": 7,
-      "cluster_label": "Tesla / Shares / Options"
+      "cluster_id": 0,
+      "cluster_label": "Tesla / Shares / Share"
     },
     {
       "slug": "gamestop-the-screenplay-5-hollywood-projects-3-competing-morality-tales",
@@ -1036,8 +982,8 @@
       "date": "2021-02-06",
       "url": "https://www.forbes.com/sites/georgecalhoun/2021/02/06/gamestop-the-screenplay-5-hollywood-projects-3-competing-morality-tales/",
       "word_count": 2050,
-      "cluster_id": 7,
-      "cluster_label": "Tesla / Shares / Options"
+      "cluster_id": 0,
+      "cluster_label": "Tesla / Shares / Share"
     },
     {
       "slug": "gamestop-tesla-do-asset-bubbles-exist-can-they-be-managed",
@@ -1045,8 +991,8 @@
       "date": "2021-02-17",
       "url": "https://www.forbes.com/sites/georgecalhoun/2021/02/17/gamestop-tesla-do-asset-bubbles-exist-can-they-be-managed/",
       "word_count": 1692,
-      "cluster_id": 7,
-      "cluster_label": "Tesla / Shares / Options"
+      "cluster_id": 0,
+      "cluster_label": "Tesla / Shares / Share"
     },
     {
       "slug": "kill-chicken-scare-monkey-杀鸡儆猴-beijings-philosophy-of-regulation-wont-work",
@@ -1063,8 +1009,8 @@
       "date": "2021-03-05",
       "url": "https://www.forbes.com/sites/georgecalhoun/2021/03/05/gamestopgamestonk-has-nothing-to-do-with-the-madness-of-crowds/",
       "word_count": 2278,
-      "cluster_id": 7,
-      "cluster_label": "Tesla / Shares / Options"
+      "cluster_id": 0,
+      "cluster_label": "Tesla / Shares / Share"
     },
     {
       "slug": "gamestop-the-second-surge-anatomy-of-a-gamma-swarm",
@@ -1072,8 +1018,8 @@
       "date": "2021-03-10",
       "url": "https://www.forbes.com/sites/georgecalhoun/2021/03/10/gamestop-the-second-surgeanatomy-of-a-gamma-swarm/",
       "word_count": 2464,
-      "cluster_id": 7,
-      "cluster_label": "Tesla / Shares / Options"
+      "cluster_id": 0,
+      "cluster_label": "Tesla / Shares / Share"
     },
     {
       "slug": "gamestop-the-second-surge-anatomy-of-a-gamma-swarm",
@@ -1081,8 +1027,8 @@
       "date": "2021-03-10",
       "url": "https://www.forbes.com/sites/georgecalhoun/2021/03/10/gamestop-the-second-surgeanatomy-of-a-gamma-swarm/",
       "word_count": 2464,
-      "cluster_id": 7,
-      "cluster_label": "Tesla / Shares / Options"
+      "cluster_id": 0,
+      "cluster_label": "Tesla / Shares / Share"
     },
     {
       "slug": "gamestop-were-the-short-sellers-routed-does-it-matter-beware-the-gamma",
@@ -1090,8 +1036,8 @@
       "date": "2021-03-19",
       "url": "https://www.forbes.com/sites/georgecalhoun/2021/03/19/gamestop-were-the-short-sellers-routed-does-it-matter-beware-the-gamma/",
       "word_count": 2553,
-      "cluster_id": 7,
-      "cluster_label": "Tesla / Shares / Options"
+      "cluster_id": 0,
+      "cluster_label": "Tesla / Shares / Share"
     },
     {
       "slug": "media-negativity-is-the-bond-rout-real-should-we-panic-over-inflation",
@@ -1099,8 +1045,8 @@
       "date": "2021-03-28",
       "url": "https://www.forbes.com/sites/georgecalhoun/2021/03/28/media-negativity-is-the-bond-rout-real-should-we-panic-over-inflation/",
       "word_count": 1858,
-      "cluster_id": 8,
-      "cluster_label": "Inflation / Yields / Bond"
+      "cluster_id": 5,
+      "cluster_label": "Inflation / Cpi / Price"
     },
     {
       "slug": "the-new-inflation-scare-is-the-economy-really-in-danger",
@@ -1108,8 +1054,8 @@
       "date": "2021-03-31",
       "url": "https://www.forbes.com/sites/georgecalhoun/2021/03/31/the-new-inflation-scare-is-the-economy-really-in-danger/",
       "word_count": 2216,
-      "cluster_id": 8,
-      "cluster_label": "Inflation / Yields / Bond"
+      "cluster_id": 5,
+      "cluster_label": "Inflation / Cpi / Price"
     },
     {
       "slug": "what-are-the-true-fundamentals-behind-the-treasury-bond-rout",
@@ -1117,8 +1063,8 @@
       "date": "2021-04-08",
       "url": "https://www.forbes.com/sites/georgecalhoun/2021/04/08/what-are-the-true-fundamentals-behind-the-treasury-bond-rout/",
       "word_count": 1717,
-      "cluster_id": 8,
-      "cluster_label": "Inflation / Yields / Bond"
+      "cluster_id": 5,
+      "cluster_label": "Inflation / Cpi / Price"
     },
     {
       "slug": "the-inflation-scare-doesnt-match-reality",
@@ -1126,8 +1072,8 @@
       "date": "2021-05-01",
       "url": "https://www.forbes.com/sites/georgecalhoun/2021/05/01/the-inflation-scare-doesnt-match-reality/",
       "word_count": 1539,
-      "cluster_id": 8,
-      "cluster_label": "Inflation / Yields / Bond"
+      "cluster_id": 5,
+      "cluster_label": "Inflation / Cpi / Price"
     },
     {
       "slug": "the-inflation-scare-doesnt-match-reality",
@@ -1135,8 +1081,8 @@
       "date": "2021-05-01",
       "url": "https://www.forbes.com/sites/georgecalhoun/2021/05/01/the-inflation-scare-doesnt-match-reality/",
       "word_count": 1539,
-      "cluster_id": 8,
-      "cluster_label": "Inflation / Yields / Bond"
+      "cluster_id": 5,
+      "cluster_label": "Inflation / Cpi / Price"
     },
     {
       "slug": "commodity-price-increases-do-not-create-inflation",
@@ -1144,8 +1090,8 @@
       "date": "2021-05-05",
       "url": "https://www.forbes.com/sites/georgecalhoun/2021/05/05/commodity-price-increases-do-not-create-inflation/",
       "word_count": 1893,
-      "cluster_id": 8,
-      "cluster_label": "Inflation / Yields / Bond"
+      "cluster_id": 5,
+      "cluster_label": "Inflation / Cpi / Price"
     },
     {
       "slug": "janet-yellen-forgets-how-to-do-fedspeak-or-whats-that-floating-in-the-punchbowl",
@@ -1153,8 +1099,17 @@
       "date": "2021-05-10",
       "url": "https://www.forbes.com/sites/georgecalhoun/2021/05/10/janet-yellen-forgets-how-to-do-fedspeak-or-whats-that-floating-in-the-punchbowl/",
       "word_count": 2375,
+      "cluster_id": 2,
+      "cluster_label": "Fed / Financial / Wireless"
+    },
+    {
+      "slug": "the-inflation-bump-is-not-real-it-is-a-statistical-artifact",
+      "title": "The Inflation “Bump” Is Not Real. It Is A Statistical Artifact.",
+      "date": "2021-05-12",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/05/12/the-inflation-bump-is-not-real-it-is-a-statistical-artifact/",
+      "word_count": 1402,
       "cluster_id": 5,
-      "cluster_label": "Fed / Rate / Rates"
+      "cluster_label": "Inflation / Cpi / Price"
     },
     {
       "slug": "the-inflation-bump-is-not-real-it-is-a-statistical-artifact",
@@ -1162,17 +1117,8 @@
       "date": "2021-05-12",
       "url": "https://www.forbes.com/sites/georgecalhoun/2021/05/12/the-inflation-bump-is-not-real-it-is-a-statistical-artifact/",
       "word_count": 1402,
-      "cluster_id": 8,
-      "cluster_label": "Inflation / Yields / Bond"
-    },
-    {
-      "slug": "the-inflation-bump-is-not-real-it-is-a-statistical-artifact",
-      "title": "The Inflation “Bump” Is Not Real. It Is A Statistical Artifact.",
-      "date": "2021-05-12",
-      "url": "https://www.forbes.com/sites/georgecalhoun/2021/05/12/the-inflation-bump-is-not-real-it-is-a-statistical-artifact/",
-      "word_count": 1402,
-      "cluster_id": 8,
-      "cluster_label": "Inflation / Yields / Bond"
+      "cluster_id": 5,
+      "cluster_label": "Inflation / Cpi / Price"
     },
     {
       "slug": "the-inflation-figures-are-grossly-inflated-heres-how",
@@ -1180,8 +1126,8 @@
       "date": "2021-05-22",
       "url": "https://www.forbes.com/sites/georgecalhoun/2021/05/22/the-inflation-figures-are-grossly-inflated--heres-how/",
       "word_count": 2125,
-      "cluster_id": 2,
-      "cluster_label": "Inflation / Cpi / Egg"
+      "cluster_id": 5,
+      "cluster_label": "Inflation / Cpi / Price"
     },
     {
       "slug": "the-media-is-trying-to-rebrand-the-recovery-as-inflation-pressure",
@@ -1189,8 +1135,8 @@
       "date": "2021-05-26",
       "url": "https://www.forbes.com/sites/georgecalhoun/2021/05/26/the-media-is-trying-to-rebrand-the-recovery-as-inflation-pressure/",
       "word_count": 1719,
-      "cluster_id": 8,
-      "cluster_label": "Inflation / Yields / Bond"
+      "cluster_id": 5,
+      "cluster_label": "Inflation / Cpi / Price"
     },
     {
       "slug": "covid-19-testing-free-with-insurance-a-new-form-of-health-care-fraud",
@@ -1198,8 +1144,8 @@
       "date": "2021-06-03",
       "url": "https://www.forbes.com/sites/georgecalhoun/2021/06/03/covid-19-testing-free-with-insurance-a-new-form-of-health-care-fraud/",
       "word_count": 1970,
-      "cluster_id": 3,
-      "cluster_label": "Covid / China / Mortality"
+      "cluster_id": 2,
+      "cluster_label": "Fed / Financial / Wireless"
     },
     {
       "slug": "covid-19-testing-free-with-insurance-a-new-form-of-health-care-fraud",
@@ -1207,8 +1153,8 @@
       "date": "2021-06-03",
       "url": "https://www.forbes.com/sites/georgecalhoun/2021/06/03/covid-19-testing-free-with-insurance-a-new-form-of-health-care-fraud/",
       "word_count": 1970,
-      "cluster_id": 3,
-      "cluster_label": "Covid / China / Mortality"
+      "cluster_id": 2,
+      "cluster_label": "Fed / Financial / Wireless"
     },
     {
       "slug": "the-sad-end-of-jack-ma-inc",
@@ -1225,8 +1171,8 @@
       "date": "2021-06-09",
       "url": "https://www.forbes.com/sites/georgecalhoun/2021/06/09/get-ready-for-more-inflation-panic-porn--the-may-cpi-release/",
       "word_count": 1326,
-      "cluster_id": 2,
-      "cluster_label": "Inflation / Cpi / Egg"
+      "cluster_id": 5,
+      "cluster_label": "Inflation / Cpi / Price"
     },
     {
       "slug": "inflation-the-media-screams-but-the-market-is-unfazed",
@@ -1234,8 +1180,8 @@
       "date": "2021-06-20",
       "url": "https://www.forbes.com/sites/georgecalhoun/2021/06/20/inflation--the-media-screams-but-the-market-is-unfazed/",
       "word_count": 2312,
-      "cluster_id": 8,
-      "cluster_label": "Inflation / Yields / Bond"
+      "cluster_id": 5,
+      "cluster_label": "Inflation / Cpi / Price"
     },
     {
       "slug": "inflation-the-media-screams-but-the-market-is-unfazed",
@@ -1243,8 +1189,8 @@
       "date": "2021-06-20",
       "url": "https://www.forbes.com/sites/georgecalhoun/2021/06/20/inflation--the-media-screams-but-the-market-is-unfazed/",
       "word_count": 2312,
-      "cluster_id": 8,
-      "cluster_label": "Inflation / Yields / Bond"
+      "cluster_id": 5,
+      "cluster_label": "Inflation / Cpi / Price"
     },
     {
       "slug": "what-really-happened-to-jack-ma",
@@ -1270,8 +1216,8 @@
       "date": "2021-07-10",
       "url": "https://www.forbes.com/sites/georgecalhoun/2021/07/10/what-is-the-bond-market-telling-us-now-maybe-nothing-at-all/",
       "word_count": 1456,
-      "cluster_id": 8,
-      "cluster_label": "Inflation / Yields / Bond"
+      "cluster_id": 2,
+      "cluster_label": "Fed / Financial / Wireless"
     },
     {
       "slug": "there-is-no-inflation-the-june-cpi-headline-head-fake",
@@ -1279,8 +1225,8 @@
       "date": "2021-07-14",
       "url": "https://www.forbes.com/sites/georgecalhoun/2021/07/14/there-is-no-inflation-the-june-cpi-headline-head-fake/",
       "word_count": 1247,
-      "cluster_id": 2,
-      "cluster_label": "Inflation / Cpi / Egg"
+      "cluster_id": 5,
+      "cluster_label": "Inflation / Cpi / Price"
     },
     {
       "slug": "there-is-no-inflation-the-june-cpi-headline-head-fake",
@@ -1288,8 +1234,8 @@
       "date": "2021-07-14",
       "url": "https://www.forbes.com/sites/georgecalhoun/2021/07/14/there-is-no-inflation-the-june-cpi-headline-head-fake/",
       "word_count": 1247,
-      "cluster_id": 2,
-      "cluster_label": "Inflation / Cpi / Egg"
+      "cluster_id": 5,
+      "cluster_label": "Inflation / Cpi / Price"
     },
     {
       "slug": "didi-means-war-a-financial-cold-war-with-china",
@@ -1306,8 +1252,8 @@
       "date": "2021-07-28",
       "url": "https://www.forbes.com/sites/georgecalhoun/2021/07/28/suggested-reading-a-world-without-work-by-david-susskind-part-1/",
       "word_count": 1834,
-      "cluster_id": 8,
-      "cluster_label": "Inflation / Yields / Bond"
+      "cluster_id": 2,
+      "cluster_label": "Fed / Financial / Wireless"
     },
     {
       "slug": "review-of-a-world-without-work-part-2-what-doesnt-work",
@@ -1315,8 +1261,8 @@
       "date": "2021-07-31",
       "url": "https://www.forbes.com/sites/georgecalhoun/2021/07/31/review-of-a-world-without-work-part-2--what-doesnt--work/",
       "word_count": 1227,
-      "cluster_id": 8,
-      "cluster_label": "Inflation / Yields / Bond"
+      "cluster_id": 2,
+      "cluster_label": "Fed / Financial / Wireless"
     },
     {
       "slug": "beijing-embraces-moral-hazard-the-huarong-bailout-was-the-right-move",
@@ -1324,8 +1270,8 @@
       "date": "2021-08-23",
       "url": "https://www.forbes.com/sites/georgecalhoun/2021/08/23/beijing-embraces-moral-hazard--the-huarong-bailout-was-the-right-move/",
       "word_count": 2672,
-      "cluster_id": 0,
-      "cluster_label": "Huawei / Semiconductor / China"
+      "cluster_id": 2,
+      "cluster_label": "Fed / Financial / Wireless"
     },
     {
       "slug": "can-the-euro-survive-the-progressive-critique-joseph-stiglitz-part-1",
@@ -1333,8 +1279,8 @@
       "date": "2021-08-25",
       "url": "https://www.forbes.com/sites/georgecalhoun/2021/08/25/can-the-euro-survive-the-progressive-critique-joseph-stiglitz-part-1/",
       "word_count": 1681,
-      "cluster_id": 4,
-      "cluster_label": "Eu / Hamilton / European"
+      "cluster_id": 2,
+      "cluster_label": "Fed / Financial / Wireless"
     },
     {
       "slug": "how-not-to-think-about-the-euro-joseph-stiglitz-part-2",
@@ -1342,8 +1288,8 @@
       "date": "2021-08-27",
       "url": "https://www.forbes.com/sites/georgecalhoun/2021/08/27/how-not-to-think-about-the-euro-joseph-stiglitz-part-2/",
       "word_count": 930,
-      "cluster_id": 8,
-      "cluster_label": "Inflation / Yields / Bond"
+      "cluster_id": 2,
+      "cluster_label": "Fed / Financial / Wireless"
     },
     {
       "slug": "why-a-liberal-arts-education-is-the-best-foundation-for-a-career-in-finance",
@@ -1351,8 +1297,8 @@
       "date": "2021-08-30",
       "url": "https://www.forbes.com/sites/georgecalhoun/2021/08/30/why-a-liberal-arts-education-is-the-best-foundation-for-a-career-in-finance/",
       "word_count": 2271,
-      "cluster_id": 4,
-      "cluster_label": "Eu / Hamilton / European"
+      "cluster_id": 2,
+      "cluster_label": "Fed / Financial / Wireless"
     },
     {
       "slug": "jackson-hole-the-federal-reserve-does-shark-week-for-the-markets",
@@ -1360,8 +1306,8 @@
       "date": "2021-08-31",
       "url": "https://www.forbes.com/sites/georgecalhoun/2021/08/31/jackson-hole-the-federal-reserve-does-shark-week-for-the-markets/",
       "word_count": 1685,
-      "cluster_id": 5,
-      "cluster_label": "Fed / Rate / Rates"
+      "cluster_id": 2,
+      "cluster_label": "Fed / Financial / Wireless"
     },
     {
       "slug": "war-with-china-the-economic-factor-that-could-trigger-it",
@@ -1369,8 +1315,8 @@
       "date": "2021-09-12",
       "url": "https://www.forbes.com/sites/georgecalhoun/2021/09/12/war-with-china-the-economic-factor-that-could-trigger-it/",
       "word_count": 1813,
-      "cluster_id": 0,
-      "cluster_label": "Huawei / Semiconductor / China"
+      "cluster_id": 8,
+      "cluster_label": "Semiconductor / Chips / Industry"
     },
     {
       "slug": "tapering-talking-tightening-the-federal-reserves-masterful-messaging",
@@ -1378,8 +1324,8 @@
       "date": "2021-09-23",
       "url": "https://www.forbes.com/sites/georgecalhoun/2021/09/23/tapering-talking-tightening-the-federal-reserves-masterful-messaging/",
       "word_count": 2480,
-      "cluster_id": 5,
-      "cluster_label": "Fed / Rate / Rates"
+      "cluster_id": 2,
+      "cluster_label": "Fed / Financial / Wireless"
     },
     {
       "slug": "the-huawei-hostage-crisis-is-not-over-it-has-escalated",
@@ -1387,8 +1333,8 @@
       "date": "2021-09-27",
       "url": "https://www.forbes.com/sites/georgecalhoun/2021/09/27/the-huawei-hostage-crisis-is-not-over-it-has-escalated/",
       "word_count": 1921,
-      "cluster_id": 0,
-      "cluster_label": "Huawei / Semiconductor / China"
+      "cluster_id": 7,
+      "cluster_label": "Huawei / Ftx / Chinese"
     },
     {
       "slug": "why-china-probably-wont-go-to-war-over-taiwans-semiconductor-riches",
@@ -1396,8 +1342,8 @@
       "date": "2021-09-29",
       "url": "https://www.forbes.com/sites/georgecalhoun/2021/09/29/why-china-probably-wont-go-to-war-over-taiwans-semiconductor-riches/",
       "word_count": 1983,
-      "cluster_id": 0,
-      "cluster_label": "Huawei / Semiconductor / China"
+      "cluster_id": 8,
+      "cluster_label": "Semiconductor / Chips / Industry"
     },
     {
       "slug": "the-semiconductor-scoreboard-part-1-the-basic-value-chain-who-adds-the-value",
@@ -1405,8 +1351,17 @@
       "date": "2021-09-30",
       "url": "http://www.forbes.com/sites/georgecalhoun/2021/09/30/the-semiconductor-scoreboard-part-1-the-basic-value-chain-and-the-value-added/",
       "word_count": 1104,
-      "cluster_id": 0,
-      "cluster_label": "Huawei / Semiconductor / China"
+      "cluster_id": 8,
+      "cluster_label": "Semiconductor / Chips / Industry"
+    },
+    {
+      "slug": "which-companies-add-the-most-value-in-the-semiconductor-industry-part-1",
+      "title": "Which Companies Add The Most Value In The Semiconductor Industry? (Part 1)",
+      "date": "2021-09-30",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/09/30/the-semiconductor-scoreboard-part-1-the-basic-value-chain-and-the-value-added/",
+      "word_count": 806,
+      "cluster_id": 8,
+      "cluster_label": "Semiconductor / Chips / Industry"
     },
     {
       "slug": "the-us-still-dominates-in-semiconductors-china-is-vulnerable-pt-2",
@@ -1414,8 +1369,8 @@
       "date": "2021-10-11",
       "url": "https://www.forbes.com/sites/georgecalhoun/2021/10/11/the-us-still-dominates-in-semiconductors-china-is-vulnerable-pt-2/",
       "word_count": 1726,
-      "cluster_id": 0,
-      "cluster_label": "Huawei / Semiconductor / China"
+      "cluster_id": 8,
+      "cluster_label": "Semiconductor / Chips / Industry"
     },
     {
       "slug": "the-latest-jack-ma-sighting-is-it-for-real",
@@ -1432,8 +1387,8 @@
       "date": "2021-10-23",
       "url": "https://www.forbes.com/sites/georgecalhoun/2021/10/23/semiconductors-more-us-leverage-more-bad-news-for-beijing-part-3/",
       "word_count": 1767,
-      "cluster_id": 0,
-      "cluster_label": "Huawei / Semiconductor / China"
+      "cluster_id": 8,
+      "cluster_label": "Semiconductor / Chips / Industry"
     },
     {
       "slug": "in-semiconductors-china-is-in-commodity-hell-part-4",
@@ -1441,8 +1396,8 @@
       "date": "2021-10-27",
       "url": "https://www.forbes.com/sites/georgecalhoun/2021/10/27/in-semiconductors-china-is-in-commodity-hell-part-4/",
       "word_count": 1824,
-      "cluster_id": 0,
-      "cluster_label": "Huawei / Semiconductor / China"
+      "cluster_id": 8,
+      "cluster_label": "Semiconductor / Chips / Industry"
     },
     {
       "slug": "beijings-jack-ma-kabuki-play-continues-is-alibaba-a-value-play",
@@ -1468,8 +1423,8 @@
       "date": "2021-11-23",
       "url": "https://www.forbes.com/sites/georgecalhoun/2021/11/23/semiconductors--the-chips-act-why-it-is-what-it-is-part-1/",
       "word_count": 1549,
-      "cluster_id": 4,
-      "cluster_label": "Eu / Hamilton / European"
+      "cluster_id": 8,
+      "cluster_label": "Semiconductor / Chips / Industry"
     },
     {
       "slug": "semiconductors-the-chips-act-what-it-is-part-1",
@@ -1477,8 +1432,8 @@
       "date": "2021-11-23",
       "url": "https://www.forbes.com/sites/georgecalhoun/2021/11/23/semiconductors--the-chips-act-why-it-is-what-it-is-part-1/",
       "word_count": 1549,
-      "cluster_id": 4,
-      "cluster_label": "Eu / Hamilton / European"
+      "cluster_id": 8,
+      "cluster_label": "Semiconductor / Chips / Industry"
     },
     {
       "slug": "the-chips-act-good-questions-bad-questions-bad-bets-part-2",
@@ -1486,8 +1441,8 @@
       "date": "2021-11-27",
       "url": "https://www.forbes.com/sites/georgecalhoun/2021/11/27/the-chips-act-good-questions-bad-questions-bad-bets-part-2/",
       "word_count": 1968,
-      "cluster_id": 0,
-      "cluster_label": "Huawei / Semiconductor / China"
+      "cluster_id": 8,
+      "cluster_label": "Semiconductor / Chips / Industry"
     },
     {
       "slug": "semiconductors-the-chips-act-is-it-really-necessary-part-3",
@@ -1495,8 +1450,8 @@
       "date": "2021-11-29",
       "url": "https://www.forbes.com/sites/georgecalhoun/2021/11/29/semiconductors-the-chips-act--is-it-really-necessary-part-3/",
       "word_count": 1617,
-      "cluster_id": 0,
-      "cluster_label": "Huawei / Semiconductor / China"
+      "cluster_id": 8,
+      "cluster_label": "Semiconductor / Chips / Industry"
     },
     {
       "slug": "two-pseudo-facts-about-semiconductors-that-could-distort-the-chips-act-part-4",
@@ -1504,8 +1459,8 @@
       "date": "2021-11-30",
       "url": "https://www.forbes.com/sites/georgecalhoun/2021/11/30/two-pseudo-facts-about-semiconductors-that-could-distort-the-chips-act/",
       "word_count": 1207,
-      "cluster_id": 0,
-      "cluster_label": "Huawei / Semiconductor / China"
+      "cluster_id": 8,
+      "cluster_label": "Semiconductor / Chips / Industry"
     },
     {
       "slug": "two-pseudo-facts-about-semiconductors-that-could-distort-the-chips-act-part-4",
@@ -1513,8 +1468,8 @@
       "date": "2021-11-30",
       "url": "https://www.forbes.com/sites/georgecalhoun/2021/11/30/two-pseudo-facts-about-semiconductors-that-could-distort-the-chips-act/",
       "word_count": 1207,
-      "cluster_id": 0,
-      "cluster_label": "Huawei / Semiconductor / China"
+      "cluster_id": 8,
+      "cluster_label": "Semiconductor / Chips / Industry"
     },
     {
       "slug": "alibaba-update-whoops-is-this-stock-really-a-value-trap",
@@ -1531,8 +1486,8 @@
       "date": "2021-12-28",
       "url": "https://www.forbes.com/sites/georgecalhoun/2021/12/28/will-tesla-break-the-sp-500-index-part-1/",
       "word_count": 2699,
-      "cluster_id": 7,
-      "cluster_label": "Tesla / Shares / Options"
+      "cluster_id": 0,
+      "cluster_label": "Tesla / Shares / Share"
     },
     {
       "slug": "beijing-is-intentionally-underreporting-chinas-covid-death-rate-part-1",
@@ -1540,8 +1495,8 @@
       "date": "2022-01-02",
       "url": "https://www.forbes.com/sites/georgecalhoun/2022/01/02/beijing-is-intentionally-underreporting-chinas-covid-death-rate-part-1/",
       "word_count": 2043,
-      "cluster_id": 3,
-      "cluster_label": "Covid / China / Mortality"
+      "cluster_id": 6,
+      "cluster_label": "Covid / China / Chinese"
     },
     {
       "slug": "beijing-is-intentionally-underreporting-chinas-covid-death-rate-part-2",
@@ -1549,8 +1504,8 @@
       "date": "2022-01-05",
       "url": "https://www.forbes.com/sites/georgecalhoun/2022/01/05/beijing-is-intentionally-underreporting-chinas-covid-death-rate-part-2/",
       "word_count": 2342,
-      "cluster_id": 3,
-      "cluster_label": "Covid / China / Mortality"
+      "cluster_id": 6,
+      "cluster_label": "Covid / China / Chinese"
     },
     {
       "slug": "part-3-anomalies-in-the-chinese-covid-data-evidence-of-manipulation",
@@ -1558,8 +1513,8 @@
       "date": "2022-01-11",
       "url": "https://www.forbes.com/sites/georgecalhoun/2022/01/11/part-3-anomalies-in-the-chinese-covid-data--evidence-of-manipulation/",
       "word_count": 1961,
-      "cluster_id": 3,
-      "cluster_label": "Covid / China / Mortality"
+      "cluster_id": 6,
+      "cluster_label": "Covid / China / Chinese"
     },
     {
       "slug": "chinas-manipulation-of-covid-data-the-two-smoking-guns",
@@ -1567,8 +1522,8 @@
       "date": "2022-01-17",
       "url": "https://www.forbes.com/sites/georgecalhoun/2022/01/17/chinas-manipulation-of-covid-data--the-two-smoking-guns/",
       "word_count": 1285,
-      "cluster_id": 3,
-      "cluster_label": "Covid / China / Mortality"
+      "cluster_id": 6,
+      "cluster_label": "Covid / China / Chinese"
     },
     {
       "slug": "chinas-covid-data-gaps-and-inaccuracies-new-reports-from-science-and-nature",
@@ -1576,8 +1531,8 @@
       "date": "2022-01-25",
       "url": "https://www.forbes.com/sites/georgecalhoun/2022/01/25/chinas-covid-data-gaps-and-inaccuracies-new-reports-from-science-and-nature/",
       "word_count": 1892,
-      "cluster_id": 3,
-      "cluster_label": "Covid / China / Mortality"
+      "cluster_id": 6,
+      "cluster_label": "Covid / China / Chinese"
     },
     {
       "slug": "would-you-buy-a-used-car-from-this-economist-is-inflation-real",
@@ -1585,8 +1540,8 @@
       "date": "2022-02-20",
       "url": "https://www.forbes.com/sites/georgecalhoun/2022/02/20/would-you-buy-a-used-car-from-this-economist-is-inflation-real/",
       "word_count": 2388,
-      "cluster_id": 2,
-      "cluster_label": "Inflation / Cpi / Egg"
+      "cluster_id": 5,
+      "cluster_label": "Inflation / Cpi / Price"
     },
     {
       "slug": "the-31-flavors-of-inflation-do-we-really-understand-these-numbers",
@@ -1594,8 +1549,8 @@
       "date": "2022-02-23",
       "url": "https://www.forbes.com/sites/georgecalhoun/2022/02/23/the-31-flavors-of-inflation-do-we-really-understand-these-numbers/",
       "word_count": 2046,
-      "cluster_id": 2,
-      "cluster_label": "Inflation / Cpi / Egg"
+      "cluster_id": 5,
+      "cluster_label": "Inflation / Cpi / Price"
     },
     {
       "slug": "problems-with-the-inflation-figures-the-cpi-has-a-kink-in-it",
@@ -1603,8 +1558,8 @@
       "date": "2022-02-25",
       "url": "https://www.forbes.com/sites/georgecalhoun/2022/02/25/problems-with-the-inflation-figures--the-cpi-has-a-kink-in-it/",
       "word_count": 1452,
-      "cluster_id": 2,
-      "cluster_label": "Inflation / Cpi / Egg"
+      "cluster_id": 5,
+      "cluster_label": "Inflation / Cpi / Price"
     },
     {
       "slug": "germanys-pearl-harbor-moment-the-wars-weightiest-consequence",
@@ -1612,8 +1567,8 @@
       "date": "2022-02-27",
       "url": "https://www.forbes.com/sites/georgecalhoun/2022/02/27/germanys-pearl-harbor-moment-the-wars-weightiest-consequence/",
       "word_count": 1161,
-      "cluster_id": 4,
-      "cluster_label": "Eu / Hamilton / European"
+      "cluster_id": 2,
+      "cluster_label": "Fed / Financial / Wireless"
     },
     {
       "slug": "more-problems-with-inflation-coping-with-volatility",
@@ -1621,8 +1576,8 @@
       "date": "2022-02-28",
       "url": "https://www.forbes.com/sites/georgecalhoun/2022/02/28/more-problems-with-inflation-coping-with-volatility/",
       "word_count": 1363,
-      "cluster_id": 2,
-      "cluster_label": "Inflation / Cpi / Egg"
+      "cluster_id": 5,
+      "cluster_label": "Inflation / Cpi / Price"
     },
     {
       "slug": "alibaba-update-its-down-75-is-it-still-a-value-play",
@@ -1639,8 +1594,8 @@
       "date": "2022-09-06",
       "url": "https://www.forbes.com/sites/georgecalhoun/2022/09/06/media-laziness-in-evaluating-economic-data-inflation-gas-prices-china-russia/",
       "word_count": 1979,
-      "cluster_id": 2,
-      "cluster_label": "Inflation / Cpi / Egg"
+      "cluster_id": 5,
+      "cluster_label": "Inflation / Cpi / Price"
     },
     {
       "slug": "chinas-covid-catastrophe-contextual-evidence-part-1-demography-economics",
@@ -1648,8 +1603,17 @@
       "date": "2022-09-12",
       "url": "https://www.forbes.com/sites/georgecalhoun/2022/09/12/chinas-covid-catastrophe-contextual-evidence-part-1-demography-economics/",
       "word_count": 1913,
+      "cluster_id": 6,
+      "cluster_label": "Covid / China / Chinese"
+    },
+    {
+      "slug": "the-biggest-crypto-fantasy-of-all",
+      "title": "The Biggest Crypto Fantasy Of All",
+      "date": "2022-09-18",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2022/09/18/the-biggest-crypto-fantasy-of-all/",
+      "word_count": 1449,
       "cluster_id": 3,
-      "cluster_label": "Covid / China / Mortality"
+      "cluster_label": "Tariff / Tariffs / Crypto"
     },
     {
       "slug": "the-biggest-crypto-fantasy-of-all",
@@ -1657,17 +1621,8 @@
       "date": "2022-09-18",
       "url": "https://www.forbes.com/sites/georgecalhoun/2022/09/18/the-biggest-crypto-fantasy-of-all/",
       "word_count": 1449,
-      "cluster_id": 9,
-      "cluster_label": "Crypto / Ftx / Bitcoin"
-    },
-    {
-      "slug": "the-biggest-crypto-fantasy-of-all",
-      "title": "The Biggest Crypto Fantasy Of All",
-      "date": "2022-09-18",
-      "url": "https://www.forbes.com/sites/georgecalhoun/2022/09/18/the-biggest-crypto-fantasy-of-all/",
-      "word_count": 1449,
-      "cluster_id": 9,
-      "cluster_label": "Crypto / Ftx / Bitcoin"
+      "cluster_id": 3,
+      "cluster_label": "Tariff / Tariffs / Crypto"
     },
     {
       "slug": "the-putcall-ratio-says-get-in-the-market-now",
@@ -1675,8 +1630,8 @@
       "date": "2022-09-27",
       "url": "https://www.forbes.com/sites/georgecalhoun/2022/09/27/the--putcall-ratio-says-get-in-the-market-now/",
       "word_count": 1447,
-      "cluster_id": 7,
-      "cluster_label": "Tesla / Shares / Options"
+      "cluster_id": 3,
+      "cluster_label": "Tariff / Tariffs / Crypto"
     },
     {
       "slug": "what-is-really-driving-inflation-today",
@@ -1684,8 +1639,8 @@
       "date": "2022-09-30",
       "url": "https://www.forbes.com/sites/georgecalhoun/2022/09/30/what-is-really-driving-inflation-today/",
       "word_count": 1758,
-      "cluster_id": 2,
-      "cluster_label": "Inflation / Cpi / Egg"
+      "cluster_id": 5,
+      "cluster_label": "Inflation / Cpi / Price"
     },
     {
       "slug": "shortages-gluts-deflation-the-bottlenecks-in-the-economy-are-breaking",
@@ -1693,8 +1648,8 @@
       "date": "2022-10-03",
       "url": "https://www.forbes.com/sites/georgecalhoun/2022/10/03/shortages-gluts-deflation-the-bottlenecks-in-the-economy-are-breaking/",
       "word_count": 1846,
-      "cluster_id": 2,
-      "cluster_label": "Inflation / Cpi / Egg"
+      "cluster_id": 5,
+      "cluster_label": "Inflation / Cpi / Price"
     },
     {
       "slug": "the-ethics-of-crypto-sorting-out-good-intentions-and-bad-actors",
@@ -1702,8 +1657,8 @@
       "date": "2022-10-11",
       "url": "https://www.forbes.com/sites/georgecalhoun/2022/10/11/the-ethics-of-crypto-sorting-out-good-intentions-and-bad-actors/",
       "word_count": 2049,
-      "cluster_id": 9,
-      "cluster_label": "Crypto / Ftx / Bitcoin"
+      "cluster_id": 3,
+      "cluster_label": "Tariff / Tariffs / Crypto"
     },
     {
       "slug": "the-recession-meme-is-intense-but-can-the-market-see-around-the-corner",
@@ -1711,8 +1666,8 @@
       "date": "2022-10-19",
       "url": "https://www.forbes.com/sites/georgecalhoun/2022/10/19/the-recession-meme-is-intense-but-can-the-market-see-around-the-corner/",
       "word_count": 2093,
-      "cluster_id": 6,
-      "cluster_label": "Tariff / Tariffs / Recession"
+      "cluster_id": 3,
+      "cluster_label": "Tariff / Tariffs / Crypto"
     },
     {
       "slug": "the-recession-meme-is-intense-but-can-the-market-see-around-the-corner",
@@ -1720,8 +1675,8 @@
       "date": "2022-10-19",
       "url": "https://www.forbes.com/sites/georgecalhoun/2022/10/19/the-recession-meme-is-intense-but-can-the-market-see-around-the-corner/",
       "word_count": 2093,
-      "cluster_id": 6,
-      "cluster_label": "Tariff / Tariffs / Recession"
+      "cluster_id": 3,
+      "cluster_label": "Tariff / Tariffs / Crypto"
     },
     {
       "slug": "when-is-a-cycle-not-a-cycle-the-economist-magazine-flunks-semiconductors",
@@ -1729,8 +1684,8 @@
       "date": "2022-10-31",
       "url": "https://www.forbes.com/sites/georgecalhoun/2022/10/31/when-is-a-cycle-not-a-cycle-the-economist-magazine-flunks-semiconductors/",
       "word_count": 1427,
-      "cluster_id": 0,
-      "cluster_label": "Huawei / Semiconductor / China"
+      "cluster_id": 8,
+      "cluster_label": "Semiconductor / Chips / Industry"
     },
     {
       "slug": "the-inflation-narrative-falters-instead-we-have-gluts-now-and-soon-deflation",
@@ -1738,8 +1693,8 @@
       "date": "2022-10-31",
       "url": "https://www.forbes.com/sites/georgecalhoun/2022/10/31/the-inflation-narrative-falters--instead-we-have-gluts-now-and-soon--deflation/",
       "word_count": 1232,
-      "cluster_id": 2,
-      "cluster_label": "Inflation / Cpi / Egg"
+      "cluster_id": 3,
+      "cluster_label": "Tariff / Tariffs / Crypto"
     },
     {
       "slug": "when-is-a-cycle-not-a-cycle-the-economist-magazine-flunks-semiconductors",
@@ -1747,8 +1702,8 @@
       "date": "2022-10-31",
       "url": "https://www.forbes.com/sites/georgecalhoun/2022/10/31/when-is-a-cycle-not-a-cycle-the-economist-magazine-flunks-semiconductors/",
       "word_count": 1427,
-      "cluster_id": 0,
-      "cluster_label": "Huawei / Semiconductor / China"
+      "cluster_id": 8,
+      "cluster_label": "Semiconductor / Chips / Industry"
     },
     {
       "slug": "the-un-wisdom-of-crowds-prediction-markets-failed-their-midterm-exams",
@@ -1756,8 +1711,17 @@
       "date": "2022-11-14",
       "url": "https://www.forbes.com/sites/georgecalhoun/2022/11/14/the-un-wisdom-of-crowds-prediction-markets-failed-their-midterm-exams/",
       "word_count": 2412,
+      "cluster_id": 3,
+      "cluster_label": "Tariff / Tariffs / Crypto"
+    },
+    {
+      "slug": "ftx-and-esg-a-panorama-of-failed-governance-pt-1-the-internal-failures",
+      "title": "FTX And ESG: A Panorama Of Failed Governance (Pt 1 – The Internal Failures)",
+      "date": "2022-11-21",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2022/11/21/ftx-and-esg-a-panorama-of-failed-governance-pt-1--the-internal-failures/",
+      "word_count": 1559,
       "cluster_id": 7,
-      "cluster_label": "Tesla / Shares / Options"
+      "cluster_label": "Huawei / Ftx / Chinese"
     },
     {
       "slug": "ftx-and-esg-a-panorama-of-failed-governance-pt-1-the-internal-failures",
@@ -1765,17 +1729,8 @@
       "date": "2022-11-21",
       "url": "https://www.forbes.com/sites/georgecalhoun/2022/11/21/ftx-and-esg-a-panorama-of-failed-governance-pt-1--the-internal-failures/",
       "word_count": 1559,
-      "cluster_id": 9,
-      "cluster_label": "Crypto / Ftx / Bitcoin"
-    },
-    {
-      "slug": "ftx-and-esg-a-panorama-of-failed-governance-pt-1-the-internal-failures",
-      "title": "FTX And ESG: A Panorama Of Failed Governance (Pt 1 – The Internal Failures)",
-      "date": "2022-11-21",
-      "url": "https://www.forbes.com/sites/georgecalhoun/2022/11/21/ftx-and-esg-a-panorama-of-failed-governance-pt-1--the-internal-failures/",
-      "word_count": 1559,
-      "cluster_id": 9,
-      "cluster_label": "Crypto / Ftx / Bitcoin"
+      "cluster_id": 7,
+      "cluster_label": "Huawei / Ftx / Chinese"
     },
     {
       "slug": "the-putcall-ratio-of-market-sentiment-went-crazy-in-november-what-can-it-mean",
@@ -1783,8 +1738,8 @@
       "date": "2022-12-05",
       "url": "https://www.forbes.com/sites/georgecalhoun/2022/12/05/the-putcall-ratio-of-market-sentiment-went-crazy-in-november-what-can-it-mean/",
       "word_count": 1201,
-      "cluster_id": 7,
-      "cluster_label": "Tesla / Shares / Options"
+      "cluster_id": 3,
+      "cluster_label": "Tariff / Tariffs / Crypto"
     },
     {
       "slug": "yes-todays-inflation-is-transitory-the-pundits-have-it-wrong",
@@ -1792,8 +1747,8 @@
       "date": "2022-12-11",
       "url": "https://www.forbes.com/sites/georgecalhoun/2022/12/11/yes-todays-inflation-is-transitory-the-pundits-have-it-wrong/",
       "word_count": 789,
-      "cluster_id": 2,
-      "cluster_label": "Inflation / Cpi / Egg"
+      "cluster_id": 5,
+      "cluster_label": "Inflation / Cpi / Price"
     },
     {
       "slug": "dissecting-the-consumer-price-index-pt-1-inflation-is-over",
@@ -1801,8 +1756,8 @@
       "date": "2022-12-14",
       "url": "http://www.forbes.com/sites/georgecalhoun/2022/12/14/dissecting-the-consumer-price-index-pt-1-inflation-is-over/",
       "word_count": 1209,
-      "cluster_id": 2,
-      "cluster_label": "Inflation / Cpi / Egg"
+      "cluster_id": 5,
+      "cluster_label": "Inflation / Cpi / Price"
     },
     {
       "slug": "dissecting-the-consumer-price-index-pt-1-inflation-is-over",
@@ -1810,8 +1765,8 @@
       "date": "2022-12-14",
       "url": "http://www.forbes.com/sites/georgecalhoun/2022/12/14/dissecting-the-consumer-price-index-pt-1-inflation-is-over/",
       "word_count": 1209,
-      "cluster_id": 2,
-      "cluster_label": "Inflation / Cpi / Egg"
+      "cluster_id": 5,
+      "cluster_label": "Inflation / Cpi / Price"
     },
     {
       "slug": "why-the-federal-reserve-gets-inflation-wrong-and-why-monetary-policy-is-always-l",
@@ -1819,8 +1774,8 @@
       "date": "2022-12-29",
       "url": "https://www.forbes.com/sites/georgecalhoun/2022/12/29/why-the-federal-reserve-gets-inflation-wrong--and-monetary-policy-is-always-late/",
       "word_count": 1521,
-      "cluster_id": 2,
-      "cluster_label": "Inflation / Cpi / Egg"
+      "cluster_id": 5,
+      "cluster_label": "Inflation / Cpi / Price"
     },
     {
       "slug": "why-the-federal-reserve-gets-inflation-wrong-and-why-monetary-policy-is-always-l",
@@ -1828,8 +1783,8 @@
       "date": "2022-12-29",
       "url": "https://www.forbes.com/sites/georgecalhoun/2022/12/29/why-the-federal-reserve-gets-inflation-wrong--and-monetary-policy-is-always-late/",
       "word_count": 1521,
-      "cluster_id": 2,
-      "cluster_label": "Inflation / Cpi / Egg"
+      "cluster_id": 5,
+      "cluster_label": "Inflation / Cpi / Price"
     },
     {
       "slug": "the-impact-of-chinas-zero-covid-exit-is-china-really-vaccinated",
@@ -1837,8 +1792,8 @@
       "date": "2022-12-31",
       "url": "https://www.forbes.com/sites/georgecalhoun/2022/12/31/the-impact-of-chinas-zero-covid-exit-is-china-really-vaccinated/",
       "word_count": 1219,
-      "cluster_id": 3,
-      "cluster_label": "Covid / China / Mortality"
+      "cluster_id": 6,
+      "cluster_label": "Covid / China / Chinese"
     },
     {
       "slug": "the-federal-reserve-has-an-egg-problem-and-a-chicken-and-egg-problem",
@@ -1846,8 +1801,8 @@
       "date": "2023-01-17",
       "url": "http://www.forbes.com/sites/georgecalhoun/2023/01/17/the-federal-reserve-has-an-egg-problem--and-a-chicken-and-egg-problem/",
       "word_count": 1545,
-      "cluster_id": 2,
-      "cluster_label": "Inflation / Cpi / Egg"
+      "cluster_id": 5,
+      "cluster_label": "Inflation / Cpi / Price"
     },
     {
       "slug": "the-federal-reserve-has-an-egg-problem-and-a-chicken-and-egg-problem",
@@ -1855,8 +1810,8 @@
       "date": "2023-01-17",
       "url": "http://www.forbes.com/sites/georgecalhoun/2023/01/17/the-federal-reserve-has-an-egg-problem--and-a-chicken-and-egg-problem/",
       "word_count": 1545,
-      "cluster_id": 2,
-      "cluster_label": "Inflation / Cpi / Egg"
+      "cluster_id": 5,
+      "cluster_label": "Inflation / Cpi / Price"
     },
     {
       "slug": "is-inflation-created-by-corporate-greed-evidence-from-the-current-egg-flation-ep",
@@ -1864,8 +1819,8 @@
       "date": "2023-01-21",
       "url": "https://www.forbes.com/sites/georgecalhoun/2023/01/21/is-inflation-created-by-corporate-greed-evidence-from-the-current-egg-flation-episode/",
       "word_count": 2062,
-      "cluster_id": 2,
-      "cluster_label": "Inflation / Cpi / Egg"
+      "cluster_id": 5,
+      "cluster_label": "Inflation / Cpi / Price"
     },
     {
       "slug": "a-deflation-alert-hidden-in-the-latest-consumer-price-indicators",
@@ -1873,8 +1828,8 @@
       "date": "2023-01-28",
       "url": "https://www.forbes.com/sites/georgecalhoun/2023/01/28/a-deflation-alert-hidden-in-the-latest-consumer-price-indicators/",
       "word_count": 1569,
-      "cluster_id": 2,
-      "cluster_label": "Inflation / Cpi / Egg"
+      "cluster_id": 5,
+      "cluster_label": "Inflation / Cpi / Price"
     },
     {
       "slug": "the-egg-crisis-another-pseudo-inflation-phenomenon",
@@ -1882,8 +1837,8 @@
       "date": "2023-02-05",
       "url": "https://www.forbes.com/sites/georgecalhoun/2023/02/05/the-egg-crisis--another-pseudo-inflation-phenomenon/",
       "word_count": 2614,
-      "cluster_id": 2,
-      "cluster_label": "Inflation / Cpi / Egg"
+      "cluster_id": 5,
+      "cluster_label": "Inflation / Cpi / Price"
     },
     {
       "slug": "what-is-transitory-inflation-1-the-facts",
@@ -1891,8 +1846,8 @@
       "date": "2023-03-06",
       "url": "https://www.forbes.com/sites/georgecalhoun/2023/03/06/what-is-transitory-inflation-1-the-facts/",
       "word_count": 2340,
-      "cluster_id": 2,
-      "cluster_label": "Inflation / Cpi / Egg"
+      "cluster_id": 5,
+      "cluster_label": "Inflation / Cpi / Price"
     },
     {
       "slug": "what-is-transitory-inflation-2-the-politics",
@@ -1900,8 +1855,8 @@
       "date": "2023-03-16",
       "url": "https://www.forbes.com/sites/georgecalhoun/2023/03/16/what-is-transitory-inflation-2-the-politics/",
       "word_count": 1519,
-      "cluster_id": 2,
-      "cluster_label": "Inflation / Cpi / Egg"
+      "cluster_id": 5,
+      "cluster_label": "Inflation / Cpi / Price"
     },
     {
       "slug": "chinas-covid-exit-wave-2-is-it-over",
@@ -1909,8 +1864,8 @@
       "date": "2023-03-19",
       "url": "https://www.forbes.com/sites/georgecalhoun/2023/03/19/chinas-covid-exit-wave-2-is-it-over/",
       "word_count": 1348,
-      "cluster_id": 3,
-      "cluster_label": "Covid / China / Mortality"
+      "cluster_id": 6,
+      "cluster_label": "Covid / China / Chinese"
     },
     {
       "slug": "chinas-covid-exit-wave-3-what-other-countries-zero-covid-exits-show",
@@ -1918,8 +1873,8 @@
       "date": "2023-03-27",
       "url": "https://www.forbes.com/sites/georgecalhoun/2023/03/27/chinas-covid-exit-wave-3-what-other-countries-zero-covid-exits-show/",
       "word_count": 2195,
-      "cluster_id": 3,
-      "cluster_label": "Covid / China / Mortality"
+      "cluster_id": 6,
+      "cluster_label": "Covid / China / Chinese"
     },
     {
       "slug": "chinas-covid-exit-wave-4-flattening-the-curve",
@@ -1927,8 +1882,8 @@
       "date": "2023-03-31",
       "url": "https://www.forbes.com/sites/georgecalhoun/2023/03/31/chinas-covid-exit-wave-4-flattening-the-curve/",
       "word_count": 1538,
-      "cluster_id": 3,
-      "cluster_label": "Covid / China / Mortality"
+      "cluster_id": 6,
+      "cluster_label": "Covid / China / Chinese"
     },
     {
       "slug": "the-bias-that-has-compromised-elite-science-reporting-on-the-covid-origins-story",
@@ -1936,8 +1891,8 @@
       "date": "2023-04-18",
       "url": "https://www.forbes.com/sites/georgecalhoun/2023/04/18/the-bias-that-has-compromised-elite-science-reporting-on-the-covid-origins-story/",
       "word_count": 2048,
-      "cluster_id": 3,
-      "cluster_label": "Covid / China / Mortality"
+      "cluster_id": 6,
+      "cluster_label": "Covid / China / Chinese"
     },
     {
       "slug": "the-long-and-variable-lag-a-dangerous-monetary-policy-myth",
@@ -1946,7 +1901,7 @@
       "url": "https://www.forbes.com/sites/georgecalhoun/2023/07/08/the-long-and-variable-lag--a-dangerous-monetary-policy-myth/",
       "word_count": 1388,
       "cluster_id": 5,
-      "cluster_label": "Fed / Rate / Rates"
+      "cluster_label": "Inflation / Cpi / Price"
     },
     {
       "slug": "does-raising-the-fed-funds-rate-tame-inflation-is-there-collateral-damage",
@@ -1955,7 +1910,7 @@
       "url": "https://www.forbes.com/sites/georgecalhoun/2023/07/17/does-raising-the-fed-funds-rate-tame-inflation-is-there-collateral-damage/",
       "word_count": 1817,
       "cluster_id": 5,
-      "cluster_label": "Fed / Rate / Rates"
+      "cluster_label": "Inflation / Cpi / Price"
     },
     {
       "slug": "chinas-covid-catastrophe-5-the-unvaxxed-elderly-are-a-deadly-accelerant",
@@ -1963,8 +1918,8 @@
       "date": "2023-08-01",
       "url": "https://www.forbes.com/sites/georgecalhoun/2023/08/01/chinas-covid-catastrophe-5-the-unvaxxed-elderly-are-a-deadly-accelerant/",
       "word_count": 1650,
-      "cluster_id": 3,
-      "cluster_label": "Covid / China / Mortality"
+      "cluster_id": 6,
+      "cluster_label": "Covid / China / Chinese"
     },
     {
       "slug": "the-case-for-intel-an-illustration-of-the-value-investing-mindset",
@@ -1972,8 +1927,8 @@
       "date": "2023-08-09",
       "url": "https://www.forbes.com/sites/georgecalhoun/2023/08/09/the-case-for-intel-an-illustration-of-the-value-investing-mindset/",
       "word_count": 3277,
-      "cluster_id": 0,
-      "cluster_label": "Huawei / Semiconductor / China"
+      "cluster_id": 8,
+      "cluster_label": "Semiconductor / Chips / Industry"
     },
     {
       "slug": "the-flawed-cpi-the-fallacy-of-year-over-year-inflation-reporting",
@@ -1981,8 +1936,8 @@
       "date": "2023-09-18",
       "url": "https://www.forbes.com/sites/georgecalhoun/2023/09/18/the-flawed-cpi-the-fallacy-of-year-over-year-inflation-reporting/",
       "word_count": 2249,
-      "cluster_id": 2,
-      "cluster_label": "Inflation / Cpi / Egg"
+      "cluster_id": 5,
+      "cluster_label": "Inflation / Cpi / Price"
     },
     {
       "slug": "what-is-structural-inflation-pt-1-a-compelling-case-study",
@@ -1990,8 +1945,8 @@
       "date": "2023-09-24",
       "url": "https://www.forbes.com/sites/georgecalhoun/2023/09/24/what-is-structural-inflation-pt-1-a-compelling-case-study/",
       "word_count": 2249,
-      "cluster_id": 2,
-      "cluster_label": "Inflation / Cpi / Egg"
+      "cluster_id": 5,
+      "cluster_label": "Inflation / Cpi / Price"
     },
     {
       "slug": "inflation-is-over-what-comes-next",
@@ -1999,8 +1954,8 @@
       "date": "2023-10-07",
       "url": "https://www.forbes.com/sites/georgecalhoun/2023/10/07/inflation-is-over--what-comes-next/",
       "word_count": 1862,
-      "cluster_id": 2,
-      "cluster_label": "Inflation / Cpi / Egg"
+      "cluster_id": 5,
+      "cluster_label": "Inflation / Cpi / Price"
     },
     {
       "slug": "decoding-the-inflation-signals-how-to-read-and-correct-the-latest-cpi-figure",
@@ -2008,8 +1963,8 @@
       "date": "2023-10-13",
       "url": "https://www.forbes.com/sites/georgecalhoun/2023/10/13/decoding-the-inflation-signals-how-to-read-and-correct-the-latest-cpi-figure/",
       "word_count": 1002,
-      "cluster_id": 2,
-      "cluster_label": "Inflation / Cpi / Egg"
+      "cluster_id": 5,
+      "cluster_label": "Inflation / Cpi / Price"
     },
     {
       "slug": "the-market-fears-the-fed-more-than-hamas",
@@ -2017,8 +1972,8 @@
       "date": "2023-11-08",
       "url": "https://www.forbes.com/sites/georgecalhoun/2023/11/08/the-market-fears-the-fed-more-than-hamas/",
       "word_count": 1758,
-      "cluster_id": 5,
-      "cluster_label": "Fed / Rate / Rates"
+      "cluster_id": 2,
+      "cluster_label": "Fed / Financial / Wireless"
     },
     {
       "slug": "the-markets-big-fear-is-not-geopolitics-it-is-the-federal-reserve",
@@ -2026,8 +1981,8 @@
       "date": "2023-11-08",
       "url": "https://www.forbes.com/sites/georgecalhoun/2023/11/08/why-the-stock-markets-greatest-fear-is-the-federal-reserve/",
       "word_count": 2608,
-      "cluster_id": 5,
-      "cluster_label": "Fed / Rate / Rates"
+      "cluster_id": 2,
+      "cluster_label": "Fed / Financial / Wireless"
     },
     {
       "slug": "the-verdict-on-the-2021-2023-inflation-transitory-on-all-counts",
@@ -2035,8 +1990,8 @@
       "date": "2024-02-05",
       "url": "https://www.forbes.com/sites/georgecalhoun/2024/02/05/the-verdict-on-the-2021-2023-inflation--transitory-on-all-counts/",
       "word_count": 1338,
-      "cluster_id": 2,
-      "cluster_label": "Inflation / Cpi / Egg"
+      "cluster_id": 5,
+      "cluster_label": "Inflation / Cpi / Price"
     },
     {
       "slug": "inflation-is-a-fever-is-it-a-common-cold-or-economic-leukemia",
@@ -2044,8 +1999,8 @@
       "date": "2024-02-13",
       "url": "https://www.forbes.com/sites/georgecalhoun/2024/02/13/inflation-is-a-fever--is-it-a-common-cold-or-economic-leukemia/",
       "word_count": 2154,
-      "cluster_id": 2,
-      "cluster_label": "Inflation / Cpi / Egg"
+      "cluster_id": 5,
+      "cluster_label": "Inflation / Cpi / Price"
     },
     {
       "slug": "inflation-is-a-fever-is-it-as-mild-as-a-common-cold-or-something-more-serious",
@@ -2053,8 +2008,8 @@
       "date": "2024-02-13",
       "url": "https://www.forbes.com/sites/georgecalhoun/2024/02/13/inflation-is-a-fever-is-it-as-mild-as-a-common-cold-or-something-more-serious/",
       "word_count": 2222,
-      "cluster_id": 2,
-      "cluster_label": "Inflation / Cpi / Egg"
+      "cluster_id": 5,
+      "cluster_label": "Inflation / Cpi / Price"
     },
     {
       "slug": "the-feds-two-pronged-monetary-blitzkrieg-pt-1-surveying-the-damage",
@@ -2062,8 +2017,8 @@
       "date": "2024-03-07",
       "url": "https://www.forbes.com/sites/georgecalhoun/2024/03/07/the-feds-2-pronged-monetary-blitzkrieg-pt-1--surveying-the-damage/",
       "word_count": 1350,
-      "cluster_id": 5,
-      "cluster_label": "Fed / Rate / Rates"
+      "cluster_id": 3,
+      "cluster_label": "Tariff / Tariffs / Crypto"
     },
     {
       "slug": "collateral-damage-from-fed-policy-part-2-a-broken-housing-market",
@@ -2071,8 +2026,8 @@
       "date": "2024-03-13",
       "url": "https://www.forbes.com/sites/georgecalhoun/2024/03/13/collateral-damage-from-fed-policy-part-2-a-broken-housing-market/",
       "word_count": 2469,
-      "cluster_id": 5,
-      "cluster_label": "Fed / Rate / Rates"
+      "cluster_id": 3,
+      "cluster_label": "Tariff / Tariffs / Crypto"
     },
     {
       "slug": "collateral-damage-from-fed-policy-3-money-market-funds-a-powder-keg",
@@ -2080,8 +2035,8 @@
       "date": "2024-03-26",
       "url": "https://www.forbes.com/sites/georgecalhoun/2024/03/26/collateral-damage-from-fed-policy-3-money-market-funds-a-powder-keg/",
       "word_count": 2396,
-      "cluster_id": 5,
-      "cluster_label": "Fed / Rate / Rates"
+      "cluster_id": 3,
+      "cluster_label": "Tariff / Tariffs / Crypto"
     },
     {
       "slug": "the-missing-factor-in-explanations-of-chinas-economic-distress-covid-part-1-the-",
@@ -2089,8 +2044,8 @@
       "date": "2024-05-04",
       "url": "https://www.forbes.com/sites/georgecalhoun/2024/05/04/the-missing-factor-in-explanations-of-chinas-economic-distress-covid-part-1-the-cover-up/",
       "word_count": 2555,
-      "cluster_id": 3,
-      "cluster_label": "Covid / China / Mortality"
+      "cluster_id": 6,
+      "cluster_label": "Covid / China / Chinese"
     },
     {
       "slug": "the-missing-factor-in-explanations-of-chinas-economic-distress-covid-part-2-esti",
@@ -2098,8 +2053,8 @@
       "date": "2024-05-12",
       "url": "https://www.forbes.com/sites/georgecalhoun/2024/05/12/the-missing-factor-in-explanations-of-chinas-economic-distress-covid---part-2-estimating-the-true-death-toll/",
       "word_count": 1899,
-      "cluster_id": 3,
-      "cluster_label": "Covid / China / Mortality"
+      "cluster_id": 6,
+      "cluster_label": "Covid / China / Chinese"
     },
     {
       "slug": "the-feds-rate-cut-a-soft-landing-or-fake-news",
@@ -2107,8 +2062,8 @@
       "date": "2024-09-26",
       "url": "https://www.forbes.com/sites/georgecalhoun/2024/09/26/the-feds-rate-cut--a-soft-landing--or-fake-news/",
       "word_count": 2225,
-      "cluster_id": 5,
-      "cluster_label": "Fed / Rate / Rates"
+      "cluster_id": 2,
+      "cluster_label": "Fed / Financial / Wireless"
     },
     {
       "slug": "update-on-interest-rates-is-the-federal-reserve-shooting-blanks",
@@ -2116,8 +2071,8 @@
       "date": "2024-10-07",
       "url": "https://www.forbes.com/sites/georgecalhoun/2024/10/07/update-on-interest-rates-is-the-federal-reserve-shooting-blanks/",
       "word_count": 1211,
-      "cluster_id": 5,
-      "cluster_label": "Fed / Rate / Rates"
+      "cluster_id": 2,
+      "cluster_label": "Fed / Financial / Wireless"
     },
     {
       "slug": "prediction-markets-how-reliable-are-they-really-part-1",
@@ -2125,8 +2080,8 @@
       "date": "2024-10-23",
       "url": "https://www.forbes.com/sites/georgecalhoun/2024/10/23/prediction-markets-how-reliable-are-they-really-part-1/",
       "word_count": 2132,
-      "cluster_id": 7,
-      "cluster_label": "Tesla / Shares / Options"
+      "cluster_id": 3,
+      "cluster_label": "Tariff / Tariffs / Crypto"
     },
     {
       "slug": "is-price-gouging-real-whos-doing-it-is-it-driving-inflation",
@@ -2135,7 +2090,7 @@
       "url": "https://www.forbes.com/sites/georgecalhoun/2024/11/14/is-price-gouging-real-whos-doing-it-is-it-driving-inflation/",
       "word_count": 2824,
       "cluster_id": 5,
-      "cluster_label": "Fed / Rate / Rates"
+      "cluster_label": "Inflation / Cpi / Price"
     },
     {
       "slug": "is-chinas-economy-entering-historical-garbage-time-part-1",
@@ -2143,8 +2098,8 @@
       "date": "2025-01-27",
       "url": "https://www.forbes.com/sites/georgecalhoun/2025/01/27/is-chinas-economy-entering-historical-garbage-time--part-1/",
       "word_count": 2176,
-      "cluster_id": 0,
-      "cluster_label": "Huawei / Semiconductor / China"
+      "cluster_id": 6,
+      "cluster_label": "Covid / China / Chinese"
     },
     {
       "slug": "chinas-economic-problem-isnt-just-japanification-it-may-be-worse",
@@ -2152,8 +2107,8 @@
       "date": "2025-02-06",
       "url": "https://www.forbes.com/sites/georgecalhoun/2025/02/06/chinas-economic-problem-isnt-just-japanification--it-may-be-worse/",
       "word_count": 1622,
-      "cluster_id": 0,
-      "cluster_label": "Huawei / Semiconductor / China"
+      "cluster_id": 3,
+      "cluster_label": "Tariff / Tariffs / Crypto"
     },
     {
       "slug": "chinas-economic-crisis-is-tracking-japans-downturn-in-the-1990s",
@@ -2161,8 +2116,8 @@
       "date": "2025-02-15",
       "url": "https://www.forbes.com/sites/georgecalhoun/2025/02/15/chinas-economic-crisis-is-tracking-japans-downturn-in-the-1990s/",
       "word_count": 1708,
-      "cluster_id": 0,
-      "cluster_label": "Huawei / Semiconductor / China"
+      "cluster_id": 6,
+      "cluster_label": "Covid / China / Chinese"
     },
     {
       "slug": "universities-face-a-reckoning-over-federal-rd-funding-pt-1",
@@ -2170,8 +2125,8 @@
       "date": "2025-02-26",
       "url": "https://www.forbes.com/sites/georgecalhoun/2025/02/26/universities-face-a--reckoning-over-federal-rd-funding-pt-1/",
       "word_count": 1825,
-      "cluster_id": 5,
-      "cluster_label": "Fed / Rate / Rates"
+      "cluster_id": 2,
+      "cluster_label": "Fed / Financial / Wireless"
     },
     {
       "slug": "tariffs-first-consider-the-certainties",
@@ -2179,8 +2134,8 @@
       "date": "2025-04-11",
       "url": "https://www.forbes.com/sites/georgecalhoun/2025/04/11/tariffs-first-consider-the-certainties/",
       "word_count": 2147,
-      "cluster_id": 6,
-      "cluster_label": "Tariff / Tariffs / Recession"
+      "cluster_id": 3,
+      "cluster_label": "Tariff / Tariffs / Crypto"
     },
     {
       "slug": "tariff-uncertainties-part-2-the-link-to-inflation",
@@ -2188,8 +2143,8 @@
       "date": "2025-04-30",
       "url": "https://www.forbes.com/sites/georgecalhoun/2025/04/30/tariff-uncertainties--part-2-the-link-to-inflation/",
       "word_count": 3138,
-      "cluster_id": 6,
-      "cluster_label": "Tariff / Tariffs / Recession"
+      "cluster_id": 3,
+      "cluster_label": "Tariff / Tariffs / Crypto"
     },
     {
       "slug": "tariff-uncertainties-part-3-the-bond-markets",
@@ -2197,8 +2152,8 @@
       "date": "2025-05-25",
       "url": "https://www.forbes.com/sites/georgecalhoun/2025/05/25/tariff-uncertainties-part-3-the-bond-markets/",
       "word_count": 3193,
-      "cluster_id": 6,
-      "cluster_label": "Tariff / Tariffs / Recession"
+      "cluster_id": 3,
+      "cluster_label": "Tariff / Tariffs / Crypto"
     },
     {
       "slug": "tariff-uncertainties-part-4-a-little-qa-trump-trade-china",
@@ -2206,8 +2161,8 @@
       "date": "2025-05-31",
       "url": "https://www.forbes.com/sites/georgecalhoun/2025/05/31/tariff-uncertainties-part-4-a-little-qa/",
       "word_count": 1767,
-      "cluster_id": 6,
-      "cluster_label": "Tariff / Tariffs / Recession"
+      "cluster_id": 3,
+      "cluster_label": "Tariff / Tariffs / Crypto"
     },
     {
       "slug": "tariff-uncertainties-pt-5-the-big-one-will-it-cause-a-recession",
@@ -2215,8 +2170,8 @@
       "date": "2025-07-17",
       "url": "https://www.forbes.com/sites/georgecalhoun/2025/07/17/tariff-uncertainties-pt-5-the-big-one--will-it-cause-a-recession/",
       "word_count": 2360,
-      "cluster_id": 6,
-      "cluster_label": "Tariff / Tariffs / Recession"
+      "cluster_id": 3,
+      "cluster_label": "Tariff / Tariffs / Crypto"
     },
     {
       "slug": "the-false-promises-of-economic-forecasting-newly-exposed-by-the-tariff-whiplash",
@@ -2224,8 +2179,8 @@
       "date": "2025-07-30",
       "url": "https://www.forbes.com/sites/georgecalhoun/2025/07/30/the-false-promises-of-economic-forecasting-newly-exposed-by-the-tariff-whiplash/",
       "word_count": 2171,
-      "cluster_id": 6,
-      "cluster_label": "Tariff / Tariffs / Recession"
+      "cluster_id": 3,
+      "cluster_label": "Tariff / Tariffs / Crypto"
     },
     {
       "slug": "a-long-overdue-reckoning-for-the-bureau-of-labor-statistics",
@@ -2233,8 +2188,8 @@
       "date": "2025-08-13",
       "url": "https://www.forbes.com/sites/georgecalhoun/2025/08/13/a-long-overdue-reckoning-for-the-bureau-of-labor-statistics/",
       "word_count": 1888,
-      "cluster_id": 2,
-      "cluster_label": "Inflation / Cpi / Egg"
+      "cluster_id": 3,
+      "cluster_label": "Tariff / Tariffs / Crypto"
     },
     {
       "slug": "will-the-fed-cut-interest-rates-does-it-matter-recent-history-says-no",
@@ -2242,8 +2197,8 @@
       "date": "2025-08-28",
       "url": "https://www.forbes.com/sites/georgecalhoun/2025/08/28/will-the-fed-cut-interest-rates-does-it-matter-recent-history-says-no/",
       "word_count": 1922,
-      "cluster_id": 5,
-      "cluster_label": "Fed / Rate / Rates"
+      "cluster_id": 3,
+      "cluster_label": "Tariff / Tariffs / Crypto"
     },
     {
       "slug": "the-tariff-scorecard-did-we-miss-the-apocalypse-or-was-it-just-postponed",
@@ -2251,8 +2206,8 @@
       "date": "2025-09-07",
       "url": "https://www.forbes.com/sites/georgecalhoun/2025/09/07/the-tariff-scorecard-did-we-miss-the-apocalypse-or-was-it-just-postponed/",
       "word_count": 2681,
-      "cluster_id": 6,
-      "cluster_label": "Tariff / Tariffs / Recession"
+      "cluster_id": 3,
+      "cluster_label": "Tariff / Tariffs / Crypto"
     },
     {
       "slug": "the-case-against-quarterly-reporting-by-public-companies-part-1-the-fundamentals",
@@ -2260,8 +2215,8 @@
       "date": "2025-11-02",
       "url": "https://www.forbes.com/sites/georgecalhoun/2025/11/02/the-case-against-quarterly-reporting-by-public-companies-part-1-the-fundamentals/",
       "word_count": 2530,
-      "cluster_id": 8,
-      "cluster_label": "Inflation / Yields / Bond"
+      "cluster_id": 3,
+      "cluster_label": "Tariff / Tariffs / Crypto"
     },
     {
       "slug": "the-case-against-quarterly-reporting-part-2-the-dysfunctional-earnings-game",
@@ -2269,8 +2224,8 @@
       "date": "2025-11-30",
       "url": "https://www.forbes.com/sites/georgecalhoun/2025/11/30/the-case-against-quarterly-reporting--part-2-the-earnings-game/",
       "word_count": 1823,
-      "cluster_id": 6,
-      "cluster_label": "Tariff / Tariffs / Recession"
+      "cluster_id": 3,
+      "cluster_label": "Tariff / Tariffs / Crypto"
     },
     {
       "slug": "make-venezuela-great-again-pt-1-what-happened-the-rise-and-fall",
@@ -2278,8 +2233,8 @@
       "date": "2026-02-02",
       "url": "https://www.forbes.com/sites/georgecalhoun/2026/02/02/make-venezuela-great-again-pt-1-what-happened--the-rise-and-fall/",
       "word_count": 1682,
-      "cluster_id": 8,
-      "cluster_label": "Inflation / Yields / Bond"
+      "cluster_id": 4,
+      "cluster_label": "Oil / Venezuela / Barrel"
     },
     {
       "slug": "venezuela-great-again-pt-2-the-inevitability-of-a-failed-petrostate",
@@ -2287,8 +2242,8 @@
       "date": "2026-02-24",
       "url": "https://www.forbes.com/sites/georgecalhoun/2026/02/24/venezuela-great-again-pt-2-the-inevitability-of-a-failed-petrostate/",
       "word_count": 2902,
-      "cluster_id": 8,
-      "cluster_label": "Inflation / Yields / Bond"
+      "cluster_id": 4,
+      "cluster_label": "Oil / Venezuela / Barrel"
     },
     {
       "slug": "hedge-funds-got-clipped-by-epic-fury-they-forgot-to-hedge",
@@ -2296,8 +2251,8 @@
       "date": "2026-03-20",
       "url": "https://www.forbes.com/sites/georgecalhoun/2026/03/20/hedge-funds-got-clipped-by-epic-fury-they-forgot-to-hedge/",
       "word_count": 2330,
-      "cluster_id": 6,
-      "cluster_label": "Tariff / Tariffs / Recession"
+      "cluster_id": 4,
+      "cluster_label": "Oil / Venezuela / Barrel"
     },
     {
       "slug": "to-price-in-hormuz-markets-must-recognize-two-economic-risks",
@@ -2305,72 +2260,86 @@
       "date": "2026-04-01",
       "url": "https://www.forbes.com/sites/georgecalhoun/2026/04/01/to-price-in-hormuz-markets-must-recognize-two-economic-risks/",
       "word_count": 2151,
+      "cluster_id": 4,
+      "cluster_label": "Oil / Venezuela / Barrel"
+    },
+    {
+      "slug": "is-there-price-gouging-in-the-gasoline-market",
+      "title": "Is There ‘Price Gouging’ In The Gasoline Market?",
+      "date": "2026-04-23",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2026/04/23/is-there-price-gouging-in-the-gasoline-market/",
+      "word_count": 1377,
+      "cluster_id": 3,
+      "cluster_label": "Tariff / Tariffs / Crypto"
+    },
+    {
+      "slug": "who-won-the-xitrump-summit",
+      "title": "Who Won The Xi/Trump Summit?",
+      "date": "2026-05-25",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2026/05/25/who-won-the-xitrump-summit/",
+      "word_count": 2087,
       "cluster_id": 6,
-      "cluster_label": "Tariff / Tariffs / Recession"
+      "cluster_label": "Covid / China / Chinese"
     }
   ],
   "topic_timeline": [
     {
       "quarter": "2020-Q2",
       "counts": {
-        "0": 3,
+        "0": 0,
         "1": 0,
-        "2": 0,
+        "2": 9,
         "3": 0,
-        "4": 9,
-        "5": 0,
+        "4": 1,
+        "5": 1,
         "6": 0,
-        "7": 0,
-        "8": 2,
-        "9": 0
+        "7": 3,
+        "8": 0
       },
       "total": 14
     },
     {
       "quarter": "2020-Q3",
       "counts": {
-        "0": 8,
-        "1": 0,
-        "2": 0,
+        "0": 5,
+        "1": 2,
+        "2": 4,
         "3": 0,
-        "4": 2,
-        "5": 1,
+        "4": 0,
+        "5": 0,
         "6": 0,
         "7": 5,
-        "8": 1,
-        "9": 0
+        "8": 1
       },
       "total": 17
     },
     {
       "quarter": "2020-Q4",
       "counts": {
-        "0": 0,
+        "0": 3,
         "1": 6,
-        "2": 0,
-        "3": 0,
+        "2": 4,
+        "3": 1,
         "4": 0,
         "5": 0,
         "6": 0,
-        "7": 5,
-        "8": 3,
-        "9": 0
+        "7": 0,
+        "8": 0
       },
       "total": 14
     },
     {
       "quarter": "2021-Q1",
       "counts": {
-        "0": 0,
+        "0": 9,
         "1": 5,
         "2": 0,
         "3": 0,
         "4": 0,
-        "5": 0,
+        "5": 2,
         "6": 0,
-        "7": 9,
-        "8": 2,
-        "9": 0
+        "7": 0,
+        "8": 0
       },
       "total": 16
     },
@@ -2379,46 +2348,43 @@
       "counts": {
         "0": 0,
         "1": 3,
-        "2": 2,
-        "3": 2,
+        "2": 3,
+        "3": 0,
         "4": 0,
-        "5": 1,
+        "5": 11,
         "6": 0,
         "7": 0,
-        "8": 9,
-        "9": 0
+        "8": 0
       },
       "total": 17
     },
     {
       "quarter": "2021-Q3",
       "counts": {
-        "0": 5,
+        "0": 0,
         "1": 1,
-        "2": 2,
+        "2": 9,
         "3": 0,
-        "4": 2,
+        "4": 0,
         "5": 2,
         "6": 0,
-        "7": 0,
-        "8": 4,
-        "9": 0
+        "7": 1,
+        "8": 4
       },
-      "total": 16
+      "total": 17
     },
     {
       "quarter": "2021-Q4",
       "counts": {
-        "0": 7,
+        "0": 1,
         "1": 4,
         "2": 0,
         "3": 0,
-        "4": 2,
+        "4": 0,
         "5": 0,
         "6": 0,
-        "7": 1,
-        "8": 0,
-        "9": 0
+        "7": 0,
+        "8": 9
       },
       "total": 14
     },
@@ -2427,14 +2393,13 @@
       "counts": {
         "0": 0,
         "1": 0,
-        "2": 4,
-        "3": 5,
-        "4": 1,
-        "5": 0,
-        "6": 0,
+        "2": 1,
+        "3": 0,
+        "4": 0,
+        "5": 4,
+        "6": 5,
         "7": 0,
-        "8": 0,
-        "9": 0
+        "8": 0
       },
       "total": 10
     },
@@ -2449,8 +2414,7 @@
         "5": 0,
         "6": 0,
         "7": 0,
-        "8": 0,
-        "9": 0
+        "8": 0
       },
       "total": 1
     },
@@ -2459,30 +2423,28 @@
       "counts": {
         "0": 0,
         "1": 0,
-        "2": 2,
-        "3": 1,
+        "2": 0,
+        "3": 3,
         "4": 0,
-        "5": 0,
-        "6": 0,
-        "7": 1,
-        "8": 0,
-        "9": 2
+        "5": 2,
+        "6": 1,
+        "7": 0,
+        "8": 0
       },
       "total": 6
     },
     {
       "quarter": "2022-Q4",
       "counts": {
-        "0": 2,
+        "0": 0,
         "1": 0,
-        "2": 7,
-        "3": 1,
+        "2": 0,
+        "3": 6,
         "4": 0,
-        "5": 0,
-        "6": 2,
+        "5": 6,
+        "6": 1,
         "7": 2,
-        "8": 0,
-        "9": 3
+        "8": 2
       },
       "total": 17
     },
@@ -2491,14 +2453,13 @@
       "counts": {
         "0": 0,
         "1": 0,
-        "2": 7,
-        "3": 3,
+        "2": 0,
+        "3": 0,
         "4": 0,
-        "5": 0,
-        "6": 0,
+        "5": 7,
+        "6": 3,
         "7": 0,
-        "8": 0,
-        "9": 0
+        "8": 0
       },
       "total": 10
     },
@@ -2508,29 +2469,27 @@
         "0": 0,
         "1": 0,
         "2": 0,
-        "3": 1,
+        "3": 0,
         "4": 0,
         "5": 0,
-        "6": 0,
+        "6": 1,
         "7": 0,
-        "8": 0,
-        "9": 0
+        "8": 0
       },
       "total": 1
     },
     {
       "quarter": "2023-Q3",
       "counts": {
-        "0": 1,
+        "0": 0,
         "1": 0,
-        "2": 2,
-        "3": 1,
+        "2": 0,
+        "3": 0,
         "4": 0,
-        "5": 2,
-        "6": 0,
+        "5": 4,
+        "6": 1,
         "7": 0,
-        "8": 0,
-        "9": 0
+        "8": 1
       },
       "total": 6
     },
@@ -2545,8 +2504,7 @@
         "5": 2,
         "6": 0,
         "7": 0,
-        "8": 0,
-        "9": 0
+        "8": 0
       },
       "total": 4
     },
@@ -2555,14 +2513,13 @@
       "counts": {
         "0": 0,
         "1": 0,
-        "2": 3,
-        "3": 0,
+        "2": 0,
+        "3": 3,
         "4": 0,
         "5": 3,
         "6": 0,
         "7": 0,
-        "8": 0,
-        "9": 0
+        "8": 0
       },
       "total": 6
     },
@@ -2572,13 +2529,12 @@
         "0": 0,
         "1": 0,
         "2": 0,
-        "3": 2,
+        "3": 0,
         "4": 0,
         "5": 0,
-        "6": 0,
+        "6": 2,
         "7": 0,
-        "8": 0,
-        "9": 0
+        "8": 0
       },
       "total": 2
     },
@@ -2587,14 +2543,13 @@
       "counts": {
         "0": 0,
         "1": 0,
-        "2": 0,
+        "2": 1,
         "3": 0,
         "4": 0,
-        "5": 1,
+        "5": 0,
         "6": 0,
         "7": 0,
-        "8": 0,
-        "9": 0
+        "8": 0
       },
       "total": 1
     },
@@ -2603,30 +2558,28 @@
       "counts": {
         "0": 0,
         "1": 0,
-        "2": 0,
-        "3": 0,
+        "2": 1,
+        "3": 1,
         "4": 0,
-        "5": 2,
+        "5": 1,
         "6": 0,
-        "7": 1,
-        "8": 0,
-        "9": 0
+        "7": 0,
+        "8": 0
       },
       "total": 3
     },
     {
       "quarter": "2025-Q1",
       "counts": {
-        "0": 3,
+        "0": 0,
         "1": 0,
-        "2": 0,
-        "3": 0,
+        "2": 1,
+        "3": 1,
         "4": 0,
-        "5": 1,
-        "6": 0,
+        "5": 0,
+        "6": 2,
         "7": 0,
-        "8": 0,
-        "9": 0
+        "8": 0
       },
       "total": 4
     },
@@ -2636,13 +2589,12 @@
         "0": 0,
         "1": 0,
         "2": 0,
-        "3": 0,
+        "3": 4,
         "4": 0,
         "5": 0,
-        "6": 4,
+        "6": 0,
         "7": 0,
-        "8": 0,
-        "9": 0
+        "8": 0
       },
       "total": 4
     },
@@ -2651,14 +2603,13 @@
       "counts": {
         "0": 0,
         "1": 0,
-        "2": 1,
-        "3": 0,
+        "2": 0,
+        "3": 5,
         "4": 0,
-        "5": 1,
-        "6": 3,
+        "5": 0,
+        "6": 0,
         "7": 0,
-        "8": 0,
-        "9": 0
+        "8": 0
       },
       "total": 5
     },
@@ -2668,13 +2619,12 @@
         "0": 0,
         "1": 0,
         "2": 0,
-        "3": 0,
+        "3": 2,
         "4": 0,
         "5": 0,
-        "6": 1,
+        "6": 0,
         "7": 0,
-        "8": 1,
-        "9": 0
+        "8": 0
       },
       "total": 2
     },
@@ -2685,12 +2635,11 @@
         "1": 0,
         "2": 0,
         "3": 0,
-        "4": 0,
+        "4": 3,
         "5": 0,
-        "6": 1,
+        "6": 0,
         "7": 0,
-        "8": 2,
-        "9": 0
+        "8": 0
       },
       "total": 3
     },
@@ -2700,15 +2649,14 @@
         "0": 0,
         "1": 0,
         "2": 0,
-        "3": 0,
-        "4": 0,
+        "3": 1,
+        "4": 1,
         "5": 0,
         "6": 1,
         "7": 0,
-        "8": 0,
-        "9": 0
+        "8": 0
       },
-      "total": 1
+      "total": 3
     }
   ]
 }
