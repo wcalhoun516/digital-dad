@@ -58,6 +58,16 @@ class TestExcerpt:
         out = excerpt(text, max_chars=14)  # mid-"gamma"
         assert out == "alpha beta…"  # cut at the last whole word
 
+    def test_prefers_a_sentence_boundary_without_ellipsis(self):
+        text = "First sentence here. Second sentence runs well past the limit."
+        out = excerpt(text, max_chars=35)
+        assert out == "First sentence here."  # complete sentence, no trailing ellipsis
+
+    def test_falls_back_to_word_boundary_when_sentence_break_is_too_early(self):
+        text = "Hi. " + "word " * 50
+        out = excerpt(text, max_chars=40)
+        assert out.endswith("…")  # the lone early "Hi." is not a useful cut
+
 
 class TestBuildTrial:
     def test_id_is_zero_padded(self):

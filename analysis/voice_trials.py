@@ -61,15 +61,22 @@ def derive_prompt(record: dict) -> str:
 
 
 def excerpt(text: str, max_chars: int = DEFAULT_EXCERPT_CHARS) -> str:
-    """Trim *text* to at most *max_chars*, cutting on a word boundary with an ellipsis.
+    """Trim *text* to at most *max_chars*, preferring a clean sentence boundary.
 
-    Short text is returned stripped and unchanged; longer text is cut at the last whole
-    word that fits so the passage never ends mid-word.
+    Short text is returned stripped and unchanged. Otherwise, if a sentence terminator
+    (``.!?``) falls in the back half of the window, the passage is cut there and returned
+    as a complete sentence — no ellipsis. This matters for the blind voice ranking: a
+    fragment that ends mid-thought (``…``) could tip the judge off that it's an excerpt
+    and bias the comparison. Failing a usable sentence break, it falls back to the last
+    whole word so the passage never ends mid-word.
     """
     text = text.strip()
     if len(text) <= max_chars:
         return text
     window = text[:max_chars]
+    sentence_end = max(window.rfind(c) for c in ".!?")
+    if sentence_end >= max_chars // 2:
+        return window[: sentence_end + 1].rstrip()
     cut = window.rsplit(" ", 1)[0].rstrip()
     return f"{cut}…"
 
