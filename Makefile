@@ -4,7 +4,7 @@ PYTHON := .venv/bin/python
 # ruff findings (broadening the scope is a follow-up roadmap item, #1-3/cleanup).
 LINT_PATHS := tests
 
-.PHONY: scrape manifest-check analyze training dashboard all serve search on-this-day send-on-this-day adjudicate backfill-verdicts rag-eval voice-eval clean test lint fmt verify verify-responsive
+.PHONY: scrape manifest-check analyze training finetune-prep finetune-preflight dashboard all serve search on-this-day send-on-this-day adjudicate backfill-verdicts rag-eval voice-eval clean test lint fmt verify verify-responsive
 
 scrape:
 	$(PYTHON) -m scraper $(ARGS)
@@ -26,6 +26,12 @@ training:
 # notebooks/finetune_qlora.ipynb. Run `make training` first to produce the split.
 finetune-prep:
 	$(PYTHON) -m training.finetune_config
+
+# Preflight 26a's split against the QLoRA config before the 26c training run:
+# chat-shape integrity, train/heldout disjointness, and sequence-length budget vs
+# max_seq_len. Report-only (exit 0); add --strict for a non-zero gate.
+finetune-preflight:
+	$(PYTHON) -m training.finetune_preflight
 
 dashboard:
 	$(PYTHON) viz/build_dashboard.py

@@ -67,3 +67,28 @@ These deterministic pieces are unit-tested in `tests/test_finetune_config.py`. T
 actual MLX training run (model download + Metal compute) stays in the notebook —
 it is not part of the offline test/verify path. `data/finetune_run/` (adapters,
 fused weights, staged data) is gitignored.
+
+## Fine-tune preflight (plan 0008, de-risks step 26c)
+
+`finetune_preflight.py` (`make finetune-preflight`) is a pure, offline check run
+**before** the expensive 26c training run, so the M4 isn't burned on a run that was
+doomed at the data layer. It validates 26a's split against the `QLoRAConfig`:
+
+- **chat-shape integrity** — every record is a non-empty system/user/assistant turn;
+- **split disjointness** — no training body leaks into the held-out/valid set (keyed
+  on assistant content, so a reworded prompt can't hide a leaked body);
+- **sequence-length budget** — how many records' rendered prompts exceed the config's
+  `max_seq_len` and would be dropped/truncated by mlx-lm (token count estimated at
+  ~4 chars/token — no model download needed).
+
+Report-only (exit 0) by default so it never reddens `make verify`; `--strict` exits 1
+on any failing check (a future pre-run/CI gate). `--json` emits the machine-readable
+report; `--max-seq-len` / `--base` override the config for what-if runs.
+
+**Why this matters now:** on the real corpus the preflight passes shape + disjointness
+but **fails the length budget — 100% of records exceed the default `max_seq_len=1024`**
+(est. tokens median ~3,000, max ~5,300), because the assistant turn is a full article
+body. The report turns this into an action: it suggests a `max_seq_len` — the smallest
+power of two covering ~95% of records (currently **≈8192**, P95 ≈4,354 tokens) — so the
+26c run either raises the window or chunks bodies instead of training on almost nothing.
+The pure checks are unit-tested in `tests/test_finetune_preflight.py`.
