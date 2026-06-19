@@ -179,9 +179,22 @@ reproducible and auditable. Trials live in `eval/voice_trials.json` (shape:
 `eval/voice_trials.example.json`); the real trials are owner-produced once 26c's adapter
 exists, since the `finetuned` candidate needs the trained model.
 
+**Seed the trials from the held-out split** — `analysis/voice_trials.py` (`make voice-trials`)
+builds the `eval/voice_trials.json` skeleton deterministically from 26a's
+`data/training/heldout.jsonl`: it fills each held-out `prompt` and a length-balanced `real`
+excerpt, leaving `rag`/`finetuned` as placeholders for you to paste. Because the prompts come
+from the held-out split (which excludes the #25 RAG-eval articles), the trials are
+leakage-free by construction. It is pure/offline (no conductor, no paid calls — safe to run
+unattended), and the generated file embeds real article bodies so it's gitignored.
+
 ```bash
-# Owner-gated: the judge pass makes paid T3 calls, so it refuses to run if the conductor
-# is down. Writes data/analysis/voice_eval.json. Run deliberately, not from automation.
+make voice-trials                     # seed every held-out prompt
+make voice-trials ARGS="--limit 10"   # cap how many trials the judge will see
+make voice-trials ARGS="--seed 42"    # reproducible representative sample
+
+# Then fill the rag/finetuned passages and run the (owner-gated) judge.
+# The judge pass makes paid T3 calls, so it refuses to run if the conductor is down.
+# Writes data/analysis/voice_eval.json. Run deliberately, not from automation.
 make voice-eval                       # rank all trials
 make voice-eval ARGS="--judge-tier 2" # free local judge (lower-quality scores)
 ```

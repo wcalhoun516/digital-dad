@@ -48,27 +48,27 @@ Format:
 
 <!-- entries below -->
 
-### 2026-06-18 — training — ready-for-review
-- PR: https://github.com/wcalhoun516/digital-dad/pull/24
+### 2026-06-19 — training — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/25
 - Source: plan:ready/0008
-- Summary: Plan 0008 step **26d deterministic companion**. The 26d voice-eval harness (#21, now
-  merged) shipped the blind-A/B judge ranking but **explicitly deferred** folding
-  `training.finetune_config.style_metrics` in "to avoid depending on the unmerged 26c module"
-  (#20) — which is now merged, so this slice closes that deferral. Added a pure, offline,
-  **judge-independent style companion** to `analysis/voice_eval.py`: each candidate passage is
-  scored for type-token ratio, avg sentence length, and Calhoun-fingerprint hit rate (vs the
-  distinctive words in `data/analysis/linguistics.json`), aggregated per source with a
-  **delta-vs-`real`**. New surface: `load_distinctive_words`, `trial_style`, `evaluate_style`,
-  `aggregate_style`, `render_style_markdown`, `write_style_report`, a `distinctive_words=` arg
-  on `evaluate`, and a `--style-only` CLI path + `make voice-style` (offline, **no paid T3
-  calls** — safe unattended, unlike the owner-gated `make voice-eval`). The judged report folds
-  the style table in too. **Why it matters:** gives a deterministic voice signal even when the
-  conductor is down or before any fine-tune is trained. TDD'd: 20 new tests (`test_voice_eval.py`
-  now 45, up from 25). §8.5 deepen: extracted a shared `_style_table` helper so the judged report
-  reuses it instead of string-slicing, + edge cases. `make verify` green (ruff + **255 tests** +
-  dashboard build). **No dependency on the still-unmerged preflight #23.** No data artifacts
-  committed (§11). Plan 0008 stays in `plans/ready/` — 26c training, 26d's live judge run, 26e
-  (conductor `models.yaml`), 26f (decide) all remain and are owner-interactive.
+- Summary: Plan 0008 step **26d prep** — a deterministic builder that seeds the voice-eval's
+  input. The 26d harness (#21, on `main`) consumes `eval/voice_trials.json`, but the only input
+  today is the hand-authored placeholder `eval/voice_trials.example.json`. New
+  `analysis/voice_trials.py` + `make voice-trials` turns 26a's `data/training/heldout.jsonl` into
+  a real `voice_trials.json` **skeleton**: each trial's `prompt` (held-out user turn) + a
+  length-balanced `real` Calhoun excerpt filled in, `rag`/`finetuned` left as paste-here
+  placeholders for the owner. **Leakage-free by construction** (prompts come from the held-out
+  split, which 26a already builds to exclude the #25 RAG-eval articles). Pure/offline (stdlib,
+  no conductor, no paid T3 — safe unattended). `--limit`/`--seed` for reproducible sampling;
+  malformed records skipped. §8.5 deepen: `real` prefers a **sentence boundary** (else word +
+  ellipsis) so a mid-thought fragment can't tip the blind judge that it's an excerpt. The
+  generated file embeds real bodies → **gitignored** like `heldout.jsonl`; committed deliverable
+  is builder + 15 TDD tests + make target + README. **No dependency on the unmerged #23/#24** —
+  branches off `main`. `make verify` green (**250 tests**, +15). Verified on the real split (8
+  trials `v01..v08`, fed straight into `voice_eval.evaluate` — accepted). Plan 0008 stays in
+  `plans/ready/`: 26c training, 26d live judged run, 26e (`models.yaml`), 26f (decide) all remain
+  owner-interactive. Owner's next step: `make voice-trials`, paste the two model answers, run
+  `make voice-eval`.
 
 ### 2026-06-16 — training — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/21
