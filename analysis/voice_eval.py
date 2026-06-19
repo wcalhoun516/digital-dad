@@ -19,9 +19,12 @@ The blinding, ranking parser, un-blinding, run loop, and aggregation are pure fu
 the CLI (``python -m analysis.voice_eval`` / ``make voice-eval``) wires the seam to the
 live conductor and is gated on its reachability because a live pass makes paid T3 calls.
 
-Deferred to a future slice (kept out of this PR to avoid depending on the unmerged 26c
-module): folding ``training.finetune_config.style_metrics`` into each record as a cheap
-deterministic companion to the judge's voice ranking.
+Alongside the judge ranking there is a **deterministic style companion**: each candidate
+passage is scored with ``training.finetune_config.style_metrics`` (type-token ratio, avg
+sentence length, Calhoun-fingerprint hit rate vs ``data/analysis/linguistics.json``) and
+aggregated per source with a delta-vs-``real``. It is judge-independent, so it runs offline
+with no paid calls — ``--style-only`` / ``make voice-style`` produces it even when the
+conductor is down, and the judged report folds it in too.
 """
 
 import argparse
@@ -32,14 +35,28 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable, Hashable
 
+from training.finetune_config import style_metrics
+
 from .utils import DATA_DIR
 
 # Repo-root-relative fixture template (the real trials are owner-produced once the 26c
 # adapter exists and are not committed — see eval/voice_trials.example.json).
 TRIALS_PATH = Path(__file__).resolve().parent.parent / "eval" / "voice_trials.json"
 REPORT_PATH = DATA_DIR / "analysis" / "voice_eval.json"
+STYLE_REPORT_PATH = DATA_DIR / "analysis" / "voice_style.json"
+LINGUISTICS_PATH = DATA_DIR / "analysis" / "linguistics.json"
 
 DEFAULT_SEED = 1337
+# How many of the corpus's distinctive words count as the "Calhoun fingerprint";
+# matches the 26c notebook so the notebook and this eval score style the same way.
+DEFAULT_FINGERPRINT_WORDS = 30
+
+STYLE_METRIC_KEYS = (
+    "word_count",
+    "type_token_ratio",
+    "avg_sentence_len",
+    "fingerprint_hits_per_1k",
+)
 
 
 # --------------------------------------------------------------------------- #
@@ -121,6 +138,7 @@ def evaluate(
     judge: Callable[[str, dict[str, str]], list[str] | None],
     *,
     seed: Hashable = DEFAULT_SEED,
+    distinctive_words: set | None = None,
     log: Callable[[str], None] = lambda _m: None,
 ) -> list[dict]:
     """Blind-rank each trial's candidates via *judge*; return per-trial rows.
@@ -129,6 +147,10 @@ def evaluate(
     trial id, so the A/B/C assignment varies between trials but stays reproducible. A
     judge that returns ``None`` (unparseable) yields an empty ranking rather than
     aborting the run.
+
+    When *distinctive_words* is given, each record also carries a ``style`` map
+    (``{source: style_metrics}``) — the deterministic, judge-independent companion to
+    the blind ranking (plan 0008 step 26d).
     """
     records: list[dict] = []
     for i, trial in enumerate(trials, 1):
@@ -142,19 +164,147 @@ def evaluate(
             ranking: list[str] = []
         else:
             ranking = unblind_ranking([lbl for lbl in labels if lbl in mapping], mapping)
-        records.append(
-            {
-                "id": trial.get("id"),
-                "prompt": prompt,
-                "sources": sorted(candidates),
-                "blinding": mapping,
-                "ranking": ranking,
-                "winner": ranking[0] if ranking else None,
-            }
-        )
+        record = {
+            "id": trial.get("id"),
+            "prompt": prompt,
+            "sources": sorted(candidates),
+            "blinding": mapping,
+            "ranking": ranking,
+            "winner": ranking[0] if ranking else None,
+        }
+        if distinctive_words is not None:
+            record["style"] = trial_style(trial, distinctive_words)
+        records.append(record)
         log(f"  [{i}/{len(trials)}] {trial.get('id')}: "
             f"{'/'.join(ranking) if ranking else 'unjudged'}")
     return records
+
+
+# --------------------------------------------------------------------------- #
+# Deterministic style companion (judge-independent) — plan 0008 step 26d
+# --------------------------------------------------------------------------- #
+
+def load_distinctive_words(
+    path: Path = LINGUISTICS_PATH, top_n: int = DEFAULT_FINGERPRINT_WORDS
+) -> set[str]:
+    """Load the top-*n* distinctive corpus words (the "Calhoun fingerprint").
+
+    Reads ``data/analysis/linguistics.json`` (``analysis.linguistic``'s output), the
+    same source the 26c notebook uses. Returns an empty set if the file is absent or
+    malformed so the style pass still runs (fingerprint rate just reads 0).
+    """
+    try:
+        data = json.loads(Path(path).read_text())
+    except (FileNotFoundError, json.JSONDecodeError):
+        return set()
+    words = data.get("distinctive_words", [])
+    return {w["word"] for w in words[:top_n] if isinstance(w, dict) and "word" in w}
+
+
+def trial_style(trial: dict, distinctive_words: set) -> dict[str, dict]:
+    """Compute ``style_metrics`` for every candidate passage in *trial*."""
+    return {
+        source: style_metrics(text, distinctive_words)
+        for source, text in trial.get("candidates", {}).items()
+    }
+
+
+def evaluate_style(trials: list[dict], distinctive_words: set) -> list[dict]:
+    """Per-trial deterministic style rows (no judge / conductor needed)."""
+    return [
+        {
+            "id": trial.get("id"),
+            "prompt": trial.get("prompt", ""),
+            "sources": sorted(trial.get("candidates", {})),
+            "style": trial_style(trial, distinctive_words),
+        }
+        for trial in trials
+    ]
+
+
+def aggregate_style(records: list[dict]) -> dict:
+    """Per-source mean style metrics + each non-real source's delta vs ``real``.
+
+    Reads ``record["style"]`` (``{source: metrics}``); records without it are skipped.
+    ``delta_vs_real`` is averaged per-trial over trials where the source and ``real``
+    co-appear, so a deterministic "how far from his actual prose" signal survives even
+    when the paid judge never runs.
+    """
+    styled = [r["style"] for r in records if isinstance(r.get("style"), dict)]
+    sources = sorted({s for st in styled for s in st})
+
+    per_source: dict[str, dict] = {}
+    for source in sources:
+        rows = [st[source] for st in styled if source in st]
+        mean = {
+            k: round(sum(m[k] for m in rows) / len(rows), 3) for k in STYLE_METRIC_KEYS
+        }
+        entry: dict = {"appearances": len(rows), "mean": mean}
+        if source != "real":
+            paired = [st for st in styled if source in st and "real" in st]
+            if paired:
+                entry["delta_vs_real"] = {
+                    k: round(
+                        sum(st[source][k] - st["real"][k] for st in paired) / len(paired),
+                        3,
+                    )
+                    for k in STYLE_METRIC_KEYS
+                }
+        per_source[source] = entry
+
+    return {"n_trials": len(styled), "sources": per_source}
+
+
+def _style_table(summary: dict) -> list[str]:
+    """The intro line + markdown table for an :func:`aggregate_style` result.
+
+    Returns ``[]`` when there are no scored sources, so callers can decide whether to
+    emit a section at all.
+    """
+    sources = summary.get("sources", {})
+    if not sources:
+        return []
+    lines = [
+        f"{summary.get('n_trials', 0)} trial(s); judge-independent companion to the "
+        "blind A/B ranking (plan 0008 step 26d). `real` is the reference.",
+        "",
+        "| source | words | TTR | avg sent len | fingerprint/1k | Δ fingerprint vs real |",
+        "|--------|-------|-----|--------------|----------------|-----------------------|",
+    ]
+    for source in sorted(sources):
+        m = sources[source]["mean"]
+        delta = sources[source].get("delta_vs_real", {})
+        d_fp = delta.get("fingerprint_hits_per_1k")
+        d_str = "—" if source == "real" or d_fp is None else f"{d_fp:+.1f}"
+        lines.append(
+            f"| {source} | {m['word_count']:.0f} | {m['type_token_ratio']:.3f} | "
+            f"{m['avg_sentence_len']:.1f} | {m['fingerprint_hits_per_1k']:.1f} | {d_str} |"
+        )
+    lines.append("")
+    return lines
+
+
+def render_style_markdown(summary: dict) -> str:
+    """Human-readable table of an :func:`aggregate_style` result."""
+    table = _style_table(summary)
+    header = ["# Geo-LLM voice — deterministic style metrics", ""]
+    if not table:
+        return "\n".join(header + ["No style metrics (no candidate passages with text)."])
+    return "\n".join(header + table)
+
+
+def write_style_report(records: list[dict], path: Path = STYLE_REPORT_PATH) -> dict:
+    """Write ``{generated_at, summary, records}`` JSON; return the style summary."""
+    summary = aggregate_style(records)
+    payload = {
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "summary": summary,
+        "records": records,
+    }
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n")
+    return summary
 
 
 def aggregate(records: list[dict]) -> dict:
@@ -195,12 +345,15 @@ def aggregate(records: list[dict]) -> dict:
             )
             pairwise[f"{a}_over_{b}"] = round(a_over_b / len(both), 4)
 
-    return {
+    summary = {
         "n_trials": len(records),
         "n_judged": len(judged),
         "sources": per_source,
         "pairwise": pairwise,
     }
+    if any(isinstance(r.get("style"), dict) for r in records):
+        summary["style"] = aggregate_style(records)
+    return summary
 
 
 def render_markdown(summary: dict) -> str:
@@ -232,6 +385,11 @@ def render_markdown(summary: dict) -> str:
         for key in sorted(pairwise):
             lines.append(f"- `{key}`: {pairwise[key]:.0%}")
         lines.append("")
+    style_table = _style_table(summary.get("style", {}))
+    if style_table:
+        lines.append("## Deterministic style metrics (judge-independent)")
+        lines.append("")
+        lines += style_table
     return "\n".join(lines)
 
 
@@ -298,6 +456,22 @@ def _conductor_up(url: str = "http://127.0.0.1:8080/v1") -> bool:
         return False
 
 
+def _run_style_only(args, distinctive: set) -> int:
+    """Offline deterministic style pass (no conductor, no paid calls)."""
+    if not distinctive:
+        print("Note: no distinctive words loaded (run `python -m analysis linguistic` "
+              "first) — fingerprint rate will read 0; other metrics are unaffected.")
+    trials = load_trials(args.trials)
+    records = evaluate_style(trials, distinctive)
+    out = args.output if args.output != REPORT_PATH else STYLE_REPORT_PATH
+    summary = write_style_report(records, out)
+    note_path = out.with_suffix(".md")
+    note_path.write_text(render_style_markdown(summary) + "\n")
+    print(render_style_markdown(summary))
+    print(f"\nStyle report → {out}  (note → {note_path})")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="python -m analysis.voice_eval",
@@ -313,15 +487,28 @@ def main(argv: list[str] | None = None) -> int:
                         help=f"blinding seed (default: {DEFAULT_SEED})")
     parser.add_argument("--judge-tier", type=int, default=3,
                         help="conductor tier for the judge (default: 3, paid)")
+    parser.add_argument("--style-only", action="store_true",
+                        help="compute only the deterministic style metrics (no judge / "
+                             "conductor / paid calls); writes a style-only report")
+    parser.add_argument("--fingerprint-words", type=int, default=DEFAULT_FINGERPRINT_WORDS,
+                        help="how many distinctive corpus words count as the Calhoun "
+                             f"fingerprint (default: {DEFAULT_FINGERPRINT_WORDS})")
     args = parser.parse_args(argv)
 
     if not args.trials.exists():
         print(f"No trial set at {args.trials}. Build one from "
               f"eval/voice_trials.example.json (owner-produced once 26c's adapter exists).")
         return 1
+
+    distinctive = load_distinctive_words(top_n=args.fingerprint_words)
+
+    if args.style_only:
+        return _run_style_only(args, distinctive)
+
     if not _conductor_up():
         print("Conductor is unreachable at http://127.0.0.1:8080 — start it before "
-              "running the eval (the judge pass makes paid T3 calls). Aborting.")
+              "running the eval (the judge pass makes paid T3 calls). Aborting. "
+              "(Tip: `--style-only` runs the deterministic style metrics offline.)")
         return 2
 
     trials = load_trials(args.trials)
@@ -329,6 +516,7 @@ def main(argv: list[str] | None = None) -> int:
         trials,
         judge=_live_judge(args.judge_tier),
         seed=args.seed,
+        distinctive_words=distinctive,
         log=lambda m: print(m, flush=True),
     )
     summary = write_report(records, args.output)

@@ -48,28 +48,27 @@ Format:
 
 <!-- entries below -->
 
-### 2026-06-17 — training — ready-for-review
-- PR: https://github.com/wcalhoun516/digital-dad/pull/23
+### 2026-06-18 — training — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/24
 - Source: plan:ready/0008
-- Summary: Plan 0008, **de-risks step 26c** (smallest viable QLoRA run) with a pure, offline
-  **training-data preflight** — `training/finetune_preflight.py` + `make finetune-preflight`.
-  Hot-path pick (0008 still the only plan in `ready/`). The remaining 0008 steps all need
-  owner-interactive compute or the sibling conductor repo (26c real training on the M4; 26d/26f
-  live T3 *paid* judge; 26e edits `models.yaml` outside this repo), so — matching prior runs — I
-  shipped the **verifiable deterministic slice**: a check that validates 26a's
-  `data/training/{train,heldout}.jsonl` against the run's `QLoRAConfig` **before** anyone burns
-  M4 time. Three checks: **chat-shape integrity** (non-empty system/user/assistant), **split
-  disjointness** (no body leaks train→heldout, keyed on assistant-content hash so a reworded
-  prompt can't hide it), and **sequence-length budget** (est tokens vs `max_seq_len`, ~4
-  chars/token, no model download). Report-only (exit 0, never reddens `make verify`); `--strict`
-  gates, `--json` for machines, `--max-seq-len`/`--base` for what-ifs. **Real finding it surfaces:**
-  shape + disjointness PASS, but **100% of 172 records exceed the default `max_seq_len=1024`**
-  (est tokens median ~3,041, max ~5,319) because the assistant turn is a full article body — the
-  26c run as configured would silently train on truncated stubs. §8.5 deepen made it actionable:
-  the report now suggests a `max_seq_len` (smallest pow2 covering ~95%: **≈8192**, P95 ≈4,354) or
-  chunking. TDD'd: 26 new tests (`tests/test_finetune_preflight.py`). `make verify` green (ruff +
-  **261 tests** + dashboard build). Plan 0008 stays in `plans/ready/` (26c training + 26d/26f live
-  + 26e conductor remain — all owner-interactive). No data artifacts committed (§11).
+- Summary: Plan 0008 step **26d deterministic companion**. The 26d voice-eval harness (#21, now
+  merged) shipped the blind-A/B judge ranking but **explicitly deferred** folding
+  `training.finetune_config.style_metrics` in "to avoid depending on the unmerged 26c module"
+  (#20) — which is now merged, so this slice closes that deferral. Added a pure, offline,
+  **judge-independent style companion** to `analysis/voice_eval.py`: each candidate passage is
+  scored for type-token ratio, avg sentence length, and Calhoun-fingerprint hit rate (vs the
+  distinctive words in `data/analysis/linguistics.json`), aggregated per source with a
+  **delta-vs-`real`**. New surface: `load_distinctive_words`, `trial_style`, `evaluate_style`,
+  `aggregate_style`, `render_style_markdown`, `write_style_report`, a `distinctive_words=` arg
+  on `evaluate`, and a `--style-only` CLI path + `make voice-style` (offline, **no paid T3
+  calls** — safe unattended, unlike the owner-gated `make voice-eval`). The judged report folds
+  the style table in too. **Why it matters:** gives a deterministic voice signal even when the
+  conductor is down or before any fine-tune is trained. TDD'd: 20 new tests (`test_voice_eval.py`
+  now 45, up from 25). §8.5 deepen: extracted a shared `_style_table` helper so the judged report
+  reuses it instead of string-slicing, + edge cases. `make verify` green (ruff + **255 tests** +
+  dashboard build). **No dependency on the still-unmerged preflight #23.** No data artifacts
+  committed (§11). Plan 0008 stays in `plans/ready/` — 26c training, 26d's live judge run, 26e
+  (conductor `models.yaml`), 26f (decide) all remain and are owner-interactive.
 
 ### 2026-06-16 — training — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/21
