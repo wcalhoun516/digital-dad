@@ -27,6 +27,12 @@ training:
 finetune-prep:
 	$(PYTHON) -m training.finetune_config
 
+# Preflight 26a's split against the QLoRA config before the 26c training run:
+# chat-shape integrity, train/heldout disjointness, and sequence-length budget vs
+# max_seq_len. Report-only (exit 0); add --strict for a non-zero gate.
+finetune-preflight:
+	$(PYTHON) -m training.finetune_preflight
+
 dashboard:
 	$(PYTHON) viz/build_dashboard.py
 
