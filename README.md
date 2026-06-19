@@ -199,6 +199,18 @@ make voice-eval                       # rank all trials
 make voice-eval ARGS="--judge-tier 2" # free local judge (lower-quality scores)
 ```
 
+Alongside the judge's ranking there is a **deterministic style companion**: each candidate
+passage is scored with `training.finetune_config.style_metrics` (type-token ratio, average
+sentence length, and a Calhoun-"fingerprint" hit rate against the distinctive words in
+`data/analysis/linguistics.json`), then aggregated per source with a **delta vs `real`**. It
+is judge-independent — no conductor, no paid calls — so it gives a deterministic voice signal
+even before any fine-tune is trained, and the full judged report folds it in too.
+
+```bash
+# Offline + free; safe to run unattended. Writes data/analysis/voice_style.json.
+make voice-style
+```
+
 ## The Calhoun Track Record — Prediction Tracker
 
 Extracts every falsifiable prediction Dr. Calhoun made across his entire corpus,

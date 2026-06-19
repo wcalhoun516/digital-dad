@@ -1,13 +1,13 @@
 {
   "aggregate": {
-    "total_articles": 196,
-    "total_words": 364770,
-    "avg_word_count": 1861.07,
-    "avg_sentence_length": 21.95,
+    "total_articles": 199,
+    "total_words": 369092,
+    "avg_word_count": 1854.73,
+    "avg_sentence_length": 21.92,
     "avg_type_token_ratio": 0.4,
     "avg_flesch_reading_ease": 41.7,
     "avg_flesch_grade_level": 12.8,
-    "avg_gunning_fog": 16.31,
+    "avg_gunning_fog": 16.29,
     "sentiment_by_year": {}
   },
   "per_article": [
@@ -1641,6 +1641,23 @@
         "grade_level": 14.0
       },
       "gunning_fog": 17.9,
+      "sentiment": {}
+    },
+    {
+      "slug": "which-companies-add-the-most-value-in-the-semiconductor-industry-part-1",
+      "date": "2021-09-30",
+      "word_count": 814,
+      "sentence_count": 39,
+      "avg_sentence_length": 21.1,
+      "sentence_length_std": 16.0,
+      "vocabulary_size": 375,
+      "type_token_ratio": 0.4607,
+      "hapax_ratio": 0.7013,
+      "flesch_kincaid": {
+        "reading_ease": 40.9,
+        "grade_level": 12.7
+      },
+      "gunning_fog": 16.5,
       "sentiment": {}
     },
     {
@@ -3342,88 +3359,122 @@
       },
       "gunning_fog": 14.4,
       "sentiment": {}
+    },
+    {
+      "slug": "is-there-price-gouging-in-the-gasoline-market",
+      "date": "2026-04-23",
+      "word_count": 1383,
+      "sentence_count": 74,
+      "avg_sentence_length": 19.2,
+      "sentence_length_std": 14.2,
+      "vocabulary_size": 566,
+      "type_token_ratio": 0.4093,
+      "hapax_ratio": 0.682,
+      "flesch_kincaid": {
+        "reading_ease": 46.8,
+        "grade_level": 11.4
+      },
+      "gunning_fog": 14.8,
+      "sentiment": {}
+    },
+    {
+      "slug": "who-won-the-xitrump-summit",
+      "date": "2026-05-25",
+      "word_count": 2125,
+      "sentence_count": 110,
+      "avg_sentence_length": 19.8,
+      "sentence_length_std": 16.5,
+      "vocabulary_size": 823,
+      "type_token_ratio": 0.3873,
+      "hapax_ratio": 0.695,
+      "flesch_kincaid": {
+        "reading_ease": 43.2,
+        "grade_level": 12.0
+      },
+      "gunning_fog": 14.8,
+      "sentiment": {}
     }
   ],
   "sentence_length_histogram": [
     {
       "bin_start": 0,
       "bin_end": 5,
-      "count": 710
+      "count": 723
     },
     {
       "bin_start": 5,
       "bin_end": 10,
-      "count": 2767
+      "count": 2802
     },
     {
       "bin_start": 10,
       "bin_end": 15,
-      "count": 3284
+      "count": 3340
     },
     {
       "bin_start": 15,
       "bin_end": 20,
-      "count": 2812
+      "count": 2848
     },
     {
       "bin_start": 20,
       "bin_end": 25,
-      "count": 2303
+      "count": 2332
     },
     {
       "bin_start": 25,
       "bin_end": 30,
-      "count": 1754
+      "count": 1772
     },
     {
       "bin_start": 30,
       "bin_end": 35,
-      "count": 1071
+      "count": 1076
     },
     {
       "bin_start": 35,
       "bin_end": 40,
-      "count": 764
+      "count": 771
     },
     {
       "bin_start": 40,
       "bin_end": 45,
-      "count": 483
+      "count": 496
     },
     {
       "bin_start": 45,
       "bin_end": 50,
-      "count": 323
+      "count": 325
     },
     {
       "bin_start": 50,
       "bin_end": 55,
-      "count": 253
+      "count": 254
     },
     {
       "bin_start": 55,
       "bin_end": 60,
-      "count": 193
+      "count": 194
     },
     {
       "bin_start": 60,
       "bin_end": 65,
-      "count": 116
+      "count": 117
     },
     {
       "bin_start": 65,
       "bin_end": 70,
-      "count": 159
+      "count": 160
     },
     {
       "bin_start": 70,
       "bin_end": 75,
-      "count": 84
+      "count": 85
     },
     {
       "bin_start": 75,
       "bin_end": 80,
-      "count": 48
+      "count": 49
     },
     {
       "bin_start": 80,
@@ -3438,264 +3489,264 @@
     {
       "bin_start": 90,
       "bin_end": 95,
-      "count": 36
+      "count": 37
     },
     {
       "bin_start": 95,
       "bin_end": 100,
-      "count": 31
+      "count": 32
     }
   ],
   "distinctive_words": [
     {
       "word": "market",
-      "count": 1862,
-      "frequency": 63.88
+      "count": 1880,
+      "frequency": 63.75
     },
     {
       "word": "inflation",
       "count": 1225,
-      "frequency": 42.03
+      "frequency": 41.54
     },
     {
       "word": "china",
-      "count": 1096,
-      "frequency": 37.6
+      "count": 1144,
+      "frequency": 38.79
     },
     {
       "word": "price",
-      "count": 910,
-      "frequency": 31.22
+      "count": 935,
+      "frequency": 31.7
     },
     {
       "word": "value",
-      "count": 824,
-      "frequency": 28.27
+      "count": 831,
+      "frequency": 28.18
     },
     {
       "word": "may",
-      "count": 776,
-      "frequency": 26.62
+      "count": 781,
+      "frequency": 26.48
     },
     {
       "word": "financial",
-      "count": 744,
-      "frequency": 25.53
-    },
-    {
-      "word": "years",
-      "count": 676,
-      "frequency": 23.19
+      "count": 749,
+      "frequency": 25.4
     },
     {
       "word": "chinese",
-      "count": 673,
-      "frequency": 23.09
+      "count": 695,
+      "frequency": 23.57
     },
     {
-      "word": "company",
-      "count": 632,
-      "frequency": 21.68
+      "word": "years",
+      "count": 682,
+      "frequency": 23.13
     },
     {
       "word": "industry",
-      "count": 630,
-      "frequency": 21.61
+      "count": 641,
+      "frequency": 21.74
+    },
+    {
+      "word": "company",
+      "count": 635,
+      "frequency": 21.53
+    },
+    {
+      "word": "prices",
+      "count": 623,
+      "frequency": 21.12
     },
     {
       "word": "covid",
       "count": 619,
-      "frequency": 21.24
+      "frequency": 20.99
     },
     {
       "word": "rate",
-      "count": 604,
+      "count": 611,
       "frequency": 20.72
-    },
-    {
-      "word": "prices",
-      "count": 603,
-      "frequency": 20.69
     },
     {
       "word": "fed",
       "count": 597,
-      "frequency": 20.48
+      "frequency": 20.24
     },
     {
       "word": "technology",
       "count": 573,
-      "frequency": 19.66
+      "frequency": 19.43
     },
     {
       "word": "public",
-      "count": 567,
-      "frequency": 19.45
+      "count": 570,
+      "frequency": 19.33
     },
     {
       "word": "companies",
-      "count": 552,
-      "frequency": 18.94
+      "count": 561,
+      "frequency": 19.02
     },
     {
       "word": "economic",
-      "count": 522,
-      "frequency": 17.91
+      "count": 531,
+      "frequency": 18.01
     },
     {
       "word": "were",
-      "count": 510,
-      "frequency": 17.5
+      "count": 515,
+      "frequency": 17.46
     },
     {
       "word": "several",
-      "count": 506,
-      "frequency": 17.36
+      "count": 511,
+      "frequency": 17.33
     },
     {
       "word": "policy",
-      "count": 491,
-      "frequency": 16.85
+      "count": 493,
+      "frequency": 16.72
     },
     {
       "word": "high",
-      "count": 471,
-      "frequency": 16.16
+      "count": 475,
+      "frequency": 16.11
     },
     {
       "word": "index",
-      "count": 470,
-      "frequency": 16.13
+      "count": 471,
+      "frequency": 15.97
     },
     {
       "word": "stock",
-      "count": 441,
-      "frequency": 15.13
+      "count": 443,
+      "frequency": 15.02
     },
     {
       "word": "economy",
-      "count": 434,
-      "frequency": 14.89
+      "count": 443,
+      "frequency": 15.02
     },
     {
       "word": "cpi",
       "count": 434,
-      "frequency": 14.89
+      "frequency": 14.72
     },
     {
       "word": "wireless",
       "count": 418,
-      "frequency": 14.34
+      "frequency": 14.17
     },
     {
       "word": "chairman",
       "count": 403,
-      "frequency": 13.83
+      "frequency": 13.67
     },
     {
       "word": "federal",
-      "count": 399,
-      "frequency": 13.69
+      "count": 402,
+      "frequency": 13.63
     },
     {
       "word": "markets",
-      "count": 396,
-      "frequency": 13.59
-    },
-    {
-      "word": "last",
-      "count": 387,
-      "frequency": 13.28
-    },
-    {
-      "word": "here",
-      "count": 385,
-      "frequency": 13.21
+      "count": 398,
+      "frequency": 13.5
     },
     {
       "word": "business",
-      "count": 385,
-      "frequency": 13.21
+      "count": 394,
+      "frequency": 13.36
+    },
+    {
+      "word": "here",
+      "count": 392,
+      "frequency": 13.29
+    },
+    {
+      "word": "last",
+      "count": 391,
+      "frequency": 13.26
     },
     {
       "word": "stevens",
       "count": 379,
-      "frequency": 13.0
-    },
-    {
-      "word": "investors",
-      "count": 368,
-      "frequency": 12.63
+      "frequency": 12.85
     },
     {
       "word": "world",
-      "count": 362,
-      "frequency": 12.42
+      "count": 369,
+      "frequency": 12.51
+    },
+    {
+      "word": "investors",
+      "count": 369,
+      "frequency": 12.51
     },
     {
       "word": "down",
-      "count": 357,
-      "frequency": 12.25
+      "count": 360,
+      "frequency": 12.21
     },
     {
       "word": "development",
-      "count": 355,
-      "frequency": 12.18
-    },
-    {
-      "word": "short",
-      "count": 340,
-      "frequency": 11.66
+      "count": 357,
+      "frequency": 12.11
     },
     {
       "word": "government",
-      "count": 338,
+      "count": 349,
+      "frequency": 11.83
+    },
+    {
+      "word": "short",
+      "count": 342,
       "frequency": 11.6
     },
     {
       "word": "equity",
-      "count": 331,
-      "frequency": 11.36
+      "count": 332,
+      "frequency": 11.26
+    },
+    {
+      "word": "share",
+      "count": 330,
+      "frequency": 11.19
     },
     {
       "word": "photo",
       "count": 328,
-      "frequency": 11.25
+      "frequency": 11.12
     },
     {
-      "word": "share",
-      "count": 327,
-      "frequency": 11.22
+      "word": "today",
+      "count": 325,
+      "frequency": 11.02
     },
     {
       "word": "rates",
       "count": 323,
-      "frequency": 11.08
+      "frequency": 10.95
     },
     {
       "word": "career",
       "count": 322,
-      "frequency": 11.05
+      "frequency": 10.92
     },
     {
-      "word": "today",
-      "count": 320,
-      "frequency": 10.98
+      "word": "supply",
+      "count": 322,
+      "frequency": 10.92
     },
     {
       "word": "consumer",
-      "count": 320,
-      "frequency": 10.98
+      "count": 322,
+      "frequency": 10.92
     },
     {
-      "word": "reserve",
-      "count": 314,
-      "frequency": 10.77
-    },
-    {
-      "word": "funds",
-      "count": 313,
-      "frequency": 10.74
+      "word": "private",
+      "count": 316,
+      "frequency": 10.72
     }
   ]
 }

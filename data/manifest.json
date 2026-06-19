@@ -1,6 +1,6 @@
 {
-  "last_updated": "2026-04-10T23:31:31.385866+00:00",
-  "total_articles": 196,
+  "last_updated": "2026-06-14T07:31:34.111481+00:00",
+  "total_articles": 199,
   "articles": [
     {
       "slug": "europes-hamiltonian-moment-what-is-it-really",
@@ -1793,6 +1793,36 @@
       "word_count": 267,
       "file": "raw/george-calhoun.json",
       "content_hash": "02e0a1dea47e8c982ba2c5757af17b17"
+    },
+    {
+      "slug": "which-companies-add-the-most-value-in-the-semiconductor-industry-part-1",
+      "title": "Which Companies Add The Most Value In The Semiconductor Industry? (Part 1)",
+      "date": "2021-09-30",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2021/09/30/the-semiconductor-scoreboard-part-1-the-basic-value-chain-and-the-value-added/",
+      "tags": [],
+      "word_count": 806,
+      "file": "raw/which-companies-add-the-most-value-in-the-semiconductor-industry-part-1.json",
+      "content_hash": "273dbb5b23630a88a089094bebdd9435"
+    },
+    {
+      "slug": "is-there-price-gouging-in-the-gasoline-market",
+      "title": "Is There ‘Price Gouging’ In The Gasoline Market?",
+      "date": "2026-04-23",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2026/04/23/is-there-price-gouging-in-the-gasoline-market/",
+      "tags": [],
+      "word_count": 1377,
+      "file": "raw/is-there-price-gouging-in-the-gasoline-market.json",
+      "content_hash": "75d7ee74747e64c1bf3a6fc366f9192b"
+    },
+    {
+      "slug": "who-won-the-xitrump-summit",
+      "title": "Who Won The Xi/Trump Summit?",
+      "date": "2026-05-25",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2026/05/25/who-won-the-xitrump-summit/",
+      "tags": [],
+      "word_count": 2087,
+      "file": "raw/who-won-the-xitrump-summit.json",
+      "content_hash": "d930d1f8b68f9e7908dda35b13d4d423"
     }
   ]
 }
