@@ -48,10 +48,31 @@ Format:
 
 <!-- entries below -->
 
-### 2026-06-20 — training — in-progress
-- PR: (opening)
+### 2026-06-20 — training — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/26
 - Source: plan:ready/0008
-- Summary: Plan 0008 step **26e — Ask Dad fine-tune flag (in-repo half).** WIP.
+- Summary: Plan 0008 step **26e — register the fine-tune + let Ask Dad answer via it behind a
+  flag (default off).** The conductor `models.yaml` registration lives in the **sibling**
+  `local-llm-conductor` repo (out of scope for an unattended run), so I shipped the in-repo,
+  deterministic half: the plumbing that lets the owner flip the fine-tune on once registered,
+  with **zero behavior change until then**. (1) `analysis/geo_llm_status.py` now reads an
+  owner-dropped marker `data/analysis/geo_llm_registration.json` (`finetune_registration`),
+  replacing the hardcoded `"adapter": False` — it surfaces a `finetune` block in `geo_llm.json`
+  and flips the 26e pipeline step to **done** when present (None/absent → stays not-done). (2)
+  Ask Dad grows a **self-revealing, default-off** "Geo-LLM fine-tune" toggle in
+  `dashboard/template.html`: hidden until `GEO_LLM_DATA.finetune.model_id` exists, and even when
+  shown it defaults off → the chat keeps the existing RAG `model:"auto"` route; flipped on, the
+  request routes to the registered `model_id` (+ the marker's optional `function`/`tier`). (3)
+  Marker gitignored (owner/local, mirrors the sibling `models.yaml`); toggle + marker schema
+  documented in `training/README.md`. §8.5 deepen: the reader tolerates a **malformed
+  hand-authored marker** (invalid JSON / non-object → "not registered") so an owner typo can't
+  take the whole Geo-LLM tab snapshot down. TDD'd: +12 tests (`tests/test_geo_llm_status.py`
+  registration + 26e-flip; new `tests/test_dashboard_geo_flag.py` for the toggle plumbing).
+  `make verify` green (**324 passed**, ruff clean, dashboard smoke build). End-to-end smoke:
+  dropped a temp marker → `finetune` populated, 26e flips to done (5/6), built `index.html`
+  inlines `model_id` (toggle reveals); removed it → reverts to `null`. **Still owner-interactive
+  (not done here):** the `models.yaml` edit in `local-llm-conductor`, and 26f's live judged
+  fine-tune-vs-RAG decision. Plan 0008 stays in `plans/ready/` (26f remains).
 
 ### 2026-06-19 — training — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/25
