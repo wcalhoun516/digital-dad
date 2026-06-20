@@ -48,6 +48,11 @@ Format:
 
 <!-- entries below -->
 
+### 2026-06-20 — training — in-progress
+- PR: (opening)
+- Source: plan:ready/0008
+- Summary: Plan 0008 step **26e — Ask Dad fine-tune flag (in-repo half).** WIP.
+
 ### 2026-06-19 — training — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/25
 - Source: plan:ready/0008
