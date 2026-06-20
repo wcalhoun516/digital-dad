@@ -781,6 +781,11 @@ footer {
           T2 Local — Free
         </button>
       </div>
+      <!-- Geo-LLM fine-tune flag (plan 0008 step 26e): hidden until a model is registered;
+           default off. When on, Ask Dad answers via the fine-tune instead of the RAG route. -->
+      <button id="chat-geo-toggle" title="Answer via the Geo-LLM fine-tune (experimental) instead of retrieval" style="display:none;background:var(--bg-card);border:1px solid var(--border);color:var(--text-muted);font-family:var(--mono);font-size:0.75em;padding:4px 12px;cursor:pointer;border-radius:3px;text-transform:uppercase;letter-spacing:0.05em">
+        Geo-LLM fine-tune: off
+      </button>
       <div id="chat-cost-info" style="font-family:var(--mono);font-size:0.75em;color:var(--text-muted)"></div>
       <div style="display:flex;gap:8px;margin-left:auto">
         <button id="chat-export" class="chat-util-btn" title="Download this conversation as Markdown">Export</button>
@@ -1904,6 +1909,22 @@ function renderAskDad() {
       : '';
   });
 
+  // Geo-LLM fine-tune flag (plan 0008 step 26e). Self-revealing + default off:
+  // the toggle only appears once the owner has registered a fine-tune (surfaced as
+  // GEO_LLM_DATA.finetune.model_id by analysis/geo_llm_status). When on, the chat
+  // request routes to that model instead of the RAG 'auto' route.
+  let useGeoFinetune = false;
+  const geoToggle = document.getElementById('chat-geo-toggle');
+  const geoFinetune = (typeof GEO_LLM_DATA !== 'undefined' && GEO_LLM_DATA && GEO_LLM_DATA.finetune) || null;
+  if (geoToggle && geoFinetune && geoFinetune.model_id) {
+    geoToggle.style.display = '';
+    geoToggle.addEventListener('click', () => {
+      useGeoFinetune = !useGeoFinetune;
+      geoToggle.textContent = 'Geo-LLM fine-tune: ' + (useGeoFinetune ? 'on' : 'off');
+      geoToggle.style.color = useGeoFinetune ? 'var(--accent)' : 'var(--text-muted)';
+    });
+  }
+
   // Build rich persona from psychoprofile + linguistic data
   let personaBlock = '';
   if (PSYCHOPROFILE_DATA) {
@@ -2049,16 +2070,17 @@ function renderAskDad() {
 
     try {
       const useTier = chatTier;
+      const routeGeo = useGeoFinetune && geoFinetune && geoFinetune.model_id;
       const requestBody = {
-        model: 'auto',
+        model: routeGeo ? geoFinetune.model_id : 'auto',
         stream: true,
         max_tokens: 1024,
         messages: [
           { role: 'system', content: buildSystemPrompt(sources) },
           { role: 'user', content: query },
         ],
-        tier: useTier,
-        function: 'text',
+        tier: routeGeo && geoFinetune.tier != null ? geoFinetune.tier : useTier,
+        function: routeGeo && geoFinetune.function ? geoFinetune.function : 'text',
       };
       if (useTier === 3) requestBody.allow_remote = true;
 
