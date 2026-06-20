@@ -132,6 +132,20 @@ def test_finetune_registration_blank_model_id_returns_none(tmp_path):
     assert g.finetune_registration(f) is None
 
 
+def test_finetune_registration_malformed_json_returns_none(tmp_path):
+    # The marker is hand-authored by the owner; a typo must degrade to "not registered"
+    # rather than throwing and taking the whole Geo-LLM tab snapshot down with it.
+    f = tmp_path / "geo_llm_registration.json"
+    f.write_text('{"model_id": "geo-llm",}')  # trailing comma → invalid JSON
+    assert g.finetune_registration(f) is None
+
+
+def test_finetune_registration_non_object_returns_none(tmp_path):
+    f = tmp_path / "geo_llm_registration.json"
+    f.write_text('"geo-llm"')  # valid JSON, but a string, not an object
+    assert g.finetune_registration(f) is None
+
+
 def _setup_dirs(tmp_path, monkeypatch, *, with_instruct=True):
     tdir = tmp_path / "training"
     tdir.mkdir()

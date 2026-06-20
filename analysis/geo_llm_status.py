@@ -114,7 +114,12 @@ def finetune_registration(path: Path) -> dict | None:
     """
     if not path.exists():
         return None
-    reg = json.loads(path.read_text())
+    try:
+        reg = json.loads(path.read_text())
+    except json.JSONDecodeError:
+        return None  # a hand-authored typo shouldn't take the whole snapshot down
+    if not isinstance(reg, dict):
+        return None
     model_id = (reg.get("model_id") or "").strip()
     if not model_id:
         return None
