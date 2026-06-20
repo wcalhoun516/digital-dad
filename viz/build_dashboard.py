@@ -25,7 +25,7 @@ PLACEHOLDERS = {
 _EMPTY_DEFAULTS = {
     "/*__EMBEDDINGS_DATA__*/": '{"model":null,"dim":0,"slugs":[],"titles":[],"dates":[],"urls":[],"vectors":[],"snippets":[]}',
     "/*__PREDICTIONS_DATA__*/": '{"predictions":[],"aggregate":{"by_topic":{},"by_confidence":{},"by_year":{},"llm_verdicts":{}}}',
-    "/*__GEO_LLM_DATA__*/": '{"dataset":null,"sample_pair":null,"qlora":null,"pipeline":[],"rag_baseline":null,"voice_eval":null}',
+    "/*__GEO_LLM_DATA__*/": '{"dataset":null,"sample_pair":null,"qlora":null,"pipeline":[],"rag_baseline":null,"voice_eval":null,"finetune":null}',
 }
 
 
