@@ -92,3 +92,39 @@ body. The report turns this into an action: it suggests a `max_seq_len` — the 
 power of two covering ~95% of records (currently **≈8192**, P95 ≈4,354 tokens) — so the
 26c run either raises the window or chunks bodies instead of training on almost nothing.
 The pure checks are unit-tested in `tests/test_finetune_preflight.py`.
+
+## Registering the fine-tune for Ask Dad (plan 0008, step 26e)
+
+Once a fine-tune is trained (26c) and you've added it to the **sibling conductor's**
+`models.yaml`, you turn it on for the "Ask Dad" chat with a small **registration marker**
+this repo reads at build time:
+
+`data/analysis/geo_llm_registration.json` (gitignored — local/owner-produced):
+
+```json
+{
+  "model_id": "geo-llm",          // required — the conductor model/function name to request
+  "base_model": "gemma-2-2b",     // optional — shown for context
+  "function": "geo-voice",        // optional — conductor function (defaults to "text")
+  "tier": 2,                      // optional — pin a tier (defaults to the chat's tier toggle)
+  "registered_at": "2026-06-20"   // optional — for your own bookkeeping
+}
+```
+
+What it does:
+
+- **`analysis/geo_llm_status.py`** reads the marker (`finetune_registration`) into the
+  build-time `data/analysis/geo_llm.json`, surfacing a `finetune` block and flipping the
+  26e pipeline step to **done**. No marker → `finetune: null`, step stays not-done.
+- The dashboard's **"Ask Dad"** tab grows a **"Geo-LLM fine-tune"** toggle that is
+  **hidden until a model is registered** and **off by default**. While off (or with no
+  marker) Ask Dad is unchanged — the RAG `model: "auto"` conductor route. Flip it on and
+  the chat request routes to your `model_id` (plus the marker's `function`/`tier` if set).
+
+So the family's experience never changes until you both register the model **and** flip
+the toggle — which is the "behind a flag, default off" intent of 26e. Deleting the marker
+fully reverts it. The marker reader is unit-tested in `tests/test_geo_llm_status.py`; the
+toggle plumbing in `tests/test_dashboard_geo_flag.py`.
+
+> Still owner-interactive (not done by the daily agent): the actual `models.yaml` edit in
+> `local-llm-conductor`, and the live judged comparison (26f) that decides fine-tune vs RAG.

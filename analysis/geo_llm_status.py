@@ -104,6 +104,28 @@ def voice_summary(path: Path = ANALYSIS_DIR / "voice_eval.json") -> dict | None:
     return json.loads(path.read_text()).get("summary") or None
 
 
+def finetune_registration(path: Path) -> dict | None:
+    """Owner-dropped marker recording a fine-tune registered in the conductor.
+
+    The actual registration happens in the sibling ``local-llm-conductor``'s
+    ``models.yaml`` (out of this repo); the owner mirrors it here as a small JSON
+    so the build can reveal the Ask Dad toggle. Returns None unless the file
+    exists and names a non-blank ``model_id``.
+    """
+    if not path.exists():
+        return None
+    try:
+        reg = json.loads(path.read_text())
+    except json.JSONDecodeError:
+        return None  # a hand-authored typo shouldn't take the whole snapshot down
+    if not isinstance(reg, dict):
+        return None
+    model_id = (reg.get("model_id") or "").strip()
+    if not model_id:
+        return None
+    return reg
+
+
 def pipeline_status(flags: dict) -> list[dict]:
     """Map 26a-f to status: done where the artifact flag is set, the first
     not-done step to ``next``, and everything after to ``upcoming``."""
@@ -129,12 +151,13 @@ def build_status() -> dict:
     ds = dataset_stats(TRAINING_DIR)
     rag = rag_summary(ANALYSIS_DIR / "rag_eval.json")
     voice = voice_summary(ANALYSIS_DIR / "voice_eval.json")
+    finetune = finetune_registration(ANALYSIS_DIR / "geo_llm_registration.json")
     flags = {
         "dataset": ds["n_examples"] > 0,
         "rag": rag is not None,
         "notebook": (FINETUNE_RUN_DIR / "train.jsonl").exists(),
         "voice_harness": Path(__file__).with_name("voice_eval.py").exists(),
-        "adapter": False,  # flip true once 26e registers a trained adapter
+        "adapter": finetune is not None,  # 26e: an adapter is registered
         "voice_results": voice is not None,
     }
     return {
@@ -144,6 +167,7 @@ def build_status() -> dict:
         "pipeline": pipeline_status(flags),
         "rag_baseline": rag,
         "voice_eval": voice,
+        "finetune": finetune,
     }
 
 

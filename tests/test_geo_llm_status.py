@@ -105,6 +105,47 @@ def test_pipeline_status_marks_done_then_next_then_upcoming():
     assert [s["id"] for s in steps] == ["26a", "26b", "26c", "26d", "26e", "26f"]
 
 
+def test_finetune_registration_reads_marker(tmp_path):
+    f = tmp_path / "geo_llm_registration.json"
+    f.write_text(json.dumps({
+        "model_id": "geo-llm", "base_model": "gemma-2-2b",
+        "function": "geo-voice", "tier": 2, "registered_at": "2026-06-20"}))
+    reg = g.finetune_registration(f)
+    assert reg["model_id"] == "geo-llm"
+    assert reg["base_model"] == "gemma-2-2b"
+    assert reg["function"] == "geo-voice"
+
+
+def test_finetune_registration_missing_returns_none(tmp_path):
+    assert g.finetune_registration(tmp_path / "nope.json") is None
+
+
+def test_finetune_registration_without_model_id_returns_none(tmp_path):
+    f = tmp_path / "geo_llm_registration.json"
+    f.write_text(json.dumps({"base_model": "gemma-2-2b"}))  # no model_id
+    assert g.finetune_registration(f) is None
+
+
+def test_finetune_registration_blank_model_id_returns_none(tmp_path):
+    f = tmp_path / "geo_llm_registration.json"
+    f.write_text(json.dumps({"model_id": "  "}))
+    assert g.finetune_registration(f) is None
+
+
+def test_finetune_registration_malformed_json_returns_none(tmp_path):
+    # The marker is hand-authored by the owner; a typo must degrade to "not registered"
+    # rather than throwing and taking the whole Geo-LLM tab snapshot down with it.
+    f = tmp_path / "geo_llm_registration.json"
+    f.write_text('{"model_id": "geo-llm",}')  # trailing comma → invalid JSON
+    assert g.finetune_registration(f) is None
+
+
+def test_finetune_registration_non_object_returns_none(tmp_path):
+    f = tmp_path / "geo_llm_registration.json"
+    f.write_text('"geo-llm"')  # valid JSON, but a string, not an object
+    assert g.finetune_registration(f) is None
+
+
 def _setup_dirs(tmp_path, monkeypatch, *, with_instruct=True):
     tdir = tmp_path / "training"
     tdir.mkdir()
@@ -125,13 +166,32 @@ def test_build_status_shape_dataset_only(tmp_path, monkeypatch):
     _setup_dirs(tmp_path, monkeypatch)
     status = g.build_status()
     assert set(status) == {
-        "dataset", "sample_pair", "qlora", "pipeline", "rag_baseline", "voice_eval"}
+        "dataset", "sample_pair", "qlora", "pipeline", "rag_baseline",
+        "voice_eval", "finetune"}
     assert status["rag_baseline"] is None
     assert status["voice_eval"] is None
+    assert status["finetune"] is None                     # no registration marker yet
     assert len(status["pipeline"]) == 6
     assert status["pipeline"][0]["status"] == "done"      # dataset present → 26a done
     assert status["pipeline"][1]["status"] == "next"      # no rag baseline yet
     assert status["sample_pair"] == {"prompt": "q", "answer": "a"}
+
+
+def test_build_status_unregistered_keeps_26e_not_done(tmp_path, monkeypatch):
+    _setup_dirs(tmp_path, monkeypatch)
+    status = g.build_status()
+    step_26e = next(s for s in status["pipeline"] if s["id"] == "26e")
+    assert step_26e["status"] != "done"
+
+
+def test_build_status_registered_surfaces_finetune_and_flips_26e(tmp_path, monkeypatch):
+    _, adir = _setup_dirs(tmp_path, monkeypatch)
+    (adir / "geo_llm_registration.json").write_text(json.dumps({
+        "model_id": "geo-llm", "base_model": "gemma-2-2b"}))
+    status = g.build_status()
+    assert status["finetune"]["model_id"] == "geo-llm"
+    step_26e = next(s for s in status["pipeline"] if s["id"] == "26e")
+    assert step_26e["status"] == "done"
 
 
 def test_write_status_creates_file(tmp_path, monkeypatch):
