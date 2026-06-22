@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.calhoun.digitaldad-dashboard</string>
+
+    <!-- ProgramArguments points at the trampoline STAGED ON THE SYSTEM DISK so the
+         job can launch before the external volume mounts. The installer
+         substitutes __TRAMPOLINE_PATH__ with the real staged path. -->
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>__TRAMPOLINE_PATH__</string>
+    </array>
+
+    <!-- Long-running service: start at login and keep alive (restart on crash, or
+         if the external volume drops and remounts). -->
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>KeepAlive</key>
+    <true/>
+
+    <!-- Don't hammer relaunches if it exits fast (e.g. volume not yet mounted). -->
+    <key>ThrottleInterval</key>
+    <integer>15</integer>
+
+    <!-- Logs stay on /tmp (system disk) — NEVER point these at the external
+         volume; launchd would recreate the mountpoint as a real dir if the job
+         fires while unmounted, bumping the volume to "FamilyWorkDrive 1". -->
+    <key>StandardOutPath</key>
+    <string>/tmp/digitaldad_dashboard.out.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/tmp/digitaldad_dashboard.err.log</string>
+</dict>
+</plist>
