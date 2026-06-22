@@ -52,3 +52,32 @@ def test_no_qualifiers_gives_empty_roundup():
     out = otd.select_matches(matches, threshold=0.55)
     assert out["deep_dive"]["headline"] == "dd"
     assert out["roundup"] == []
+
+
+def test_render_roundup_empty_is_blank():
+    assert otd._render_roundup([]) == ""
+
+
+def test_render_roundup_includes_headline_blurb_and_citation():
+    items = [{
+        "headline": "Markets wobble on Fed signals",
+        "blurb": "I warned the Fed had become a market backstop.",
+        "title": "The Fed's Quiet Backstop",
+        "url": "https://example.com/fed",
+        "year": "2021",
+    }]
+    html = otd._render_roundup(items)
+    assert "In His Words" in html              # section header present
+    assert "Markets wobble on Fed signals" in html
+    assert "I warned the Fed had become a market backstop." in html
+    assert 'href="https://example.com/fed"' in html
+    assert "The Fed's Quiet Backstop" in html
+    assert "2021" in html
+
+
+def test_render_roundup_escapes_html():
+    items = [{"headline": "Tech & Trade <war>", "blurb": "b",
+              "title": "t", "url": "#", "year": "2020"}]
+    html = otd._render_roundup(items)
+    assert "Tech &amp; Trade &lt;war&gt;" in html
+    assert "<war>" not in html
