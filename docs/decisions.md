@@ -108,3 +108,21 @@ needs resize behavior means making its render idempotent first, then adding it t
 **Still pending:** a live phone-width browser pass (headless run, no preview tooling) — a
 reviewer should rotate/resize a real viewport before merging. Plan 0006 steps 3–4 (table
 reflow, dual-breakpoint device verification) remain.
+
+### D15 — RAG is the product voice; the QLoRA fine-tune stays experimental (26f)
+**Why:** the first real Geo-LLM adapter (Qwen2.5-3B QLoRA, 138 training examples, plan 0008
+26c/26e) was scored by the 26d blind voice-fidelity eval against the RAG "Ask Dad" answer and a
+genuine Calhoun excerpt. Result (8 held-out prompts, T3 judge): **fine-tune 0% win-rate, avg
+rank 2.88 — last in every trial**, while RAG (1.50) and real (1.63) tied at the top. Crucially
+the judge could **not** distinguish RAG answers from real excerpts (50/50), validating the
+retrieval path. Style metrics explain the loss: the fine-tune's lexical diversity (type-token
+ratio 0.35) is half the real corpus (0.70) and it over-uses his distinctive vocabulary at ~2×
+the natural rate (101 vs 46 hits/1k) — it learned surface markers, not fluency, and (ungrounded)
+it hallucinates specifics.
+**Implication:** Ask Dad (RAG) remains the trustworthy, shipped voice; the fine-tune is **not**
+registered in the conductor and the dashboard's Ask Dad fine-tune toggle stays hidden (no
+`geo_llm_registration.json` marker dropped). Reviving the fine-tune requires the data lever
+first: more examples-per-article (138 → 500+, a 26a change) plus more iters / higher LoRA rank,
+then re-run `make voice-eval`. The adapter, trials, and eval report live under
+`data/finetune_run/` and `data/analysis/voice_eval.*` (all gitignored). Mild overfitting
+appeared by iter ~100 (val loss bottomed there), consistent with the tiny training set.
