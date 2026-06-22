@@ -954,15 +954,18 @@ const GEO_LLM_DATA = /*__GEO_LLM_DATA__*/;
         row('grounding', pct(r.grounding)) + row('citation coverage', pct(r.citation_coverage)) + row('refusal accuracy', pct(r.abstention_accuracy));
     }
     let ft;
-    if (d.voice_eval && Object.keys(d.voice_eval).length) {
-      ft = `<div style="color:var(--text-muted);font-size:0.85em;margin-bottom:10px">Geo-LLM fine-tune</div>` +
-        Object.entries(d.voice_eval).map(([k, v]) =>
-          row(esc(k.replace(/_/g, ' ')), (typeof v === 'number' && v <= 1 && v >= 0) ? pct(v) : esc(String(v)))).join('');
+    if (d.voice_eval && d.voice_eval.sources) {
+      const s = d.voice_eval.sources;
+      const label = {real: 'real Calhoun', rag: 'Ask Dad (RAG)', finetuned: 'Geo-LLM fine-tune'};
+      const order = ['real', 'rag', 'finetuned'].filter(k => s[k]);
+      ft = `<div style="color:var(--text-muted);font-size:0.85em;margin-bottom:10px">voice A/B &middot; win-rate (avg rank)</div>` +
+        order.map(k => row(label[k] || k,
+          `${Math.round((s[k].win_rate || 0) * 100)}% (${(s[k].avg_rank ?? 0).toFixed(2)})`)).join('');
     } else {
       ft = `<div style="color:var(--text-muted);font-size:0.85em;margin-bottom:10px">Geo-LLM fine-tune</div>
         <div style="color:var(--text-muted);text-align:center;padding:18px 0">awaiting first voice-eval<br><span style="font-size:0.8em">(unlocks at 26e)</span></div>`;
     }
-    sb.innerHTML = card(rag, false) + card(ft, !!(d.voice_eval && Object.keys(d.voice_eval).length));
+    sb.innerHTML = card(rag, false) + card(ft, !!(d.voice_eval && d.voice_eval.sources));
   }
 })();
 </script>
