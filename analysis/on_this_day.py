@@ -12,6 +12,7 @@ Designed to be called from ``bin/weekly_run.sh`` as the final step in the
 Sunday cron job.
 """
 
+import html
 import json
 import sys
 import xml.etree.ElementTree as ET
@@ -28,11 +29,20 @@ from .semantic_search import (
 
 EMAIL_DIR = DATA_DIR / "cron" / "emails"
 
-# RSS feeds to pull headlines from (business/econ focused)
+# Roundup tuning (precision-first): a headline only earns an "in his words" blurb when its
+# best article match clears this cosine threshold; the roundup is capped to keep it tight.
+ROUNDUP_THRESHOLD = 0.55
+ROUNDUP_CAP = 6
+
+# RSS feeds to pull headlines from (business/econ/tech focused).
+# NOTE: Reuters retired its public feeds.reuters.com RSS (DNS now fails), so these are
+# current, reliable sources — a healthy pool matters for the roundup's precision bar.
 RSS_FEEDS = [
-    "https://feeds.reuters.com/reuters/businessNews",
-    "https://feeds.reuters.com/reuters/technologyNews",
     "https://rss.nytimes.com/services/xml/rss/nyt/Business.xml",
+    "https://rss.nytimes.com/services/xml/rss/nyt/Economy.xml",
+    "https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml",
+    "https://feeds.bbci.co.uk/news/business/rss.xml",
+    "https://feeds.bbci.co.uk/news/technology/rss.xml",
 ]
 
 INTRO_PROMPT = """You are Dr. George Calhoun — Forbes columnist, telecom economist, contrarian thinker. You write with precision, data-driven authority, and a taste for em-dashes.
@@ -53,8 +63,10 @@ EMAIL_TEMPLATE = """\
     <p style="font-size: 0.85em; color: #888; margin: 4px 0 0;">Week of {week_date}</p>
   </div>
 
+  {roundup_section}
+
   <p style="font-size: 0.9em; color: #666; margin-bottom: 8px;">
-    <em>Matched to this week's headline:</em><br>
+    <em>This week, in depth &mdash; matched to:</em><br>
     <strong>{headline}</strong>
   </p>
 
@@ -77,6 +89,44 @@ EMAIL_TEMPLATE = """\
 </body>
 </html>
 """
+
+
+ROUNDUP_ITEM_TEMPLATE = """\
+  <div style="margin-bottom: 18px;">
+    <p style="font-size: 0.95em; font-weight: bold; margin: 0 0 4px;">{headline}</p>
+    <p style="font-size: 0.92em; font-style: italic; color: #444; margin: 0 0 4px;">{blurb}</p>
+    <p style="font-size: 0.8em; color: #888; margin: 0;">&mdash; <a href="{url}" style="color: #c9a84c; text-decoration: none;">{title}</a> ({year})</p>
+  </div>"""
+
+ROUNDUP_SECTION_TEMPLATE = """\
+  <div style="margin-bottom: 28px;">
+    <h2 style="font-size: 1.2em; font-weight: 400; margin: 0 0 14px;">This Week &mdash; In His Words</h2>
+    <p style="font-size: 0.85em; color: #888; margin: 0 0 16px;">Where this week's headlines echo something he already wrote.</p>
+{items}
+  </div>
+  <hr style="border: none; border-top: 1px solid #ddd; margin: 24px 0;">
+"""
+
+
+def _render_roundup(items: list[dict]) -> str:
+    """Render the 'in his words' roundup block (empty string when no items).
+
+    Each item is ``{headline, blurb, title, url, year}``; user-facing text is
+    HTML-escaped (RSS titles and LLM blurbs can contain ``&``/``<``).
+    """
+    if not items:
+        return ""
+    rendered = "\n".join(
+        ROUNDUP_ITEM_TEMPLATE.format(
+            headline=html.escape(it.get("headline", ""), quote=False),
+            blurb=html.escape(it.get("blurb", ""), quote=False),
+            title=html.escape(it.get("title", ""), quote=False),
+            url=html.escape(it.get("url", "#"), quote=True),
+            year=html.escape(it.get("year", ""), quote=False),
+        )
+        for it in items
+    )
+    return ROUNDUP_SECTION_TEMPLATE.format(items=rendered)
 
 
 def _fetch_headlines(max_per_feed: int = 5) -> list[dict]:
@@ -129,6 +179,57 @@ def _generate_intro(client, article: dict, headline: str) -> str:
     return (response.choices[0].message.content or "").strip()
 
 
+def select_matches(matches: list[dict], *, threshold: float = ROUNDUP_THRESHOLD,
+                   cap: int = ROUNDUP_CAP) -> dict:
+    """Pick the deep-dive (global best) plus a precision-first roundup.
+
+    ``matches`` is one record per headline — its single best article —
+    ``{"headline": str, "article_idx": int, "score": float}``. Returns
+    ``{"deep_dive": <match|None>, "roundup": [<match>, ...]}`` where the roundup is the
+    *other* headlines whose score is >= ``threshold``, sorted strongest-first, deduped by
+    article (stronger headline wins), excluding the deep-dive's article, capped at ``cap``.
+    Pure: no embedding, no network.
+    """
+    if not matches:
+        return {"deep_dive": None, "roundup": []}
+    deep_dive = max(matches, key=lambda m: m["score"])
+    roundup: list[dict] = []
+    seen_articles = {deep_dive["article_idx"]}
+    for m in sorted(matches, key=lambda m: m["score"], reverse=True):
+        if m is deep_dive or m["score"] < threshold or m["article_idx"] in seen_articles:
+            continue
+        roundup.append(m)
+        seen_articles.add(m["article_idx"])
+        if len(roundup) >= cap:
+            break
+    return {"deep_dive": deep_dive, "roundup": roundup}
+
+
+BLURB_PROMPT = """You are Dr. George Calhoun — Forbes columnist, telecom economist, contrarian thinker.
+
+In ONE sentence, first person, note why your {year} article "{article_title}" speaks to this week's headline: "{headline}". Be specific and pointed. Output only the sentence — no preamble, no quotation marks."""
+
+
+def _generate_blurb(client, article: dict, headline: str) -> str:
+    """One-sentence in-voice connection for a roundup item (free local tier-2)."""
+    prompt = BLURB_PROMPT.format(
+        year=(article.get("date") or "")[:4],
+        article_title=article.get("title", ""),
+        headline=headline,
+    )
+    try:
+        response = client.chat.completions.create(
+            model="auto",
+            max_tokens=120,
+            messages=[{"role": "user", "content": prompt}],
+            extra_body={"tier": 2, "function": "text"},
+        )
+        return (response.choices[0].message.content or "").strip()
+    except Exception as e:
+        print(f"  Warning: blurb generation failed: {e}", file=sys.stderr)
+        return ""
+
+
 def run(
     articles: list[dict] | None = None,
     recipient_label: str = "the family",
@@ -158,28 +259,36 @@ def run(
     print("  Loading corpus embeddings...")
     embeddings, meta_articles = build_embeddings(articles)
 
-    # Step 3: Embed each headline and find best corpus match
+    # Step 3: Embed each headline, record its best corpus match, then select.
     print("  Matching headlines to corpus...")
-    best_score = -1.0
-    best_headline = ""
-    best_article_idx = 0
-
     norms = np.linalg.norm(embeddings, axis=1)
-
+    per_headline: list[dict] = []
     for h in headlines:
         try:
             query_vec = np.array(_embed_one(h["title"]), dtype=np.float32)
             query_norm = np.linalg.norm(query_vec)
             similarities = (embeddings @ query_vec) / (norms * query_norm + 1e-10)
             top_idx = int(np.argmax(similarities))
-            top_score = float(similarities[top_idx])
-            if top_score > best_score:
-                best_score = top_score
-                best_headline = h["title"]
-                best_article_idx = top_idx
+            per_headline.append({
+                "headline": h["title"],
+                "article_idx": top_idx,
+                "score": float(similarities[top_idx]),
+            })
         except Exception as e:
             print(f"  Warning: embedding failed for headline: {e}", file=sys.stderr)
             continue
+
+    if not per_headline:
+        print("  No headlines could be embedded. Skipping.")
+        return None
+
+    selection = select_matches(per_headline)
+    deep = selection["deep_dive"]
+    best_headline = deep["headline"]
+    best_article_idx = deep["article_idx"]
+    best_score = deep["score"]
+    print(f"  Deep-dive match (score {best_score:.3f}); roundup candidates: "
+          f"{len(selection['roundup'])}")
 
     matched_meta = meta_articles[best_article_idx]
     # Find the full article for excerpt
@@ -199,13 +308,32 @@ def run(
     if dry_run:
         print("  Dry run — skipping LLM intro and email generation.")
         return {"dry_run": True, "headline": best_headline,
-                "article": matched_meta["title"], "score": best_score}
+                "article": matched_meta["title"], "score": best_score,
+                "roundup_candidates": len(selection["roundup"])}
 
     # Step 4: Generate intro in Dad's voice
     print("  Generating intro in Dr. Calhoun's voice...")
     client = _get_conductor_client()
     intro = _generate_intro(client, matched_article, best_headline)
     print(f"  Intro: {intro[:100]}...")
+
+    # Step 4b: Roundup — a one-sentence in-voice blurb per other qualifying headline.
+    roundup_items = []
+    for r in selection["roundup"]:
+        meta = meta_articles[r["article_idx"]]
+        art = next((a for a in articles if a.get("slug") == meta.get("slug")), None) or meta
+        blurb = _generate_blurb(client, art, r["headline"])
+        if not blurb:
+            continue  # drop rather than ship a blank
+        roundup_items.append({
+            "headline": r["headline"],
+            "blurb": blurb,
+            "title": art.get("title", ""),
+            "url": art.get("url", "#"),
+            "year": (art.get("date") or "")[:4],
+        })
+    roundup_section = _render_roundup(roundup_items)
+    print(f"  Roundup: {len(roundup_items)} item(s) with a real reference")
 
     # Step 5: Build email
     now = datetime.now(timezone.utc)
@@ -216,6 +344,7 @@ def run(
     subject = f"From the archive — week of {week_date}"
     html_body = EMAIL_TEMPLATE.format(
         week_date=week_date,
+        roundup_section=roundup_section,
         headline=best_headline,
         intro=intro,
         article_url=matched_article.get("url", "#"),
@@ -240,6 +369,7 @@ def run(
         "matched_article": matched_meta["title"],
         "matched_slug": matched_meta.get("slug"),
         "similarity_score": round(best_score, 4),
+        "roundup_count": len(roundup_items),
         "email_file": str(email_path),
     }
 
