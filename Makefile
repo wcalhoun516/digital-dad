@@ -4,7 +4,7 @@ PYTHON := .venv/bin/python
 # ruff findings (broadening the scope is a follow-up roadmap item, #1-3/cleanup).
 LINT_PATHS := tests
 
-.PHONY: scrape manifest-check analyze training dashboard all serve search on-this-day send-on-this-day adjudicate backfill-verdicts rag-eval voice-eval voice-trials clean test lint fmt verify verify-responsive
+.PHONY: scrape manifest-check analyze training dashboard all serve share search on-this-day send-on-this-day adjudicate backfill-verdicts rag-eval voice-eval voice-trials clean test lint fmt verify verify-responsive
 
 scrape:
 	$(PYTHON) -m scraper $(ARGS)
@@ -41,6 +41,12 @@ all: scrape analyze training dashboard
 serve: dashboard
 	@echo "Opening dashboard at http://localhost:8000"
 	$(PYTHON) -m http.server 8000 -d dashboard
+
+# Expose the dashboard to anyone, anywhere via one password-gated HTTPS link
+# (Tailscale Funnel + bin/serve_dashboard.py). Installs a KeepAlive launchd
+# service so it survives reboots. Re-run any time; --rotate-password to change pw.
+share: dashboard
+	bash scripts/launchd/install_dashboard.sh $(ARGS)
 
 search:
 	$(PYTHON) -m analysis.semantic_search "$(QUERY)"

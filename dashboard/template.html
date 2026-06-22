@@ -1583,9 +1583,19 @@ function renderCorpus() {
 
 // ===== INIT (lazy render on tab switch) =====
 const rendered = {};
+// ===== CONDUCTOR BASE URL =====
+// Where the browser reaches the local-llm-conductor for Ask Dad + semantic search.
+// Locally (make serve / direct localhost) we hit the conductor directly on :8080.
+// When the dashboard is shared remotely via Tailscale Funnel, the visitor's
+// browser must NOT hit 127.0.0.1 (that's THEIR machine) — instead we go
+// same-origin ('') so the request rides the Funnel back to the gated server
+// (bin/serve_dashboard.py), which reverse-proxies /v1/* to the real conductor.
+const CONDUCTOR_BASE = (location.hostname === '127.0.0.1' || location.hostname === 'localhost')
+  ? 'http://127.0.0.1:8080'
+  : '';
 // ===== SEMANTIC SEARCH =====
 const SEMANTIC_SEARCH_CONFIG = {
-  conductorUrl: 'http://127.0.0.1:8080/v1/embeddings',
+  conductorUrl: CONDUCTOR_BASE + '/v1/embeddings',
   // Always pin the same model used to build the corpus index. Mixing
   // embedders puts query and documents in different vector spaces and
   // makes cosine similarity meaningless.
@@ -1993,7 +2003,7 @@ function renderAskDad() {
 
       let expandedQuery = null;
       try {
-        const refineResp = await fetch('http://127.0.0.1:8080/v1/chat/completions', {
+        const refineResp = await fetch(CONDUCTOR_BASE + '/v1/chat/completions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -2089,7 +2099,7 @@ function renderAskDad() {
 
       if (useTier === 3) costInfo.textContent = 'Routing to Claude Sonnet 4.5 via OpenRouter...';
 
-      const resp = await fetch('http://127.0.0.1:8080/v1/chat/completions', {
+      const resp = await fetch(CONDUCTOR_BASE + '/v1/chat/completions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestBody),
