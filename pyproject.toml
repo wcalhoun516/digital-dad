@@ -22,6 +22,11 @@ dev = [
     "pytest>=8",
     "ruff>=0.6",
 ]
+finetune = [
+    # Geo-LLM QLoRA fine-tune (plan 0008). MLX is Apple-Silicon/macOS only, so the
+    # marker makes this a no-op elsewhere (e.g. Linux CI). Opt-in; kept out of `all`.
+    "mlx-lm>=0.31; platform_machine == 'arm64'",
+]
 all = [
     "digital-dad[scrape,analyze,dev]",
 ]
