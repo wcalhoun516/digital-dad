@@ -28,6 +28,11 @@ from .semantic_search import (
 
 EMAIL_DIR = DATA_DIR / "cron" / "emails"
 
+# Roundup tuning (precision-first): a headline only earns an "in his words" blurb when its
+# best article match clears this cosine threshold; the roundup is capped to keep it tight.
+ROUNDUP_THRESHOLD = 0.55
+ROUNDUP_CAP = 6
+
 # RSS feeds to pull headlines from (business/econ focused)
 RSS_FEEDS = [
     "https://feeds.reuters.com/reuters/businessNews",
@@ -127,6 +132,32 @@ def _generate_intro(client, article: dict, headline: str) -> str:
         extra_body={"tier": 2, "function": "text"},
     )
     return (response.choices[0].message.content or "").strip()
+
+
+def select_matches(matches: list[dict], *, threshold: float = ROUNDUP_THRESHOLD,
+                   cap: int = ROUNDUP_CAP) -> dict:
+    """Pick the deep-dive (global best) plus a precision-first roundup.
+
+    ``matches`` is one record per headline — its single best article —
+    ``{"headline": str, "article_idx": int, "score": float}``. Returns
+    ``{"deep_dive": <match|None>, "roundup": [<match>, ...]}`` where the roundup is the
+    *other* headlines whose score is >= ``threshold``, sorted strongest-first, deduped by
+    article (stronger headline wins), excluding the deep-dive's article, capped at ``cap``.
+    Pure: no embedding, no network.
+    """
+    if not matches:
+        return {"deep_dive": None, "roundup": []}
+    deep_dive = max(matches, key=lambda m: m["score"])
+    roundup: list[dict] = []
+    seen_articles = {deep_dive["article_idx"]}
+    for m in sorted(matches, key=lambda m: m["score"], reverse=True):
+        if m is deep_dive or m["score"] < threshold or m["article_idx"] in seen_articles:
+            continue
+        roundup.append(m)
+        seen_articles.add(m["article_idx"])
+        if len(roundup) >= cap:
+            break
+    return {"deep_dive": deep_dive, "roundup": roundup}
 
 
 def run(
