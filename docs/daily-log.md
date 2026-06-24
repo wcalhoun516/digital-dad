@@ -48,6 +48,34 @@ Format:
 
 <!-- entries below -->
 
+### 2026-06-24 — dashboard — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/30
+- Source: plan:ready/0008
+- Summary: Plan 0008 **26f, made visible to the family.** The owner has now run the real
+  fine-tune + 26d voice eval (`data/analysis/voice_eval.json`, `geo_llm.json`; verdict recorded
+  as ADR **D15**). But the dashboard's Geo-LLM tab asked *"Can the fine-tune beat retrieval?"*
+  and only showed raw scoreboard numbers — it never stated the **answer**. This slice surfaces
+  the conclusion where the family can see it. (1) New pure helper
+  `analysis.geo_llm_status.voice_verdict()` reduces the 26d `sources` block to a structured,
+  data-driven comparison (`winner`, `keep`, `finetuned_beats_rag`, win-rates + avg-ranks);
+  returns None until an eval with both `finetuned` and `rag` exists, so the banner stays hidden
+  mid-experiment. Wired into `build_status()` as a new `verdict` key (+ build-fallback dict in
+  `viz/build_dashboard.py`). (2) Dashboard Geo-LLM tab grows a **"THE VERDICT · 26f"** banner;
+  its prose is **assembled from the numbers** (not hardcoded), so a re-run that flips the outcome
+  flips the copy. On the real data it renders *"Retrieval still wins — the fine-tune won 0% (avg
+  rank 2.88) vs Ask Dad's 50% (1.50); Ask Dad stays the trustworthy voice"* — matching D15.
+  Pure/offline: no conductor, no compute, no sibling-repo edits. §8.5 deepen: edge-case guards so
+  a partial/older eval (missing `avg_rank`, or a win-rate tie with no rank to break it) still
+  resolves conservatively — never claims a fine-tune win without evidence — mirroring this
+  module's existing "tolerate a malformed marker" robustness. TDD'd: +14 tests
+  (`test_geo_llm_status.py` verdict logic; new `test_dashboard_geo_verdict.py` banner structure).
+  `make verify` green (**346 passed**, ruff clean, dashboard smoke build); confirmed the verdict
+  block + banner inline into the built `index.html`. **Not done (deliberately left to the owner):**
+  declaring plan 0008 complete / moving it out of `ready/` — step 26e (register in the conductor)
+  is intentionally *not* taken per D15, and whether to close the flagship track vs. leave 26e open
+  for a future revival is a human call. `geo_llm.json`/`voice_eval.json` stay uncommitted
+  (generated; embed article text).
+
 ### 2026-06-20 — training — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/26
 - Source: plan:ready/0008
