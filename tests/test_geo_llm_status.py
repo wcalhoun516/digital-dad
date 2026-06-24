@@ -156,6 +156,36 @@ def test_voice_verdict_tie_winrate_finetune_better_rank_beats_rag():
     assert v["keep"] == "finetuned"
 
 
+def test_voice_verdict_tolerates_missing_avg_rank():
+    # An older/partial eval may omit avg_rank; the verdict must still resolve by win-rate
+    # alone and surface None ranks (the banner renders them as "—") without crashing.
+    v = g.voice_verdict({
+        "n_trials": 5,
+        "sources": {
+            "rag": {"win_rate": 0.6},
+            "finetuned": {"win_rate": 0.2},
+        },
+    })
+    assert v["winner"] == "rag"
+    assert v["keep"] == "rag"
+    assert v["finetuned_beats_rag"] is False
+    assert v["finetuned_avg_rank"] is None
+    assert v["rag_avg_rank"] is None
+
+
+def test_voice_verdict_equal_winrate_no_rank_info_keeps_rag():
+    # Equal win-rates with no avg_rank to break the tie must NOT claim the fine-tune won —
+    # absent evidence, retrieval stays the shipped voice (conservative default).
+    v = g.voice_verdict({
+        "sources": {
+            "rag": {"win_rate": 0.5},
+            "finetuned": {"win_rate": 0.5},
+        },
+    })
+    assert v["finetuned_beats_rag"] is False
+    assert v["keep"] == "rag"
+
+
 def test_build_status_includes_verdict_from_voice_eval(tmp_path, monkeypatch):
     _, adir = _setup_dirs(tmp_path, monkeypatch)
     (adir / "voice_eval.json").write_text(json.dumps({"summary": _RAG_WINS}))
