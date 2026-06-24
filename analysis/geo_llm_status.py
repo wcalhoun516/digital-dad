@@ -104,6 +104,51 @@ def voice_summary(path: Path = ANALYSIS_DIR / "voice_eval.json") -> dict | None:
     return json.loads(path.read_text()).get("summary") or None
 
 
+def voice_verdict(voice: dict | None) -> dict | None:
+    """Derive the 26f conclusion from the 26d voice-eval ``sources`` block.
+
+    Reduces the per-source win-rates/avg-ranks to a structured comparison the
+    dashboard turns into plain prose. Returns None until an eval with both the
+    ``finetuned`` and ``rag`` candidates exists, so the verdict banner simply
+    stays hidden mid-experiment. The "winner" is the source with the highest
+    win-rate, ties broken by the lower (better) avg rank.
+    """
+    if not voice:
+        return None
+    sources = voice.get("sources") or {}
+    if "finetuned" not in sources or "rag" not in sources:
+        return None
+
+    def win_rate(key: str) -> float:
+        return sources[key].get("win_rate") or 0.0
+
+    def avg_rank(key: str):
+        return sources[key].get("avg_rank")
+
+    def rank_key(rank):  # missing avg_rank sorts worst
+        return rank if rank is not None else float("inf")
+
+    winner = min(
+        sources,
+        key=lambda k: (-win_rate(k), rank_key(avg_rank(k))),
+    )
+    ft_wr, rag_wr = win_rate("finetuned"), win_rate("rag")
+    finetuned_beats_rag = ft_wr > rag_wr or (
+        ft_wr == rag_wr
+        and rank_key(avg_rank("finetuned")) < rank_key(avg_rank("rag"))
+    )
+    return {
+        "winner": winner,
+        "keep": "finetuned" if finetuned_beats_rag else "rag",
+        "finetuned_beats_rag": finetuned_beats_rag,
+        "n_trials": voice.get("n_trials"),
+        "finetuned_win_rate": ft_wr,
+        "rag_win_rate": rag_wr,
+        "finetuned_avg_rank": avg_rank("finetuned"),
+        "rag_avg_rank": avg_rank("rag"),
+    }
+
+
 def finetune_registration(path: Path) -> dict | None:
     """Owner-dropped marker recording a fine-tune registered in the conductor.
 
@@ -167,6 +212,7 @@ def build_status() -> dict:
         "pipeline": pipeline_status(flags),
         "rag_baseline": rag,
         "voice_eval": voice,
+        "verdict": voice_verdict(voice),
         "finetune": finetune,
     }
 
