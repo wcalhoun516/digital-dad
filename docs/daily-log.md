@@ -48,6 +48,29 @@ Format:
 
 <!-- entries below -->
 
+### 2026-06-25 — docs — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/31
+- Source: roadmap:#28
+- Summary: Roadmap **#28 (P3·S·docs)** — two contributor docs that capture knowledge previously
+  only derivable by reading source. **Cold-path pick:** no unattended-runnable hot-path step
+  left (0008's 26c/26d need owner compute, 26e is a sibling-repo `models.yaml` edit, 26f shipped
+  in #30), no user pins, and `docs` is the least-recently-worked category (never appears in the
+  last-7 run history). (1) `docs/conductor-contract.md` — the **formal** LLM contract behind
+  `architecture.md §3`'s overview: exact chat + embeddings call shapes, return values,
+  `model="auto"` + `(tier, function)` routing, `model_used` extraction via `model_extra`, the
+  retry convention, tiers table (T1/T2/T3 + the paid-T3 `allow_remote` guard), and error modes
+  incl. the `_conductor_up()` health-check seam used by the owner-gated eval CLIs (exit-2 abort).
+  (2) `docs/runbooks/adding-an-analysis-module.md` — step-by-step for the next module
+  (roadmap #13–#17): the `run(articles)` shape + shared `utils` helpers, the three-edit
+  `__main__.py` wiring with `_should_run`/`_log_run` (fingerprint-skip for free), optional
+  dashboard injection (`PLACEHOLDERS` + `_EMPTY_DEFAULTS` + template placeholder), and offline
+  testing. Both linked from `docs/INDEX.md` (new "Contributor guides" section) and back-linked
+  from `architecture.md` §2/§3. All facts verified against source
+  (`analysis/{__main__,utils,predictions,semantic_search,psychoprofile,rag_eval}.py`,
+  `viz/build_dashboard.py`, `Makefile`). Pure docs — no code, no conductor, no compute.
+  `make verify` green (**333 passed**, ruff clean, dashboard smoke build). Roadmap #28 is a
+  human-curated file the agent can't edit, so marking it `(done)` is left to the owner.
+
 ### 2026-06-20 — training — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/26
 - Source: plan:ready/0008
