@@ -309,6 +309,31 @@ The email turns the static archive into a living thing — once a week, the fami
 gets a small artifact: dad explaining the present through something he wrote in
 the past.
 
+## "Year in Review" Annual Digest
+
+Once a year, look back over everything Dr. Calhoun published in a single calendar
+year and assemble a keepsake email: how much he wrote, the themes that dominated,
+and a handful of his most notable predictions — in the same Georgia-serif voice as
+the weekly note.
+
+Unlike "On This Day," this is **deterministic and offline**: it reads the analysis
+outputs already on disk (`data/analysis/themes.json` for the year's articles + theme
+labels, `data/analysis/predictions.json` for the notable calls) and makes **no
+conductor, network, or LLM calls** — so it is safe to run unattended.
+
+```bash
+# Build the digest for the latest complete calendar year → data/cron/emails/
+make year-in-review
+
+# A specific year, or a preview that writes nothing
+make year-in-review ARGS="--year 2024"
+make year-in-review ARGS="--dry-run"
+```
+
+The email is saved to `data/cron/emails/year_in_review_YYYY.html`. Delivery stays
+human-in-the-loop via the same Gmail-MCP draft path as On This Day (Decision D9) —
+nothing is sent automatically.
+
 ## The Dashboard
 
 A self-contained HTML file (`dashboard/index.html`) with nine tabs:

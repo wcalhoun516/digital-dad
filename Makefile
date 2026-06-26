@@ -4,7 +4,7 @@ PYTHON := .venv/bin/python
 # ruff findings (broadening the scope is a follow-up roadmap item, #1-3/cleanup).
 LINT_PATHS := tests
 
-.PHONY: scrape manifest-check analyze training dashboard all serve share search on-this-day send-on-this-day adjudicate backfill-verdicts rag-eval voice-eval voice-trials clean test lint fmt verify verify-responsive
+.PHONY: scrape manifest-check analyze training dashboard all serve share search on-this-day send-on-this-day year-in-review adjudicate backfill-verdicts rag-eval voice-eval voice-trials clean test lint fmt verify verify-responsive
 
 scrape:
 	$(PYTHON) -m scraper $(ARGS)
@@ -58,6 +58,12 @@ on-this-day:
 # After reviewing, create the Gmail draft via the Gmail MCP in Claude Code.
 send-on-this-day:
 	$(PYTHON) bin/create_gmail_draft.py --dry-run
+
+# Annual "year in review" keepsake email (roadmap #23). Deterministic + offline (no conductor,
+# no network): builds from data/analysis/{themes,predictions}.json and writes the HTML to
+# data/cron/emails/. ARGS e.g. --year 2024 or --dry-run. Review then draft via the Gmail MCP.
+year-in-review:
+	$(PYTHON) -m analysis.year_in_review $(ARGS)
 
 # Interactive: walk pending predictions, confirm/override the advisory LLM verdict.
 # Human verdicts win and are written back after each ruling (resumable). ARGS e.g. --limit 20.

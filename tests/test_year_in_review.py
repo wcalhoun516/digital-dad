@@ -5,17 +5,20 @@ articles, ranking themes and notable predictions, assembling the digest, and ren
 email. No conductor, network, or Gmail MCP is exercised here.
 """
 
+import datetime
+
 import pytest
 
 from analysis.year_in_review import (
     articles_for_year,
     build_digest,
+    default_year,
     notable_predictions,
     render_html,
     render_markdown,
+    run,
     top_themes,
 )
-
 
 THEME_ARTICLES = [
     {"slug": "a", "title": "Inflation Is Back", "date": "2024-02-01",
@@ -158,6 +161,51 @@ class TestRenderers:
         assert "2024" in md
         assert "Inflation / Cpi / Price" in md
         assert "<html" not in md.lower()
+
+
+class TestDefaultYear:
+    def test_is_the_latest_complete_calendar_year(self):
+        assert default_year(today=datetime.date(2026, 6, 26)) == 2025
+
+    def test_january_first_still_points_at_last_year(self):
+        assert default_year(today=datetime.date(2026, 1, 1)) == 2025
+
+
+class TestRun:
+    def test_writes_html_and_returns_payload(self, tmp_path):
+        result = run(
+            2024,
+            theme_articles=THEME_ARTICLES,
+            predictions=PREDICTIONS,
+            email_dir=tmp_path,
+        )
+        assert result["year"] == 2024
+        assert result["article_count"] == 3
+        assert "2024" in result["subject"]
+        assert "<html" in result["html_body"].lower()
+        written = list(tmp_path.glob("year_in_review_2024.html"))
+        assert len(written) == 1
+        assert written[0].read_text() == result["html_body"]
+
+    def test_dry_run_writes_nothing(self, tmp_path):
+        result = run(
+            2024,
+            theme_articles=THEME_ARTICLES,
+            predictions=PREDICTIONS,
+            email_dir=tmp_path,
+            write=False,
+        )
+        assert result["article_count"] == 3
+        assert list(tmp_path.glob("*.html")) == []
+
+    def test_defaults_year_when_not_given(self, tmp_path):
+        result = run(
+            theme_articles=THEME_ARTICLES,
+            predictions=PREDICTIONS,
+            email_dir=tmp_path,
+            write=False,
+        )
+        assert result["year"] == default_year()
 
 
 if __name__ == "__main__":

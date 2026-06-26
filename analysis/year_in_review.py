@@ -11,8 +11,18 @@ already on disk (`themes.json`, `predictions.json`) and the corpus, and renders 
 unattended. Delivery stays human-in-the-loop via the existing Gmail-MCP draft path (D9).
 """
 
+import argparse
+import datetime
 import html
+import json
 from collections import Counter
+from pathlib import Path
+
+from .utils import ANALYSIS_DIR, DATA_DIR
+
+EMAIL_DIR = DATA_DIR / "cron" / "emails"
+THEMES_PATH = ANALYSIS_DIR / "themes.json"
+PREDICTIONS_PATH = ANALYSIS_DIR / "predictions.json"
 
 # Conviction ordering for ranking notable predictions (most → least committed). Anything
 # outside this list sorts last, so an unexpected confidence label can't outrank a real one.
@@ -195,3 +205,99 @@ def render_markdown(digest: dict) -> str:
             conf = (p.get("confidence_language") or "").title() or "Prediction"
             lines.append(f"- [{conf}] {p.get('claim', '')} — {p.get('article_title', '')}")
     return "\n".join(lines)
+
+
+def default_year(today: datetime.date | None = None) -> int:
+    """The latest *complete* calendar year (this year minus one)."""
+    today = today or datetime.date.today()
+    return today.year - 1
+
+
+def _load_json(path: Path, default):
+    """Load JSON from ``path``; return ``default`` if it is missing or malformed."""
+    path = Path(path)
+    if not path.exists():
+        return default
+    try:
+        return json.loads(path.read_text())
+    except json.JSONDecodeError:
+        return default
+
+
+def _load_theme_articles() -> list[dict]:
+    data = _load_json(THEMES_PATH, {})
+    return data.get("articles", []) if isinstance(data, dict) else []
+
+
+def _load_predictions() -> list[dict]:
+    data = _load_json(PREDICTIONS_PATH, {})
+    return data.get("predictions", []) if isinstance(data, dict) else []
+
+
+def run(
+    year: int | None = None,
+    *,
+    theme_articles: list[dict] | None = None,
+    predictions: list[dict] | None = None,
+    email_dir: Path = EMAIL_DIR,
+    write: bool = True,
+) -> dict:
+    """Build the year-in-review digest and (unless ``write=False``) render it to disk.
+
+    Deterministic and offline: reads ``themes.json`` + ``predictions.json`` (or the injected
+    lists) and writes an HTML email to ``email_dir``. Makes no conductor/network/LLM calls.
+    Delivery stays human-in-the-loop via the Gmail-MCP draft path (D9).
+    """
+    if year is None:
+        year = default_year()
+    if theme_articles is None:
+        theme_articles = _load_theme_articles()
+    if predictions is None:
+        predictions = _load_predictions()
+
+    digest = build_digest(theme_articles, predictions, year)
+    html_body = render_html(digest)
+    markdown = render_markdown(digest)
+    subject = f"{year} — A Year in the Archive"
+
+    email_file = None
+    if write:
+        email_dir = Path(email_dir)
+        email_dir.mkdir(parents=True, exist_ok=True)
+        email_file = email_dir / f"year_in_review_{year}.html"
+        email_file.write_text(html_body)
+
+    return {
+        "year": year,
+        "subject": subject,
+        "article_count": digest["article_count"],
+        "total_words": digest["total_words"],
+        "html_body": html_body,
+        "markdown": markdown,
+        "email_file": str(email_file) if email_file else None,
+    }
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="Year-in-review digest email (roadmap #23).")
+    parser.add_argument(
+        "--year", type=int, default=None,
+        help="Calendar year to review (default: the latest complete year).",
+    )
+    parser.add_argument(
+        "--dry-run", action="store_true",
+        help="Print the digest summary without writing the email to disk.",
+    )
+    args = parser.parse_args(argv)
+
+    result = run(args.year, write=not args.dry_run)
+    print(result["markdown"])
+    if result["email_file"]:
+        print(f"\nEmail saved: {result['email_file']}")
+    else:
+        print("\nDry run — nothing written.")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
