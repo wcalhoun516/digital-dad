@@ -50,12 +50,17 @@ def top_themes(year_articles: list[dict], top_n: int = 5) -> list[dict]:
     return [{"label": label, "count": n} for label, n in ranked[:top_n]]
 
 
-def notable_predictions(predictions: list[dict], year, limit: int = 6) -> list[dict]:
+def notable_predictions(
+    predictions: list[dict], year, limit: int = 6, *, max_per_article: int = 1
+) -> list[dict]:
     """Pick a year's most notable predictions, most-committed first.
 
     Filters ``predictions`` (from ``predictions.json``) to those whose ``article_date`` falls
     in ``year``, ranks by conviction (certain > confident > hedged > other), dedupes identical
     claims, and returns at most ``limit``. Deterministic: ties keep first-seen order.
+
+    ``max_per_article`` caps how many calls a single article can contribute (default 1) so the
+    digest spans his year rather than over-quoting one prolific piece.
     """
     y = str(year)
     in_year = [p for p in predictions if (p.get("article_date") or "")[:4] == y]
@@ -65,11 +70,16 @@ def notable_predictions(predictions: list[dict], year, limit: int = 6) -> list[d
     )
     out: list[dict] = []
     seen: set[str] = set()
+    per_article: Counter = Counter()
     for p in ranked:
         claim = p.get("claim", "")
         if claim in seen:
             continue
+        article_key = p.get("article_slug") or p.get("article_title", "")
+        if article_key and per_article[article_key] >= max_per_article:
+            continue
         seen.add(claim)
+        per_article[article_key] += 1
         out.append(p)
         if len(out) >= limit:
             break

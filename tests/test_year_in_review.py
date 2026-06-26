@@ -117,6 +117,38 @@ class TestNotablePredictions:
     def test_empty_when_no_predictions_in_year(self):
         assert notable_predictions(PREDICTIONS, 2099) == []
 
+    def test_caps_predictions_per_article_by_default(self):
+        # One article hogs three high-conviction claims; the digest should still span
+        # multiple pieces rather than showing the same article three times.
+        hoggy = [
+            {"claim": "Call one.", "confidence_language": "certain",
+             "article_date": "2024-01-01", "article_slug": "big-piece",
+             "article_title": "Big Piece"},
+            {"claim": "Call two.", "confidence_language": "certain",
+             "article_date": "2024-01-01", "article_slug": "big-piece",
+             "article_title": "Big Piece"},
+            {"claim": "Call three.", "confidence_language": "certain",
+             "article_date": "2024-01-01", "article_slug": "big-piece",
+             "article_title": "Big Piece"},
+            {"claim": "Other call.", "confidence_language": "confident",
+             "article_date": "2024-02-02", "article_slug": "other-piece",
+             "article_title": "Other Piece"},
+        ]
+        got = notable_predictions(hoggy, 2024)
+        slugs = [p["article_slug"] for p in got]
+        assert slugs.count("big-piece") == 1
+        assert "other-piece" in slugs
+
+    def test_max_per_article_is_configurable(self):
+        hoggy = [
+            {"claim": "Call one.", "confidence_language": "certain",
+             "article_date": "2024-01-01", "article_slug": "big-piece"},
+            {"claim": "Call two.", "confidence_language": "certain",
+             "article_date": "2024-01-01", "article_slug": "big-piece"},
+        ]
+        got = notable_predictions(hoggy, 2024, max_per_article=2)
+        assert len(got) == 2
+
 
 class TestBuildDigest:
     def test_assembles_the_full_digest(self):
