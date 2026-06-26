@@ -20,7 +20,7 @@ jobs:
           cache-dependency-path: pyproject.toml
 
       - name: Install dev dependencies
-        run: pip install -e ".[dev]"
+        run: pip install -e ".[dev,analyze]"
 
       - name: Check required make targets exist
         run: |
@@ -32,8 +32,8 @@ jobs:
           done
 
       # The Makefile defaults PYTHON to .venv/bin/python (local dev). CI installs into the
-      # runner's interpreter, so override PYTHON=python. Tests import only stdlib-only utils,
-      # so the [dev] extra is sufficient — no network, conductor, or scraped data needed.
+      # runner's interpreter, so override PYTHON=python. The [analyze] extra is required:
+      # tests import analysis modules (e.g. analysis.on_this_day) that depend on numpy.
       - name: Lint
         run: make lint PYTHON=python
 
