@@ -152,6 +152,57 @@ def test_render_narrative_handles_empty():
     assert isinstance(text, str) and text  # graceful, non-empty
 
 
+# --- partial (low-volume) years -------------------------------------------
+
+@pytest.fixture
+def themes_partial_final() -> dict:
+    """Two full years (2020, 2021) plus a thin partial 2022 (1 piece)."""
+    arts = [
+        {"slug": "a", "date": "2020-01-01", "cluster_id": 2, "cluster_label": "Markets"},
+        {"slug": "b", "date": "2020-06-01", "cluster_id": 2, "cluster_label": "Markets"},
+        {"slug": "c", "date": "2020-09-01", "cluster_id": 1, "cluster_label": "Fed"},
+        {"slug": "d", "date": "2021-02-01", "cluster_id": 0, "cluster_label": "Crypto"},
+        {"slug": "e", "date": "2021-03-01", "cluster_id": 0, "cluster_label": "Crypto"},
+        {"slug": "f", "date": "2021-07-01", "cluster_id": 1, "cluster_label": "Fed"},
+        {"slug": "g", "date": "2021-08-01", "cluster_id": 1, "cluster_label": "Fed"},
+        {"slug": "h", "date": "2022-01-15", "cluster_id": 0, "cluster_label": "Crypto"},
+    ]
+    return {
+        "clusters": [
+            {"id": 0, "label": "Crypto"},
+            {"id": 1, "label": "Fed"},
+            {"id": 2, "label": "Markets"},
+        ],
+        "articles": arts,
+    }
+
+
+def test_partial_year_is_flagged(themes_partial_final):
+    by_year = arc.arc_by_year(themes_partial_final)
+    flags = {y["year"]: y["partial"] for y in by_year}
+    assert flags == {"2020": False, "2021": False, "2022": True}
+
+
+def test_overall_uses_last_full_year_for_summary(themes_partial_final):
+    by_year = arc.arc_by_year(themes_partial_final)
+    overall = arc.overall_arc(by_year)
+    # arc summary spans only the full years; the thin 2022 is excluded from the endpoint
+    assert overall["span"] == "2020–2021"
+    assert overall["last_year"] == "2021"
+    assert overall["partial_final_year"] is True
+    assert overall["final_year"]["year"] == "2022"
+    # but every year (incl. the partial one) is still reported in by_year + the totals
+    assert overall["n_years"] == 3
+    assert overall["n_articles"] == 8
+
+
+def test_narrative_caveats_partial_year(themes_partial_final):
+    by_year = arc.arc_by_year(themes_partial_final)
+    overall = arc.overall_arc(by_year)
+    text = arc.render_narrative(by_year, arc.year_over_year_shifts(by_year), overall)
+    assert "So far in 2022" in text
+
+
 # --- build_arc / run -------------------------------------------------------
 
 def test_build_arc_assembles_full_document(themes):

@@ -12,6 +12,7 @@ CLI:
 
 import argparse
 import json
+import statistics
 from collections import defaultdict
 from datetime import date
 
@@ -23,6 +24,9 @@ REPORT_PATH = ANALYSIS_DIR / "intellectual_arc.json"
 
 # How many entries to surface in each rising/fading list per year transition.
 _TOP_N = 3
+# A year is "partial" (e.g. the in-progress current year) when its article count is
+# below this fraction of the median year — too thin to anchor the arc's conclusion.
+_PARTIAL_FRACTION = 0.5
 
 
 def _label_map(themes: dict) -> dict[int, str]:
@@ -80,6 +84,13 @@ def arc_by_year(themes: dict) -> list[dict]:
             "themes": themes_list,
             "dominant": themes_list[0] if themes_list else None,
         })
+
+    # Flag thin years (e.g. the in-progress current year) so they don't anchor the arc.
+    totals = [y["total"] for y in by_year]
+    if totals:
+        threshold = _PARTIAL_FRACTION * statistics.median(totals)
+        for y in by_year:
+            y["partial"] = y["total"] < threshold
     return by_year
 
 
@@ -146,13 +157,23 @@ def year_over_year_shifts(by_year: list[dict]) -> list[dict]:
 
 
 def overall_arc(by_year: list[dict]) -> dict | None:
-    """Summarize the full span: most-grown / most-declined theme, first vs last dominant."""
+    """Summarize the arc across the *full* years; report any partial final year aside.
+
+    The most-grown / most-declined comparison and the first→last endpoints use only the
+    years with enough volume to be representative, so an in-progress current year can't
+    distort the conclusion. Every year (including partial ones) still contributes to
+    ``n_years`` / ``n_articles`` and remains in ``by_year``.
+    """
     if not by_year:
         return None
-    first, last = by_year[0], by_year[-1]
+
+    full = [y for y in by_year if not y.get("partial")] or by_year
+    first = full[0]
+    last_full = full[-1] if len(full) >= 2 else first
+
     first_shares = _shares(first)
-    last_shares = _shares(last)
-    labels = {**_labels_from_year(first), **_labels_from_year(last)}
+    last_shares = _shares(last_full)
+    labels = {**_labels_from_year(first), **_labels_from_year(last_full)}
 
     movers = []
     for cid in set(first_shares) | set(last_shares):
@@ -169,16 +190,28 @@ def overall_arc(by_year: list[dict]) -> dict | None:
     most_grown = max(movers, key=lambda m: (m["delta_share"], -m["cluster_id"]))
     most_declined = min(movers, key=lambda m: (m["delta_share"], m["cluster_id"]))
 
+    final = by_year[-1]
+    partial_final = bool(final.get("partial")) and final is not last_full
+    final_year = None
+    if partial_final:
+        final_year = {
+            "year": final["year"],
+            "total": final["total"],
+            "dominant": final.get("dominant"),
+        }
+
     return {
-        "span": f"{first['year']}–{last['year']}",
+        "span": f"{first['year']}–{last_full['year']}",
         "n_years": len(by_year),
         "n_articles": sum(y["total"] for y in by_year),
         "first_year": first["year"],
-        "last_year": last["year"],
+        "last_year": last_full["year"],
         "first_dominant": first.get("dominant"),
-        "last_dominant": last.get("dominant"),
+        "last_dominant": last_full.get("dominant"),
         "most_grown": most_grown,
         "most_declined": most_declined,
+        "partial_final_year": partial_final,
+        "final_year": final_year,
     }
 
 
@@ -198,13 +231,27 @@ def render_narrative(by_year: list[dict], shifts: list[dict], overall: dict | No
     n_years = overall["n_years"]
     fd = overall["first_dominant"]
     ld = overall["last_dominant"]
+    full_years = {y["year"] for y in by_year if not y.get("partial")}
 
-    if n_years == 1:
-        only = by_year[0]
-        parts.append(
-            f"In {only['year']}, across {only['total']} dated pieces, Dr. Calhoun's "
-            f"writing centered on {fd['label']} ({_pct(fd['share'])} of his output)."
+    def _append_final_note() -> None:
+        fn = overall.get("final_year")
+        if fn and fn.get("dominant"):
+            piece = "piece" if fn["total"] == 1 else "pieces"
+            parts.append(
+                f"So far in {fn['year']} ({fn['total']} {piece}), "
+                f"{fn['dominant']['label']} leads ({_pct(fn['dominant']['share'])})."
+            )
+
+    if overall["first_year"] == overall["last_year"]:
+        first_total = next(
+            (y["total"] for y in by_year if y["year"] == overall["first_year"]), 0
         )
+        parts.append(
+            f"In {overall['first_year']}, across {first_total} dated pieces, Dr. "
+            f"Calhoun's writing centered on {fd['label']} "
+            f"({_pct(fd['share'])} of his output)."
+        )
+        _append_final_note()
         return " ".join(parts)
 
     opener = (f"Across {n_years} years and {n_articles} dated pieces ({span}), "
@@ -235,9 +282,11 @@ def render_narrative(by_year: list[dict], shifts: list[dict], overall: dict | No
             f"({_pct(declined['first_share'])} → {_pct(declined['last_share'])})."
         )
 
-    # Highlight the single sharpest year-to-year emergence, if any.
+    # Highlight the single sharpest year-to-year emergence into a *full* year.
     sharpest = None
     for s in shifts:
+        if s["to_year"] not in full_years:
+            continue
         for e in s["emergent"]:
             if sharpest is None or e["to_share"] > sharpest[1]["to_share"]:
                 sharpest = (s, e)
@@ -248,6 +297,7 @@ def render_narrative(by_year: list[dict], shifts: list[dict], overall: dict | No
             f"to {_pct(e['to_share'])} of that year's writing."
         )
 
+    _append_final_note()
     return " ".join(parts)
 
 
