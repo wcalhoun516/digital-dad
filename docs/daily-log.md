@@ -48,6 +48,29 @@ Format:
 
 <!-- entries below -->
 
+### 2026-06-27 — analysis — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/34
+- Source: roadmap:#13
+- Summary: Roadmap **#13 (P2·M·analysis)** — the "intellectual arc": year-over-year theme
+  evolution + a generated narrative. **Cold-path pick:** plan 0008 has no unattended-runnable
+  step left (26c/26d owner compute, 26e sibling-repo, 26f shipped #30); no pins; **analysis** was
+  absent from the last-7 run history (tie with infra → analysis has a P1, but #11 is already
+  started via `verdict_backfill.py`/#6, so next not-started is #13). New **pure/offline**
+  `analysis/intellectual_arc.py` post-processes `data/analysis/themes.json`: bins articles by
+  year, finds each year's dominant theme + share, computes year-over-year rising/fading/emergent/
+  vanished themes + an overall most-grown/most-declined summary, and renders a deterministic
+  template narrative from the numbers (can't drift from data). No conductor/network/LLM — safe
+  unattended. CLI `python -m analysis.intellectual_arc` (+`--dry-run`), `make intellectual-arc`,
+  README section, committed `intellectual_arc.json` (small derived artifact, no article text).
+  **§8.5 deepen — partial-year guard:** the in-progress 2026 (6 pieces) was anchoring the headline
+  ("Oil broke through to 67%"); years below half the median volume are now flagged `partial`, the
+  arc's endpoints/most-grown use only full years, and the partial year is reported as a
+  clearly-marked "So far in 2026…" note. On real data: focus shifts **2020 Fed/Financial →
+  2025 Tariff/Crypto (80%)**, with 2026 noted aside. TDD'd: +18 tests (`tests/test_intellectual_arc.py`).
+  `make verify` green (**351 passed** = 333 + 18, ruff clean, dashboard build). **Left to owner:**
+  marking roadmap #13 `(done)` (roadmap is human-curated, §11). Future slices: LLM-richened
+  narrative + an Intellectual Arc dashboard tab.
+
 ### 2026-06-20 — training — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/26
 - Source: plan:ready/0008
