@@ -10,9 +10,11 @@ these tests touch no conductor and no network.
 import io
 import urllib.error
 
+from analysis import conductor as conductor_mod
 from analysis.conductor import (
     CONDUCTOR_BASE_URL,
     conductor_up,
+    main,
     require_conductor,
     unreachable_message,
 )
@@ -109,3 +111,13 @@ class TestRequireConductor:
         out = io.StringIO()
         require_conductor(opener=_opener_returning(200), stream=out)
         assert out.getvalue() == ""
+
+
+class TestMainCli:
+    def test_exit_0_when_up(self, monkeypatch):
+        monkeypatch.setattr(conductor_mod, "conductor_up", lambda *a, **k: True)
+        assert main([]) == 0
+
+    def test_exit_2_when_down(self, monkeypatch):
+        monkeypatch.setattr(conductor_mod, "conductor_up", lambda *a, **k: False)
+        assert main([]) == 2

@@ -4,7 +4,7 @@ PYTHON := .venv/bin/python
 # ruff findings (broadening the scope is a follow-up roadmap item, #1-3/cleanup).
 LINT_PATHS := tests
 
-.PHONY: scrape manifest-check analyze training dashboard all serve share search on-this-day send-on-this-day adjudicate backfill-verdicts rag-eval voice-eval voice-trials clean test lint fmt verify verify-responsive
+.PHONY: scrape manifest-check analyze training dashboard all serve share search on-this-day send-on-this-day adjudicate backfill-verdicts rag-eval voice-eval voice-trials conductor-check clean test lint fmt verify verify-responsive
 
 scrape:
 	$(PYTHON) -m scraper $(ARGS)
@@ -91,6 +91,12 @@ voice-eval:
 # article bodies and is gitignored. ARGS e.g. --limit 10 or --seed 42.
 voice-trials:
 	$(PYTHON) -m analysis.voice_trials $(ARGS)
+
+# Preflight the local LLM conductor: exit 0 if it's reachable, 2 if not. The shared
+# health check that every owner-gated eval (rag-eval, voice-eval, backfill-verdicts) uses
+# before spending a paid T3 call. Run it first to confirm the conductor is up.
+conductor-check:
+	$(PYTHON) -m analysis.conductor $(ARGS)
 
 test:
 	$(PYTHON) -m pytest -q
