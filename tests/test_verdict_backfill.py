@@ -240,7 +240,7 @@ class TestCliGate:
 
         path = self._write_preds(tmp_path)
         before = path.read_text()
-        monkeypatch.setattr(vb, "_conductor_up", lambda *a, **k: False)
+        monkeypatch.setattr(vb, "require_conductor", lambda *a, **k: False)
         rc = vb.main(["--input", str(path)])
         assert rc == 2
         assert path.read_text() == before  # untouched — no paid calls, no writeback
@@ -248,6 +248,6 @@ class TestCliGate:
     def test_missing_input_returns_one(self, tmp_path, monkeypatch):
         from analysis import verdict_backfill as vb
 
-        monkeypatch.setattr(vb, "_conductor_up", lambda *a, **k: True)
+        monkeypatch.setattr(vb, "require_conductor", lambda *a, **k: True)
         rc = vb.main(["--input", str(tmp_path / "nope.json")])
         assert rc == 1

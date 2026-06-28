@@ -35,6 +35,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable
 
+from .conductor import require_conductor
 from .utils import DATA_DIR
 
 VALID_VERDICTS = ("vindicated", "wrong", "mixed", "unfalsifiable", "pending")
@@ -220,18 +221,6 @@ def run_backfill(
 # CLI wiring (owner-gated; makes real paid calls — not for automation)
 # --------------------------------------------------------------------------- #
 
-def _conductor_up(url: str = "http://127.0.0.1:8080/v1") -> bool:
-    """Best-effort reachability check for the local conductor."""
-    import urllib.error
-    from urllib.request import urlopen
-
-    try:
-        with urlopen(url.rstrip("/") + "/models", timeout=4) as resp:
-            return resp.status == 200
-    except (urllib.error.URLError, OSError):
-        return False
-
-
 def _conductor_chat(tier: int = 3) -> Callable[[str], str]:
     """A ``chat`` seam backed by the conductor (defaults to paid tier 3)."""
     from .predictions import _call, _get_client
@@ -290,9 +279,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"No predictions file at {args.input}. Run `make analyze` first.")
         return 1
 
-    if not _conductor_up():
-        print("Conductor is unreachable at http://127.0.0.1:8080 — start it before "
-              "running the backfill (this pass makes paid T3 calls). Aborting.")
+    if not require_conductor():
         return 2
 
     data = json.loads(args.input.read_text())
