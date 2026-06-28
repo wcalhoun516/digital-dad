@@ -48,6 +48,33 @@ Format:
 
 <!-- entries below -->
 
+### 2026-06-28 — infra — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/35
+- Source: roadmap:#6
+- Summary: Roadmap **#6 (P2·M·ops)** — conductor preflight as a reusable Python helper.
+  **Cold-path pick:** hot-path plan 0008 has no unattended-runnable step left (26c/26d owner
+  compute, 26e sibling-repo, 26f shipped #30); no pins; **infra** was the least-recently-worked
+  category (absent from last-7 run history; last worked 2026-06-02). Highest-priority
+  not-yet-started infra/ops item is #6. Three modules carried a **byte-for-byte identical**
+  `_conductor_up()` (`analysis/rag_eval.py`, `voice_eval.py`, `verdict_backfill.py`), each with
+  its own hand-written "Conductor is unreachable…" message. New **pure/offline**
+  `analysis/conductor.py` consolidates this into one tested helper: `conductor_up()` (cheap
+  `GET /models` health check, network call behind an injectable `opener` so it's testable
+  offline), `unreachable_message()` (the shared, `extra`-extensible message), and
+  `require_conductor()` (the single call each owner-gated CLI now uses — `if not
+  require_conductor(): return 2`). Refactored all three modules onto it (deleted 3 copies +
+  inline messages; voice_eval keeps its `--style-only` tip via `extra=`). **§8.5 deepen:**
+  `python -m analysis.conductor` CLI + `make conductor-check` (exit 0 up / 2 down) as a
+  standalone scriptable gate, README section. TDD'd: +17 tests (`tests/test_conductor.py`)
+  covering 200/non-200/URLError/OSError, the `/models` endpoint + trailing-slash/timeout
+  handling, message content, `require_conductor` print/stream/silence, and CLI exit codes;
+  updated `test_verdict_backfill`'s gate tests to patch `require_conductor`. `make verify`
+  green (**350 passed** = 333 + 17, ruff clean, dashboard build); `make conductor-check`
+  smoke-run live → exit 0 (conductor up), and exit 2 against a dead port. **Deliberately
+  untouched:** `bin/weekly_run.sh`'s curl (the weekly cron under `bin/**` is off-limits to the
+  agent per §11, and it does an embeddings-specific check + restart, not just reachability).
+  **Left to owner:** marking roadmap #6 `(done)` (roadmap is human-curated, §11).
+
 ### 2026-06-20 — training — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/26
 - Source: plan:ready/0008
