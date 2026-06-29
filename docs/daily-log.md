@@ -48,6 +48,13 @@ Format:
 
 <!-- entries below -->
 
+### 2026-06-29 — infra — skipped
+- PR: (this skip PR)
+- Source: none (backlog full)
+- Summary: **Stood down per §2** — 5 open draft `daily/*` PRs (#30, #31, #32, #34, #35),
+  hitting the ≥5 backlog-full threshold. No new product work started. Opened a `[skipped]
+  backlog full` draft PR and exited clean so unreviewed work doesn't pile up.
+
 ### 2026-06-20 — training — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/26
 - Source: plan:ready/0008
