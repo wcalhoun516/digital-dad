@@ -92,6 +92,114 @@ def test_voice_summary_missing(tmp_path):
     assert g.voice_summary(tmp_path / "nope.json") is None
 
 
+_RAG_WINS = {
+    "n_trials": 8,
+    "sources": {
+        "real": {"win_rate": 0.5, "avg_rank": 1.625},
+        "rag": {"win_rate": 0.5, "avg_rank": 1.5},
+        "finetuned": {"win_rate": 0.0, "avg_rank": 2.875},
+    },
+}
+
+
+def test_voice_verdict_none_until_eval_exists():
+    assert g.voice_verdict(None) is None
+
+
+def test_voice_verdict_none_without_both_candidates():
+    # need both the finetune and rag to make a comparison
+    assert g.voice_verdict({"sources": {"rag": {"win_rate": 0.5}}}) is None
+
+
+def test_voice_verdict_rag_beats_finetune():
+    v = g.voice_verdict(_RAG_WINS)
+    assert v["finetuned_beats_rag"] is False
+    assert v["keep"] == "rag"
+    assert v["winner"] == "rag"          # best win-rate, tie broken by lower avg rank
+    assert v["n_trials"] == 8
+    assert v["finetuned_win_rate"] == 0.0
+    assert v["rag_win_rate"] == 0.5
+    assert v["finetuned_avg_rank"] == 2.875
+    assert v["rag_avg_rank"] == 1.5
+
+
+def test_voice_verdict_winner_breaks_tie_on_avg_rank():
+    # rag and real both 50%; rag has the lower (better) avg rank → rag is winner
+    v = g.voice_verdict(_RAG_WINS)
+    assert v["winner"] == "rag"
+
+
+def test_voice_verdict_finetune_wins_flips_keep():
+    v = g.voice_verdict({
+        "n_trials": 6,
+        "sources": {
+            "rag": {"win_rate": 0.2, "avg_rank": 2.1},
+            "finetuned": {"win_rate": 0.7, "avg_rank": 1.2},
+            "real": {"win_rate": 0.1, "avg_rank": 2.7},
+        },
+    })
+    assert v["finetuned_beats_rag"] is True
+    assert v["keep"] == "finetuned"
+    assert v["winner"] == "finetuned"
+
+
+def test_voice_verdict_tie_winrate_finetune_better_rank_beats_rag():
+    # equal win-rates → the lower avg rank decides; finetune edges it
+    v = g.voice_verdict({
+        "n_trials": 4,
+        "sources": {
+            "rag": {"win_rate": 0.5, "avg_rank": 1.8},
+            "finetuned": {"win_rate": 0.5, "avg_rank": 1.4},
+        },
+    })
+    assert v["finetuned_beats_rag"] is True
+    assert v["keep"] == "finetuned"
+
+
+def test_voice_verdict_tolerates_missing_avg_rank():
+    # An older/partial eval may omit avg_rank; the verdict must still resolve by win-rate
+    # alone and surface None ranks (the banner renders them as "—") without crashing.
+    v = g.voice_verdict({
+        "n_trials": 5,
+        "sources": {
+            "rag": {"win_rate": 0.6},
+            "finetuned": {"win_rate": 0.2},
+        },
+    })
+    assert v["winner"] == "rag"
+    assert v["keep"] == "rag"
+    assert v["finetuned_beats_rag"] is False
+    assert v["finetuned_avg_rank"] is None
+    assert v["rag_avg_rank"] is None
+
+
+def test_voice_verdict_equal_winrate_no_rank_info_keeps_rag():
+    # Equal win-rates with no avg_rank to break the tie must NOT claim the fine-tune won —
+    # absent evidence, retrieval stays the shipped voice (conservative default).
+    v = g.voice_verdict({
+        "sources": {
+            "rag": {"win_rate": 0.5},
+            "finetuned": {"win_rate": 0.5},
+        },
+    })
+    assert v["finetuned_beats_rag"] is False
+    assert v["keep"] == "rag"
+
+
+def test_build_status_includes_verdict_from_voice_eval(tmp_path, monkeypatch):
+    _, adir = _setup_dirs(tmp_path, monkeypatch)
+    (adir / "voice_eval.json").write_text(json.dumps({"summary": _RAG_WINS}))
+    status = g.build_status()
+    assert status["verdict"] is not None
+    assert status["verdict"]["keep"] == "rag"
+
+
+def test_build_status_verdict_none_without_voice_eval(tmp_path, monkeypatch):
+    _setup_dirs(tmp_path, monkeypatch)
+    status = g.build_status()
+    assert status["verdict"] is None
+
+
 def test_pipeline_status_marks_done_then_next_then_upcoming():
     flags = {"dataset": True, "rag": True, "notebook": False,
              "voice_harness": False, "adapter": False, "voice_results": False}
@@ -167,7 +275,7 @@ def test_build_status_shape_dataset_only(tmp_path, monkeypatch):
     status = g.build_status()
     assert set(status) == {
         "dataset", "sample_pair", "qlora", "pipeline", "rag_baseline",
-        "voice_eval", "finetune"}
+        "voice_eval", "finetune", "verdict"}
     assert status["rag_baseline"] is None
     assert status["voice_eval"] is None
     assert status["finetune"] is None                     # no registration marker yet

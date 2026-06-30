@@ -865,6 +865,7 @@ footer {
   <h3 style="color:var(--accent);font-size:1.05em;margin:32px 0 4px">The scoreboard</h3>
   <p class="section-desc">Can the fine-tune beat retrieval on faithfulness <em>and</em> voice?</p>
   <div id="geo-scoreboard" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px"></div>
+  <div id="geo-verdict"></div>
 </div>
 
 <footer>
@@ -966,6 +967,28 @@ const GEO_LLM_DATA = /*__GEO_LLM_DATA__*/;
         <div style="color:var(--text-muted);text-align:center;padding:18px 0">awaiting first voice-eval<br><span style="font-size:0.8em">(unlocks at 26e)</span></div>`;
     }
     sb.innerHTML = card(rag, false) + card(ft, !!(d.voice_eval && d.voice_eval.sources));
+  }
+
+  // The verdict (plan 0008 step 26f): answer the tab's question in plain language.
+  // Prose is assembled from the numbers so a re-run that flips the outcome flips the copy.
+  const vb = document.getElementById('geo-verdict');
+  if (vb && d.verdict) {
+    const v = d.verdict;
+    const ftPct = Math.round((v.finetuned_win_rate || 0) * 100);
+    const ragPct = Math.round((v.rag_win_rate || 0) * 100);
+    const ftRank = v.finetuned_avg_rank == null ? '—' : v.finetuned_avg_rank.toFixed(2);
+    const ragRank = v.rag_avg_rank == null ? '—' : v.rag_avg_rank.toFixed(2);
+    const keepLabel = v.keep === 'finetuned' ? 'the Geo-LLM fine-tune' : 'Ask Dad (retrieval)';
+    const headline = v.finetuned_beats_rag
+      ? 'The fine-tune edges out retrieval'
+      : 'Retrieval still wins';
+    const closing = v.finetuned_beats_rag
+      ? `So ${keepLabel} carries his voice — though the fine-tune stays experimental until faithfulness is re-checked.`
+      : `So ${keepLabel} stays the trustworthy voice; the fine-tune remains an experiment, not the shipped answer.`;
+    vb.innerHTML = `<div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:8px;padding:18px 22px;margin-top:16px">
+      <div style="font-family:var(--mono);font-size:0.75em;color:var(--accent);letter-spacing:0.05em;margin-bottom:8px">THE VERDICT &middot; 26f</div>
+      <div style="font-size:1.05em;color:var(--text);margin-bottom:8px">${esc(headline)}</div>
+      <p style="margin:0;font-size:0.9em;color:var(--text-muted);max-width:64ch">Across ${fmt(v.n_trials)} blind trials judged for voice, the Geo-LLM fine-tune won ${ftPct}% (avg rank ${ftRank}) against Ask Dad's ${ragPct}% (avg rank ${ragRank}). ${esc(closing)}</p></div>`;
   }
 })();
 </script>
