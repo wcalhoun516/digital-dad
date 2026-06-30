@@ -50,6 +50,8 @@ ran against; on the next run a module is **skipped if the fingerprint is unchang
 `utils.py` — shared `load_manifest()`, `load_articles()`, `clean_text()` (strips Forbes
 boilerplate), `chunk_text()` (sentence-aware), `save_analysis()`.
 
+> Adding a module? See the runbook: [`runbooks/adding-an-analysis-module.md`](runbooks/adding-an-analysis-module.md).
+
 `on_this_day.py` — not part of the default analyze chain; run via `make on-this-day`. Pulls
 RSS headlines, embeds them, finds the best-matching archive article by cosine similarity,
 generates a 2–3 sentence intro in Dr. Calhoun's voice (conductor T2), renders an HTML email
@@ -71,6 +73,9 @@ Code uses the `openai` Python SDK (or `fetch` from the browser) pointed at that 
   default), T3 OpenRouter (paid; selected with `--remote` or the dashboard tier toggle).
 
 No API keys in this repo; T3's `OPENROUTER_API_KEY` lives in the conductor's own `.env`.
+
+> Full reference (exact signatures, return shapes, error/retry behavior, health check):
+> [`conductor-contract.md`](conductor-contract.md).
 
 ## 4. Presentation
 

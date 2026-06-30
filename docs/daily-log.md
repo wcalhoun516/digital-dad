@@ -48,33 +48,28 @@ Format:
 
 <!-- entries below -->
 
-### 2026-06-24 — dashboard — ready-for-review
-- PR: https://github.com/wcalhoun516/digital-dad/pull/30
-- Source: plan:ready/0008
-- Summary: Plan 0008 **26f, made visible to the family.** The owner has now run the real
-  fine-tune + 26d voice eval (`data/analysis/voice_eval.json`, `geo_llm.json`; verdict recorded
-  as ADR **D15**). But the dashboard's Geo-LLM tab asked *"Can the fine-tune beat retrieval?"*
-  and only showed raw scoreboard numbers — it never stated the **answer**. This slice surfaces
-  the conclusion where the family can see it. (1) New pure helper
-  `analysis.geo_llm_status.voice_verdict()` reduces the 26d `sources` block to a structured,
-  data-driven comparison (`winner`, `keep`, `finetuned_beats_rag`, win-rates + avg-ranks);
-  returns None until an eval with both `finetuned` and `rag` exists, so the banner stays hidden
-  mid-experiment. Wired into `build_status()` as a new `verdict` key (+ build-fallback dict in
-  `viz/build_dashboard.py`). (2) Dashboard Geo-LLM tab grows a **"THE VERDICT · 26f"** banner;
-  its prose is **assembled from the numbers** (not hardcoded), so a re-run that flips the outcome
-  flips the copy. On the real data it renders *"Retrieval still wins — the fine-tune won 0% (avg
-  rank 2.88) vs Ask Dad's 50% (1.50); Ask Dad stays the trustworthy voice"* — matching D15.
-  Pure/offline: no conductor, no compute, no sibling-repo edits. §8.5 deepen: edge-case guards so
-  a partial/older eval (missing `avg_rank`, or a win-rate tie with no rank to break it) still
-  resolves conservatively — never claims a fine-tune win without evidence — mirroring this
-  module's existing "tolerate a malformed marker" robustness. TDD'd: +14 tests
-  (`test_geo_llm_status.py` verdict logic; new `test_dashboard_geo_verdict.py` banner structure).
-  `make verify` green (**346 passed**, ruff clean, dashboard smoke build); confirmed the verdict
-  block + banner inline into the built `index.html`. **Not done (deliberately left to the owner):**
-  declaring plan 0008 complete / moving it out of `ready/` — step 26e (register in the conductor)
-  is intentionally *not* taken per D15, and whether to close the flagship track vs. leave 26e open
-  for a future revival is a human call. `geo_llm.json`/`voice_eval.json` stay uncommitted
-  (generated; embed article text).
+### 2026-06-25 — docs — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/31
+- Source: roadmap:#28
+- Summary: Roadmap **#28 (P3·S·docs)** — two contributor docs that capture knowledge previously
+  only derivable by reading source. **Cold-path pick:** no unattended-runnable hot-path step
+  left (0008's 26c/26d need owner compute, 26e is a sibling-repo `models.yaml` edit, 26f shipped
+  in #30), no user pins, and `docs` is the least-recently-worked category (never appears in the
+  last-7 run history). (1) `docs/conductor-contract.md` — the **formal** LLM contract behind
+  `architecture.md §3`'s overview: exact chat + embeddings call shapes, return values,
+  `model="auto"` + `(tier, function)` routing, `model_used` extraction via `model_extra`, the
+  retry convention, tiers table (T1/T2/T3 + the paid-T3 `allow_remote` guard), and error modes
+  incl. the `_conductor_up()` health-check seam used by the owner-gated eval CLIs (exit-2 abort).
+  (2) `docs/runbooks/adding-an-analysis-module.md` — step-by-step for the next module
+  (roadmap #13–#17): the `run(articles)` shape + shared `utils` helpers, the three-edit
+  `__main__.py` wiring with `_should_run`/`_log_run` (fingerprint-skip for free), optional
+  dashboard injection (`PLACEHOLDERS` + `_EMPTY_DEFAULTS` + template placeholder), and offline
+  testing. Both linked from `docs/INDEX.md` (new "Contributor guides" section) and back-linked
+  from `architecture.md` §2/§3. All facts verified against source
+  (`analysis/{__main__,utils,predictions,semantic_search,psychoprofile,rag_eval}.py`,
+  `viz/build_dashboard.py`, `Makefile`). Pure docs — no code, no conductor, no compute.
+  `make verify` green (**333 passed**, ruff clean, dashboard smoke build). Roadmap #28 is a
+  human-curated file the agent can't edit, so marking it `(done)` is left to the owner.
 
 ### 2026-06-20 — training — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/26
