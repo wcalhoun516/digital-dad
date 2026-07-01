@@ -54,6 +54,33 @@ def parse_article_url(url: str) -> dict | None:
     }
 
 
+def contiguous_month_ranges(months: list[str]) -> list[str]:
+    """Group ``YYYY-MM`` strings into consecutive-calendar-month ranges.
+
+    A lone month renders bare (``"2021-03"``); a run of consecutive months renders as
+    ``"start..end"`` (``"2021-12..2022-01"`` across a year boundary). Input is sorted and
+    de-duplicated first, so callers needn't pre-sort.
+    """
+    def index(month: str) -> int:
+        y, m = month.split("-")
+        return int(y) * 12 + (int(m) - 1)
+
+    ordered = sorted(set(months))
+    ranges: list[str] = []
+    start = prev = None
+    for month in ordered:
+        if start is None:
+            start = prev = month
+        elif index(month) == index(prev) + 1:
+            prev = month
+        else:
+            ranges.append(start if start == prev else f"{start}..{prev}")
+            start = prev = month
+    if start is not None:
+        ranges.append(start if start == prev else f"{start}..{prev}")
+    return ranges
+
+
 def audit_coverage(manifest_articles: list[dict], discovered_urls: list[str]) -> dict:
     """Compare what we *have* against a *discovered* footprint and report the gap.
 
@@ -108,6 +135,7 @@ def audit_coverage(manifest_articles: list[dict], discovered_urls: list[str]) ->
         by_month[month] = {"have": h, "discovered": disc, "missing": miss}
 
     gap_months = sorted(m for m, c in by_month.items() if c["missing"] > 0)
+    missing_ranges = contiguous_month_ranges(gap_months)
 
     discovered_count = len(discovered)
     matched_count = len(discovered_keys & have_keys)
@@ -125,6 +153,7 @@ def audit_coverage(manifest_articles: list[dict], discovered_urls: list[str]) ->
         "extra_urls": extra_urls,
         "by_month": by_month,
         "gap_months": gap_months,
+        "missing_ranges": missing_ranges,
         "unparsed_manifest_urls": sorted(set(unparsed_manifest)),
         "unparsed_discovered_urls": sorted(set(unparsed_discovered)),
         "ok": missing_count == 0,
@@ -150,7 +179,7 @@ def format_report(report: dict) -> str:
     else:
         lines.append(
             f"  MISSING {report['missing_count']} article(s) across "
-            f"{len(report['gap_months'])} month(s): {', '.join(report['gap_months'])}"
+            f"{len(report['gap_months'])} month(s): {', '.join(report['missing_ranges'])}"
         )
         for miss in report["missing_urls"]:
             lines.append(f"    {miss['date']}  {miss['slug']}  ({miss['url']})")

@@ -3,12 +3,12 @@
 import json
 
 from scraper.coverage_audit import (
-    run,
-    format_report,
     audit_coverage,
+    contiguous_month_ranges,
+    format_report,
     parse_article_url,
+    run,
 )
-
 
 AUTHOR = "https://www.forbes.com/sites/georgecalhoun"
 
@@ -206,3 +206,35 @@ class TestRun:
         assert rc == 0
         assert data["discovered_count"] == 2
         assert data["missing_count"] == 1
+
+
+class TestMonthRanges:
+    def test_single_month_renders_bare(self):
+        assert contiguous_month_ranges(["2021-03"]) == ["2021-03"]
+
+    def test_consecutive_months_collapse_to_a_range(self):
+        assert contiguous_month_ranges(["2021-03", "2021-04", "2021-05"]) == ["2021-03..2021-05"]
+
+    def test_year_boundary_is_consecutive(self):
+        assert contiguous_month_ranges(["2021-12", "2022-01"]) == ["2021-12..2022-01"]
+
+    def test_gaps_split_ranges_and_input_is_sorted(self):
+        got = contiguous_month_ranges(["2022-01", "2021-05", "2021-03", "2021-04"])
+        assert got == ["2021-03..2021-05", "2022-01"]
+
+    def test_empty_is_empty(self):
+        assert contiguous_month_ranges([]) == []
+
+
+class TestMissingRangesInReport:
+    def test_report_groups_gap_months_into_ranges(self):
+        arts = _manifest_articles()
+        discovered = [_url("2021-03-02", "a"), _url("2021-04-09", "b"), _url("2021-07-01", "c")]
+        report = audit_coverage(arts, discovered)
+        assert report["missing_ranges"] == ["2021-03..2021-04", "2021-07"]
+
+    def test_format_report_shows_ranges(self):
+        arts = _manifest_articles()
+        discovered = [_url("2021-03-02", "a"), _url("2021-04-09", "b")]
+        text = format_report(audit_coverage(arts, discovered))
+        assert "2021-03..2021-04" in text
