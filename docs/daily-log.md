@@ -48,6 +48,27 @@ Format:
 
 <!-- entries below -->
 
+### 2026-07-01 — scraper — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/38
+- Source: roadmap:#9
+- Summary: Roadmap **#9 (P2·M·scraper)** — coverage audit vs the author index. New
+  `scraper/coverage_audit.py` is the outward-looking mirror of `manifest_check` (#8): it compares
+  the URLs we **have** (`data/manifest.json`) against a **discovered** set (the author's full
+  Forbes footprint via Wayback CDX) and reports what's missing and *when* — `missing_urls`,
+  `by_month` `{have, discovered, missing}`, `gap_months`, and contiguous `missing_ranges`
+  (`2021-03..2021-04`). Pure `audit_coverage(manifest_articles, discovered_urls)` +
+  `parse_article_url` (scheme-/www-/query-insensitive canonical keys from the
+  `/YYYY/MM/DD/slug/` path) + `contiguous_month_ranges` + `format_report`, all TDD'd (31 new
+  tests, offline). Live Wayback discovery sits behind an injectable seam (`discover` callable /
+  `--urls-file`) so tests stay network-free. `run()` + `python -m scraper.coverage_audit` CLI
+  mirrors `manifest_check`: report-only exit 0 by default, `--strict` gates CI, `--json` for
+  machines. Added `make coverage-audit` + a `scraper/README.md` section. **Cold-path pick:**
+  no ready plan, no user pins, and `scraper` was the least-recently-worked non-piled-on category
+  with a not-started P2 (`docs` #28 already merged in #31; `analysis`/`family` had fresh open
+  PRs #34/#32). Live smoke: 264 CDX URLs → 176 keys vs manifest's 176 → **100% coverage** today,
+  corroborating #8's duplicate-slug finding. `make verify` green (377 passed, ruff clean,
+  dashboard builds).
+
 ### 2026-06-25 — docs — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/31
 - Source: roadmap:#28
