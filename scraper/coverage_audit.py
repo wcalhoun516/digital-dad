@@ -10,8 +10,16 @@ discovered URLs) so it is unit-testable offline with no network. ``run`` wires i
 Wayback discovery for ``python -m scraper.coverage_audit`` / ``make coverage-audit``.
 """
 
+import argparse
+import json
 import re
+import sys
+from collections.abc import Callable
+from pathlib import Path
 from urllib.parse import urlparse
+
+DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+MANIFEST_PATH = DATA_DIR / "manifest.json"
 
 # Forbes author URLs encode the publish date + slug in the path:
 #   /sites/georgecalhoun/YYYY/MM/DD/some-slug/
@@ -121,3 +129,132 @@ def audit_coverage(manifest_articles: list[dict], discovered_urls: list[str]) ->
         "unparsed_discovered_urls": sorted(set(unparsed_discovered)),
         "ok": missing_count == 0,
     }
+
+
+def format_report(report: dict) -> str:
+    """Render a coverage report as a human-readable, multi-line summary."""
+    pct = report["coverage_ratio"] * 100
+    lines = [
+        f"Coverage: {report['matched_count']}/{report['discovered_count']} discovered "
+        f"articles present ({pct:.1f}%); manifest holds {report['have_count']}.",
+    ]
+
+    if report["discovered_count"] == 0:
+        lines.append(
+            "  0 discovered — no URLs discovered to compare against "
+            "(discovery source returned nothing; coverage unknown)."
+        )
+
+    if report["missing_count"] == 0:
+        lines.append("  No missing articles — archive is complete vs the discovered set.")
+    else:
+        lines.append(
+            f"  MISSING {report['missing_count']} article(s) across "
+            f"{len(report['gap_months'])} month(s): {', '.join(report['gap_months'])}"
+        )
+        for miss in report["missing_urls"]:
+            lines.append(f"    {miss['date']}  {miss['slug']}  ({miss['url']})")
+
+    if report["extra_count"]:
+        lines.append(
+            f"  {report['extra_count']} manifest article(s) not in the discovered set "
+            "(may be discovery gaps, not corpus errors)."
+        )
+    if report["unparsed_manifest_urls"]:
+        lines.append(
+            f"  {len(report['unparsed_manifest_urls'])} manifest URL(s) did not match the "
+            "author-article pattern (skipped)."
+        )
+    if report["unparsed_discovered_urls"]:
+        lines.append(
+            f"  {len(report['unparsed_discovered_urls'])} discovered URL(s) did not match the "
+            "author-article pattern (skipped)."
+        )
+    return "\n".join(lines)
+
+
+def load_manifest_articles(path: Path) -> list[dict]:
+    """Load the ``articles`` list from a manifest JSON file."""
+    return json.loads(Path(path).read_text()).get("articles", [])
+
+
+def read_urls_file(path: Path) -> list[str]:
+    """Read a discovery URL list from a file: one URL per line, ``#`` comments/blanks ignored."""
+    urls: list[str] = []
+    for line in Path(path).read_text().splitlines():
+        line = line.strip()
+        if line and not line.startswith("#"):
+            urls.append(line)
+    return urls
+
+
+def _default_discover() -> list[str]:
+    """Live discovery source: the author's full footprint via the Wayback CDX index."""
+    from .wayback import discover_urls_from_wayback
+
+    return discover_urls_from_wayback()
+
+
+def run(
+    manifest_path: Path = MANIFEST_PATH,
+    *,
+    discover: Callable[[], list[str]] | None = None,
+    urls_file: Path | None = None,
+    as_json: bool = False,
+    strict: bool = False,
+) -> int:
+    """Audit the manifest's coverage against a discovered author footprint and print it.
+
+    Discovery source precedence: ``urls_file`` (offline list) → ``discover`` callable →
+    live Wayback CDX. Returns 0 normally; 1 when the manifest is missing, or when ``strict``
+    is set and articles are missing (so it can gate CI).
+    """
+    manifest_path = Path(manifest_path)
+    if not manifest_path.exists():
+        print(f"No manifest at {manifest_path}. Run `make scrape` first.")
+        return 1
+
+    if urls_file is not None:
+        discovered = read_urls_file(urls_file)
+    else:
+        discovered = (discover or _default_discover)()
+
+    report = audit_coverage(load_manifest_articles(manifest_path), discovered)
+    if as_json:
+        print(json.dumps(report, indent=2, ensure_ascii=False))
+    else:
+        print(format_report(report))
+
+    if strict and not report["ok"]:
+        return 1
+    return 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(
+        prog="python -m scraper.coverage_audit",
+        description="Audit corpus coverage vs the author's full Forbes footprint (roadmap #9).",
+    )
+    parser.add_argument(
+        "--manifest", type=Path, default=MANIFEST_PATH,
+        help="Path to manifest.json (default: data/manifest.json).",
+    )
+    parser.add_argument(
+        "--urls-file", type=Path, default=None,
+        help="Read the discovered URL set from a file (one per line) instead of querying "
+             "Wayback — offline / reproducible input.",
+    )
+    parser.add_argument(
+        "--json", action="store_true", dest="as_json",
+        help="Emit the report as JSON instead of a human summary.",
+    )
+    parser.add_argument(
+        "--strict", action="store_true",
+        help="Exit non-zero when articles are missing (for CI).",
+    )
+    args = parser.parse_args(argv)
+    return run(args.manifest, urls_file=args.urls_file, as_json=args.as_json, strict=args.strict)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

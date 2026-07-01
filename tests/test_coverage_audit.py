@@ -1,6 +1,10 @@
 """Tests for scraper/coverage_audit.py — coverage audit vs the author index (roadmap #9)."""
 
+import json
+
 from scraper.coverage_audit import (
+    run,
+    format_report,
     audit_coverage,
     parse_article_url,
 )
@@ -132,3 +136,73 @@ class TestAuditCoverage:
         assert report["ok"] is True
         assert report["missing_count"] == 0
         assert report["coverage_ratio"] == 1.0
+
+
+class TestFormatReport:
+    def test_full_coverage_summary(self):
+        arts = _manifest_articles(("2020-05-26", "a"))
+        report = audit_coverage(arts, [_url("2020-05-26", "a")])
+        text = format_report(report)
+        assert "1/1" in text
+        assert "100" in text  # 100% coverage
+        assert "no missing" in text.lower() or "complete" in text.lower()
+
+    def test_missing_summary_lists_gap_months_and_urls(self):
+        arts = _manifest_articles(("2020-05-26", "a"))
+        discovered = [_url("2020-05-26", "a"), _url("2020-07-01", "gap-article")]
+        text = format_report(audit_coverage(arts, discovered))
+        assert "2020-07" in text
+        assert "gap-article" in text
+
+    def test_report_notes_when_discovery_empty(self):
+        text = format_report(audit_coverage(_manifest_articles(("2020-05-26", "a")), []))
+        assert "0 discovered" in text.lower() or "no urls discovered" in text.lower()
+
+
+def _write_manifest(tmp_path, articles):
+    mp = tmp_path / "manifest.json"
+    mp.write_text(json.dumps({"total_articles": len(articles), "articles": articles}))
+    return mp
+
+
+class TestRun:
+    def test_full_coverage_returns_zero(self, tmp_path, capsys):
+        arts = _manifest_articles(("2020-05-26", "a"))
+        mp = _write_manifest(tmp_path, arts)
+        rc = run(mp, discover=lambda: [_url("2020-05-26", "a")])
+        assert rc == 0
+        assert "100" in capsys.readouterr().out
+
+    def test_non_strict_returns_zero_even_with_gaps(self, tmp_path, capsys):
+        arts = _manifest_articles(("2020-05-26", "a"))
+        mp = _write_manifest(tmp_path, arts)
+        rc = run(mp, discover=lambda: [_url("2020-05-26", "a"), _url("2020-07-01", "gap")])
+        assert rc == 0
+
+    def test_strict_returns_one_on_gaps(self, tmp_path, capsys):
+        arts = _manifest_articles(("2020-05-26", "a"))
+        mp = _write_manifest(tmp_path, arts)
+        rc = run(mp, discover=lambda: [_url("2020-07-01", "gap")], strict=True)
+        assert rc == 1
+
+    def test_missing_manifest_returns_one(self, tmp_path):
+        assert run(tmp_path / "absent.json", discover=lambda: []) == 1
+
+    def test_json_output_is_machine_readable(self, tmp_path, capsys):
+        arts = _manifest_articles(("2020-05-26", "a"))
+        mp = _write_manifest(tmp_path, arts)
+        run(mp, discover=lambda: [_url("2020-07-01", "gap")], as_json=True)
+        data = json.loads(capsys.readouterr().out)
+        assert data["missing_count"] == 1
+        assert data["ok"] is False
+
+    def test_urls_file_is_used_as_discovery_source(self, tmp_path, capsys):
+        arts = _manifest_articles(("2020-05-26", "a"))
+        mp = _write_manifest(tmp_path, arts)
+        uf = tmp_path / "urls.txt"
+        uf.write_text(f"{_url('2020-05-26', 'a')}\n# a comment\n{_url('2020-07-01', 'gap')}\n\n")
+        rc = run(mp, urls_file=uf, as_json=True)
+        data = json.loads(capsys.readouterr().out)
+        assert rc == 0
+        assert data["discovered_count"] == 2
+        assert data["missing_count"] == 1
