@@ -48,6 +48,15 @@ Format:
 
 <!-- entries below -->
 
+### 2026-07-02 — infra — skipped
+- PR: (skip PR — backlog full)
+- Source: none
+- Summary: Stood down per §2 — **6 open `daily/*` PRs** (≥5 threshold): #38 (coverage audit),
+  #37 & #36 (prior backlog-full skips), #35 (conductor preflight), #34 (intellectual arc),
+  #32 (year-in-review). No new work started. Owner needs to review/merge the queue to unblock
+  future runs; two of the six are already `[skipped]` markers, so the reviewable backlog is
+  really four substantive PRs (#38/#35/#34/#32).
+
 ### 2026-06-25 — docs — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/31
 - Source: roadmap:#28
