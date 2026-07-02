@@ -16,6 +16,15 @@ This directory is the durable context for any Claude (or human) session working 
    This is the **source of truth** for what to build next. Human-curated; the daily agent
    reads it but never edits it.
 
+## Contributor guides
+
+- **[`conductor-contract.md`](conductor-contract.md)** — the formal LLM contract: chat +
+  embeddings call shapes, tiers/routing, `model_used`, error modes & the conductor health
+  check. The reference behind `architecture.md` §3.
+- **[`runbooks/adding-an-analysis-module.md`](runbooks/adding-an-analysis-module.md)** —
+  step-by-step for adding a module to the `analysis/` pipeline (shape, `__main__` wiring,
+  fingerprint-skip, dashboard injection, tests).
+
 ## Operational
 
 - **[`daily-log.md`](daily-log.md)** — the daily product-dev agent's working memory:
