@@ -113,6 +113,25 @@ Articles are saved as JSON with title, date, body text, tags, and word count.
   by cosine similarity, generates a 2-3 sentence intro in Dr. Calhoun's voice,
   and saves the email for delivery via Gmail draft
 
+## Intellectual Arc — theme evolution over time
+
+A deterministic post-processing pass over the theme clustering that traces *how Dad's
+focus shifted year over year*. It reads `data/analysis/themes.json` (no LLM, no network)
+and derives, for each calendar year, the dominant theme and its share; the
+year-over-year rises, fades, emergent, and vanished themes; an overall most-grown /
+most-declined summary; and a plain-prose narrative assembled from those numbers (so the
+copy can never drift from the data).
+
+```bash
+make analyze ARGS="themes"     # build the theme clusters first (if not already)
+make intellectual-arc          # write data/analysis/intellectual_arc.json
+make intellectual-arc ARGS="--dry-run"   # print the narrative, write nothing
+```
+
+Output `data/analysis/intellectual_arc.json` has `overall`, `by_year`, `shifts`, and a
+`narrative` string. A future slice can richen the narrative through the conductor and
+surface the arc as a dashboard panel.
+
 ## Ask Dad — RAG Chat
 
 The centerpiece interactive feature. Ask a question about any topic Dad has
@@ -308,6 +327,31 @@ Gmail draft via the Gmail MCP and sends it from Gmail — a human stays in the l
 The email turns the static archive into a living thing — once a week, the family
 gets a small artifact: dad explaining the present through something he wrote in
 the past.
+
+## "Year in Review" Annual Digest
+
+Once a year, look back over everything Dr. Calhoun published in a single calendar
+year and assemble a keepsake email: how much he wrote, the themes that dominated,
+and a handful of his most notable predictions — in the same Georgia-serif voice as
+the weekly note.
+
+Unlike "On This Day," this is **deterministic and offline**: it reads the analysis
+outputs already on disk (`data/analysis/themes.json` for the year's articles + theme
+labels, `data/analysis/predictions.json` for the notable calls) and makes **no
+conductor, network, or LLM calls** — so it is safe to run unattended.
+
+```bash
+# Build the digest for the latest complete calendar year → data/cron/emails/
+make year-in-review
+
+# A specific year, or a preview that writes nothing
+make year-in-review ARGS="--year 2024"
+make year-in-review ARGS="--dry-run"
+```
+
+The email is saved to `data/cron/emails/year_in_review_YYYY.html`. Delivery stays
+human-in-the-loop via the same Gmail-MCP draft path as On This Day (Decision D9) —
+nothing is sent automatically.
 
 ## The Dashboard
 

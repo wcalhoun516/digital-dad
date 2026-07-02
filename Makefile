@@ -66,6 +66,12 @@ on-this-day:
 send-on-this-day:
 	$(PYTHON) bin/create_gmail_draft.py --dry-run
 
+# Annual "year in review" keepsake email (roadmap #23). Deterministic + offline (no conductor,
+# no network): builds from data/analysis/{themes,predictions}.json and writes the HTML to
+# data/cron/emails/. ARGS e.g. --year 2024 or --dry-run. Review then draft via the Gmail MCP.
+year-in-review:
+	$(PYTHON) -m analysis.year_in_review $(ARGS)
+
 # Interactive: walk pending predictions, confirm/override the advisory LLM verdict.
 # Human verdicts win and are written back after each ruling (resumable). ARGS e.g. --limit 20.
 adjudicate:
@@ -76,6 +82,13 @@ adjudicate:
 # incremental. ARGS e.g. --limit 20 or --evidence-file evidence.json. Adjudicate afterwards.
 backfill-verdicts:
 	$(PYTHON) -m analysis.verdict_backfill $(ARGS)
+
+# Trace the "intellectual arc": year-over-year theme evolution derived from
+# data/analysis/themes.json (run `make analyze` first). Pure/offline — no conductor,
+# no network — so it's safe in automation. Writes data/analysis/intellectual_arc.json;
+# ARGS=--dry-run prints the narrative without writing.
+intellectual-arc:
+	$(PYTHON) -m analysis.intellectual_arc $(ARGS)
 
 # RAG faithfulness eval baseline for Ask Dad (plan 0007). Owner-gated: the generation +
 # judge passes make conductor calls (judge defaults to paid T3), so it refuses to run if
