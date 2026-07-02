@@ -59,6 +59,12 @@ on-this-day:
 send-on-this-day:
 	$(PYTHON) bin/create_gmail_draft.py --dry-run
 
+# Annual "year in review" keepsake email (roadmap #23). Deterministic + offline (no conductor,
+# no network): builds from data/analysis/{themes,predictions}.json and writes the HTML to
+# data/cron/emails/. ARGS e.g. --year 2024 or --dry-run. Review then draft via the Gmail MCP.
+year-in-review:
+	$(PYTHON) -m analysis.year_in_review $(ARGS)
+
 # Interactive: walk pending predictions, confirm/override the advisory LLM verdict.
 # Human verdicts win and are written back after each ruling (resumable). ARGS e.g. --limit 20.
 adjudicate:
