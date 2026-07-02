@@ -4,7 +4,7 @@ PYTHON := .venv/bin/python
 # ruff findings (broadening the scope is a follow-up roadmap item, #1-3/cleanup).
 LINT_PATHS := tests
 
-.PHONY: scrape manifest-check analyze training dashboard all serve share search on-this-day send-on-this-day year-in-review adjudicate backfill-verdicts rag-eval voice-eval voice-trials clean test lint fmt verify verify-responsive
+.PHONY: scrape manifest-check analyze training dashboard all serve share search on-this-day send-on-this-day adjudicate backfill-verdicts intellectual-arc rag-eval voice-eval voice-trials clean test lint fmt verify verify-responsive
 
 scrape:
 	$(PYTHON) -m scraper $(ARGS)
@@ -75,6 +75,13 @@ adjudicate:
 # incremental. ARGS e.g. --limit 20 or --evidence-file evidence.json. Adjudicate afterwards.
 backfill-verdicts:
 	$(PYTHON) -m analysis.verdict_backfill $(ARGS)
+
+# Trace the "intellectual arc": year-over-year theme evolution derived from
+# data/analysis/themes.json (run `make analyze` first). Pure/offline — no conductor,
+# no network — so it's safe in automation. Writes data/analysis/intellectual_arc.json;
+# ARGS=--dry-run prints the narrative without writing.
+intellectual-arc:
+	$(PYTHON) -m analysis.intellectual_arc $(ARGS)
 
 # RAG faithfulness eval baseline for Ask Dad (plan 0007). Owner-gated: the generation +
 # judge passes make conductor calls (judge defaults to paid T3), so it refuses to run if

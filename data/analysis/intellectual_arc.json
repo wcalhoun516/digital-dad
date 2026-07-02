@@ -1,0 +1,763 @@
+{
+  "generated": "2026-06-27",
+  "overall": {
+    "span": "2020–2025",
+    "n_years": 7,
+    "n_articles": 197,
+    "first_year": "2020",
+    "last_year": "2025",
+    "first_dominant": {
+      "cluster_id": 2,
+      "label": "Fed / Financial / Wireless",
+      "count": 17,
+      "share": 0.378
+    },
+    "last_dominant": {
+      "cluster_id": 3,
+      "label": "Tariff / Tariffs / Crypto",
+      "count": 12,
+      "share": 0.8
+    },
+    "most_grown": {
+      "cluster_id": 3,
+      "label": "Tariff / Tariffs / Crypto",
+      "first_share": 0.022,
+      "last_share": 0.8,
+      "delta_share": 0.778
+    },
+    "most_declined": {
+      "cluster_id": 2,
+      "label": "Fed / Financial / Wireless",
+      "first_share": 0.378,
+      "last_share": 0.067,
+      "delta_share": -0.311
+    },
+    "partial_final_year": true,
+    "final_year": {
+      "year": "2026",
+      "total": 6,
+      "dominant": {
+        "cluster_id": 4,
+        "label": "Oil / Venezuela / Barrel",
+        "count": 4,
+        "share": 0.667
+      }
+    }
+  },
+  "by_year": [
+    {
+      "year": "2020",
+      "total": 45,
+      "themes": [
+        {
+          "cluster_id": 2,
+          "label": "Fed / Financial / Wireless",
+          "count": 17,
+          "share": 0.378
+        },
+        {
+          "cluster_id": 0,
+          "label": "Tesla / Shares / Share",
+          "count": 8,
+          "share": 0.178
+        },
+        {
+          "cluster_id": 1,
+          "label": "Ma / Ant / Jack",
+          "count": 8,
+          "share": 0.178
+        },
+        {
+          "cluster_id": 7,
+          "label": "Huawei / Ftx / Chinese",
+          "count": 8,
+          "share": 0.178
+        },
+        {
+          "cluster_id": 3,
+          "label": "Tariff / Tariffs / Crypto",
+          "count": 1,
+          "share": 0.022
+        },
+        {
+          "cluster_id": 4,
+          "label": "Oil / Venezuela / Barrel",
+          "count": 1,
+          "share": 0.022
+        },
+        {
+          "cluster_id": 5,
+          "label": "Inflation / Cpi / Price",
+          "count": 1,
+          "share": 0.022
+        },
+        {
+          "cluster_id": 8,
+          "label": "Semiconductor / Chips / Industry",
+          "count": 1,
+          "share": 0.022
+        }
+      ],
+      "dominant": {
+        "cluster_id": 2,
+        "label": "Fed / Financial / Wireless",
+        "count": 17,
+        "share": 0.378
+      },
+      "partial": false
+    },
+    {
+      "year": "2021",
+      "total": 64,
+      "themes": [
+        {
+          "cluster_id": 5,
+          "label": "Inflation / Cpi / Price",
+          "count": 15,
+          "share": 0.234
+        },
+        {
+          "cluster_id": 1,
+          "label": "Ma / Ant / Jack",
+          "count": 13,
+          "share": 0.203
+        },
+        {
+          "cluster_id": 8,
+          "label": "Semiconductor / Chips / Industry",
+          "count": 13,
+          "share": 0.203
+        },
+        {
+          "cluster_id": 2,
+          "label": "Fed / Financial / Wireless",
+          "count": 12,
+          "share": 0.188
+        },
+        {
+          "cluster_id": 0,
+          "label": "Tesla / Shares / Share",
+          "count": 10,
+          "share": 0.156
+        },
+        {
+          "cluster_id": 7,
+          "label": "Huawei / Ftx / Chinese",
+          "count": 1,
+          "share": 0.016
+        }
+      ],
+      "dominant": {
+        "cluster_id": 5,
+        "label": "Inflation / Cpi / Price",
+        "count": 15,
+        "share": 0.234
+      },
+      "partial": false
+    },
+    {
+      "year": "2022",
+      "total": 34,
+      "themes": [
+        {
+          "cluster_id": 5,
+          "label": "Inflation / Cpi / Price",
+          "count": 12,
+          "share": 0.353
+        },
+        {
+          "cluster_id": 3,
+          "label": "Tariff / Tariffs / Crypto",
+          "count": 9,
+          "share": 0.265
+        },
+        {
+          "cluster_id": 6,
+          "label": "Covid / China / Chinese",
+          "count": 7,
+          "share": 0.206
+        },
+        {
+          "cluster_id": 7,
+          "label": "Huawei / Ftx / Chinese",
+          "count": 2,
+          "share": 0.059
+        },
+        {
+          "cluster_id": 8,
+          "label": "Semiconductor / Chips / Industry",
+          "count": 2,
+          "share": 0.059
+        },
+        {
+          "cluster_id": 1,
+          "label": "Ma / Ant / Jack",
+          "count": 1,
+          "share": 0.029
+        },
+        {
+          "cluster_id": 2,
+          "label": "Fed / Financial / Wireless",
+          "count": 1,
+          "share": 0.029
+        }
+      ],
+      "dominant": {
+        "cluster_id": 5,
+        "label": "Inflation / Cpi / Price",
+        "count": 12,
+        "share": 0.353
+      },
+      "partial": false
+    },
+    {
+      "year": "2023",
+      "total": 21,
+      "themes": [
+        {
+          "cluster_id": 5,
+          "label": "Inflation / Cpi / Price",
+          "count": 13,
+          "share": 0.619
+        },
+        {
+          "cluster_id": 6,
+          "label": "Covid / China / Chinese",
+          "count": 5,
+          "share": 0.238
+        },
+        {
+          "cluster_id": 2,
+          "label": "Fed / Financial / Wireless",
+          "count": 2,
+          "share": 0.095
+        },
+        {
+          "cluster_id": 8,
+          "label": "Semiconductor / Chips / Industry",
+          "count": 1,
+          "share": 0.048
+        }
+      ],
+      "dominant": {
+        "cluster_id": 5,
+        "label": "Inflation / Cpi / Price",
+        "count": 13,
+        "share": 0.619
+      },
+      "partial": false
+    },
+    {
+      "year": "2024",
+      "total": 12,
+      "themes": [
+        {
+          "cluster_id": 3,
+          "label": "Tariff / Tariffs / Crypto",
+          "count": 4,
+          "share": 0.333
+        },
+        {
+          "cluster_id": 5,
+          "label": "Inflation / Cpi / Price",
+          "count": 4,
+          "share": 0.333
+        },
+        {
+          "cluster_id": 2,
+          "label": "Fed / Financial / Wireless",
+          "count": 2,
+          "share": 0.167
+        },
+        {
+          "cluster_id": 6,
+          "label": "Covid / China / Chinese",
+          "count": 2,
+          "share": 0.167
+        }
+      ],
+      "dominant": {
+        "cluster_id": 3,
+        "label": "Tariff / Tariffs / Crypto",
+        "count": 4,
+        "share": 0.333
+      },
+      "partial": false
+    },
+    {
+      "year": "2025",
+      "total": 15,
+      "themes": [
+        {
+          "cluster_id": 3,
+          "label": "Tariff / Tariffs / Crypto",
+          "count": 12,
+          "share": 0.8
+        },
+        {
+          "cluster_id": 6,
+          "label": "Covid / China / Chinese",
+          "count": 2,
+          "share": 0.133
+        },
+        {
+          "cluster_id": 2,
+          "label": "Fed / Financial / Wireless",
+          "count": 1,
+          "share": 0.067
+        }
+      ],
+      "dominant": {
+        "cluster_id": 3,
+        "label": "Tariff / Tariffs / Crypto",
+        "count": 12,
+        "share": 0.8
+      },
+      "partial": false
+    },
+    {
+      "year": "2026",
+      "total": 6,
+      "themes": [
+        {
+          "cluster_id": 4,
+          "label": "Oil / Venezuela / Barrel",
+          "count": 4,
+          "share": 0.667
+        },
+        {
+          "cluster_id": 3,
+          "label": "Tariff / Tariffs / Crypto",
+          "count": 1,
+          "share": 0.167
+        },
+        {
+          "cluster_id": 6,
+          "label": "Covid / China / Chinese",
+          "count": 1,
+          "share": 0.167
+        }
+      ],
+      "dominant": {
+        "cluster_id": 4,
+        "label": "Oil / Venezuela / Barrel",
+        "count": 4,
+        "share": 0.667
+      },
+      "partial": true
+    }
+  ],
+  "shifts": [
+    {
+      "from_year": "2020",
+      "to_year": "2021",
+      "rising": [
+        {
+          "cluster_id": 5,
+          "label": "Inflation / Cpi / Price",
+          "from_share": 0.022,
+          "to_share": 0.234,
+          "delta_share": 0.212
+        },
+        {
+          "cluster_id": 8,
+          "label": "Semiconductor / Chips / Industry",
+          "from_share": 0.022,
+          "to_share": 0.203,
+          "delta_share": 0.181
+        },
+        {
+          "cluster_id": 1,
+          "label": "Ma / Ant / Jack",
+          "from_share": 0.178,
+          "to_share": 0.203,
+          "delta_share": 0.025
+        }
+      ],
+      "fading": [
+        {
+          "cluster_id": 2,
+          "label": "Fed / Financial / Wireless",
+          "from_share": 0.378,
+          "to_share": 0.188,
+          "delta_share": -0.19
+        },
+        {
+          "cluster_id": 7,
+          "label": "Huawei / Ftx / Chinese",
+          "from_share": 0.178,
+          "to_share": 0.016,
+          "delta_share": -0.162
+        },
+        {
+          "cluster_id": 0,
+          "label": "Tesla / Shares / Share",
+          "from_share": 0.178,
+          "to_share": 0.156,
+          "delta_share": -0.022
+        }
+      ],
+      "emergent": [],
+      "vanished": [
+        {
+          "cluster_id": 3,
+          "label": "Tariff / Tariffs / Crypto",
+          "from_share": 0.022,
+          "to_share": 0.0,
+          "delta_share": -0.022
+        },
+        {
+          "cluster_id": 4,
+          "label": "Oil / Venezuela / Barrel",
+          "from_share": 0.022,
+          "to_share": 0.0,
+          "delta_share": -0.022
+        }
+      ],
+      "dominant_change": {
+        "from": {
+          "cluster_id": 2,
+          "label": "Fed / Financial / Wireless"
+        },
+        "to": {
+          "cluster_id": 5,
+          "label": "Inflation / Cpi / Price"
+        }
+      }
+    },
+    {
+      "from_year": "2021",
+      "to_year": "2022",
+      "rising": [
+        {
+          "cluster_id": 3,
+          "label": "Tariff / Tariffs / Crypto",
+          "from_share": 0.0,
+          "to_share": 0.265,
+          "delta_share": 0.265
+        },
+        {
+          "cluster_id": 6,
+          "label": "Covid / China / Chinese",
+          "from_share": 0.0,
+          "to_share": 0.206,
+          "delta_share": 0.206
+        },
+        {
+          "cluster_id": 5,
+          "label": "Inflation / Cpi / Price",
+          "from_share": 0.234,
+          "to_share": 0.353,
+          "delta_share": 0.119
+        }
+      ],
+      "fading": [
+        {
+          "cluster_id": 1,
+          "label": "Ma / Ant / Jack",
+          "from_share": 0.203,
+          "to_share": 0.029,
+          "delta_share": -0.174
+        },
+        {
+          "cluster_id": 2,
+          "label": "Fed / Financial / Wireless",
+          "from_share": 0.188,
+          "to_share": 0.029,
+          "delta_share": -0.159
+        },
+        {
+          "cluster_id": 0,
+          "label": "Tesla / Shares / Share",
+          "from_share": 0.156,
+          "to_share": 0.0,
+          "delta_share": -0.156
+        }
+      ],
+      "emergent": [
+        {
+          "cluster_id": 3,
+          "label": "Tariff / Tariffs / Crypto",
+          "from_share": 0.0,
+          "to_share": 0.265,
+          "delta_share": 0.265
+        },
+        {
+          "cluster_id": 6,
+          "label": "Covid / China / Chinese",
+          "from_share": 0.0,
+          "to_share": 0.206,
+          "delta_share": 0.206
+        }
+      ],
+      "vanished": [
+        {
+          "cluster_id": 0,
+          "label": "Tesla / Shares / Share",
+          "from_share": 0.156,
+          "to_share": 0.0,
+          "delta_share": -0.156
+        }
+      ],
+      "dominant_change": null
+    },
+    {
+      "from_year": "2022",
+      "to_year": "2023",
+      "rising": [
+        {
+          "cluster_id": 5,
+          "label": "Inflation / Cpi / Price",
+          "from_share": 0.353,
+          "to_share": 0.619,
+          "delta_share": 0.266
+        },
+        {
+          "cluster_id": 2,
+          "label": "Fed / Financial / Wireless",
+          "from_share": 0.029,
+          "to_share": 0.095,
+          "delta_share": 0.066
+        },
+        {
+          "cluster_id": 6,
+          "label": "Covid / China / Chinese",
+          "from_share": 0.206,
+          "to_share": 0.238,
+          "delta_share": 0.032
+        }
+      ],
+      "fading": [
+        {
+          "cluster_id": 3,
+          "label": "Tariff / Tariffs / Crypto",
+          "from_share": 0.265,
+          "to_share": 0.0,
+          "delta_share": -0.265
+        },
+        {
+          "cluster_id": 7,
+          "label": "Huawei / Ftx / Chinese",
+          "from_share": 0.059,
+          "to_share": 0.0,
+          "delta_share": -0.059
+        },
+        {
+          "cluster_id": 1,
+          "label": "Ma / Ant / Jack",
+          "from_share": 0.029,
+          "to_share": 0.0,
+          "delta_share": -0.029
+        }
+      ],
+      "emergent": [],
+      "vanished": [
+        {
+          "cluster_id": 3,
+          "label": "Tariff / Tariffs / Crypto",
+          "from_share": 0.265,
+          "to_share": 0.0,
+          "delta_share": -0.265
+        },
+        {
+          "cluster_id": 7,
+          "label": "Huawei / Ftx / Chinese",
+          "from_share": 0.059,
+          "to_share": 0.0,
+          "delta_share": -0.059
+        },
+        {
+          "cluster_id": 1,
+          "label": "Ma / Ant / Jack",
+          "from_share": 0.029,
+          "to_share": 0.0,
+          "delta_share": -0.029
+        }
+      ],
+      "dominant_change": null
+    },
+    {
+      "from_year": "2023",
+      "to_year": "2024",
+      "rising": [
+        {
+          "cluster_id": 3,
+          "label": "Tariff / Tariffs / Crypto",
+          "from_share": 0.0,
+          "to_share": 0.333,
+          "delta_share": 0.333
+        },
+        {
+          "cluster_id": 2,
+          "label": "Fed / Financial / Wireless",
+          "from_share": 0.095,
+          "to_share": 0.167,
+          "delta_share": 0.072
+        }
+      ],
+      "fading": [
+        {
+          "cluster_id": 5,
+          "label": "Inflation / Cpi / Price",
+          "from_share": 0.619,
+          "to_share": 0.333,
+          "delta_share": -0.286
+        },
+        {
+          "cluster_id": 6,
+          "label": "Covid / China / Chinese",
+          "from_share": 0.238,
+          "to_share": 0.167,
+          "delta_share": -0.071
+        },
+        {
+          "cluster_id": 8,
+          "label": "Semiconductor / Chips / Industry",
+          "from_share": 0.048,
+          "to_share": 0.0,
+          "delta_share": -0.048
+        }
+      ],
+      "emergent": [
+        {
+          "cluster_id": 3,
+          "label": "Tariff / Tariffs / Crypto",
+          "from_share": 0.0,
+          "to_share": 0.333,
+          "delta_share": 0.333
+        }
+      ],
+      "vanished": [
+        {
+          "cluster_id": 8,
+          "label": "Semiconductor / Chips / Industry",
+          "from_share": 0.048,
+          "to_share": 0.0,
+          "delta_share": -0.048
+        }
+      ],
+      "dominant_change": {
+        "from": {
+          "cluster_id": 5,
+          "label": "Inflation / Cpi / Price"
+        },
+        "to": {
+          "cluster_id": 3,
+          "label": "Tariff / Tariffs / Crypto"
+        }
+      }
+    },
+    {
+      "from_year": "2024",
+      "to_year": "2025",
+      "rising": [
+        {
+          "cluster_id": 3,
+          "label": "Tariff / Tariffs / Crypto",
+          "from_share": 0.333,
+          "to_share": 0.8,
+          "delta_share": 0.467
+        }
+      ],
+      "fading": [
+        {
+          "cluster_id": 5,
+          "label": "Inflation / Cpi / Price",
+          "from_share": 0.333,
+          "to_share": 0.0,
+          "delta_share": -0.333
+        },
+        {
+          "cluster_id": 2,
+          "label": "Fed / Financial / Wireless",
+          "from_share": 0.167,
+          "to_share": 0.067,
+          "delta_share": -0.1
+        },
+        {
+          "cluster_id": 6,
+          "label": "Covid / China / Chinese",
+          "from_share": 0.167,
+          "to_share": 0.133,
+          "delta_share": -0.034
+        }
+      ],
+      "emergent": [],
+      "vanished": [
+        {
+          "cluster_id": 5,
+          "label": "Inflation / Cpi / Price",
+          "from_share": 0.333,
+          "to_share": 0.0,
+          "delta_share": -0.333
+        }
+      ],
+      "dominant_change": null
+    },
+    {
+      "from_year": "2025",
+      "to_year": "2026",
+      "rising": [
+        {
+          "cluster_id": 4,
+          "label": "Oil / Venezuela / Barrel",
+          "from_share": 0.0,
+          "to_share": 0.667,
+          "delta_share": 0.667
+        },
+        {
+          "cluster_id": 6,
+          "label": "Covid / China / Chinese",
+          "from_share": 0.133,
+          "to_share": 0.167,
+          "delta_share": 0.034
+        }
+      ],
+      "fading": [
+        {
+          "cluster_id": 3,
+          "label": "Tariff / Tariffs / Crypto",
+          "from_share": 0.8,
+          "to_share": 0.167,
+          "delta_share": -0.633
+        },
+        {
+          "cluster_id": 2,
+          "label": "Fed / Financial / Wireless",
+          "from_share": 0.067,
+          "to_share": 0.0,
+          "delta_share": -0.067
+        }
+      ],
+      "emergent": [
+        {
+          "cluster_id": 4,
+          "label": "Oil / Venezuela / Barrel",
+          "from_share": 0.0,
+          "to_share": 0.667,
+          "delta_share": 0.667
+        }
+      ],
+      "vanished": [
+        {
+          "cluster_id": 2,
+          "label": "Fed / Financial / Wireless",
+          "from_share": 0.067,
+          "to_share": 0.0,
+          "delta_share": -0.067
+        }
+      ],
+      "dominant_change": {
+        "from": {
+          "cluster_id": 3,
+          "label": "Tariff / Tariffs / Crypto"
+        },
+        "to": {
+          "cluster_id": 4,
+          "label": "Oil / Venezuela / Barrel"
+        }
+      }
+    }
+  ],
+  "narrative": "Across 7 years and 197 dated pieces (2020–2025), Dr. Calhoun's focus shifted from Fed / Financial / Wireless (38% of his 2020 writing) to Tariff / Tariffs / Crypto (80% by 2025). The biggest gainer over the span was Tariff / Tariffs / Crypto (2% → 80%). Fed / Financial / Wireless receded the most (38% → 7%). Tariff / Tariffs / Crypto broke through in 2024, arriving from nothing to 33% of that year's writing. So far in 2026 (6 pieces), Oil / Venezuela / Barrel leads (67%)."
+}

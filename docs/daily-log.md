@@ -48,33 +48,28 @@ Format:
 
 <!-- entries below -->
 
-### 2026-06-26 — family — ready-for-review
-- PR: https://github.com/wcalhoun516/digital-dad/pull/32
-- Source: roadmap:#23
-- Summary: Roadmap **#23 (P3·M·family)** — the annual "year in review" keepsake digest email
-  (best predictions, top themes). **Cold-path pick:** hot-path plan 0008 has no
-  unattended-runnable step left (26c/26d need owner compute, 26e is a sibling-repo `models.yaml`
-  edit, 26f shipped in #30 per ADR D15); no user pins; **family** is a least-recently-worked
-  category (absent from the last-7 run history; last worked 2026-06-03). The roadmap's own steer
-  (lines 34–36) is explicit: *after the plan queue drains, prefer emotional/family-payoff items* —
-  #23 is one of the three named. New `analysis/year_in_review.py`: a **deterministic, offline**
-  builder (no conductor / network / LLM) that reads the analysis JSON already on disk
-  (`themes.json` for a year's articles + cluster labels, `predictions.json` for notable calls) and
-  renders a Georgia-serif email (matching On This Day) to `data/cron/emails/year_in_review_YYYY.html`.
-  Pure functions TDD'd: `articles_for_year` (date-prefix filter, drops the undated author-listing
-  page), `top_themes` (count by `cluster_label`, alpha tie-break), `notable_predictions`
-  (conviction-ranked certain>confident>hedged, dedup), `build_digest`, `render_html`/`render_markdown`
-  (HTML-escaped), `default_year` (latest *complete* calendar year), and an injectable `run()` + CLI
-  (`python -m analysis.year_in_review [--year N] [--dry-run]`) + `make year-in-review`.
-  **§8.5 deepen:** `notable_predictions` caps **one call per article** (`max_per_article=1`) so a
-  prolific single piece can't hog the digest — on the real 2024 corpus this turned a list dominated
-  by one article into 6 calls spanning 6 distinct articles. Delivery stays human-in-the-loop via the
-  existing Gmail-MCP draft path (D9); this PR only renders to disk (`data/cron/emails/` is untracked,
-  not committed). TDD'd: **+24 tests** (`tests/test_year_in_review.py`). `make verify` green
-  (**357 passed**, ruff clean on `tests/`, dashboard smoke build). Smoke-ran the CLI on the real
-  corpus for 2024 + 2025 (e.g. 2025: 15 articles, ~32,951 words, themes led by Tariff/Crypto).
-  Roadmap #23 is a human-curated file the agent can't edit, so marking it `(done)` is left to the
-  owner.
+### 2026-06-27 — analysis — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/34
+- Source: roadmap:#13
+- Summary: Roadmap **#13 (P2·M·analysis)** — the "intellectual arc": year-over-year theme
+  evolution + a generated narrative. **Cold-path pick:** plan 0008 has no unattended-runnable
+  step left (26c/26d owner compute, 26e sibling-repo, 26f shipped #30); no pins; **analysis** was
+  absent from the last-7 run history (tie with infra → analysis has a P1, but #11 is already
+  started via `verdict_backfill.py`/#6, so next not-started is #13). New **pure/offline**
+  `analysis/intellectual_arc.py` post-processes `data/analysis/themes.json`: bins articles by
+  year, finds each year's dominant theme + share, computes year-over-year rising/fading/emergent/
+  vanished themes + an overall most-grown/most-declined summary, and renders a deterministic
+  template narrative from the numbers (can't drift from data). No conductor/network/LLM — safe
+  unattended. CLI `python -m analysis.intellectual_arc` (+`--dry-run`), `make intellectual-arc`,
+  README section, committed `intellectual_arc.json` (small derived artifact, no article text).
+  **§8.5 deepen — partial-year guard:** the in-progress 2026 (6 pieces) was anchoring the headline
+  ("Oil broke through to 67%"); years below half the median volume are now flagged `partial`, the
+  arc's endpoints/most-grown use only full years, and the partial year is reported as a
+  clearly-marked "So far in 2026…" note. On real data: focus shifts **2020 Fed/Financial →
+  2025 Tariff/Crypto (80%)**, with 2026 noted aside. TDD'd: +18 tests (`tests/test_intellectual_arc.py`).
+  `make verify` green (**351 passed** = 333 + 18, ruff clean, dashboard build). **Left to owner:**
+  marking roadmap #13 `(done)` (roadmap is human-curated, §11). Future slices: LLM-richened
+  narrative + an Intellectual Arc dashboard tab.
 
 ### 2026-06-20 — training — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/26

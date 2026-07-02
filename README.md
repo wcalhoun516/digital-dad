@@ -113,6 +113,25 @@ Articles are saved as JSON with title, date, body text, tags, and word count.
   by cosine similarity, generates a 2-3 sentence intro in Dr. Calhoun's voice,
   and saves the email for delivery via Gmail draft
 
+## Intellectual Arc — theme evolution over time
+
+A deterministic post-processing pass over the theme clustering that traces *how Dad's
+focus shifted year over year*. It reads `data/analysis/themes.json` (no LLM, no network)
+and derives, for each calendar year, the dominant theme and its share; the
+year-over-year rises, fades, emergent, and vanished themes; an overall most-grown /
+most-declined summary; and a plain-prose narrative assembled from those numbers (so the
+copy can never drift from the data).
+
+```bash
+make analyze ARGS="themes"     # build the theme clusters first (if not already)
+make intellectual-arc          # write data/analysis/intellectual_arc.json
+make intellectual-arc ARGS="--dry-run"   # print the narrative, write nothing
+```
+
+Output `data/analysis/intellectual_arc.json` has `overall`, `by_year`, `shifts`, and a
+`narrative` string. A future slice can richen the narrative through the conductor and
+surface the arc as a dashboard panel.
+
 ## Ask Dad — RAG Chat
 
 The centerpiece interactive feature. Ask a question about any topic Dad has
