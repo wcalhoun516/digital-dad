@@ -49,7 +49,7 @@ Format:
 <!-- entries below -->
 
 ### 2026-07-02 — infra — skipped
-- PR: (skip PR — backlog full)
+- PR: https://github.com/wcalhoun516/digital-dad/pull/39
 - Source: none
 - Summary: Stood down per §2 — **6 open `daily/*` PRs** (≥5 threshold): #38 (coverage audit),
   #37 & #36 (prior backlog-full skips), #35 (conductor preflight), #34 (intellectual arc),
