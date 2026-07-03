@@ -48,6 +48,16 @@ Format:
 
 <!-- entries below -->
 
+### 2026-07-03 — infra — skipped
+- PR: https://github.com/wcalhoun516/digital-dad/pull/40
+- Source: none
+- Summary: Stood down per §2 — **5 open `daily/*` PRs** (≥5 threshold): #39 (07-02 skip), #38
+  (coverage audit #9), #37 & #36 (prior backlog-full skips), #35 (conductor preflight #6). No new
+  work started. **Three of the five are `[skipped]` markers** (#39/#37/#36), so the substantive
+  reviewable backlog is only two PRs — #38 and #35. Owner action to unblock: **close the three
+  stale skip-marker PRs** and review/merge #38 + #35. The skip markers keep the count at the
+  threshold, so each day produces another skip until they're cleared.
+
 ### 2026-06-27 — analysis — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/34
 - Source: roadmap:#13
