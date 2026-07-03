@@ -1,0 +1,240 @@
+"""Tests for scraper/coverage_audit.py — coverage audit vs the author index (roadmap #9)."""
+
+import json
+
+from scraper.coverage_audit import (
+    audit_coverage,
+    contiguous_month_ranges,
+    format_report,
+    parse_article_url,
+    run,
+)
+
+AUTHOR = "https://www.forbes.com/sites/georgecalhoun"
+
+
+def _url(date: str, slug: str) -> str:
+    """Build an author article URL from an ISO date and slug."""
+    y, m, d = date.split("-")
+    return f"{AUTHOR}/{y}/{m}/{d}/{slug}/"
+
+
+def _manifest_articles(*pairs):
+    """pairs of (date, slug) → manifest-shaped article dicts."""
+    return [{"slug": slug, "date": date, "url": _url(date, slug)} for date, slug in pairs]
+
+
+class TestParseArticleUrl:
+    def test_parses_date_month_year_and_slug(self):
+        info = parse_article_url(f"{AUTHOR}/2020/05/26/europes-hamiltonian-moment/")
+        assert info is not None
+        assert info["date"] == "2020-05-26"
+        assert info["year"] == "2020"
+        assert info["month"] == "2020-05"
+        assert info["slug"] == "europes-hamiltonian-moment"
+
+    def test_url_key_is_scheme_and_www_insensitive(self):
+        a = parse_article_url("http://www.forbes.com/sites/georgecalhoun/2021/01/02/foo/")
+        b = parse_article_url("https://forbes.com/sites/georgecalhoun/2021/01/02/foo/")
+        assert a is not None and b is not None
+        assert a["key"] == b["key"]
+
+    def test_url_key_ignores_query_and_fragment(self):
+        a = parse_article_url(f"{AUTHOR}/2021/01/02/foo/")
+        b = parse_article_url(f"{AUTHOR}/2021/01/02/foo/?utm=x#top")
+        assert a["key"] == b["key"]
+
+    def test_non_author_url_returns_none(self):
+        assert parse_article_url("https://www.forbes.com/sites/someoneelse/2021/01/02/foo/") is None
+
+    def test_url_without_date_returns_none(self):
+        assert parse_article_url(f"{AUTHOR}/some-listing-page/") is None
+
+    def test_empty_or_garbage_returns_none(self):
+        assert parse_article_url("") is None
+        assert parse_article_url("not a url") is None
+
+
+class TestAuditCoverage:
+    def test_full_coverage_is_ok(self):
+        arts = _manifest_articles(("2020-05-26", "a"), ("2020-06-10", "b"))
+        discovered = [_url("2020-05-26", "a"), _url("2020-06-10", "b")]
+        report = audit_coverage(arts, discovered)
+        assert report["ok"] is True
+        assert report["missing_count"] == 0
+        assert report["missing_urls"] == []
+        assert report["coverage_ratio"] == 1.0
+        assert report["gap_months"] == []
+
+    def test_missing_url_is_reported_with_date_and_month(self):
+        arts = _manifest_articles(("2020-05-26", "a"))
+        discovered = [_url("2020-05-26", "a"), _url("2020-07-01", "gap")]
+        report = audit_coverage(arts, discovered)
+        assert report["ok"] is False
+        assert report["missing_count"] == 1
+        miss = report["missing_urls"][0]
+        assert miss["slug"] == "gap"
+        assert miss["date"] == "2020-07-01"
+        assert miss["month"] == "2020-07"
+        assert miss["url"] == _url("2020-07-01", "gap")
+        assert "2020-07" in report["gap_months"]
+
+    def test_missing_urls_sorted_by_date_then_slug(self):
+        arts = _manifest_articles()
+        discovered = [
+            _url("2021-03-02", "z"),
+            _url("2021-01-05", "b"),
+            _url("2021-01-05", "a"),
+        ]
+        report = audit_coverage(arts, discovered)
+        got = [(m["date"], m["slug"]) for m in report["missing_urls"]]
+        assert got == [("2021-01-05", "a"), ("2021-01-05", "b"), ("2021-03-02", "z")]
+
+    def test_by_month_counts_have_discovered_missing(self):
+        arts = _manifest_articles(("2020-05-26", "a"))
+        discovered = [_url("2020-05-26", "a"), _url("2020-05-30", "b")]
+        report = audit_coverage(arts, discovered)
+        assert report["by_month"]["2020-05"] == {"have": 1, "discovered": 2, "missing": 1}
+
+    def test_coverage_ratio_is_matched_over_discovered(self):
+        arts = _manifest_articles(("2020-05-26", "a"))
+        discovered = [_url("2020-05-26", "a"), _url("2020-06-01", "b"), _url("2020-06-02", "c")]
+        report = audit_coverage(arts, discovered)
+        assert report["discovered_count"] == 3
+        assert report["matched_count"] == 1
+        assert round(report["coverage_ratio"], 3) == round(1 / 3, 3)
+
+    def test_variant_scheme_and_query_dedup_to_one_discovered(self):
+        arts = _manifest_articles(("2020-05-26", "a"))
+        discovered = [
+            "http://www.forbes.com/sites/georgecalhoun/2020/05/26/a/",
+            "https://forbes.com/sites/georgecalhoun/2020/05/26/a/?utm=x",
+        ]
+        report = audit_coverage(arts, discovered)
+        assert report["discovered_count"] == 1
+        assert report["missing_count"] == 0
+
+    def test_extra_urls_in_manifest_not_discovered(self):
+        arts = _manifest_articles(("2020-05-26", "a"), ("2020-05-27", "extra"))
+        discovered = [_url("2020-05-26", "a")]
+        report = audit_coverage(arts, discovered)
+        assert report["extra_count"] == 1
+        assert report["extra_urls"][0]["slug"] == "extra"
+
+    def test_unparsed_urls_are_collected_not_counted(self):
+        arts = [{"slug": "weird", "date": "2020-01-01", "url": "https://example.com/x/"}]
+        discovered = [_url("2020-05-26", "a"), "https://web.archive.org/nonsense"]
+        report = audit_coverage(arts, discovered)
+        assert report["have_count"] == 0
+        assert report["discovered_count"] == 1
+        assert "https://example.com/x/" in report["unparsed_manifest_urls"]
+        assert "https://web.archive.org/nonsense" in report["unparsed_discovered_urls"]
+
+    def test_empty_discovered_is_ok_and_ratio_one(self):
+        arts = _manifest_articles(("2020-05-26", "a"))
+        report = audit_coverage(arts, [])
+        assert report["ok"] is True
+        assert report["missing_count"] == 0
+        assert report["coverage_ratio"] == 1.0
+
+
+class TestFormatReport:
+    def test_full_coverage_summary(self):
+        arts = _manifest_articles(("2020-05-26", "a"))
+        report = audit_coverage(arts, [_url("2020-05-26", "a")])
+        text = format_report(report)
+        assert "1/1" in text
+        assert "100" in text  # 100% coverage
+        assert "no missing" in text.lower() or "complete" in text.lower()
+
+    def test_missing_summary_lists_gap_months_and_urls(self):
+        arts = _manifest_articles(("2020-05-26", "a"))
+        discovered = [_url("2020-05-26", "a"), _url("2020-07-01", "gap-article")]
+        text = format_report(audit_coverage(arts, discovered))
+        assert "2020-07" in text
+        assert "gap-article" in text
+
+    def test_report_notes_when_discovery_empty(self):
+        text = format_report(audit_coverage(_manifest_articles(("2020-05-26", "a")), []))
+        assert "0 discovered" in text.lower() or "no urls discovered" in text.lower()
+
+
+def _write_manifest(tmp_path, articles):
+    mp = tmp_path / "manifest.json"
+    mp.write_text(json.dumps({"total_articles": len(articles), "articles": articles}))
+    return mp
+
+
+class TestRun:
+    def test_full_coverage_returns_zero(self, tmp_path, capsys):
+        arts = _manifest_articles(("2020-05-26", "a"))
+        mp = _write_manifest(tmp_path, arts)
+        rc = run(mp, discover=lambda: [_url("2020-05-26", "a")])
+        assert rc == 0
+        assert "100" in capsys.readouterr().out
+
+    def test_non_strict_returns_zero_even_with_gaps(self, tmp_path, capsys):
+        arts = _manifest_articles(("2020-05-26", "a"))
+        mp = _write_manifest(tmp_path, arts)
+        rc = run(mp, discover=lambda: [_url("2020-05-26", "a"), _url("2020-07-01", "gap")])
+        assert rc == 0
+
+    def test_strict_returns_one_on_gaps(self, tmp_path, capsys):
+        arts = _manifest_articles(("2020-05-26", "a"))
+        mp = _write_manifest(tmp_path, arts)
+        rc = run(mp, discover=lambda: [_url("2020-07-01", "gap")], strict=True)
+        assert rc == 1
+
+    def test_missing_manifest_returns_one(self, tmp_path):
+        assert run(tmp_path / "absent.json", discover=lambda: []) == 1
+
+    def test_json_output_is_machine_readable(self, tmp_path, capsys):
+        arts = _manifest_articles(("2020-05-26", "a"))
+        mp = _write_manifest(tmp_path, arts)
+        run(mp, discover=lambda: [_url("2020-07-01", "gap")], as_json=True)
+        data = json.loads(capsys.readouterr().out)
+        assert data["missing_count"] == 1
+        assert data["ok"] is False
+
+    def test_urls_file_is_used_as_discovery_source(self, tmp_path, capsys):
+        arts = _manifest_articles(("2020-05-26", "a"))
+        mp = _write_manifest(tmp_path, arts)
+        uf = tmp_path / "urls.txt"
+        uf.write_text(f"{_url('2020-05-26', 'a')}\n# a comment\n{_url('2020-07-01', 'gap')}\n\n")
+        rc = run(mp, urls_file=uf, as_json=True)
+        data = json.loads(capsys.readouterr().out)
+        assert rc == 0
+        assert data["discovered_count"] == 2
+        assert data["missing_count"] == 1
+
+
+class TestMonthRanges:
+    def test_single_month_renders_bare(self):
+        assert contiguous_month_ranges(["2021-03"]) == ["2021-03"]
+
+    def test_consecutive_months_collapse_to_a_range(self):
+        assert contiguous_month_ranges(["2021-03", "2021-04", "2021-05"]) == ["2021-03..2021-05"]
+
+    def test_year_boundary_is_consecutive(self):
+        assert contiguous_month_ranges(["2021-12", "2022-01"]) == ["2021-12..2022-01"]
+
+    def test_gaps_split_ranges_and_input_is_sorted(self):
+        got = contiguous_month_ranges(["2022-01", "2021-05", "2021-03", "2021-04"])
+        assert got == ["2021-03..2021-05", "2022-01"]
+
+    def test_empty_is_empty(self):
+        assert contiguous_month_ranges([]) == []
+
+
+class TestMissingRangesInReport:
+    def test_report_groups_gap_months_into_ranges(self):
+        arts = _manifest_articles()
+        discovered = [_url("2021-03-02", "a"), _url("2021-04-09", "b"), _url("2021-07-01", "c")]
+        report = audit_coverage(arts, discovered)
+        assert report["missing_ranges"] == ["2021-03..2021-04", "2021-07"]
+
+    def test_format_report_shows_ranges(self):
+        arts = _manifest_articles()
+        discovered = [_url("2021-03-02", "a"), _url("2021-04-09", "b")]
+        text = format_report(audit_coverage(arts, discovered))
+        assert "2021-03..2021-04" in text

@@ -42,3 +42,43 @@ manifest entry is appended**. The current corpus carries 23 such duplicate-slug 
 This checker only *reports* the drift; it does not mutate the manifest. De-duplicating the
 manifest (and switching the scraper's dedup key to `slug`, or normalizing URLs before the
 existence check) is a separate, owner-reviewed change.
+
+## Coverage audit (`make coverage-audit`)
+
+Where `manifest-check` looks *inward* (manifest vs the files on disk), `coverage-audit`
+(`scraper/coverage_audit.py`, roadmap #9) looks *outward*: it compares the URLs we **have** in
+the manifest against a **discovered** set — the author's full known Forbes footprint — and
+reports what the archive is still missing, and *when*.
+
+```bash
+make coverage-audit                        # human-readable report (always exits 0)
+make coverage-audit ARGS=--strict          # exit non-zero if any article is missing (CI)
+make coverage-audit ARGS=--json            # machine-readable report
+make coverage-audit ARGS="--urls-file urls.txt"  # audit against an offline URL list (no network)
+```
+
+**Discovery source.** By default `run()` queries the Wayback CDX index
+(`wayback.discover_urls_from_wayback()`) for every archived
+`forbes.com/sites/georgecalhoun/*` URL. Because that hits the network (and can be blocked or
+empty in an unattended run), the source is an **injectable seam**: pass a `discover` callable
+in code, or `--urls-file` on the CLI to audit against a saved URL dump. The pure comparison
+(`audit_coverage`) takes the manifest articles + a URL list, so it is fully offline-testable.
+
+**How URLs are matched.** Forbes author URLs encode the publish date and slug in the path
+(`/sites/georgecalhoun/YYYY/MM/DD/slug/`). `parse_article_url()` reduces each URL — from either
+side — to a canonical, scheme-/`www`-/query-insensitive key, so `http` vs `https`, `www` vs
+bare, and tracking params all collapse to one article.
+
+What it reports:
+
+| Field | Meaning |
+|-------|---------|
+| **coverage_ratio** | Fraction of discovered articles present in the manifest. |
+| **missing_urls** | Discovered articles absent from the manifest (date + slug + URL), the scrape backlog. |
+| **gap_months** | Months (`YYYY-MM`) where at least one discovered article is missing — the missing date ranges. |
+| **by_month** | Per-month `{have, discovered, missing}` counts. |
+| **extra_urls** | Manifest articles *not* in the discovered set (usually discovery gaps, not corpus errors). |
+| **unparsed_\*** | URLs on either side that didn't match the author-article pattern (skipped, surfaced for transparency). |
+
+Report-only by design — it never mutates the manifest or triggers a scrape; feeding the
+`missing_urls` back into `python -m scraper` is a separate, owner-driven step.

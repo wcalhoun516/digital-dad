@@ -48,32 +48,49 @@ Format:
 
 <!-- entries below -->
 
-### 2026-06-28 — infra — ready-for-review
-- PR: https://github.com/wcalhoun516/digital-dad/pull/35
-- Source: roadmap:#6
-- Summary: Roadmap **#6 (P2·M·ops)** — conductor preflight as a reusable Python helper.
-  **Cold-path pick:** hot-path plan 0008 has no unattended-runnable step left (26c/26d owner
-  compute, 26e sibling-repo, 26f shipped #30); no pins; **infra** was the least-recently-worked
-  category (absent from last-7 run history; last worked 2026-06-02). Highest-priority
-  not-yet-started infra/ops item is #6. Three modules carried a **byte-for-byte identical**
-  `_conductor_up()` (`analysis/rag_eval.py`, `voice_eval.py`, `verdict_backfill.py`), each with
-  its own hand-written "Conductor is unreachable…" message. New **pure/offline**
-  `analysis/conductor.py` consolidates this into one tested helper: `conductor_up()` (cheap
-  `GET /models` health check, network call behind an injectable `opener` so it's testable
-  offline), `unreachable_message()` (the shared, `extra`-extensible message), and
-  `require_conductor()` (the single call each owner-gated CLI now uses — `if not
-  require_conductor(): return 2`). Refactored all three modules onto it (deleted 3 copies +
-  inline messages; voice_eval keeps its `--style-only` tip via `extra=`). **§8.5 deepen:**
-  `python -m analysis.conductor` CLI + `make conductor-check` (exit 0 up / 2 down) as a
-  standalone scriptable gate, README section. TDD'd: +17 tests (`tests/test_conductor.py`)
-  covering 200/non-200/URLError/OSError, the `/models` endpoint + trailing-slash/timeout
-  handling, message content, `require_conductor` print/stream/silence, and CLI exit codes;
-  updated `test_verdict_backfill`'s gate tests to patch `require_conductor`. `make verify`
-  green (**350 passed** = 333 + 17, ruff clean, dashboard build); `make conductor-check`
-  smoke-run live → exit 0 (conductor up), and exit 2 against a dead port. **Deliberately
-  untouched:** `bin/weekly_run.sh`'s curl (the weekly cron under `bin/**` is off-limits to the
-  agent per §11, and it does an embeddings-specific check + restart, not just reachability).
-  **Left to owner:** marking roadmap #6 `(done)` (roadmap is human-curated, §11).
+### 2026-07-01 — scraper — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/38
+- Source: roadmap:#9
+- Summary: Roadmap **#9 (P2·M·scraper)** — coverage audit vs the author index. New
+  `scraper/coverage_audit.py` is the outward-looking mirror of `manifest_check` (#8): it compares
+  the URLs we **have** (`data/manifest.json`) against a **discovered** set (the author's full
+  Forbes footprint via Wayback CDX) and reports what's missing and *when* — `missing_urls`,
+  `by_month` `{have, discovered, missing}`, `gap_months`, and contiguous `missing_ranges`
+  (`2021-03..2021-04`). Pure `audit_coverage(manifest_articles, discovered_urls)` +
+  `parse_article_url` (scheme-/www-/query-insensitive canonical keys from the
+  `/YYYY/MM/DD/slug/` path) + `contiguous_month_ranges` + `format_report`, all TDD'd (31 new
+  tests, offline). Live Wayback discovery sits behind an injectable seam (`discover` callable /
+  `--urls-file`) so tests stay network-free. `run()` + `python -m scraper.coverage_audit` CLI
+  mirrors `manifest_check`: report-only exit 0 by default, `--strict` gates CI, `--json` for
+  machines. Added `make coverage-audit` + a `scraper/README.md` section. **Cold-path pick:**
+  no ready plan, no user pins, and `scraper` was the least-recently-worked non-piled-on category
+  with a not-started P2 (`docs` #28 already merged in #31; `analysis`/`family` had fresh open
+  PRs #34/#32). Live smoke: 264 CDX URLs → 176 keys vs manifest's 176 → **100% coverage** today,
+  corroborating #8's duplicate-slug finding. `make verify` green (377 passed, ruff clean,
+  dashboard builds).
+
+### 2026-06-25 — docs — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/31
+- Source: roadmap:#28
+- Summary: Roadmap **#28 (P3·S·docs)** — two contributor docs that capture knowledge previously
+  only derivable by reading source. **Cold-path pick:** no unattended-runnable hot-path step
+  left (0008's 26c/26d need owner compute, 26e is a sibling-repo `models.yaml` edit, 26f shipped
+  in #30), no user pins, and `docs` is the least-recently-worked category (never appears in the
+  last-7 run history). (1) `docs/conductor-contract.md` — the **formal** LLM contract behind
+  `architecture.md §3`'s overview: exact chat + embeddings call shapes, return values,
+  `model="auto"` + `(tier, function)` routing, `model_used` extraction via `model_extra`, the
+  retry convention, tiers table (T1/T2/T3 + the paid-T3 `allow_remote` guard), and error modes
+  incl. the `_conductor_up()` health-check seam used by the owner-gated eval CLIs (exit-2 abort).
+  (2) `docs/runbooks/adding-an-analysis-module.md` — step-by-step for the next module
+  (roadmap #13–#17): the `run(articles)` shape + shared `utils` helpers, the three-edit
+  `__main__.py` wiring with `_should_run`/`_log_run` (fingerprint-skip for free), optional
+  dashboard injection (`PLACEHOLDERS` + `_EMPTY_DEFAULTS` + template placeholder), and offline
+  testing. Both linked from `docs/INDEX.md` (new "Contributor guides" section) and back-linked
+  from `architecture.md` §2/§3. All facts verified against source
+  (`analysis/{__main__,utils,predictions,semantic_search,psychoprofile,rag_eval}.py`,
+  `viz/build_dashboard.py`, `Makefile`). Pure docs — no code, no conductor, no compute.
+  `make verify` green (**333 passed**, ruff clean, dashboard smoke build). Roadmap #28 is a
+  human-curated file the agent can't edit, so marking it `(done)` is left to the owner.
 
 ### 2026-06-20 — training — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/26
