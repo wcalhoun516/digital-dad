@@ -48,28 +48,32 @@ Format:
 
 <!-- entries below -->
 
-### 2026-06-27 — analysis — ready-for-review
-- PR: https://github.com/wcalhoun516/digital-dad/pull/34
-- Source: roadmap:#13
-- Summary: Roadmap **#13 (P2·M·analysis)** — the "intellectual arc": year-over-year theme
-  evolution + a generated narrative. **Cold-path pick:** plan 0008 has no unattended-runnable
-  step left (26c/26d owner compute, 26e sibling-repo, 26f shipped #30); no pins; **analysis** was
-  absent from the last-7 run history (tie with infra → analysis has a P1, but #11 is already
-  started via `verdict_backfill.py`/#6, so next not-started is #13). New **pure/offline**
-  `analysis/intellectual_arc.py` post-processes `data/analysis/themes.json`: bins articles by
-  year, finds each year's dominant theme + share, computes year-over-year rising/fading/emergent/
-  vanished themes + an overall most-grown/most-declined summary, and renders a deterministic
-  template narrative from the numbers (can't drift from data). No conductor/network/LLM — safe
-  unattended. CLI `python -m analysis.intellectual_arc` (+`--dry-run`), `make intellectual-arc`,
-  README section, committed `intellectual_arc.json` (small derived artifact, no article text).
-  **§8.5 deepen — partial-year guard:** the in-progress 2026 (6 pieces) was anchoring the headline
-  ("Oil broke through to 67%"); years below half the median volume are now flagged `partial`, the
-  arc's endpoints/most-grown use only full years, and the partial year is reported as a
-  clearly-marked "So far in 2026…" note. On real data: focus shifts **2020 Fed/Financial →
-  2025 Tariff/Crypto (80%)**, with 2026 noted aside. TDD'd: +18 tests (`tests/test_intellectual_arc.py`).
-  `make verify` green (**351 passed** = 333 + 18, ruff clean, dashboard build). **Left to owner:**
-  marking roadmap #13 `(done)` (roadmap is human-curated, §11). Future slices: LLM-richened
-  narrative + an Intellectual Arc dashboard tab.
+### 2026-06-28 — infra — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/35
+- Source: roadmap:#6
+- Summary: Roadmap **#6 (P2·M·ops)** — conductor preflight as a reusable Python helper.
+  **Cold-path pick:** hot-path plan 0008 has no unattended-runnable step left (26c/26d owner
+  compute, 26e sibling-repo, 26f shipped #30); no pins; **infra** was the least-recently-worked
+  category (absent from last-7 run history; last worked 2026-06-02). Highest-priority
+  not-yet-started infra/ops item is #6. Three modules carried a **byte-for-byte identical**
+  `_conductor_up()` (`analysis/rag_eval.py`, `voice_eval.py`, `verdict_backfill.py`), each with
+  its own hand-written "Conductor is unreachable…" message. New **pure/offline**
+  `analysis/conductor.py` consolidates this into one tested helper: `conductor_up()` (cheap
+  `GET /models` health check, network call behind an injectable `opener` so it's testable
+  offline), `unreachable_message()` (the shared, `extra`-extensible message), and
+  `require_conductor()` (the single call each owner-gated CLI now uses — `if not
+  require_conductor(): return 2`). Refactored all three modules onto it (deleted 3 copies +
+  inline messages; voice_eval keeps its `--style-only` tip via `extra=`). **§8.5 deepen:**
+  `python -m analysis.conductor` CLI + `make conductor-check` (exit 0 up / 2 down) as a
+  standalone scriptable gate, README section. TDD'd: +17 tests (`tests/test_conductor.py`)
+  covering 200/non-200/URLError/OSError, the `/models` endpoint + trailing-slash/timeout
+  handling, message content, `require_conductor` print/stream/silence, and CLI exit codes;
+  updated `test_verdict_backfill`'s gate tests to patch `require_conductor`. `make verify`
+  green (**350 passed** = 333 + 17, ruff clean, dashboard build); `make conductor-check`
+  smoke-run live → exit 0 (conductor up), and exit 2 against a dead port. **Deliberately
+  untouched:** `bin/weekly_run.sh`'s curl (the weekly cron under `bin/**` is off-limits to the
+  agent per §11, and it does an embeddings-specific check + restart, not just reachability).
+  **Left to owner:** marking roadmap #6 `(done)` (roadmap is human-curated, §11).
 
 ### 2026-06-20 — training — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/26

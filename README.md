@@ -179,6 +179,16 @@ accuracy** on unanswerable questions, **false-abstention rate** (over-refusal on
 ones), and **citation coverage**. This is the baseline any future voice fine-tune (#26)
 must beat.
 
+**Is the conductor up? (preflight)** — every owner-gated eval below shares one health check,
+`analysis/conductor.py` (`require_conductor()`): a cheap `GET /models` against the conductor,
+plus one clear "it's down, here's what to do" message. The evals call it before spending a
+paid T3 request; you can also run it standalone as a gate in scripts or `make`:
+
+```bash
+make conductor-check                 # exit 0 if the conductor is up, 2 if it's down
+make conductor-check ARGS="--base-url http://host:8080/v1 --timeout 2"
+```
+
 ```bash
 # Owner-gated: the judge pass makes paid T3 calls, so it refuses to run if the conductor
 # is down. Writes data/analysis/rag_eval.json. Run deliberately, not from automation.

@@ -33,6 +33,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable
 
+from .conductor import require_conductor
 from .utils import DATA_DIR
 
 # Repo-root-relative fixture (source-controlled input, not a generated artifact).
@@ -352,17 +353,6 @@ def _live_judge(tier: int = 3) -> Callable[[str, str, list[dict]], dict | None]:
     return judge
 
 
-def _conductor_up(url: str = "http://127.0.0.1:8080/v1") -> bool:
-    import urllib.error
-    from urllib.request import urlopen
-
-    try:
-        with urlopen(url.rstrip("/") + "/models", timeout=4) as resp:
-            return resp.status == 200
-    except (urllib.error.URLError, OSError):
-        return False
-
-
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="python -m analysis.rag_eval",
@@ -387,9 +377,7 @@ def main(argv: list[str] | None = None) -> int:
     if not args.questions.exists():
         print(f"No question set at {args.questions}.")
         return 1
-    if not _conductor_up():
-        print("Conductor is unreachable at http://127.0.0.1:8080 — start it before "
-              "running the eval (the judge pass makes paid T3 calls). Aborting.")
+    if not require_conductor():
         return 2
 
     questions = load_questions(args.questions)
