@@ -108,10 +108,19 @@ class GatedHandler(SimpleHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(payload)
             return
-        except Exception as exc:  # conductor down / unreachable
+        except urllib.error.URLError as exc:  # conductor truly down/unreachable
             msg = (f'{{"error":{{"message":"conductor unreachable at '
                    f'{CONDUCTOR_URL}: {exc}"}}}}').encode()
             self.send_response(502)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(msg)))
+            self.end_headers()
+            self.wfile.write(msg)
+            return
+        except Exception as exc:  # local/proxy-side failure — do NOT blame the conductor
+            msg = (f'{{"error":{{"message":"dashboard proxy error (conductor may '
+                   f'be fine): {exc}"}}}}').encode()
+            self.send_response(500)
             self.send_header("Content-Type", "application/json")
             self.send_header("Content-Length", str(len(msg)))
             self.end_headers()
