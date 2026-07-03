@@ -112,6 +112,12 @@ voice-eval:
 voice-trials:
 	$(PYTHON) -m analysis.voice_trials $(ARGS)
 
+# Preflight the local LLM conductor: exit 0 if it's reachable, 2 if not. The shared
+# health check that every owner-gated eval (rag-eval, voice-eval, backfill-verdicts) uses
+# before spending a paid T3 call. Run it first to confirm the conductor is up.
+conductor-check:
+	$(PYTHON) -m analysis.conductor $(ARGS)
+
 test:
 	$(PYTHON) -m pytest -q
 

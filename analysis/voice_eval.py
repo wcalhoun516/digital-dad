@@ -37,6 +37,7 @@ from typing import Callable, Hashable
 
 from training.finetune_config import style_metrics
 
+from .conductor import require_conductor
 from .utils import DATA_DIR
 
 # Repo-root-relative fixture template (the real trials are owner-produced once the 26c
@@ -445,17 +446,6 @@ def _live_judge(tier: int = 3) -> Callable[[str, dict[str, str]], list[str] | No
     return judge
 
 
-def _conductor_up(url: str = "http://127.0.0.1:8080/v1") -> bool:
-    import urllib.error
-    from urllib.request import urlopen
-
-    try:
-        with urlopen(url.rstrip("/") + "/models", timeout=4) as resp:
-            return resp.status == 200
-    except (urllib.error.URLError, OSError):
-        return False
-
-
 def _run_style_only(args, distinctive: set) -> int:
     """Offline deterministic style pass (no conductor, no paid calls)."""
     if not distinctive:
@@ -505,10 +495,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.style_only:
         return _run_style_only(args, distinctive)
 
-    if not _conductor_up():
-        print("Conductor is unreachable at http://127.0.0.1:8080 — start it before "
-              "running the eval (the judge pass makes paid T3 calls). Aborting. "
-              "(Tip: `--style-only` runs the deterministic style metrics offline.)")
+    if not require_conductor(
+        extra="(Tip: `--style-only` runs the deterministic style metrics offline.)"
+    ):
         return 2
 
     trials = load_trials(args.trials)
