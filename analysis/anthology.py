@@ -112,6 +112,23 @@ def signature_pieces(theme_articles: list[dict], top_n: int = 5) -> list[dict]:
     return out
 
 
+def reasoning_snippet(text: str | None, max_chars: int = 200) -> str:
+    """A tight one-line gloss of a verdict's reasoning for the keepsake.
+
+    Returns the first sentence if it fits in ``max_chars``; otherwise truncates at a word
+    boundary and appends an ellipsis. Empty/None → "".
+    """
+    text = (text or "").strip()
+    if not text:
+        return ""
+    first = text.split(". ", 1)[0].rstrip(".")
+    first = f"{first}." if first else ""
+    if len(first) <= max_chars:
+        return first
+    clipped = text[:max_chars].rsplit(" ", 1)[0].rstrip(",;: ")
+    return f"{clipped}…"
+
+
 def build_anthology(
     theme_articles: list[dict],
     predictions: list[dict],
@@ -144,6 +161,7 @@ _HTML_TEMPLATE = """\
   .claim {{ font-size: 1.05em; margin: 0 0 4px; }}
   .meta {{ font-size: 0.82em; color: #888; margin: 0; }}
   .meta a {{ color: #c9a84c; text-decoration: none; }}
+  .why {{ font-size: 0.85em; font-style: italic; color: #555; margin: 4px 0 0; }}
   section {{ page-break-before: always; }}
   section.frontispiece {{ page-break-before: avoid; }}
   footer {{ margin-top: 40px; padding-top: 16px; border-top: 1px solid #ddd;
@@ -175,8 +193,10 @@ _HTML_TEMPLATE = """\
 _CALL_ITEM = """\
     <div class="entry">
       <p class="claim">&ldquo;{claim}&rdquo;</p>
-      <p class="meta">{confidence} &middot; <a href="{url}">{title}</a>{date}</p>
+      <p class="meta">{confidence} &middot; <a href="{url}">{title}</a>{date}</p>{why}
     </div>"""
+
+_WHY_LINE = '\n      <p class="why">Why it held up: {snippet}</p>'
 
 _PIECE_ITEM = """\
     <div class="entry">
@@ -191,6 +211,11 @@ def _esc(value) -> str:
 
 def _date_suffix(date: str) -> str:
     return f" &middot; {_esc(date)}" if date else ""
+
+
+def _why_line(prediction: dict) -> str:
+    snippet = reasoning_snippet(prediction.get("llm_verdict_reasoning"))
+    return _WHY_LINE.format(snippet=_esc(snippet)) if snippet else ""
 
 
 def render_html(anthology: dict) -> str:
@@ -214,6 +239,7 @@ def render_html(anthology: dict) -> str:
                 title=_esc(p.get("article_title", "")),
                 url=html.escape(p.get("article_url", "#"), quote=True),
                 date=_date_suffix(p.get("article_date", "")),
+                why=_why_line(p),
             )
             for p in calls
         )
@@ -260,6 +286,9 @@ def render_markdown(anthology: dict) -> str:
         for p in calls:
             conf = (p.get("confidence_language") or "").title() or "Vindicated"
             lines.append(f"- [{conf}] {p.get('claim', '')} — {p.get('article_title', '')}")
+            snippet = reasoning_snippet(p.get("llm_verdict_reasoning"))
+            if snippet:
+                lines.append(f"    Why it held up: {snippet}")
     pieces = anthology.get("signature_pieces") or []
     if pieces:
         lines += ["", "## Signature Pieces"]

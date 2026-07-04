@@ -12,6 +12,7 @@ from analysis.anthology import (
     best_calls,
     build_anthology,
     corpus_span,
+    reasoning_snippet,
     render_html,
     render_markdown,
     run,
@@ -142,6 +143,29 @@ class TestSignaturePieces:
         assert signature_pieces([]) == []
 
 
+class TestReasoningSnippet:
+    def test_short_single_sentence_returned_whole(self):
+        assert reasoning_snippet("He was right.") == "He was right."
+
+    def test_returns_only_the_first_sentence(self):
+        text = "The first point holds. A second, longer elaboration follows here."
+        assert reasoning_snippet(text) == "The first point holds."
+
+    def test_long_first_sentence_truncated_at_word_boundary(self):
+        words = "alpha bravo charlie delta echo foxtrot golf hotel india juliet".split()
+        text = " ".join(words * 6)  # long, no sentence break
+        got = reasoning_snippet(text, max_chars=40)
+        assert got.endswith("…")
+        assert len(got) <= 41
+        assert not got.startswith(" ")
+        # every token before the ellipsis is a whole word (never split mid-word)
+        assert all(tok in words for tok in got[:-1].split())
+
+    def test_empty_or_none_is_blank(self):
+        assert reasoning_snippet("") == ""
+        assert reasoning_snippet(None) == ""
+
+
 class TestBuildAnthology:
     def test_assembles_the_full_anthology(self):
         a = build_anthology(THEME_ARTICLES, PREDICTIONS)
@@ -180,6 +204,23 @@ class TestRenderers:
         md = render_markdown(a)
         assert "<html" not in md.lower()
         assert "The Fed will not cut before September." in md
+
+    def test_html_shows_why_a_call_held_up_when_reasoning_present(self):
+        preds = [{"claim": "It happened.", "confidence_language": "certain",
+                  "llm_verdict": "vindicated", "article_slug": "z",
+                  "article_title": "Z", "article_url": "u",
+                  "llm_verdict_reasoning": "Events unfolded exactly as forecast. More detail."}]
+        html = render_html(build_anthology([], preds))
+        assert "Events unfolded exactly as forecast." in html
+        # the longer second sentence is trimmed to keep the keepsake tight
+        assert "More detail." not in html
+
+    def test_html_omits_why_line_when_no_reasoning(self):
+        preds = [{"claim": "It happened.", "confidence_language": "certain",
+                  "llm_verdict": "vindicated", "article_slug": "z",
+                  "article_title": "Z", "article_url": "u"}]
+        html = render_html(build_anthology([], preds))
+        assert "class=\"why\"" not in html
 
 
 class TestRun:
