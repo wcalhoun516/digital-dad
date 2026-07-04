@@ -22,6 +22,10 @@ data/analysis/embeddings.npy
 data/analysis/embeddings_meta.json
 data/analysis/embeddings.json
 
+# Best-of anthology keepsake (roadmap #24) — regenerated on demand by `make anthology`
+data/analysis/anthology.json
+data/analysis/anthology.html
+
 # Weekly cron logs (the directory is kept via .gitkeep)
 data/cron/*.log
 data/cron/*.out
