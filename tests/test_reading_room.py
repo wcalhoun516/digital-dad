@@ -5,6 +5,8 @@ injectable ``load_body`` callable, so these tests make no conductor calls and to
 (no real ``data/raw`` files needed).
 """
 
+import json
+
 import pytest
 
 from analysis import reading_room as rr
@@ -139,3 +141,39 @@ def test_build_themes_are_present_sorted_by_frequency(articles):
     room = rr.build_reading_room(articles, load_body=load_body)
     # Fed/Inflation has 2 readable articles, Crypto has 1 -> Fed first, ties alphabetical
     assert room["themes"] == ["Fed / Inflation / Rates", "Crypto / Bitcoin / Blockchain"]
+
+
+# --- raw body reader -------------------------------------------------------------
+
+
+def test_read_raw_body_returns_body_field(tmp_path):
+    (tmp_path / "a-slug.json").write_text(json.dumps({"body": "Hello.\n\nWorld."}))
+    assert rr._read_raw_body("a-slug", raw_dir=tmp_path) == "Hello.\n\nWorld."
+
+
+def test_read_raw_body_missing_file_is_none(tmp_path):
+    assert rr._read_raw_body("nope", raw_dir=tmp_path) is None
+
+
+def test_read_raw_body_malformed_json_is_none(tmp_path):
+    (tmp_path / "bad.json").write_text("{not json")
+    assert rr._read_raw_body("bad", raw_dir=tmp_path) is None
+
+
+# --- run -------------------------------------------------------------------------
+
+
+def test_run_no_write_returns_room(articles):
+    result = rr.run(articles=articles, load_body=load_body, write=False)
+    assert result["reading_room"]["count"] == 3
+    assert result["json_file"] is None
+
+
+def test_run_writes_reading_room_json(tmp_path, articles):
+    result = rr.run(articles=articles, load_body=load_body, out_dir=tmp_path, write=True)
+    out = tmp_path / "reading_room.json"
+    assert out.exists()
+    data = json.loads(out.read_text())
+    assert data["count"] == 3
+    assert [e["slug"] for e in data["entries"]][0] == "inflation-returns"
+    assert result["json_file"] == str(out)

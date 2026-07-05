@@ -17,12 +17,15 @@ git-ignored ``dashboard/index.html``); it is never committed and never present i
 where the dashboard inlines an empty stub instead.
 """
 
+import argparse
+import json
 import math
 import re
 from collections import Counter
 from collections.abc import Callable
+from pathlib import Path
 
-from .utils import ANALYSIS_DIR
+from .utils import ANALYSIS_DIR, RAW_DIR
 
 THEMES_PATH = ANALYSIS_DIR / "themes.json"
 OUT_DIR = ANALYSIS_DIR
@@ -99,3 +102,93 @@ def build_reading_room(
     themes = [t for t, _ in sorted(theme_counts.items(), key=lambda kv: (-kv[1], kv[0]))]
 
     return {"entries": entries, "count": len(entries), "themes": themes}
+
+
+def _load_json(path: Path, default):
+    """Load JSON from ``path``; return ``default`` if it is missing or malformed."""
+    path = Path(path)
+    if not path.exists():
+        return default
+    try:
+        return json.loads(path.read_text())
+    except json.JSONDecodeError:
+        return default
+
+
+def _load_theme_articles() -> list[dict]:
+    data = _load_json(THEMES_PATH, {})
+    return data.get("articles", []) if isinstance(data, dict) else []
+
+
+def _read_raw_body(slug: str, *, raw_dir: Path = RAW_DIR) -> str | None:
+    """Read the full body text for ``slug`` from ``data/raw/<slug>.json``.
+
+    Returns ``None`` if the file is missing or malformed — such articles simply don't appear
+    in the reading room (there is nothing to read).
+    """
+    record = _load_json(Path(raw_dir) / f"{slug}.json", None)
+    if not isinstance(record, dict):
+        return None
+    body = record.get("body")
+    return body if isinstance(body, str) else None
+
+
+def run(
+    *,
+    articles: list[dict] | None = None,
+    load_body: Callable[[str], str | None] | None = None,
+    out_dir: Path = OUT_DIR,
+    write: bool = True,
+    limit: int | None = None,
+) -> dict:
+    """Build the reading room and (unless ``write=False``) write it to disk.
+
+    Deterministic and offline: reads ``themes.json`` for article metadata/theme labels and the
+    full bodies from ``data/raw/*.json`` (or the injected ``articles``/``load_body``), then
+    writes the **git-ignored** ``reading_room.json`` (full bodies — regenerate on demand).
+    Makes no conductor/network/LLM calls.
+    """
+    if articles is None:
+        articles = _load_theme_articles()
+    if load_body is None:
+        load_body = _read_raw_body
+
+    room = build_reading_room(articles, load_body=load_body, limit=limit)
+
+    json_file = None
+    if write:
+        out_dir = Path(out_dir)
+        out_dir.mkdir(parents=True, exist_ok=True)
+        json_file = out_dir / "reading_room.json"
+        json_file.write_text(json.dumps(room, indent=2, ensure_ascii=False) + "\n")
+
+    return {"reading_room": room, "json_file": str(json_file) if json_file else None}
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(
+        description="Reading Room — full-article reader data for the dashboard (roadmap #21)."
+    )
+    parser.add_argument(
+        "--limit", type=int, default=None,
+        help="Keep only the newest N readable articles (default: all).",
+    )
+    parser.add_argument(
+        "--dry-run", action="store_true",
+        help="Report what would be built without writing reading_room.json.",
+    )
+    args = parser.parse_args(argv)
+
+    result = run(write=not args.dry_run, limit=args.limit)
+    room = result["reading_room"]
+    print(f"Reading Room: {room['count']} readable articles across {len(room['themes'])} themes.")
+    if result["json_file"]:
+        print(f"JSON saved:  {result['json_file']}")
+        print("Run `make dashboard` to surface it in the Reading Room tab.")
+    else:
+        print("Dry run — nothing written.")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
