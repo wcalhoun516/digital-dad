@@ -17,7 +17,85 @@ git-ignored ``dashboard/index.html``); it is never committed and never present i
 where the dashboard inlines an empty stub instead.
 """
 
+import math
+import re
+from collections import Counter
+from collections.abc import Callable
+
 from .utils import ANALYSIS_DIR
 
 THEMES_PATH = ANALYSIS_DIR / "themes.json"
 OUT_DIR = ANALYSIS_DIR
+
+# Reading speed for the time-to-read estimate shown in the reader.
+_WORDS_PER_MINUTE = 200
+
+
+def paragraphs(body: str | None) -> list[str]:
+    """Split a raw article body into clean paragraphs.
+
+    Splits on blank lines, strips whitespace, and drops empties (raw Wayback bodies carry
+    stray whitespace-only "paragraphs"). None/blank → ``[]``.
+    """
+    if not body or not body.strip():
+        return []
+    parts = re.split(r"\n\s*\n", body)
+    return [p.strip() for p in parts if p.strip()]
+
+
+def reading_time_minutes(word_count: int) -> int:
+    """Estimated minutes to read, at ~200 wpm. A real article never rounds to 0."""
+    if word_count <= 0:
+        return 0
+    return max(1, math.ceil(word_count / _WORDS_PER_MINUTE))
+
+
+def build_reading_room(
+    articles: list[dict],
+    *,
+    load_body: Callable[[str], str | None],
+    limit: int | None = None,
+) -> dict:
+    """Assemble the ordered, navigable reading experience (pure; no I/O).
+
+    ``articles`` is a ``themes.json``-shaped list (``slug``/``title``/``date``/``url``/
+    ``word_count``/``cluster_label``). ``load_body(slug)`` returns the full body text or
+    ``None`` when the raw file is missing. Entries are ordered **newest-first** by date;
+    undated records (the Forbes author-listing page) and any article with no readable body
+    are excluded (there is nothing to read). ``prev_slug``/``next_slug`` walk the final
+    reading order. ``limit`` keeps the newest N.
+    """
+    dated = [a for a in articles if (a.get("date") or "")]
+    ordered = sorted(dated, key=lambda a: (a.get("date", ""), a.get("slug", "")), reverse=True)
+
+    entries: list[dict] = []
+    for a in ordered:
+        slug = a.get("slug", "")
+        paras = paragraphs(load_body(slug))
+        if not paras:
+            continue
+        entries.append(
+            {
+                "slug": slug,
+                "title": a.get("title", ""),
+                "date": a.get("date", ""),
+                "url": a.get("url", ""),
+                "theme": a.get("cluster_label", ""),
+                "word_count": a.get("word_count", 0),
+                "reading_minutes": reading_time_minutes(a.get("word_count", 0)),
+                "paragraphs": paras,
+                "prev_slug": None,
+                "next_slug": None,
+            }
+        )
+        if limit is not None and len(entries) >= limit:
+            break
+
+    for i, entry in enumerate(entries):
+        entry["prev_slug"] = entries[i - 1]["slug"] if i > 0 else None
+        entry["next_slug"] = entries[i + 1]["slug"] if i < len(entries) - 1 else None
+
+    theme_counts = Counter(e["theme"] for e in entries)
+    themes = [t for t, _ in sorted(theme_counts.items(), key=lambda kv: (-kv[1], kv[0]))]
+
+    return {"entries": entries, "count": len(entries), "themes": themes}
