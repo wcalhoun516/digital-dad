@@ -875,7 +875,12 @@ footer {
   <p class="section-desc">Sit and read the archive — every column in full, newest first, with its theme and a link back to Forbes.</p>
   <div id="reading-room-body">
     <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start">
-      <div id="rr-index" style="flex:1;min-width:220px;max-width:340px;max-height:70vh;overflow-y:auto"></div>
+      <div style="flex:1;min-width:220px;max-width:340px">
+        <select id="rr-theme-filter" style="width:100%;background:var(--bg-card);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:0.8em;padding:8px 10px;border-radius:0;cursor:pointer;margin-bottom:10px">
+          <option value="">All themes</option>
+        </select>
+        <div id="rr-index" style="max-height:66vh;overflow-y:auto"></div>
+      </div>
       <div id="rr-reader" style="flex:2;min-width:280px"></div>
     </div>
   </div>
@@ -2400,11 +2405,24 @@ function renderReadingRoom() {
   entries.forEach(e => { bySlug[e.slug] = e; });
 
   index.innerHTML = entries.map(e =>
-    `<div class="rr-item" data-slug="${esc(e.slug)}" style="padding:8px 10px;border-left:2px solid transparent;cursor:pointer">
+    `<div class="rr-item" data-slug="${esc(e.slug)}" data-theme="${esc(e.theme)}" style="padding:8px 10px;border-left:2px solid transparent;cursor:pointer">
        <div style="font-size:0.9em;line-height:1.35">${esc(e.title)}</div>
        <div style="font-family:var(--mono);font-size:0.72em;color:var(--text-muted);margin-top:2px">${esc(e.date)} &middot; ${esc(e.theme)}</div>
      </div>`
   ).join('');
+
+  const themeFilter = document.getElementById('rr-theme-filter');
+  (data.themes || []).forEach(t => {
+    const o = document.createElement('option');
+    o.value = t; o.textContent = t;
+    themeFilter.appendChild(o);
+  });
+  themeFilter.addEventListener('change', () => {
+    const want = themeFilter.value;
+    index.querySelectorAll('.rr-item').forEach(el => {
+      el.style.display = (!want || el.dataset.theme === want) ? '' : 'none';
+    });
+  });
 
   function open(slug) {
     const e = bySlug[slug];

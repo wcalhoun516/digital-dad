@@ -58,3 +58,10 @@ def test_template_reader_renders_prev_next_theme_and_forbes_link():
     # Prev/next navigation between articles and a Forbes deep link for the open one.
     assert "rr-prev" in html and "rr-next" in html
     assert "Read on Forbes" in html
+
+
+def test_template_has_theme_filter_over_emitted_themes():
+    html = TEMPLATE.read_text()
+    # A theme filter (populated from the builder's `themes`) narrows the index list.
+    assert 'id="rr-theme-filter"' in html
+    assert "data-theme=" in html
