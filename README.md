@@ -132,6 +132,30 @@ Output `data/analysis/intellectual_arc.json` has `overall`, `by_year`, `shifts`,
 `narrative` string. A future slice can richen the narrative through the conductor and
 surface the arc as a dashboard panel.
 
+## Reading Room — sit and read the archive
+
+The dashboard's **Reading Room** tab is a clean, paginated full-article reader: every
+column in full, newest-first, with its theme, an estimated reading time, prev/next
+navigation, and a link back to the original on Forbes. It's the "read" companion to Ask
+Dad's "query" — for when the family just wants to *read* Dad's writing.
+
+The reader's data is built by a deterministic, offline pass that joins the metadata in
+`data/analysis/themes.json` with the full article bodies in `data/raw/*.json` (no LLM, no
+network — safe to run unattended):
+
+```bash
+make reading-room                        # write data/analysis/reading_room.json
+make reading-room ARGS="--dry-run"       # report counts, write nothing
+make reading-room ARGS="--limit 20"      # only the newest 20 articles
+make dashboard                           # surface it in the Reading Room tab
+```
+
+Because `reading_room.json` embeds full article text, it is **git-ignored** (like
+`embeddings.json`) and regenerated on demand — it lives only in your local build and the
+git-ignored `dashboard/index.html`, never in the repo or CI. When it's absent (a fresh
+clone), the dashboard inlines an empty stub and the tab shows a "run `make reading-room`"
+prompt instead of article text.
+
 ## Ask Dad — RAG Chat
 
 The centerpiece interactive feature. Ask a question about any topic Dad has
