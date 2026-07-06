@@ -18,6 +18,7 @@ PLACEHOLDERS = {
     "/*__EMBEDDINGS_DATA__*/": DATA_DIR / "analysis" / "embeddings.json",
     "/*__PREDICTIONS_DATA__*/": DATA_DIR / "analysis" / "predictions.json",
     "/*__GEO_LLM_DATA__*/": DATA_DIR / "analysis" / "geo_llm.json",
+    "/*__READING_ROOM_DATA__*/": DATA_DIR / "analysis" / "reading_room.json",
 }
 
 # When an embeddings export is missing, inline an empty stub so the dashboard
@@ -26,6 +27,9 @@ _EMPTY_DEFAULTS = {
     "/*__EMBEDDINGS_DATA__*/": '{"model":null,"dim":0,"slugs":[],"titles":[],"dates":[],"urls":[],"vectors":[],"snippets":[]}',
     "/*__PREDICTIONS_DATA__*/": '{"predictions":[],"aggregate":{"by_topic":{},"by_confidence":{},"by_year":{},"llm_verdicts":{}}}',
     "/*__GEO_LLM_DATA__*/": '{"dataset":null,"sample_pair":null,"qlora":null,"pipeline":[],"rag_baseline":null,"voice_eval":null,"verdict":null,"finetune":null}',
+    # Reading Room embeds full bodies, so it is git-ignored; CI / fresh clones inline an
+    # empty room and the tab shows a "run make reading-room" prompt instead of article text.
+    "/*__READING_ROOM_DATA__*/": '{"entries":[],"count":0,"themes":[]}',
 }
 
 

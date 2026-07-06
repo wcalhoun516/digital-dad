@@ -648,6 +648,7 @@ footer {
   <button data-tab="search">Search</button>
   <button data-tab="askdad">Ask Dad</button>
   <button data-tab="trackrecord">Track Record</button>
+  <button data-tab="reading-room">Reading Room</button>
   <button data-tab="geollm">Geo-LLM</button>
 </nav>
 
@@ -868,6 +869,23 @@ footer {
   <div id="geo-verdict"></div>
 </div>
 
+<!-- Tab 11: Reading Room -->
+<div class="tab-content" id="tab-reading-room">
+  <h2>Reading Room</h2>
+  <p class="section-desc">Sit and read the archive — every column in full, newest first, with its theme and a link back to Forbes.</p>
+  <div id="reading-room-body">
+    <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start">
+      <div style="flex:1;min-width:220px;max-width:340px">
+        <select id="rr-theme-filter" style="width:100%;background:var(--bg-card);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:0.8em;padding:8px 10px;border-radius:0;cursor:pointer;margin-bottom:10px">
+          <option value="">All themes</option>
+        </select>
+        <div id="rr-index" style="max-height:66vh;overflow-y:auto"></div>
+      </div>
+      <div id="rr-reader" style="flex:2;min-width:280px"></div>
+    </div>
+  </div>
+</div>
+
 <footer>
   Digital Dad &middot; A project about preserving intellectual legacy &middot; Built with D3.js, Python, and the local-llm-conductor
 </footer>
@@ -885,6 +903,7 @@ const ENTITY_DATA = /*__ENTITY_DATA__*/;
 const EMBEDDINGS_DATA = /*__EMBEDDINGS_DATA__*/;
 const PREDICTIONS_DATA = /*__PREDICTIONS_DATA__*/;
 const GEO_LLM_DATA = /*__GEO_LLM_DATA__*/;
+const READING_ROOM_DATA = /*__READING_ROOM_DATA__*/;
 </script>
 
 <script>
@@ -2366,12 +2385,84 @@ function renderTrackRecord() {
   document.getElementById('prediction-confidence-filter').addEventListener('change', () => renderList(getFiltered()));
 }
 
+// ===== READING ROOM (roadmap #21) — full-article reader from READING_ROOM_DATA =====
+// Bodies live in the git-ignored reading_room.json, so this tab is populated only in the
+// owner's local build; in CI / fresh clones READING_ROOM_DATA is the empty stub and the tab
+// shows a "run make reading-room" prompt instead of article text.
+function renderReadingRoom() {
+  const esc = s => (s || '').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  const data = READING_ROOM_DATA || {};
+  const entries = data.entries || [];
+  const index = document.getElementById('rr-index');
+  const reader = document.getElementById('rr-reader');
+  if (!entries.length) {
+    index.innerHTML = '';
+    reader.innerHTML = '<p class="section-desc">No articles loaded. Run <code>make reading-room</code> then <code>make dashboard</code> to populate the reading room with full article text.</p>';
+    return;
+  }
+
+  const bySlug = {};
+  entries.forEach(e => { bySlug[e.slug] = e; });
+
+  index.innerHTML = entries.map(e =>
+    `<div class="rr-item" data-slug="${esc(e.slug)}" data-theme="${esc(e.theme)}" style="padding:8px 10px;border-left:2px solid transparent;cursor:pointer">
+       <div style="font-size:0.9em;line-height:1.35">${esc(e.title)}</div>
+       <div style="font-family:var(--mono);font-size:0.72em;color:var(--text-muted);margin-top:2px">${esc(e.date)} &middot; ${esc(e.theme)}</div>
+     </div>`
+  ).join('');
+
+  const themeFilter = document.getElementById('rr-theme-filter');
+  (data.themes || []).forEach(t => {
+    const o = document.createElement('option');
+    o.value = t; o.textContent = t;
+    themeFilter.appendChild(o);
+  });
+  themeFilter.addEventListener('change', () => {
+    const want = themeFilter.value;
+    index.querySelectorAll('.rr-item').forEach(el => {
+      el.style.display = (!want || el.dataset.theme === want) ? '' : 'none';
+    });
+  });
+
+  function open(slug) {
+    const e = bySlug[slug];
+    if (!e) return;
+    index.querySelectorAll('.rr-item').forEach(el => {
+      const on = el.dataset.slug === slug;
+      el.style.borderLeftColor = on ? 'var(--accent)' : 'transparent';
+      el.style.background = on ? 'var(--accent-dim)' : 'transparent';
+    });
+    const paras = (e.paragraphs || []).map(p => `<p style="margin:0 0 14px">${esc(p)}</p>`).join('');
+    const prevBtn = `<button id="rr-prev" ${e.prev_slug ? '' : 'disabled'} style="background:var(--bg-card);border:1px solid var(--border);color:var(--text-muted);font-family:var(--mono);font-size:0.75em;padding:6px 14px;cursor:pointer;border-radius:3px">&larr; Newer</button>`;
+    const nextBtn = `<button id="rr-next" ${e.next_slug ? '' : 'disabled'} style="background:var(--bg-card);border:1px solid var(--border);color:var(--text-muted);font-family:var(--mono);font-size:0.75em;padding:6px 14px;cursor:pointer;border-radius:3px">Older &rarr;</button>`;
+    reader.innerHTML =
+      `<article style="max-width:680px">
+         <h3 style="font-size:1.4em;margin:0 0 6px;color:var(--text)">${esc(e.title)}</h3>
+         <div style="font-family:var(--mono);font-size:0.78em;color:var(--text-muted);margin-bottom:20px">
+           ${esc(e.date)} &middot; ${esc(e.theme)} &middot; ${e.reading_minutes} min read
+           &middot; <a href="${esc(e.url)}" target="_blank" rel="noopener" style="color:var(--accent)">Read on Forbes &#8599;</a>
+         </div>
+         <div style="line-height:1.75;font-size:1.02em">${paras}</div>
+         <div style="display:flex;justify-content:space-between;margin-top:28px;padding-top:16px;border-top:1px solid var(--border)">${prevBtn}${nextBtn}</div>
+       </article>`;
+    if (e.prev_slug) document.getElementById('rr-prev').addEventListener('click', () => open(e.prev_slug));
+    if (e.next_slug) document.getElementById('rr-next').addEventListener('click', () => open(e.next_slug));
+    reader.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+  }
+
+  index.querySelectorAll('.rr-item').forEach(el => {
+    el.addEventListener('click', () => open(el.dataset.slug));
+  });
+  open(entries[0].slug);
+}
+
 let currentTab = null;
 function renderTab(name) {
   currentTab = name;  // tracked even for cached tabs, so resize redraw knows the target
   if (rendered[name]) return;
   rendered[name] = true;
   switch(name) {
+    case 'reading-room': renderReadingRoom(); break;
     case 'themes': renderThemeMap(); break;
     case 'timeline': renderTimeline(); break;
     case 'psychoprofile': renderPsychoprofile(); break;
