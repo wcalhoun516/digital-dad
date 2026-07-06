@@ -4,7 +4,7 @@ PYTHON := .venv/bin/python
 # ruff findings (broadening the scope is a follow-up roadmap item, #1-3/cleanup).
 LINT_PATHS := tests
 
-.PHONY: scrape manifest-check coverage-audit analyze training dashboard all serve share search on-this-day send-on-this-day adjudicate backfill-verdicts rag-eval voice-eval voice-trials anthology clean test lint fmt verify verify-responsive
+.PHONY: scrape manifest-check coverage-audit analyze training dashboard all serve share search on-this-day send-on-this-day adjudicate backfill-verdicts rag-eval voice-eval voice-trials reading-room clean test lint fmt verify verify-responsive
 
 scrape:
 	$(PYTHON) -m scraper $(ARGS)
@@ -90,13 +90,12 @@ backfill-verdicts:
 intellectual-arc:
 	$(PYTHON) -m analysis.intellectual_arc $(ARGS)
 
-# Printable "best of" anthology keepsake (roadmap #24, family). Pure/offline — no conductor,
-# no network — so it's safe in automation. Curates his vindicated calls + a signature piece
-# per dominant theme from data/analysis/{predictions,themes}.json and writes a print-ready
-# data/analysis/anthology.html (open in a browser, "Print → Save as PDF"). ARGS e.g.
-# --calls-limit 12, --themes 8, or --dry-run to preview without writing.
-anthology:
-	$(PYTHON) -m analysis.anthology $(ARGS)
+# Reading Room data for the dashboard (roadmap #21, family). Pure/offline — no conductor,
+# no network — so it's safe in automation. Joins themes.json metadata with the full bodies
+# from data/raw/*.json and writes the git-ignored data/analysis/reading_room.json (full
+# text — regenerate on demand, then `make dashboard`). ARGS e.g. --dry-run or --limit 20.
+reading-room:
+	$(PYTHON) -m analysis.reading_room $(ARGS)
 
 # RAG faithfulness eval baseline for Ask Dad (plan 0007). Owner-gated: the generation +
 # judge passes make conductor calls (judge defaults to paid T3), so it refuses to run if

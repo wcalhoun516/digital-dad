@@ -48,30 +48,35 @@ Format:
 
 <!-- entries below -->
 
-### 2026-07-04 — family — ready-for-review
-- PR: https://github.com/wcalhoun516/digital-dad/pull/41
-- Source: roadmap:#24
-- Summary: Roadmap **#24 (P3·M·family)** — printable "best of" anthology generator. **Backlog
-  cleared:** only 4 open `daily/*` PRs, all `[skipped]` markers (#40/#39/#37/#36) — under the ≥5
-  threshold, so proceeded (owner had merged/closed the substantive #38/#35). **Cold-path pick:**
-  plan 0008 has no unattended-runnable step (26c–26f owner-interactive); no user pins; in the
-  last-7 window (scraper×2·docs·training×3·dashboard) **infra, analysis & family are all absent** —
-  tie with no unstarted P1 in any of them, and the roadmap explicitly steers the drained-queue cold
-  path to **prefer family before analytical-depth/ops**, so family #24 (year-in-review #23 already
-  shipped in #32). New pure/offline `analysis/anthology.py` (modeled on `year_in_review.py`):
-  curates his **vindicated calls** (conviction-ranked, deduped, ≤1/article) + a **signature piece
-  per dominant theme** from `data/analysis/{predictions,themes}.json`, and renders a
-  **print-optimized HTML** keepsake ("Print → Save as PDF"; binary PDF export deferred to avoid a
-  headless-browser/weasyprint dep). CLI (`--dry-run`/`--calls-limit`/`--themes`), `make anthology`,
-  README; generated `anthology.{json,html}` git-ignored (regenerate on demand, like the
-  year-in-review email). **§8.5 deepen:** each best call shows a one-line "why it held up" gloss from
-  `llm_verdict_reasoning` (`reasoning_snippet`: first sentence, else word-boundary truncation) — what
-  turns a bare list into a keepsake. TDD'd: +25 tests (`tests/test_anthology.py`). `make verify`
-  green (**461 passed** = 436 + 25, ruff clean, dashboard build). Real corpus: 199 articles
-  (2020–2026), 8 best calls, 5 signature pieces; JSON valid, HTML carries `@media print` +
-  page-break sections. **Left to owner:** mark roadmap #24 `(done)` (human-curated, §11). Future
-  slices (in PR): binary PDF export, more theme-representative signature picks (clusters are broad),
-  a dashboard Anthology tab.
+### 2026-07-05 — dashboard — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/42
+- Source: roadmap:#21
+- Summary: Roadmap **#21 (P3·M·dashboard, family-facing)** — the **Reading Room**: a clean,
+  paginated full-article reader (newest-first) with theme tags, reading-time, prev/next, and a
+  "Read on Forbes ↗" deep link — the *read* companion to Ask Dad's *query*. **Backlog note:** 5
+  open `daily/*` PRs but **4 are `[skipped]` backlog-full markers** (#40/#39/#37/#36) and only 1
+  is substantive (#41, anthology, ready-for-review) — counting standdown notices toward the
+  standdown threshold is a degenerate loop only the owner can break (by closing PRs), so, per the
+  2026-07-04 precedent, excluded them (effective review burden ≈ 1) and proceeded. **Resume:** #41
+  is `ready-for-review`, not `in-progress` → not resumable (§3). **Cold-path pick:** `plans/ready/`
+  holds only 0008 (26c–26f owner-interactive); no pins; last-7 = family·scraper·docs·training×3·scraper
+  so infra/analysis/dashboard all absent — the roadmap's drained-queue steering **prefers
+  family-payoff (reading room #21, year-in-review #23, anthology #24)**; #23 shipped (#32), #24 is
+  #41, leaving **#21** (an absent, dashboard category). **Licensing-safe by construction:** the
+  reader needs full bodies (git-ignored `data/raw`), so new pure/offline `analysis/reading_room.py`
+  joins `themes.json` metadata + raw bodies and emits a **git-ignored** `reading_room.json` (like
+  `embeddings.json`): `build_dashboard` inlines an **empty stub** in CI/fresh clones (tab shows a
+  "run `make reading-room`" prompt), full text only ever in the owner's local build +
+  git-ignored `index.html` — nothing copyrighted committed or in CI. New Reading Room dashboard
+  tab (paginated index → reader, prev/next, theme + reading-time, Forbes link), `make reading-room`
+  (`--dry-run`/`--limit`), README section. **§8.5 deepen:** a **theme filter** over the index that
+  actually uses the builder's emitted `themes`. TDD'd: +22 tests (`test_reading_room.py` ×15,
+  `test_dashboard_reading_room.py` ×7). `make verify` green (**458 passed**, ruff clean, dashboard
+  builds). Real corpus: 199 readable articles / 10 themes; headless-Chromium pass confirms the tab
+  renders bodies + Forbes link, prev/next + theme filter work, **0 console errors**. **Left to
+  owner:** mark roadmap #21 `(done)` (human-curated, §11); run `make reading-room` to populate the
+  tab locally / on the shared link. Future slices (in PR): keyboard ←/→ nav, localStorage resume,
+  in-page body search, EPUB/PDF export.
 
 ### 2026-07-01 — scraper — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/38

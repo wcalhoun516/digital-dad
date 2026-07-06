@@ -22,9 +22,9 @@ data/analysis/embeddings.npy
 data/analysis/embeddings_meta.json
 data/analysis/embeddings.json
 
-# Best-of anthology keepsake (roadmap #24) — regenerated on demand by `make anthology`
-data/analysis/anthology.json
-data/analysis/anthology.html
+# Reading Room (roadmap #21) — embeds full article bodies, so regenerate on demand with
+# `make reading-room`; never committed (licensing), CI inlines an empty stub instead.
+data/analysis/reading_room.json
 
 # Weekly cron logs (the directory is kept via .gitkeep)
 data/cron/*.log
