@@ -57,6 +57,12 @@ RSS headlines, embeds them, finds the best-matching archive article by cosine si
 generates a 2–3 sentence intro in Dr. Calhoun's voice (conductor T2), renders an HTML email
 to `data/cron/emails/`, logs to `data/cron/on_this_day.jsonl`.
 
+`entity_graph.py` — also outside the default chain; run via `make entity-graph`. A pure/offline
+**derived** artifact: reads `entities.json`'s `per_article` lists and emits `entity_graph.json`,
+an undirected co-occurrence graph (nodes = people/orgs, edge weight = shared-article count) for
+a future dashboard network viz. Byline/photo-credit boilerplate is excluded by default
+(`--no-exclude` to keep it). No conductor/network. (Roadmap #14.)
+
 ## 3. The conductor (LLM abstraction)
 
 All model calls go to a **local OpenAI-compatible server** at `http://127.0.0.1:8080/v1`

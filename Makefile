@@ -4,7 +4,7 @@ PYTHON := .venv/bin/python
 # ruff findings (broadening the scope is a follow-up roadmap item, #1-3/cleanup).
 LINT_PATHS := tests
 
-.PHONY: scrape manifest-check coverage-audit analyze training dashboard all serve share search on-this-day send-on-this-day adjudicate backfill-verdicts rag-eval voice-eval voice-trials clean test lint fmt verify verify-responsive
+.PHONY: scrape manifest-check coverage-audit analyze training dashboard all serve share search on-this-day send-on-this-day adjudicate backfill-verdicts entity-graph rag-eval voice-eval voice-trials clean test lint fmt verify verify-responsive
 
 scrape:
 	$(PYTHON) -m scraper $(ARGS)
@@ -89,6 +89,13 @@ backfill-verdicts:
 # ARGS=--dry-run prints the narrative without writing.
 intellectual-arc:
 	$(PYTHON) -m analysis.intellectual_arc $(ARGS)
+
+# Entity co-occurrence graph (roadmap #14): who Dr. Calhoun writes about alongside whom,
+# derived from data/analysis/entities.json (run `make analyze` first). Pure/offline — no
+# conductor, no network — so it's safe in automation. Writes data/analysis/entity_graph.json;
+# ARGS e.g. --dry-run, --top 60, --min-cooccur 3, or --no-exclude (keep byline/photo boilerplate).
+entity-graph:
+	$(PYTHON) -m analysis.entity_graph $(ARGS)
 
 # RAG faithfulness eval baseline for Ask Dad (plan 0007). Owner-gated: the generation +
 # judge passes make conductor calls (judge defaults to paid T3), so it refuses to run if

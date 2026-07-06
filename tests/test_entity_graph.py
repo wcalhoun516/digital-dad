@@ -158,6 +158,39 @@ def test_render_markdown_mentions_strongest_pair(entities_data):
     assert md.startswith("#")
 
 
+# --- exclude / boilerplate filtering (§8.5 deepen) --------------------------
+
+def test_article_entities_exclude_is_case_insensitive():
+    rec = {"slug": "x", "orgs": [["Getty Images", 4], ["Fed", 2]], "people": []}
+    ents = eg.article_entities(rec, exclude={"getty images"})
+    assert ("Getty Images", "org") not in ents
+    assert ("Fed", "org") in ents
+
+
+def test_default_exclude_drops_boilerplate():
+    per_article = [
+        {"slug": "a1", "orgs": [["Getty Images", 3], ["Fed", 2]],
+         "people": [["George Calhoun", 1], ["Powell", 2]]},
+    ]
+    nodes = eg.entity_nodes(per_article)  # exclude=None -> default set
+    names = {n["name"] for n in nodes.values()}
+    assert "Getty Images" not in names
+    assert "George Calhoun" not in names
+    assert {"Fed", "Powell"} <= names
+
+
+def test_no_exclude_keeps_everything():
+    per_article = [{"slug": "a1", "orgs": [["Getty Images", 3]], "people": []}]
+    nodes = eg.entity_nodes(per_article, exclude=frozenset())
+    assert any(n["name"] == "Getty Images" for n in nodes.values())
+
+
+def test_build_graph_records_excluded_param(entities_data):
+    g = eg.build_graph(entities_data, exclude={"Fed"}, min_cooccur=1)
+    assert "fed" in g["meta"]["params"]["excluded"]
+    assert all(n["name"] != "Fed" for n in g["nodes"])
+
+
 # --- run (offline, injected data) ------------------------------------------
 
 def test_run_writes_json(tmp_path, entities_data):
