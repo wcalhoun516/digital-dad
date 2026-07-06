@@ -48,6 +48,34 @@ Format:
 
 <!-- entries below -->
 
+### 2026-07-06 — analysis — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/43
+- Source: roadmap:#14
+- Summary: Roadmap **#14 (P2·L·analysis)** — **entity co-occurrence graph**, first slice: the
+  pure/offline **builder** (D3 network viz deferred to a later slice). New
+  `analysis/entity_graph.py` reads `entities.json`'s `per_article` lists and emits committable
+  `entity_graph.json` — nodes = people/orgs (`article_count`/`total_mentions`/`degree`), edge
+  weight = shared-article count, plus `top_pairs`. **§8.5 deepen:** a default, overridable
+  boilerplate **exclude** set (author byline "George Calhoun/Calhoun/Rafael/Stevens" + photo
+  credits "Getty Images/AFP") so the graph reflects who he *writes about* — on the real corpus
+  this cut noise edges 317→201 and surfaced the real hubs (Fed, Powell, Treasury, PCE, Jack Ma,
+  Ant, Larry Summers). `run()` + `python -m analysis.entity_graph` CLI (`--dry-run`, `--top`,
+  `--min-cooccur`, `--min-mentions`, `--exclude`/`--no-exclude`) + `make entity-graph` +
+  architecture doc note. TDD'd: +21 tests (`test_entity_graph.py`). `make verify` green (**457
+  passed**, ruff clean, dashboard builds); real corpus → 40 nodes / 201 edges, artifact valid.
+  **Cold-path pick (stale-log correction):** `plans/ready/` holds only 0008 (26c–26f
+  owner-interactive/paid/sibling-repo); no pins. The run history here is **missing the merged
+  06-26/06-27/06-28 entries** (`#32` year-in-review, `#34` intellectual-arc, `#35`
+  conductor-preflight — a stale-merge log regression), so rotation was computed from **merged
+  code on `main`**: within `analysis`, #11 (P1) is the owner-gated paid backfill
+  (`verdict_backfill.py` exists) and #13 is merged (`intellectual_arc.py`), leaving **#14** the
+  top unstarted, unattended-safe item. **Env note:** started on a dirty
+  `daily/2026-07-05-reading-room` tree (not `main`); its uncommitted local extras (a
+  `serve_dashboard.py` tweak + regenerated data, not part of PR #42) were **stashed**
+  (recoverable, `stash@{0}`) to cut this branch cleanly off `origin/main`. **Future slices (in
+  PR):** entity alias-merging (Fed / the Federal Reserve / Jerome Powell), per-node neighbor
+  lists, and the dashboard D3 network tab.
+
 ### 2026-07-01 — scraper — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/38
 - Source: roadmap:#9
