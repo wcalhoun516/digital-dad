@@ -387,6 +387,33 @@ The email is saved to `data/cron/emails/year_in_review_YYYY.html`. Delivery stay
 human-in-the-loop via the same Gmail-MCP draft path as On This Day (Decision D9) —
 nothing is sent automatically.
 
+## "Best Of" Printable Anthology
+
+A printable keepsake of his strongest writing across the whole archive: the
+predictions the record vindicated, ranked by how boldly he made them, plus a
+signature piece for each dominant theme. Rendered as a clean, print-optimized HTML
+document the family can open in a browser and **"Print → Save as PDF."**
+
+Like Year in Review, this is **deterministic and offline**: it reads the analysis
+outputs already on disk (`data/analysis/predictions.json` for his vindicated calls,
+`data/analysis/themes.json` for the theme clusters + articles) and makes **no
+conductor, network, or LLM calls** — so it is safe to run unattended.
+
+```bash
+# Build the anthology → data/analysis/anthology.html (+ anthology.json)
+make anthology
+
+# Tune how much to include, or preview without writing anything
+make anthology ARGS="--calls-limit 12 --themes 8"
+make anthology ARGS="--dry-run"
+```
+
+Two files are written to `data/analysis/` (both git-ignored — regenerate on demand):
+`anthology.html` (the print-ready keepsake) and `anthology.json` (the excerpt-level
+selection behind it). Binary PDF generation is deliberately deferred to a later slice
+— browser "Save as PDF" is the interim path, which avoids a headless-browser/weasyprint
+dependency.
+
 ## The Dashboard
 
 A self-contained HTML file (`dashboard/index.html`) with nine tabs:
