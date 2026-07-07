@@ -1,0 +1,31 @@
+# Pre-commit hooks (roadmap #5). Install once with `make hooks` (or `pre-commit install`),
+# then they run on `git commit`. All hooks are `repo: local` on purpose: they reuse the
+# tools already pinned in `.venv` (see pyproject `[dev]`) so first use needs no network
+# fetch, and they stay in lockstep with `make lint`/`make fmt`.
+#
+# Run against everything on demand: `pre-commit run --all-files`.
+repos:
+  - repo: local
+    hooks:
+      # ruff lint. Scoped to tests/ to mirror `make lint` (`LINT_PATHS := tests`): the
+      # existing modules still carry pre-existing ruff findings, so broadening this scope is
+      # deferred to roadmap #1-3 cleanup. Widen `files:` once those are clean.
+      #
+      # This is `ruff check`, matching what `make verify` enforces. `ruff format` is left as
+      # an on-demand `make fmt` (not a blocking hook) because the committed tests are not yet
+      # format-clean and a repo-wide format sweep is out of scope for this change.
+      - id: ruff-check
+        name: ruff check (tests/)
+        entry: .venv/bin/ruff check --force-exclude
+        language: system
+        types: [python]
+        files: ^tests/
+
+      # JSON validity for the committed analysis artifacts. `\.json$` excludes runs.jsonl
+      # (JSONL, not JSON); gitignored artifacts (embeddings*, geo_llm_registration) never
+      # stage so they are never checked.
+      - id: check-analysis-json
+        name: validate data/analysis/*.json
+        entry: .venv/bin/python -m tools.check_analysis_json
+        language: system
+        files: ^data/analysis/.*\.json$

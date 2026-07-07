@@ -4,7 +4,7 @@ PYTHON := .venv/bin/python
 # ruff findings (broadening the scope is a follow-up roadmap item, #1-3/cleanup).
 LINT_PATHS := tests
 
-.PHONY: scrape manifest-check coverage-audit analyze training dashboard all serve share search on-this-day send-on-this-day adjudicate backfill-verdicts entity-graph rag-eval voice-eval voice-trials clean test lint fmt verify verify-responsive
+.PHONY: scrape manifest-check coverage-audit analyze training dashboard all serve share search on-this-day send-on-this-day adjudicate backfill-verdicts entity-graph rag-eval voice-eval voice-trials clean test lint fmt lint-json hooks verify verify-responsive
 
 scrape:
 	$(PYTHON) -m scraper $(ARGS)
@@ -133,6 +133,16 @@ lint:
 
 fmt:
 	$(PYTHON) -m ruff format $(LINT_PATHS)
+
+# Validate the committed data/analysis/*.json artifacts parse as JSON (roadmap #5). This is
+# the same check the pre-commit hook runs; report-only exit 0 unless a file is malformed.
+lint-json:
+	$(PYTHON) -m tools.check_analysis_json
+
+# Install the git pre-commit hooks defined in .pre-commit-config.yaml (roadmap #5). One-time
+# per clone; needs `pip install -e .[dev]` first so `pre-commit` is on PATH in .venv.
+hooks:
+	.venv/bin/pre-commit install
 
 verify: lint test
 	$(MAKE) dashboard
