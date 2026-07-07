@@ -62,6 +62,25 @@ make on-this-day                         # Generate weekly "On This Day" email
 make serve       # Opens http://localhost:8000
 ```
 
+### Developing
+
+```bash
+pip install -e ".[dev]"   # pytest, ruff, pre-commit
+make verify               # ruff check (tests/) + pytest + dashboard smoke build (what CI runs)
+
+# Optional git hooks (roadmap #5) — run the same checks on `git commit`:
+make hooks                # installs .pre-commit-config.yaml (one-time per clone)
+make lint-json            # standalone: validate the committed data/analysis/*.json parse
+
+# Run all hooks on demand without committing:
+pre-commit run --all-files
+```
+
+Two hooks fire on commit: **ruff check** on staged `tests/` files (matching `make verify`)
+and a **JSON-validity** check on staged `data/analysis/*.json` so a malformed analysis
+artifact can't be committed. Both are `repo: local` — they reuse the tools in `.venv`, so no
+network fetch is needed. Formatting stays on-demand via `make fmt` (not a blocking hook).
+
 ## Project Structure
 
 ```

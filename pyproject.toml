@@ -21,6 +21,7 @@ analyze = [
 dev = [
     "pytest>=8",
     "ruff>=0.6",
+    "pre-commit>=3.7",
 ]
 finetune = [
     # Geo-LLM QLoRA fine-tune (plan 0008). MLX is Apple-Silicon/macOS only, so the
