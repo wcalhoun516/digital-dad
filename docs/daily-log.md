@@ -48,6 +48,37 @@ Format:
 
 <!-- entries below -->
 
+### 2026-07-07 — infra — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/44
+- Source: roadmap:#5
+- Summary: Roadmap **#5 (P3·S·infra)** — **pre-commit hooks**. New `.pre-commit-config.yaml`
+  with two `repo: local` hooks (no network fetch — they reuse the pinned `.venv` tools):
+  **ruff check** on staged `tests/` (mirrors `make lint`/`verify`'s `LINT_PATHS := tests`) and a
+  **JSON-validity** check on staged `data/analysis/*.json` so a malformed analysis artifact can't
+  be committed. New TDD'd `tools/check_analysis_json.py` (pure `find_invalid()` + a CLI that takes
+  pre-commit's staged filenames and gates on exit code; stdlib-only) + `make lint-json` (standalone
+  runner) + `make hooks` (installer) + `pre-commit` added to `[dev]` deps + a README "Developing"
+  section. **Scoping decisions:** (1) the JSON regex `\.json$` deliberately excludes committed
+  `runs.jsonl` (JSONL, not JSON) and `.gitkeep`; gitignored artifacts (`embeddings*`,
+  `geo_llm_registration`) never stage. (2) **Dropped a ruff-*format* hook** I first drafted:
+  running it `--all-files` reformatted 14 pre-existing test files (+726/-308) — the committed tests
+  aren't `ruff format`-clean and a repo-wide sweep is out of scope, so I matched the repo's actual
+  enforced policy (`make verify` runs `ruff check`, not `ruff format`; formatting stays on-demand via
+  `make fmt`). This keeps `pre-commit run --all-files` **green out of the box**. **§8.5 deepen:** +13
+  tests incl. the real subprocess CLI contract pre-commit relies on, `main([])` default-glob mode,
+  unicode + bare-scalar validity, and a pre-commit-guarded integration test that runs the actual
+  configured hook against the real corpus (skips cleanly where pre-commit is absent, like the
+  responsive check). **Verification:** `make verify` green (**517 passed**, ruff clean, dashboard
+  builds); `pre-commit validate-config` OK; `pre-commit run --all-files` → both hooks Passed;
+  `make lint-json` exit 0. **Cold-path pick:** `plans/ready/` holds only 0008 whose remaining steps
+  (26c QLoRA train / 26d live judged run / 26f decide) are all owner-interactive/paid/compute — not
+  unattended-safe; no user pins. Category rotation over the last 7 runs (training×3, scraper×2,
+  analysis×1, docs×1) left **infra/dashboard/family** absent; infra was least-recently-worked
+  (last 2026-06-02) and its only remaining items are P3 (#5 here, #7 structured logging) — picked #5
+  (smaller, fully offline/deterministic). **Backlog:** 4 open `daily/*` PRs, all stale
+  `[skipped] backlog full` markers (#40/#39/#37/#36) — under the 5 threshold so work proceeded;
+  owner should close those skip markers to keep the count down.
+
 ### 2026-07-06 — analysis — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/43
 - Source: roadmap:#14
