@@ -6,6 +6,24 @@ Three-tier discovery + extraction of Dr. George Calhoun's Forbes articles
 - `python -m scraper` — discover + extract; writes `data/raw/*.json` and updates
   `data/manifest.json`.
 
+## Per-article metadata (roadmap #10)
+
+`extract_article` (Tier 2, `scraper/forbes_requests.py`) records the core fields
+(`url`, `title`, `date`, `body`, `tags`, `word_count`) plus a set of **richer metadata**
+fields pulled from the article page by the pure, offline-testable `extract_metadata(soup, url)`:
+
+| Field | Source (in preference order) |
+|-------|------------------------------|
+| **canonical_url** | `<link rel="canonical">` → `<meta property="og:url">` → the page URL (relatives resolved against it). |
+| **published_date** | `<meta property="article:published_time">` → `<time datetime>` → the `/YYYY/MM/DD/` URL path. |
+| **updated_date** | `<meta property="article:modified_time">` → `<meta property="og:updated_time">` → `""` (empty when the page advertises no revision). |
+| **section** | `<meta property="article:section">` → the last link in a `[class*="breadcrumb"]` nav → `""`. |
+| **byline** / **byline_variants** | `<meta name="author">`, `<meta property="article:author">` (URL-valued ones skipped), and `[rel="author"]`/`[class*="author"]` elements — deduped in first-seen order; `byline` is the first variant. |
+
+The helpers are pure (they take an already-parsed BeautifulSoup tree), so they're covered
+by offline fixtures in `tests/test_forbes_metadata.py`. Existing raw JSON only back-fills
+these fields on the **next** `make scrape` — this is an extraction change, not a re-scrape.
+
 ## Manifest integrity check (`make manifest-check`)
 
 `scraper/manifest_check.py` audits `data/manifest.json` against `data/raw/*.json` and reports
