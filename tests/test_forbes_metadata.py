@@ -5,9 +5,11 @@ published-vs-modified date, section, and byline variants. All fixtures are inlin
 HTML strings parsed with BeautifulSoup, so the suite stays fully offline.
 """
 
+import pytest
 from bs4 import BeautifulSoup
 
-from scraper.forbes_requests import extract_metadata
+from scraper import forbes_requests
+from scraper.forbes_requests import extract_article, extract_metadata
 
 ARTICLE_URL = "https://www.forbes.com/sites/georgecalhoun/2024/01/15/the-fed-is-wrong/"
 
@@ -145,3 +147,105 @@ class TestExtractMetadataShape:
             "byline",
             "byline_variants",
         }
+
+
+class TestPrecedenceAndWhitespace:
+    def test_published_time_beats_time_tag(self):
+        html = (
+            '<meta property="article:published_time" content="2024-01-15T09:30:00Z">'
+            '<time datetime="1999-12-31T00:00:00Z">old</time>'
+        )
+        assert extract_metadata(_soup(html), ARTICLE_URL)["published_date"] == (
+            "2024-01-15T09:30:00Z"
+        )
+
+    def test_modified_time_beats_og_updated(self):
+        html = (
+            '<meta property="article:modified_time" content="2024-01-18T14:00:00Z">'
+            '<meta property="og:updated_time" content="2024-02-01T00:00:00Z">'
+        )
+        assert extract_metadata(_soup(html), ARTICLE_URL)["updated_date"] == (
+            "2024-01-18T14:00:00Z"
+        )
+
+    def test_canonical_href_whitespace_is_stripped(self):
+        html = '<link rel="canonical" href="  https://www.forbes.com/x/  ">'
+        assert extract_metadata(_soup(html), ARTICLE_URL)["canonical_url"] == (
+            "https://www.forbes.com/x/"
+        )
+
+    def test_whitespace_only_author_ignored(self):
+        html = '<meta name="author" content="   ">'
+        md = extract_metadata(_soup(html), ARTICLE_URL)
+        assert md["byline_variants"] == []
+
+    def test_same_name_across_sources_deduped(self):
+        html = """
+        <meta name="author" content="George Calhoun">
+        <span class="author-name">George Calhoun</span>
+        <a rel="author" href="/x">George Calhoun</a>
+        """
+        assert extract_metadata(_soup(html), ARTICLE_URL)["byline_variants"] == [
+            "George Calhoun"
+        ]
+
+    def test_breadcrumb_without_links_yields_empty_section(self):
+        html = '<nav class="breadcrumbs"><span>Forbes</span></nav>'
+        assert extract_metadata(_soup(html), ARTICLE_URL)["section"] == ""
+
+
+class _FakeResponse:
+    def __init__(self, text, status_code=200):
+        self.text = text
+        self.status_code = status_code
+
+    def raise_for_status(self):
+        pass
+
+
+class TestExtractArticleWiring:
+    """The metadata fields must flow through extract_article's merged return dict."""
+
+    def test_article_dict_includes_metadata(self, monkeypatch):
+        html = """
+        <html><head>
+          <link rel="canonical" href="https://www.forbes.com/sites/georgecalhoun/2024/01/15/the-fed-is-wrong/">
+          <meta property="article:published_time" content="2024-01-15T09:30:00Z">
+          <meta property="article:modified_time" content="2024-01-18T14:00:00Z">
+          <meta property="article:section" content="Money">
+          <meta name="author" content="George Calhoun">
+          <title>The Fed Is Wrong</title>
+        </head><body>
+          <h1>The Fed Is Wrong</h1>
+          <article>
+            <p>This is a sufficiently long body paragraph that clears the length filter.</p>
+          </article>
+        </body></html>
+        """
+        monkeypatch.setattr(forbes_requests.rate_limiter, "wait", lambda url: None)
+        monkeypatch.setattr(
+            forbes_requests.SESSION, "get", lambda url, timeout=20: _FakeResponse(html)
+        )
+
+        article = extract_article(ARTICLE_URL)
+
+        assert article is not None
+        # Core fields still present …
+        assert article["title"] == "The Fed Is Wrong"
+        assert article["word_count"] > 0
+        # … alongside the richer metadata.
+        assert article["canonical_url"].endswith("/the-fed-is-wrong/")
+        assert article["published_date"] == "2024-01-15T09:30:00Z"
+        assert article["updated_date"] == "2024-01-18T14:00:00Z"
+        assert article["section"] == "Money"
+        assert article["byline"] == "George Calhoun"
+
+    @pytest.mark.parametrize("status", [403, 503])
+    def test_blocked_responses_still_return_none(self, monkeypatch, status):
+        monkeypatch.setattr(forbes_requests.rate_limiter, "wait", lambda url: None)
+        monkeypatch.setattr(
+            forbes_requests.SESSION,
+            "get",
+            lambda url, timeout=20: _FakeResponse("", status_code=status),
+        )
+        assert extract_article(ARTICLE_URL) is None
