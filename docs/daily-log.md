@@ -49,7 +49,7 @@ Format:
 <!-- entries below -->
 
 ### 2026-07-09 — infra — skipped
-- PR: https://github.com/wcalhoun516/digital-dad/pull/ (skip marker — see below)
+- PR: https://github.com/wcalhoun516/digital-dad/pull/46 (skip marker)
 - Source: none
 - Summary: **Stood down per §2 — backlog full (5 open `daily/*` PRs).** Open drafts: **#45**
   (07-08 richer-metadata, roadmap #10, ready-for-review — the one *real* PR awaiting review)
