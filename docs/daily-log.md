@@ -48,7 +48,17 @@ Format:
 
 <!-- entries below -->
 
-### 2026-07-07 — infra — ready-for-review
+### 2026-07-09 — infra — skipped
+- PR: https://github.com/wcalhoun516/digital-dad/pull/ (skip marker — see below)
+- Source: none
+- Summary: **Stood down per §2 — backlog full (5 open `daily/*` PRs).** Open drafts: **#45**
+  (07-08 richer-metadata, roadmap #10, ready-for-review — the one *real* PR awaiting review)
+  plus **four stale `[skipped] backlog full` markers #40/#39/#37/#36** (07-03/07-02/06-30/06-29).
+  That's exactly the §2 threshold (≥5), so no new work started today. **Action for owner:** the
+  backlog is *not* genuinely full of work — it's inflated by the 4 stale skip markers. **Close
+  #40/#39/#37/#36** (and merge/close #45) to drop back under 5 so the daily agent resumes real
+  cold-path work tomorrow; otherwise this skip loop repeats. Prior runs (07-07, 07-08) flagged
+  the same stale markers.
 - PR: https://github.com/wcalhoun516/digital-dad/pull/44
 - Source: roadmap:#5
 - Summary: Roadmap **#5 (P3·S·infra)** — **pre-commit hooks**. New `.pre-commit-config.yaml`
