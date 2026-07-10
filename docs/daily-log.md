@@ -48,6 +48,20 @@ Format:
 
 <!-- entries below -->
 
+### 2026-07-10 — infra — skipped
+- PR: (skip marker — daily/2026-07-10-skipped-backlog-full)
+- Source: none
+- Summary: **Stood down per §2 — backlog full (6 open `daily/*` PRs).** Only **one** is real work:
+  **#45** (07-08 richer-metadata, roadmap #10, ready-for-review). The other **five are stale
+  `[skipped] backlog full` markers**: **#46** (07-09), **#40** (07-03), **#39** (07-02), **#37**
+  (06-30), **#36** (06-29). Count = 6 ≥ 5, so no new work started. **This is the self-reinforcing
+  skip loop the 07-07/07-08/07-09 runs all flagged**: the skip markers themselves inflate the
+  count past the threshold, guaranteeing tomorrow skips too. **Action for owner (unblocks the
+  daily agent):** close the 5 stale skip markers **#46/#40/#39/#37/#36**, and merge-or-close the
+  one real PR **#45**. That drops the open count to 0 and the agent resumes cold-path roadmap work
+  the next run. Nothing here is genuinely blocked on capacity — the queue is empty of real work,
+  it's just clogged with skip PRs the agent structurally can't close itself (§11).
+
 ### 2026-07-07 — infra — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/44
 - Source: roadmap:#5
