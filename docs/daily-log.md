@@ -48,6 +48,39 @@ Format:
 
 <!-- entries below -->
 
+### 2026-07-08 — scraper — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/45
+- Source: roadmap:#10
+- Summary: Roadmap **#10 (P3·M·scraper)** — **richer per-article metadata**, first slice: the pure,
+  offline **extraction helpers** (D3 network viz / re-scrape deferred). New `extract_metadata(soup,
+  url)` in `scraper/forbes_requests.py` pulls **canonical_url** (`<link rel=canonical>` → `og:url` →
+  page URL, relatives resolved via `urljoin`), **published_date** (`article:published_time` → `<time
+  datetime>` → `/YYYY/MM/DD/` path), **updated_date** (`article:modified_time` → `og:updated_time` →
+  `""`), **section** (`article:section` → last `[class*=breadcrumb]` link → `""`), and **byline** +
+  **byline_variants** (dedup across `meta[name=author]`, non-URL `article:author`, and
+  `[rel=author]`/`[class*=author]`, first-seen order). Wired into `extract_article` via
+  `**extract_metadata(...)`, preserving the existing keys — so the corpus back-fills these fields on
+  the **next** `make scrape` (this is an extraction change, **not** a re-scrape; no regenerated data
+  committed). TDD'd offline: +26 tests (`tests/test_forbes_metadata.py`) built from inline HTML
+  fixtures. **§8.5 deepen:** source-precedence (published_time beats a stale `<time>`; modified_time
+  beats og:updated), href whitespace stripping, whitespace-only/duplicate byline dedup, empty-
+  breadcrumb section, and a monkeypatched **`extract_article` wiring** test proving the metadata flows
+  into the merged article dict (+ 403/503 still return `None`). Also ruff-fixed the file's pre-existing
+  unsorted import block (it was never gated — `make lint` only checks `tests/`). **Verification:** `make
+  verify` green (**543 passed**, up from 517; ruff clean; dashboard builds). **Cold-path pick:**
+  `plans/ready/` holds only 0008 whose remaining steps (26c QLoRA train / 26d live judged run / 26f
+  decide) are owner-interactive/paid/compute — not unattended-safe; no user pins. Rotation was computed
+  from **merged `main`** (the log is stale — missing the merged 06-26 #32 family, 06-27 #34 analysis,
+  06-28 #35 ops, 07-04 #41 family, 07-05 #42 dashboard runs): by daily-date the last runs were infra
+  (07-07), analysis (07-06), dashboard (07-05), family (07-04), scraper (07-01), ops (06-28). **family
+  is now fully drained** (#22/#23/#24 all shipped), so the roadmap's family-payoff emphasis is
+  exhausted; training (06-20) is least-recent but its only open item #27 is compute/conductor-heavy, and
+  docs is drained — leaving **scraper #10** the least-recently-worked category with a clean,
+  fully-offline unstarted item. **Backlog:** 4 open `daily/*` PRs, all stale `[skipped] backlog full`
+  markers (#40/#39/#37/#36) — under the 5 threshold so work proceeded; owner should close those skip
+  markers to keep the count down. **Future slices (in PR):** re-scrape/back-fill the existing corpus,
+  surface the new fields in the manifest + dashboard, and add a byline-normalization pass.
+
 ### 2026-07-07 — infra — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/44
 - Source: roadmap:#5
