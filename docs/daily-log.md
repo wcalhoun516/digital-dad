@@ -75,6 +75,36 @@ Format:
   category with a genuinely-unstarted, fully-offline item: **#16**. **Backlog:** 1 open `daily/*` PR
   (#48) before this run — well under the 5 threshold.
 
+### 2026-07-11 — ops — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/48
+- Source: roadmap:#7
+- Summary: Roadmap **#7 (P3·M·ops)** — **structured logging across the analysis pipeline**, first
+  slice. Analysis modules had **zero logging infra** (all `print`, no `--verbose`), while the
+  scraper already had a `setup_logging`/`log` house pattern. Mirrored it: new
+  `setup_logging(level="INFO")` + module-level `log` in `analysis/utils.py` (named
+  `digital-dad.analysis`, single StreamHandler, **idempotent handler guard**, unknown-level →
+  INFO fallback). Wired **`--verbose`/`-v`** into `python -m analysis` (extracted a testable
+  `build_parser()`; flag drops the logger to DEBUG) and converted the CLI orchestration surface
+  (`__main__.py`'s 32 `print`s → `log.*`, banners collapsed to one-line `=== SECTION ===`).
+  **§8.5 deepen:** converted two exemplar leaf modules (`linguistic.py`, `themes.py`) — themes'
+  per-`k` silhouette detail now `log.debug`, so it's hidden by default and revealed by
+  `--verbose` (the payoff demo); documented the shared logger + flag in `architecture.md` and the
+  CLI docstring. **TDD'd:** +9 tests (`test_analysis_logging.py` ×6: named logger, formatter,
+  idempotency, level arg, case-insensitive, invalid-level fallback; `test_analysis_main.py` ×3:
+  `--verbose`/`-v`/default). **Verification:** `make verify` green (**552 passed**, up from 543;
+  ruff clean; dashboard builds); end-to-end smoke confirmed INFO suppresses `log.debug` while
+  `--verbose`→DEBUG reveals it, with a single (non-duplicated) handler. **Cold-path pick:**
+  `plans/ready/` holds only 0008 (26c/26d/26f owner-interactive/paid/compute — not
+  unattended-safe); no user pins. The daily-log is sparse/stale (prior 3 runs noted merged
+  entries missing), so §5b rotation was computed from merged `main`: the genuinely-unstarted,
+  unattended-safe items are #7 (ops) and #16 (analysis, Calhoun-isms); **ops** (last worked
+  06-28) beats analysis (07-06), and training (06-20) is exhausted (#27 is compute/conductor-
+  heavy). **Scope left for follow-up slices (in PR):** the remaining ~15 analysis modules still
+  `print` — convert the rest module-by-module (`on_this_day`, `adjudicate`, `predictions`,
+  `psychoprofile`, `semantic_search`, … the leaf-module conversions here set the pattern).
+  **Backlog note:** 0 open `daily/*` PRs before this run (the old `[skipped] backlog full`
+  markers appear to have been closed).
+
 ### 2026-07-08 — scraper — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/45
 - Source: roadmap:#10
