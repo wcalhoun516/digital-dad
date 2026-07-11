@@ -17,7 +17,7 @@ import hashlib
 import json
 import sys
 
-from .utils import load_articles, DATA_DIR
+from .utils import load_articles, log, DATA_DIR
 
 RUNS_LOG = DATA_DIR / "analysis" / "runs.jsonl"
 ALL_MODULES = ["linguistic", "themes", "entities", "psychoprofile", "semantic_search", "predictions"]
@@ -61,7 +61,8 @@ def _log_run(module: str, fingerprint: str) -> None:
         f.write(json.dumps(entry) + "\n")
 
 
-def main():
+def build_parser() -> argparse.ArgumentParser:
+    """Construct the ``python -m analysis`` argument parser."""
     parser = argparse.ArgumentParser(
         description="Analyze Dr. George Calhoun's Forbes article corpus"
     )
@@ -79,10 +80,19 @@ def main():
                         help="Route psychoprofile LLM calls through conductor T3 remote tier")
     parser.add_argument("--force", action="store_true",
                         help="Re-run all modules even if corpus is unchanged")
-    args = parser.parse_args()
+    parser.add_argument("--verbose", "-v", action="store_true",
+                        help="Enable debug logging")
+    return parser
+
+
+def main():
+    args = build_parser().parse_args()
+
+    if args.verbose:
+        log.setLevel("DEBUG")
 
     if args.local and args.remote:
-        print("Error: cannot specify both --local and --remote")
+        log.error("cannot specify both --local and --remote")
         sys.exit(1)
 
     router = "conductor_remote" if args.remote else "conductor_local"
@@ -92,7 +102,7 @@ def main():
         modules = ALL_MODULES
 
     articles = load_articles()
-    print(f"Loaded {len(articles)} articles for analysis\n")
+    log.info("Loaded %d articles for analysis", len(articles))
 
     fingerprint = _corpus_fingerprint(articles)
 
@@ -101,71 +111,53 @@ def main():
             return True
         last = _last_run_fingerprint(module)
         if last == fingerprint:
-            print(f"  [skip] {module}: corpus unchanged since last run (use --force to override)")
+            log.info("[skip] %s: corpus unchanged since last run (use --force to override)", module)
             return False
         return True
 
     if "linguistic" in modules:
-        print("=" * 50)
-        print("LINGUISTIC FINGERPRINT")
-        print("=" * 50)
+        log.info("=== LINGUISTIC FINGERPRINT ===")
         if _should_run("linguistic"):
             from .linguistic import run as run_linguistic
             run_linguistic(articles)
             _log_run("linguistic", fingerprint)
-        print()
 
     if "themes" in modules:
-        print("=" * 50)
-        print("THEME ANALYSIS")
-        print("=" * 50)
+        log.info("=== THEME ANALYSIS ===")
         if _should_run("themes"):
             from .themes import run as run_themes
             run_themes(articles)
             _log_run("themes", fingerprint)
-        print()
 
     if "entities" in modules:
-        print("=" * 50)
-        print("NAMED ENTITY EXTRACTION")
-        print("=" * 50)
+        log.info("=== NAMED ENTITY EXTRACTION ===")
         if _should_run("entities"):
             from .entities import run as run_entities
             run_entities(articles)
             _log_run("entities", fingerprint)
-        print()
 
     if "psychoprofile" in modules:
-        print("=" * 50)
-        print("PSYCHOANALYTIC PROFILE")
-        print("=" * 50)
+        log.info("=== PSYCHOANALYTIC PROFILE ===")
         if _should_run("psychoprofile"):
             from .psychoprofile import run as run_psychoprofile
             run_psychoprofile(articles, dry_run=args.dry_run, router=router,
                               corpus_fingerprint=fingerprint)
-        print()
 
     if "semantic_search" in modules:
-        print("=" * 50)
-        print("SEMANTIC SEARCH INDEX")
-        print("=" * 50)
+        log.info("=== SEMANTIC SEARCH INDEX ===")
         if _should_run("semantic_search"):
             from .semantic_search import run as run_semantic_search
             run_semantic_search(articles)
             _log_run("semantic_search", fingerprint)
-        print()
 
     if "predictions" in modules:
-        print("=" * 50)
-        print("TRACK RECORD — PREDICTION EXTRACTION")
-        print("=" * 50)
+        log.info("=== TRACK RECORD — PREDICTION EXTRACTION ===")
         if _should_run("predictions"):
             from .predictions import run as run_predictions
             run_predictions(articles, router=router)
             _log_run("predictions", fingerprint)
-        print()
 
-    print("Analysis complete.")
+    log.info("Analysis complete.")
 
 
 if __name__ == "__main__":
