@@ -10,6 +10,7 @@ Examples:
   python -m analysis psychoprofile --remote    # T3 remote model via conductor (costs money)
   python -m analysis --dry-run          # estimate costs only
   python -m analysis --force            # re-run even if no articles changed
+  python -m analysis --verbose          # DEBUG-level logging (e.g. per-k silhouette scores)
 """
 
 import argparse
