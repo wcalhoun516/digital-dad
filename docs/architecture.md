@@ -63,6 +63,13 @@ an undirected co-occurrence graph (nodes = people/orgs, edge weight = shared-art
 a future dashboard network viz. Byline/photo-credit boilerplate is excluded by default
 (`--no-exclude` to keep it). No conductor/network. (Roadmap #14.)
 
+`calhoun_isms.py` — also outside the default chain; run via `make calhoun-isms`. A pure/offline
+**derived** artifact: reads `themes.json`'s per-article theme assignments plus the corpus bodies
+and emits `calhoun_isms.json`, the most quotable/aphoristic sentences grouped by theme (+ an
+overall board). "Quotable" is a transparent heuristic — self-contained sentences in a memorable
+length band that carry aphoristic signals (`X is …`, absolutes like `always`/`never`, contrast),
+with newsy specifics (dates, `%`, "Powell said") scored down. No conductor/network. (Roadmap #16.)
+
 ## 3. The conductor (LLM abstraction)
 
 All model calls go to a **local OpenAI-compatible server** at `http://127.0.0.1:8080/v1`
