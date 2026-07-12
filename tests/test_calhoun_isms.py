@@ -87,6 +87,18 @@ def test_score_is_deterministic():
     assert ci.quotability_score(s) == ci.quotability_score(s)
 
 
+def test_score_penalizes_newsy_digits():
+    plain = "The recovery rewards patience and punishes fear over the whole long cycle."
+    newsy = "The recovery rewarded patience and punished fear across the 2020 downturn cycle."
+    assert ci.quotability_score(newsy) < ci.quotability_score(plain)
+
+
+def test_score_rewards_multiword_marker_phrase():
+    plain = "The crowd chased the rally straight into a wall of its own making."
+    phrase = "The crowd learns, sooner or later, that no one outruns arithmetic."
+    assert ci.quotability_score(phrase) > ci.quotability_score(plain)
+
+
 # --- extract_isms -----------------------------------------------------------
 
 @pytest.fixture
@@ -178,6 +190,27 @@ def test_extract_isms_skips_articles_without_theme(articles, themes_data):
     result = ci.extract_isms(articles + [orphan], themes_data, top_n=5)
     all_slugs = {i["slug"] for t in result["themes"] for i in t["isms"]}
     assert "no-theme" not in all_slugs
+
+
+def test_extract_isms_min_score_filters_weak_candidates(articles, themes_data):
+    # A very high threshold should drop everything; the themes survive but carry no isms.
+    result = ci.extract_isms(articles, themes_data, top_n=5, min_score=999.0)
+    assert result["themes"], "themes should still be listed"
+    assert all(t["isms"] == [] for t in result["themes"])
+    assert result["overall_top"] == []
+
+
+def test_extract_isms_overall_dedupes_identical_text_across_themes(themes_data):
+    # The same sentence appears in two articles that live in two different themes; the
+    # per-theme lists each keep it, but the overall board must show it only once.
+    shared = "The market always punishes those who never respect its raw power today."
+    arts = [
+        {"slug": "fed-nerve", "title": "A", "date": "2021-01-01", "body": shared},
+        {"slug": "btc-truth", "title": "B", "date": "2022-01-01", "body": shared},
+    ]
+    result = ci.extract_isms(arts, themes_data, top_n=10)
+    overall_texts = [i["text"] for i in result["overall_top"]]
+    assert overall_texts.count(shared) == 1
 
 
 # --- run (I/O wrapper) ------------------------------------------------------

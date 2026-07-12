@@ -152,13 +152,16 @@ def extract_isms(
     top_n: int = 10,
     min_words: int = 8,
     max_words: int = 30,
+    min_score: float = 0.0,
 ) -> dict:
     """Build the per-theme Calhoun-isms (pure; no I/O).
 
     For each corpus article that has a theme assignment, split its cleaned body into sentences,
-    keep the quotable ones, and score them. Group by theme, dedupe identical sentences (keeping
-    the highest score), sort by score, and cap each theme at ``top_n``. Also returns an
-    ``overall_top`` board across all themes. Fully deterministic.
+    keep the quotable ones, and score them. Candidates scoring below ``min_score`` are dropped
+    (so a sparse theme surfaces genuine aphorisms rather than filler). Group by theme, dedupe
+    identical sentences (keeping the highest score), sort by score, and cap each theme at
+    ``top_n``. Also returns an ``overall_top`` board across all themes (deduped by text). Fully
+    deterministic.
     """
     theme_of = _theme_by_slug(themes_data)
 
@@ -182,6 +185,8 @@ def extract_isms(
             if not is_quotable(sentence, min_words=min_words, max_words=max_words):
                 continue
             score = quotability_score(sentence)
+            if score < min_score:
+                continue
             existing = bucket["candidates"].get(sentence)
             if existing is not None and existing["score"] >= score:
                 continue
@@ -214,14 +219,29 @@ def extract_isms(
     themes.sort(key=lambda t: (t["cluster_id"] if t["cluster_id"] is not None else 1e9, t["theme"]))
     overall.sort(key=lambda i: (-i["score"], i["text"]))
 
+    # Dedupe the overall board by sentence text (a line can recur across two articles/themes),
+    # keeping the first — i.e. highest-scoring — occurrence.
+    seen: set[str] = set()
+    overall_unique = []
+    for ism in overall:
+        if ism["text"] in seen:
+            continue
+        seen.add(ism["text"])
+        overall_unique.append(ism)
+
     return {
         "meta": {
             "total_articles": used_articles,
             "num_themes": len(themes),
-            "params": {"top_n": top_n, "min_words": min_words, "max_words": max_words},
+            "params": {
+                "top_n": top_n,
+                "min_words": min_words,
+                "max_words": max_words,
+                "min_score": min_score,
+            },
         },
         "themes": themes,
-        "overall_top": overall[:top_n],
+        "overall_top": overall_unique[:top_n],
     }
 
 
@@ -252,6 +272,7 @@ def run(
     top_n: int = 10,
     min_words: int = 8,
     max_words: int = 30,
+    min_score: float = 0.0,
     write: bool = True,
 ) -> dict:
     """Build the Calhoun-isms and (unless ``write=False``) write `calhoun_isms.json`.
@@ -265,7 +286,12 @@ def run(
         themes_data = _load_themes()
 
     result = extract_isms(
-        articles, themes_data, top_n=top_n, min_words=min_words, max_words=max_words
+        articles,
+        themes_data,
+        top_n=top_n,
+        min_words=min_words,
+        max_words=max_words,
+        min_score=min_score,
     )
 
     if write:
@@ -295,6 +321,8 @@ def main(argv: list[str] | None = None) -> int:
                         help="Minimum sentence length in words (default 8).")
     parser.add_argument("--max-words", type=int, default=30,
                         help="Maximum sentence length in words (default 30).")
+    parser.add_argument("--min-score", type=float, default=0.0,
+                        help="Drop candidates scoring below this (default 0.0 — keep all).")
     parser.add_argument("--dry-run", action="store_true",
                         help="Print the summary without writing calhoun_isms.json.")
     args = parser.parse_args(argv)
@@ -303,6 +331,7 @@ def main(argv: list[str] | None = None) -> int:
         top_n=args.top,
         min_words=args.min_words,
         max_words=args.max_words,
+        min_score=args.min_score,
         write=not args.dry_run,
     )
     print(render_markdown(result))
