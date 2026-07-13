@@ -36,6 +36,15 @@ def test_polarity_is_case_insensitive():
     assert es.sentence_polarity("A STRONG, SUCCESSFUL outcome.") > 0
 
 
+def test_polarity_negator_within_window_flips():
+    assert es.sentence_polarity("It was not really a success.") < 0
+
+
+def test_polarity_negator_outside_window_does_not_flip():
+    # "No" is >3 tokens before "success", so it must not flip it.
+    assert es.sentence_polarity("No, the outcome was clearly a success.") > 0
+
+
 # --- entity_mentioned -------------------------------------------------------
 
 def test_entity_mentioned_word_boundary():
@@ -134,6 +143,33 @@ def test_build_stance_min_articles_filters(articles, entities_data):
     # Fed appears in 2 articles; require 3 -> dropped.
     result = es.build_stance(articles, entities_data, min_articles=3)
     assert result["entities"] == []
+
+
+def test_build_stance_min_mentions_filters_entity():
+    # Fed is mentioned only once in the extraction; require 2 -> it never counts.
+    articles = [{"slug": "a1", "date": "2020-01-01",
+                 "body": "The Fed looked strong today."}]
+    entities_data = {"per_article": [
+        {"slug": "a1", "date": "2020-01-01", "orgs": [["Fed", 1]], "people": []}]}
+    result = es.build_stance(articles, entities_data, min_articles=1, min_mentions=2)
+    assert result["entities"] == []
+
+
+def test_build_stance_overall_is_sentence_weighted():
+    # 2020 has 1 sentence (+1); 2021 has 3 sentences (-1 each). Sentence-weighted overall is
+    # (1 - 3) / 4 = -0.5, NOT the mean-of-year-means (1 + -1)/2 = 0.
+    articles = [
+        {"slug": "a1", "date": "2020-01-01", "body": "The ECB looked strong."},
+        {"slug": "a2", "date": "2021-01-01",
+         "body": "The ECB failed. The ECB was weak. The ECB was a disaster."},
+    ]
+    entities_data = {"per_article": [
+        {"slug": "a1", "date": "2020-01-01", "orgs": [["ECB", 3]], "people": []},
+        {"slug": "a2", "date": "2021-01-01", "orgs": [["ECB", 3]], "people": []},
+    ]}
+    result = es.build_stance(articles, entities_data, min_articles=1)
+    ecb = next(e for e in result["entities"] if e["name"] == "ECB")
+    assert ecb["overall_stance"] == -0.5
 
 
 # --- render_markdown / run --------------------------------------------------
