@@ -49,6 +49,20 @@ _NEG_WINDOW = 3
 
 _TOKEN_RE = re.compile(r"[a-z][a-z']*")
 
+# Beyond `entity_graph`'s boilerplate set, the extractor also surfaces bare image-credit words
+# ("Photo", "Photographer", "Illustration") that are page furniture, not subjects Dr. Calhoun
+# takes a stance toward. Folded into the default exclude here (stance-scoped, so `entity_graph`'s
+# committed artifact is untouched). Matched case-insensitively.
+_EXTRA_EXCLUDE = frozenset({"photo", "photographer", "photos", "illustration", "image"})
+
+
+def _resolve_exclude(exclude) -> frozenset[str]:
+    """Default (``None``) → `entity_graph`'s boilerplate set plus the stance-scoped extras;
+    an explicit collection is used verbatim (lowercased)."""
+    if exclude is None:
+        return _DEFAULT_EXCLUDE | _EXTRA_EXCLUDE
+    return _norm_exclude(exclude)
+
 
 def sentence_polarity(sentence: str) -> int:
     """Signed tone of one sentence via the transparent polarity lexicon.
@@ -159,6 +173,7 @@ def build_stance(
     boilerplate (defaults to `entity_graph`'s set). Fully deterministic.
     """
     body_by_slug = {a.get("slug"): a for a in articles}
+    resolved_exclude = _resolve_exclude(exclude)
 
     # id -> {id, name, type, article_slugs: set, by_year: {year: [sum, n_sentences, {slugs}]}}
     acc: dict[str, dict] = {}
@@ -173,7 +188,7 @@ def build_stance(
             continue
         body = article.get("body", "")
         for name, entity_type in article_entities(
-            record, min_mentions=min_mentions, exclude=exclude
+            record, min_mentions=min_mentions, exclude=resolved_exclude
         ):
             sentences = mentioning_sentences(clean_text(body), name)
             if not sentences:
@@ -244,7 +259,7 @@ def build_stance(
                 "min_articles": min_articles,
                 "min_mentions": min_mentions,
                 "threshold": threshold,
-                "excluded": sorted(_norm_exclude(exclude)),
+                "excluded": sorted(resolved_exclude),
             },
         },
         "entities": entities,
@@ -355,7 +370,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.no_exclude:
         exclude: frozenset[str] | None = frozenset()
     elif args.exclude:
-        exclude = _DEFAULT_EXCLUDE | {name.lower() for name in args.exclude}
+        exclude = _DEFAULT_EXCLUDE | _EXTRA_EXCLUDE | {name.lower() for name in args.exclude}
     else:
         exclude = None
 

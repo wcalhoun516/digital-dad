@@ -4,8 +4,9 @@ Offline and deterministic: the pure helpers are exercised on tiny hand-built str
 `per_article` / article fixtures. No corpus, no network, no conductor.
 """
 
-from analysis import entity_stance as es
+import pytest
 
+from analysis import entity_stance as es
 
 # --- sentence_polarity ------------------------------------------------------
 
@@ -72,9 +73,6 @@ def test_article_stance_no_mentions_returns_none():
 
 # --- build_stance -----------------------------------------------------------
 
-import pytest  # noqa: E402
-
-
 @pytest.fixture
 def articles():
     return [
@@ -120,6 +118,16 @@ def test_build_stance_trend_is_cooling(articles, entities_data):
 def test_build_stance_excludes_byline_boilerplate(articles, entities_data):
     result = es.build_stance(articles, entities_data, min_articles=1)
     assert all(e["name"] != "George Calhoun" for e in result["entities"])
+
+
+def test_build_stance_excludes_photo_credit_boilerplate():
+    # "Photo" is a Forbes image-credit artifact the extractor picks up, not a subject.
+    articles = [{"slug": "p1", "date": "2020-01-01",
+                 "body": "The Photo showed a strong scene."}]
+    entities_data = {"per_article": [
+        {"slug": "p1", "date": "2020-01-01", "orgs": [], "people": [["Photo", 3]]}]}
+    result = es.build_stance(articles, entities_data, min_articles=1)
+    assert all(e["name"] != "Photo" for e in result["entities"])
 
 
 def test_build_stance_min_articles_filters(articles, entities_data):
