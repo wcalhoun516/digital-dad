@@ -1,0 +1,332 @@
+{
+  "meta": {
+    "total_articles": 199,
+    "n_entities": 6,
+    "params": {
+      "top_n": 6,
+      "min_articles": 5,
+      "min_mentions": 1,
+      "threshold": 0.25,
+      "excluded": [
+        "afp",
+        "calhoun",
+        "george calhoun",
+        "getty",
+        "getty images",
+        "illustration",
+        "image",
+        "photo",
+        "photographer",
+        "photos",
+        "rafael",
+        "stevens"
+      ]
+    }
+  },
+  "entities": [
+    {
+      "id": "org:the Federal Reserve",
+      "name": "the Federal Reserve",
+      "type": "org",
+      "article_count": 49,
+      "total_sentences": 183,
+      "overall_stance": 0.0328,
+      "trend": "steady",
+      "trend_delta": 0.0,
+      "trajectory": [
+        {
+          "year": "2020",
+          "mean_stance": 0.0,
+          "n_sentences": 20,
+          "n_articles": 6
+        },
+        {
+          "year": "2021",
+          "mean_stance": 0.0,
+          "n_sentences": 19,
+          "n_articles": 7
+        },
+        {
+          "year": "2022",
+          "mean_stance": 0.0417,
+          "n_sentences": 48,
+          "n_articles": 10
+        },
+        {
+          "year": "2023",
+          "mean_stance": -0.0208,
+          "n_sentences": 48,
+          "n_articles": 12
+        },
+        {
+          "year": "2024",
+          "mean_stance": 0.1786,
+          "n_sentences": 28,
+          "n_articles": 10
+        },
+        {
+          "year": "2025",
+          "mean_stance": 0.0,
+          "n_sentences": 20,
+          "n_articles": 4
+        }
+      ]
+    },
+    {
+      "id": "org:Fed",
+      "name": "Fed",
+      "type": "org",
+      "article_count": 48,
+      "total_sentences": 523,
+      "overall_stance": -0.0554,
+      "trend": "steady",
+      "trend_delta": 0.0833,
+      "trajectory": [
+        {
+          "year": "2020",
+          "mean_stance": -0.0833,
+          "n_sentences": 48,
+          "n_articles": 4
+        },
+        {
+          "year": "2021",
+          "mean_stance": 0.0286,
+          "n_sentences": 70,
+          "n_articles": 9
+        },
+        {
+          "year": "2022",
+          "mean_stance": -0.1042,
+          "n_sentences": 48,
+          "n_articles": 7
+        },
+        {
+          "year": "2023",
+          "mean_stance": -0.0904,
+          "n_sentences": 177,
+          "n_articles": 13
+        },
+        {
+          "year": "2024",
+          "mean_stance": -0.0496,
+          "n_sentences": 121,
+          "n_articles": 9
+        },
+        {
+          "year": "2025",
+          "mean_stance": 0.0,
+          "n_sentences": 59,
+          "n_articles": 6
+        }
+      ]
+    },
+    {
+      "id": "person:Covid",
+      "name": "Covid",
+      "type": "person",
+      "article_count": 35,
+      "total_sentences": 448,
+      "overall_stance": -0.058,
+      "trend": "warming",
+      "trend_delta": 0.3201,
+      "trajectory": [
+        {
+          "year": "2020",
+          "mean_stance": -0.3636,
+          "n_sentences": 11,
+          "n_articles": 5
+        },
+        {
+          "year": "2021",
+          "mean_stance": -0.325,
+          "n_sentences": 40,
+          "n_articles": 8
+        },
+        {
+          "year": "2022",
+          "mean_stance": -0.0273,
+          "n_sentences": 220,
+          "n_articles": 13
+        },
+        {
+          "year": "2023",
+          "mean_stance": -0.0076,
+          "n_sentences": 131,
+          "n_articles": 8
+        },
+        {
+          "year": "2024",
+          "mean_stance": -0.0435,
+          "n_sentences": 46,
+          "n_articles": 1
+        }
+      ]
+    },
+    {
+      "id": "org:Treasury",
+      "name": "Treasury",
+      "type": "org",
+      "article_count": 23,
+      "total_sentences": 154,
+      "overall_stance": -0.0325,
+      "trend": "cooling",
+      "trend_delta": -0.6667,
+      "trajectory": [
+        {
+          "year": "2020",
+          "mean_stance": 0.1667,
+          "n_sentences": 12,
+          "n_articles": 2
+        },
+        {
+          "year": "2021",
+          "mean_stance": 0.0,
+          "n_sentences": 59,
+          "n_articles": 7
+        },
+        {
+          "year": "2022",
+          "mean_stance": 0.0,
+          "n_sentences": 2,
+          "n_articles": 2
+        },
+        {
+          "year": "2023",
+          "mean_stance": 0.0,
+          "n_sentences": 5,
+          "n_articles": 2
+        },
+        {
+          "year": "2024",
+          "mean_stance": 0.0,
+          "n_sentences": 19,
+          "n_articles": 5
+        },
+        {
+          "year": "2025",
+          "mean_stance": -0.1091,
+          "n_sentences": 55,
+          "n_articles": 4
+        },
+        {
+          "year": "2026",
+          "mean_stance": -0.5,
+          "n_sentences": 2,
+          "n_articles": 1
+        }
+      ]
+    },
+    {
+      "id": "org:EU",
+      "name": "EU",
+      "type": "org",
+      "article_count": 18,
+      "total_sentences": 88,
+      "overall_stance": -0.2727,
+      "trend": "warming",
+      "trend_delta": 0.4943,
+      "trajectory": [
+        {
+          "year": "2020",
+          "mean_stance": -0.3276,
+          "n_sentences": 58,
+          "n_articles": 9
+        },
+        {
+          "year": "2021",
+          "mean_stance": -0.3333,
+          "n_sentences": 21,
+          "n_articles": 6
+        },
+        {
+          "year": "2022",
+          "mean_stance": 0.3333,
+          "n_sentences": 3,
+          "n_articles": 2
+        },
+        {
+          "year": "2025",
+          "mean_stance": 0.1667,
+          "n_sentences": 6,
+          "n_articles": 1
+        }
+      ]
+    },
+    {
+      "id": "org:The Federal Reserve",
+      "name": "The Federal Reserve",
+      "type": "org",
+      "article_count": 18,
+      "total_sentences": 60,
+      "overall_stance": 0.0333,
+      "trend": "cooling",
+      "trend_delta": -0.3333,
+      "trajectory": [
+        {
+          "year": "2020",
+          "mean_stance": 0.3333,
+          "n_sentences": 3,
+          "n_articles": 1
+        },
+        {
+          "year": "2021",
+          "mean_stance": -0.0909,
+          "n_sentences": 11,
+          "n_articles": 4
+        },
+        {
+          "year": "2022",
+          "mean_stance": 0.2222,
+          "n_sentences": 9,
+          "n_articles": 3
+        },
+        {
+          "year": "2023",
+          "mean_stance": -0.0455,
+          "n_sentences": 22,
+          "n_articles": 6
+        },
+        {
+          "year": "2024",
+          "mean_stance": 0.0769,
+          "n_sentences": 13,
+          "n_articles": 3
+        },
+        {
+          "year": "2025",
+          "mean_stance": 0.0,
+          "n_sentences": 2,
+          "n_articles": 1
+        }
+      ]
+    }
+  ],
+  "warming": [
+    {
+      "name": "EU",
+      "type": "org",
+      "trend_delta": 0.4943,
+      "overall_stance": -0.2727
+    },
+    {
+      "name": "Covid",
+      "type": "person",
+      "trend_delta": 0.3201,
+      "overall_stance": -0.058
+    }
+  ],
+  "cooling": [
+    {
+      "name": "Treasury",
+      "type": "org",
+      "trend_delta": -0.6667,
+      "overall_stance": -0.0325
+    },
+    {
+      "name": "The Federal Reserve",
+      "type": "org",
+      "trend_delta": -0.3333,
+      "overall_stance": 0.0333
+    }
+  ]
+}
