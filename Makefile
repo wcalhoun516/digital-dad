@@ -4,7 +4,7 @@ PYTHON := .venv/bin/python
 # ruff findings (broadening the scope is a follow-up roadmap item, #1-3/cleanup).
 LINT_PATHS := tests
 
-.PHONY: scrape manifest-check coverage-audit analyze training dashboard all serve share search on-this-day send-on-this-day adjudicate backfill-verdicts entity-graph rag-eval voice-eval voice-trials clean test lint fmt lint-json hooks verify verify-responsive
+.PHONY: scrape manifest-check coverage-audit analyze training dashboard all serve share search on-this-day send-on-this-day adjudicate backfill-verdicts entity-graph calhoun-isms rag-eval voice-eval voice-trials clean test lint fmt lint-json hooks verify verify-responsive
 
 scrape:
 	$(PYTHON) -m scraper $(ARGS)
@@ -96,6 +96,13 @@ intellectual-arc:
 # ARGS e.g. --dry-run, --top 60, --min-cooccur 3, or --no-exclude (keep byline/photo boilerplate).
 entity-graph:
 	$(PYTHON) -m analysis.entity_graph $(ARGS)
+
+# Calhoun-isms (roadmap #16): the most quotable/aphoristic sentences per theme, derived from
+# data/analysis/themes.json + the corpus (run `make analyze` first). Pure/offline — no conductor,
+# no network — so it's safe in automation. Writes data/analysis/calhoun_isms.json;
+# ARGS e.g. --dry-run, --top 15, --min-words 6, --max-words 34.
+calhoun-isms:
+	$(PYTHON) -m analysis.calhoun_isms $(ARGS)
 
 # RAG faithfulness eval baseline for Ask Dad (plan 0007). Owner-gated: the generation +
 # judge passes make conductor calls (judge defaults to paid T3), so it refuses to run if

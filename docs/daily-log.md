@@ -48,6 +48,33 @@ Format:
 
 <!-- entries below -->
 
+### 2026-07-12 — analysis — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/49
+- Source: roadmap:#16
+- Summary: Roadmap **#16 (P3·S·analysis)** — **"Calhoun-isms": most quotable/aphoristic sentences per
+  theme.** New `analysis/calhoun_isms.py`, a deterministic/offline builder modeled on `entity_graph.py`
+  (#14): reads `themes.json`'s per-article theme assignments + the corpus bodies, scores every sentence
+  with **transparent heuristics**, and emits `calhoun_isms.json` (top aphorisms per theme + an overall
+  board). Gate (`is_quotable`): declarative, memorable word band (8–30), capitalized, no
+  antecedent-needing opener (`But`/`This`/`It`/…), no URL noise. Score (`quotability_score`,
+  deterministic additive): length term peaking ~14 words + bonuses for absolutes
+  (`always`/`never`/`no one`), a definitional `X is …`, and contrast; penalties for attribution
+  ("Powell said") and newsy digits. `run()` + `python -m analysis.calhoun_isms` CLI
+  (`--dry-run`/`--top`/`--min-words`/`--max-words`/`--min-score`) + `make calhoun-isms` + architecture
+  note. **§8.5 deepen:** `--min-score` filler filter + overall-board dedup-by-text. **TDD'd:** +24 tests
+  (`tests/test_calhoun_isms.py`). **Licensing:** the artifact embeds body-text excerpts, so it's
+  **gitignored** (regenerate on demand), mirroring `reading_room.json`. **Verification:** `make verify`
+  green (**567 passed**, up from 543; ruff clean; dashboard builds); real-corpus smoke → 9 themes / 199
+  articles, genuine aphorisms surfaced, 33 KB valid JSON correctly ignored by git. **Cold-path pick:**
+  `plans/ready/` holds only 0008 (26c/26d/26f owner-interactive/paid/compute — not unattended-safe); no
+  user pins. PR #48 (07-11 ops/structured-logging, on its own unmerged branch) is
+  ready-for-review-but-unmerged, so §3 didn't resume it and a parallel logging PR off `main` would
+  conflict. Rotation (last worked by category, from merged `main` + known open PRs): ops 07-11, scraper
+  07-08, infra 07-07, analysis 07-06, dashboard 07-05, family 07-04 — training (06-20)/docs (06-25) are
+  drained or conductor-heavy (#27), dashboard/family drained, leaving **analysis** the least-recent
+  category with a genuinely-unstarted, fully-offline item: **#16**. **Backlog:** 1 open `daily/*` PR
+  (#48) before this run — well under the 5 threshold.
+
 ### 2026-07-08 — scraper — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/45
 - Source: roadmap:#10
