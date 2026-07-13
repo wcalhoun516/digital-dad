@@ -48,6 +48,43 @@ Format:
 
 <!-- entries below -->
 
+### 2026-07-13 — analysis — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/50
+- Source: roadmap:#17
+- Summary: Roadmap **#17 (P2·M·analysis)** — **per-entity stance over time** (his evolving view of the
+  Fed, Bitcoin, the ECB…), first slice: the pure/offline **builder** (dashboard viz deferred). New
+  `analysis/entity_stance.py` mirrors `entity_graph.py` (#14): joins `entities.json`'s `per_article`
+  lists to the corpus bodies and emits `entity_stance.json` — per entity a **yearly stance
+  trajectory** (mean tone of the sentences that name it, per year) + `overall_stance` +
+  warming/cooling **trend boards**. **Key env constraint:** nltk/VADER is absent here (all
+  `linguistics.json` sentiment is `{}`), so stance is a **transparent heuristic**, not a model — a
+  small curated polarity lexicon scored per sentence (`sentence_polarity`, positive−negative with a
+  light 3-token **negation flip**); honest proxy for *tone trends*, not ground-truth sentiment. Reuses
+  `entity_graph`'s `article_entities`/`entity_id`/exclude set; sums are accumulated at the **sentence
+  level** so yearly/overall means are exact (not means-of-means). `run()` + `python -m
+  analysis.entity_stance` CLI (`--dry-run`/`--top`/`--min-articles`/`--min-mentions`/`--threshold`/
+  `--exclude`/`--no-exclude`) + `make entity-stance` + architecture note. **§8.5 deepen:** the smoke
+  run surfaced Forbes image-credit boilerplate ("Photo") as the top warming entity, so added a
+  stance-scoped `_EXTRA_EXCLUDE` (photo/photographer/illustration/image) on top of the shared byline
+  set — kept **stance-local** so `entity_graph`'s committed artifact is untouched; plus negation-window
+  boundary + sentence-weighting edge tests. **TDD'd:** +22 tests (`tests/test_entity_stance.py`).
+  **Licensing:** artifact is **text-free** (names/years/scores only) → committable like
+  `entity_graph.json` (contrast the gitignored `calhoun_isms.json`). **Verification:** `make verify`
+  green (**565 passed**, up from 543; ruff clean; dashboard builds); real-corpus smoke (`--top 6
+  --min-articles 5`): 199 articles → genuine trends (Covid warming, Treasury cooling, "Photo" noise
+  gone), 7 KB valid JSON. **Known limitation (documented, deferred like #14):** entity alias
+  fragmentation — "Fed" / "the Federal Reserve" / "The Federal Reserve" score as separate entities;
+  alias-merging + the dashboard "stance over time" viz are future slices. **Cold-path pick:**
+  `plans/ready/` holds only 0008 (26c/26d/26e/26f owner-interactive/paid/compute/sibling-repo — not
+  unattended-safe); no user pins. PRs #49 (07-12 analysis) and #48 (07-11 ops) are both
+  ready-for-review-but-unmerged, so §3 didn't resume either. Rotation (last worked by category):
+  analysis 07-12, ops 07-11, scraper 07-08, infra 07-07, dashboard 07-05, family 07-04 — training
+  (06-20)/docs (06-25) drained or compute-heavy (#26/#27); family/dashboard drained; infra/ops/scraper
+  only have continuation slices (ops #7 sits in unmerged #48 → a parallel PR would conflict).
+  **analysis** held the only genuinely-unstarted, fully-offline roadmap items (#15 P3
+  contradiction-finder, #17 P2 stance) — #17 wins on priority. **Backlog:** 2 open `daily/*` PRs
+  (#48/#49) before this run — under 5.
+
 ### 2026-07-08 — scraper — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/45
 - Source: roadmap:#10
