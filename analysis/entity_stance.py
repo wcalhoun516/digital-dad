@@ -117,3 +117,263 @@ def article_stance(body: str, name: str) -> dict:
         "n_positive": sum(1 for s in scores if s > 0),
         "n_negative": sum(1 for s in scores if s < 0),
     }
+
+
+def classify_trend(trajectory: list[dict], *, threshold: float = 0.25) -> tuple[str, float]:
+    """Label an entity's stance drift as ``warming`` / ``cooling`` / ``steady``.
+
+    Compares the mean stance of the **last** dated year to the **first** across ``trajectory``
+    (each point ``{year, mean_stance, ...}``). ``trend_delta = last − first``; a magnitude below
+    ``threshold`` (or fewer than two years of signal) is ``steady``. Deterministic.
+    """
+    points = sorted((p for p in trajectory if p.get("mean_stance") is not None),
+                    key=lambda p: p["year"])
+    if len(points) < 2:
+        return "steady", 0.0
+    delta = round(points[-1]["mean_stance"] - points[0]["mean_stance"], 4)
+    if delta >= threshold:
+        return "warming", delta
+    if delta <= -threshold:
+        return "cooling", delta
+    return "steady", delta
+
+
+def build_stance(
+    articles: list[dict],
+    entities_data: dict,
+    *,
+    top_n: int = 30,
+    min_articles: int = 2,
+    min_mentions: int = 1,
+    threshold: float = 0.25,
+    exclude=None,
+) -> dict:
+    """Assemble per-entity yearly stance trajectories (pure; no I/O).
+
+    Joins ``entities_data``'s ``per_article`` records (which entities appear in which article,
+    plus its date) to the corpus ``articles`` (bodies, keyed by slug). For every entity in an
+    article it scores the sentences that name it (:func:`article_stance`) and accumulates the raw
+    polarity **sum** and sentence **count** per calendar year — so yearly means are exact, not
+    means-of-means. Keeps entities mentioned in at least ``min_articles`` articles, ranks by
+    article_count, caps at ``top_n``, and labels each entity's trend. ``exclude`` drops
+    boilerplate (defaults to `entity_graph`'s set). Fully deterministic.
+    """
+    body_by_slug = {a.get("slug"): a for a in articles}
+
+    # id -> {id, name, type, article_slugs: set, by_year: {year: [sum, n_sentences, {slugs}]}}
+    acc: dict[str, dict] = {}
+
+    for record in entities_data.get("per_article", []):
+        slug = record.get("slug")
+        article = body_by_slug.get(slug)
+        if article is None:
+            continue
+        year = (record.get("date") or article.get("date") or "")[:4]
+        if not year:
+            continue
+        body = article.get("body", "")
+        for name, entity_type in article_entities(
+            record, min_mentions=min_mentions, exclude=exclude
+        ):
+            sentences = mentioning_sentences(clean_text(body), name)
+            if not sentences:
+                continue
+            scores = [sentence_polarity(s) for s in sentences]
+            nid = entity_id(name, entity_type)
+            node = acc.setdefault(nid, {
+                "id": nid, "name": name, "type": entity_type,
+                "article_slugs": set(), "by_year": {},
+            })
+            node["article_slugs"].add(slug)
+            bucket = node["by_year"].setdefault(year, [0, 0, set()])
+            bucket[0] += sum(scores)
+            bucket[1] += len(scores)
+            bucket[2].add(slug)
+
+    entities = []
+    for node in acc.values():
+        if len(node["article_slugs"]) < min_articles:
+            continue
+        trajectory = []
+        total_sum = total_n = 0
+        for year in sorted(node["by_year"]):
+            s, n, slugs = node["by_year"][year]
+            total_sum += s
+            total_n += n
+            trajectory.append({
+                "year": year,
+                "mean_stance": round(s / n, 4) if n else None,
+                "n_sentences": n,
+                "n_articles": len(slugs),
+            })
+        trend, trend_delta = classify_trend(trajectory, threshold=threshold)
+        entities.append({
+            "id": node["id"],
+            "name": node["name"],
+            "type": node["type"],
+            "article_count": len(node["article_slugs"]),
+            "total_sentences": total_n,
+            "overall_stance": round(total_sum / total_n, 4) if total_n else None,
+            "trend": trend,
+            "trend_delta": trend_delta,
+            "trajectory": trajectory,
+        })
+
+    entities.sort(key=lambda e: (-e["article_count"], -e["total_sentences"], e["id"]))
+    entities = entities[:top_n]
+
+    warming = sorted(
+        (e for e in entities if e["trend"] == "warming"),
+        key=lambda e: (-e["trend_delta"], e["id"]),
+    )
+    cooling = sorted(
+        (e for e in entities if e["trend"] == "cooling"),
+        key=lambda e: (e["trend_delta"], e["id"]),
+    )
+
+    def _board(items):
+        return [{"name": e["name"], "type": e["type"], "trend_delta": e["trend_delta"],
+                 "overall_stance": e["overall_stance"]} for e in items]
+
+    return {
+        "meta": {
+            "total_articles": entities_data.get("total_articles_analyzed"),
+            "n_entities": len(entities),
+            "params": {
+                "top_n": top_n,
+                "min_articles": min_articles,
+                "min_mentions": min_mentions,
+                "threshold": threshold,
+                "excluded": sorted(_norm_exclude(exclude)),
+            },
+        },
+        "entities": entities,
+        "warming": _board(warming[:10]),
+        "cooling": _board(cooling[:10]),
+    }
+
+
+def render_markdown(result: dict) -> str:
+    """A short human-readable summary (for `--dry-run` and logs)."""
+    meta = result["meta"]
+    lines = [
+        "# Per-entity stance over time",
+        "",
+        f"{meta['n_entities']} entities (from {meta.get('total_articles')} articles). "
+        "Stance is a heuristic tone proxy, not ground truth.",
+    ]
+    for title, key in (("Warming (tone rising)", "warming"), ("Cooling (tone falling)", "cooling")):
+        board = result.get(key) or []
+        if board:
+            lines += ["", f"## {title}"]
+            lines += [f"- {e['name']} ({e['type']}) — Δ{e['trend_delta']:+.2f}, "
+                      f"overall {e['overall_stance']:+.2f}" for e in board]
+    entities = result.get("entities") or []
+    if entities:
+        lines += ["", "## Most-written-about"]
+        for e in entities[:10]:
+            span = e["trajectory"]
+            years = f"{span[0]['year']}–{span[-1]['year']}" if span else "—"
+            lines.append(
+                f"- {e['name']} ({e['type']}) — {e['article_count']} articles, {years}, "
+                f"{e['trend']} (Δ{e['trend_delta']:+.2f})"
+            )
+    return "\n".join(lines)
+
+
+def _load_entities():
+    import json
+
+    path = ANALYSIS_DIR / "entities.json"
+    if not path.exists():
+        raise FileNotFoundError(
+            f"No entities analysis at {path}. Run `make analyze entities` first."
+        )
+    return json.loads(path.read_text())
+
+
+def run(
+    articles: list[dict] | None = None,
+    *,
+    entities_data: dict | None = None,
+    top_n: int = 30,
+    min_articles: int = 2,
+    min_mentions: int = 1,
+    threshold: float = 0.25,
+    exclude=None,
+    write: bool = True,
+) -> dict:
+    """Build the per-entity stance trajectories and (unless ``write=False``) write it to disk.
+
+    Deterministic and offline: reads the corpus (or the injected ``articles``) and
+    `entities.json` (or the injected ``entities_data``), writes `entity_stance.json`. Makes no
+    conductor/network/LLM calls.
+    """
+    if articles is None:
+        articles = load_articles()
+    if entities_data is None:
+        entities_data = _load_entities()
+
+    result = build_stance(
+        articles,
+        entities_data,
+        top_n=top_n,
+        min_articles=min_articles,
+        min_mentions=min_mentions,
+        threshold=threshold,
+        exclude=exclude,
+    )
+
+    if write:
+        save_analysis("entity_stance.json", result)
+
+    return result
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(
+        description="Per-entity stance over time builder (roadmap #17)."
+    )
+    parser.add_argument("--top", type=int, default=30,
+                        help="Keep the N most-written-about entities (default 30).")
+    parser.add_argument("--min-articles", type=int, default=2,
+                        help="Minimum articles mentioning an entity to include it (default 2).")
+    parser.add_argument("--min-mentions", type=int, default=1,
+                        help="Minimum mentions for an entity to count in an article (default 1).")
+    parser.add_argument("--threshold", type=float, default=0.25,
+                        help="Min |Δstance| (first→last year) to call a trend warming/cooling "
+                             "(default 0.25).")
+    parser.add_argument("--exclude", action="append", metavar="NAME", default=None,
+                        help="Extra entity name to drop (repeatable); adds to the default "
+                             "boilerplate set.")
+    parser.add_argument("--no-exclude", action="store_true",
+                        help="Disable the default boilerplate exclude set (keep all entities).")
+    parser.add_argument("--dry-run", action="store_true",
+                        help="Print the summary without writing entity_stance.json.")
+    args = parser.parse_args(argv)
+
+    if args.no_exclude:
+        exclude: frozenset[str] | None = frozenset()
+    elif args.exclude:
+        exclude = _DEFAULT_EXCLUDE | {name.lower() for name in args.exclude}
+    else:
+        exclude = None
+
+    result = run(
+        top_n=args.top,
+        min_articles=args.min_articles,
+        min_mentions=args.min_mentions,
+        threshold=args.threshold,
+        exclude=exclude,
+        write=not args.dry_run,
+    )
+    print(render_markdown(result))
+    if args.dry_run:
+        print("\nDry run — nothing written.")
+    else:
+        print(f"\nWrote {ANALYSIS_DIR / 'entity_stance.json'}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

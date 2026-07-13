@@ -68,3 +68,75 @@ def test_article_stance_no_mentions_returns_none():
     stance = es.article_stance("Bitcoin surged today.", "Powell")
     assert stance["n_sentences"] == 0
     assert stance["mean_stance"] is None
+
+
+# --- build_stance -----------------------------------------------------------
+
+import pytest  # noqa: E402
+
+
+@pytest.fixture
+def articles():
+    return [
+        {"slug": "a1", "date": "2020-01-01", "title": "Early Fed",
+         "body": "The Fed delivered a success. The Fed looked strong."},
+        {"slug": "a2", "date": "2022-01-01", "title": "Later Fed",
+         "body": "The Fed became a disaster. The Fed looked weak."},
+        {"slug": "a3", "date": "2021-01-01", "title": "Byline",
+         "body": "George Calhoun writes here. This is boilerplate."},
+    ]
+
+
+@pytest.fixture
+def entities_data():
+    return {
+        "total_articles_analyzed": 3,
+        "per_article": [
+            {"slug": "a1", "date": "2020-01-01", "orgs": [["Fed", 4]], "people": []},
+            {"slug": "a2", "date": "2022-01-01", "orgs": [["Fed", 4]], "people": []},
+            {"slug": "a3", "date": "2021-01-01", "orgs": [],
+             "people": [["George Calhoun", 2]]},
+        ],
+    }
+
+
+def test_build_stance_tracks_yearly_trajectory(articles, entities_data):
+    result = es.build_stance(articles, entities_data, min_articles=1)
+    fed = next(e for e in result["entities"] if e["name"] == "Fed")
+    years = {p["year"]: p["mean_stance"] for p in fed["trajectory"]}
+    assert years["2020"] == 1.0
+    assert years["2022"] == -1.0
+    assert fed["article_count"] == 2
+
+
+def test_build_stance_trend_is_cooling(articles, entities_data):
+    result = es.build_stance(articles, entities_data, min_articles=1)
+    fed = next(e for e in result["entities"] if e["name"] == "Fed")
+    assert fed["trend"] == "cooling"
+    assert fed["trend_delta"] == -2.0
+    assert any(e["name"] == "Fed" for e in result["cooling"])
+
+
+def test_build_stance_excludes_byline_boilerplate(articles, entities_data):
+    result = es.build_stance(articles, entities_data, min_articles=1)
+    assert all(e["name"] != "George Calhoun" for e in result["entities"])
+
+
+def test_build_stance_min_articles_filters(articles, entities_data):
+    # Fed appears in 2 articles; require 3 -> dropped.
+    result = es.build_stance(articles, entities_data, min_articles=3)
+    assert result["entities"] == []
+
+
+# --- render_markdown / run --------------------------------------------------
+
+def test_render_markdown_names_the_entity_and_trend(articles, entities_data):
+    md = es.render_markdown(es.build_stance(articles, entities_data, min_articles=1))
+    assert "Fed" in md
+    assert "cooling" in md.lower()
+
+
+def test_run_write_false_returns_without_io(articles, entities_data):
+    result = es.run(articles=articles, entities_data=entities_data,
+                    min_articles=1, write=False)
+    assert result["meta"]["n_entities"] == 1
