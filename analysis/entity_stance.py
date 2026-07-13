@@ -72,3 +72,48 @@ def sentence_polarity(sentence: str) -> int:
             sign = -sign
         score += sign
     return score
+
+
+def split_sentences(text: str) -> list[str]:
+    """Split cleaned text into sentences (same simple rule as `calhoun_isms.split_sentences`)."""
+    if not text:
+        return []
+    parts = re.split(r"(?<=[.!?])\s+", text.strip())
+    return [p.strip() for p in parts if p.strip()]
+
+
+def entity_mentioned(sentence: str, name: str) -> bool:
+    """True if ``name`` occurs in ``sentence`` as a whole word (case-insensitive).
+
+    Word boundaries stop ``"Fed"`` from matching inside ``"federal"``; internal spaces in a
+    multi-word name are matched literally, so ``"Federal Reserve"`` matches regardless of case.
+    """
+    name = name.strip()
+    if not name:
+        return False
+    pattern = r"\b" + re.escape(name) + r"\b"
+    return re.search(pattern, sentence, flags=re.IGNORECASE) is not None
+
+
+def mentioning_sentences(text: str, name: str) -> list[str]:
+    """The sentences of ``text`` that name ``name`` (see :func:`entity_mentioned`)."""
+    return [s for s in split_sentences(text) if entity_mentioned(s, name)]
+
+
+def article_stance(body: str, name: str) -> dict:
+    """Mean polarity of the sentences in ``body`` that mention ``name``.
+
+    Returns ``{"mean_stance": float | None, "n_sentences": int, "n_positive": int,
+    "n_negative": int}``. ``mean_stance`` is ``None`` when the entity is not mentioned (so a
+    caller can distinguish "no signal" from "neutral"). Pure and deterministic.
+    """
+    sentences = mentioning_sentences(clean_text(body), name)
+    if not sentences:
+        return {"mean_stance": None, "n_sentences": 0, "n_positive": 0, "n_negative": 0}
+    scores = [sentence_polarity(s) for s in sentences]
+    return {
+        "mean_stance": round(sum(scores) / len(scores), 4),
+        "n_sentences": len(sentences),
+        "n_positive": sum(1 for s in scores if s > 0),
+        "n_negative": sum(1 for s in scores if s < 0),
+    }

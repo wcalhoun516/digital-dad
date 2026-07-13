@@ -33,3 +33,38 @@ def test_polarity_negation_flips_negative():
 
 def test_polarity_is_case_insensitive():
     assert es.sentence_polarity("A STRONG, SUCCESSFUL outcome.") > 0
+
+
+# --- entity_mentioned -------------------------------------------------------
+
+def test_entity_mentioned_word_boundary():
+    assert es.entity_mentioned("The Fed raised rates.", "Fed")
+    # "Fed" must not match inside "federal".
+    assert not es.entity_mentioned("A federal program launched.", "Fed")
+
+
+def test_entity_mentioned_case_insensitive_multiword():
+    assert es.entity_mentioned("He praised the federal reserve today.", "Federal Reserve")
+
+
+def test_entity_mentioned_absent():
+    assert not es.entity_mentioned("Bitcoin surged overnight.", "Powell")
+
+
+# --- article_stance ---------------------------------------------------------
+
+def test_article_stance_averages_mentioning_sentences():
+    body = (
+        "The Fed engineered a strong recovery. "  # +1, mentions Fed
+        "Bitcoin remains a dangerous bubble. "     # not about Fed
+        "The Fed's policy was a success."          # +1, mentions Fed
+    )
+    stance = es.article_stance(body, "Fed")
+    assert stance["n_sentences"] == 2
+    assert stance["mean_stance"] > 0
+
+
+def test_article_stance_no_mentions_returns_none():
+    stance = es.article_stance("Bitcoin surged today.", "Powell")
+    assert stance["n_sentences"] == 0
+    assert stance["mean_stance"] is None
