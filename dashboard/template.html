@@ -644,6 +644,7 @@ footer {
   <button data-tab="psychoprofile">Psychoprofile</button>
   <button data-tab="linguistic">Linguistic DNA</button>
   <button data-tab="entities">Influence Map</button>
+  <button data-tab="network">Network</button>
   <button data-tab="corpus">Raw Corpus</button>
   <button data-tab="search">Search</button>
   <button data-tab="askdad">Ask Dad</button>
@@ -712,6 +713,24 @@ footer {
   <h2>Influence Map</h2>
   <p class="section-desc">Who and what does he cite? Named entities extracted from the full corpus.</p>
   <div id="entities-content"></div>
+</div>
+
+<!-- Tab 5b: Network (entity co-occurrence graph, roadmap #14) -->
+<div class="tab-content" id="tab-network">
+  <h2>Network</h2>
+  <p class="section-desc">Who he writes about <em>together</em>. Each node is a person or organization; a line links two that share an article, thicker the more often. Drag a node; hover for detail.</p>
+  <div id="network-body">
+    <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start">
+      <div style="flex:3;min-width:300px">
+        <div class="cluster-legend" id="network-legend"></div>
+        <svg id="network-svg"></svg>
+      </div>
+      <div style="flex:1;min-width:220px">
+        <h4 style="margin:0 0 8px">Strongest pairs</h4>
+        <div id="network-top-pairs"></div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Tab 6: Raw Corpus -->
@@ -904,6 +923,7 @@ const EMBEDDINGS_DATA = /*__EMBEDDINGS_DATA__*/;
 const PREDICTIONS_DATA = /*__PREDICTIONS_DATA__*/;
 const GEO_LLM_DATA = /*__GEO_LLM_DATA__*/;
 const READING_ROOM_DATA = /*__READING_ROOM_DATA__*/;
+const ENTITY_GRAPH_DATA = /*__ENTITY_GRAPH_DATA__*/;
 </script>
 
 <script>
@@ -2456,6 +2476,96 @@ function renderReadingRoom() {
   open(entries[0].slug);
 }
 
+// ===== NETWORK (roadmap #14) — entity co-occurrence force graph from ENTITY_GRAPH_DATA =====
+// Reads the committed, text-free entity_graph.json (nodes = people/orgs, edges = shared-article
+// counts). In CI / fresh clones ENTITY_GRAPH_DATA is the empty stub, so the tab prompts a build.
+const NETWORK_TYPE_COLOR = { person: '#e8a33d', org: '#4d9de0' };
+function renderNetwork() {
+  const legend = document.getElementById('network-legend');
+  const pairsEl = document.getElementById('network-top-pairs');
+  const svg = d3.select('#network-svg');
+  svg.selectAll('*').remove();  // idempotent: never stack a second graph on redraw
+  legend.innerHTML = '';
+  pairsEl.innerHTML = '';
+
+  const data = ENTITY_GRAPH_DATA || {};
+  const rawNodes = data.nodes || [];
+  const rawEdges = data.edges || [];
+  if (!rawNodes.length || typeof d3 === 'undefined') {
+    pairsEl.innerHTML = '<p class="section-desc">No graph loaded. Run <code>make entity-graph</code> then <code>make dashboard</code> to populate the network.</p>';
+    return;
+  }
+
+  const legendItems = [['org', 'Organization'], ['person', 'Person']];
+  legendItems.forEach(([type, label]) => {
+    const item = document.createElement('div');
+    item.className = 'item';
+    item.innerHTML = `<span class="swatch" style="background:${NETWORK_TYPE_COLOR[type]}"></span>${label}`;
+    legend.appendChild(item);
+  });
+
+  const width = svg.node().parentElement.clientWidth;
+  const height = Math.max(500, width * 0.7);
+  svg.attr('width', width).attr('height', height).attr('viewBox', `0 0 ${width} ${height}`);
+
+  // Only draw edges whose endpoints are both present (the builder can emit an edge to a
+  // node trimmed by top_n); keep a copy so the sim's mutation of source/target is contained.
+  const ids = new Set(rawNodes.map(n => n.id));
+  const maxArt = d3.max(rawNodes, d => d.article_count) || 1;
+  const nodes = rawNodes.map(d => ({ ...d, r: Math.max(5, Math.sqrt(d.article_count / maxArt) * 26) }));
+  const maxW = d3.max(rawEdges, d => d.weight) || 1;
+  const links = rawEdges
+    .filter(e => ids.has(e.source) && ids.has(e.target))
+    .map(e => ({ source: e.source, target: e.target, weight: e.weight }));
+
+  const sim = d3.forceSimulation(nodes)
+    .force('link', d3.forceLink(links).id(d => d.id).distance(d => 60 + 40 * (1 - d.weight / maxW)).strength(d => Math.min(1, d.weight / maxW + 0.1)))
+    .force('charge', d3.forceManyBody().strength(-120))
+    .force('center', d3.forceCenter(width / 2, height / 2))
+    .force('collide', d3.forceCollide(d => d.r + 3));
+
+  const link = svg.append('g').attr('stroke', '#5a5550')
+    .selectAll('line').data(links).join('line')
+    .attr('stroke-opacity', d => 0.15 + 0.55 * (d.weight / maxW))
+    .attr('stroke-width', d => Math.max(1, Math.sqrt(d.weight)));
+
+  const node = svg.append('g')
+    .selectAll('circle').data(nodes).join('circle')
+    .attr('r', d => d.r)
+    .attr('fill', d => NETWORK_TYPE_COLOR[d.type] || '#888')
+    .attr('fill-opacity', 0.8)
+    .attr('stroke', '#1a1a1a').attr('stroke-width', 1)
+    .attr('cursor', 'grab')
+    .on('mouseover', (evt, d) => {
+      d3.select(evt.target).attr('fill-opacity', 1);
+      showTooltip(evt, `<div class="title">${d.name}</div><div class="cluster">${d.type} · ${d.article_count} articles · ${d.degree} connections</div>`);
+    })
+    .on('mousemove', (evt) => { tooltip.style.left = (evt.pageX + 15) + 'px'; tooltip.style.top = (evt.pageY - 10) + 'px'; })
+    .on('mouseout', (evt) => { d3.select(evt.target).attr('fill-opacity', 0.8); hideTooltip(); })
+    .call(d3.drag()
+      .on('start', (evt, d) => { if (!evt.active) sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
+      .on('drag', (evt, d) => { d.fx = evt.x; d.fy = evt.y; })
+      .on('end', (evt, d) => { if (!evt.active) sim.alphaTarget(0); d.fx = null; d.fy = null; }));
+
+  const label = svg.append('g')
+    .selectAll('text').data(nodes.filter(d => d.r >= 9)).join('text')
+    .text(d => d.name).attr('font-size', '10px').attr('fill', '#c8c3bd')
+    .attr('font-family', 'var(--mono)').attr('pointer-events', 'none').attr('dx', d => d.r + 3).attr('dy', 3);
+
+  sim.on('tick', () => {
+    link.attr('x1', d => d.source.x).attr('y1', d => d.source.y).attr('x2', d => d.target.x).attr('y2', d => d.target.y);
+    node.attr('cx', d => d.x = Math.max(d.r, Math.min(width - d.r, d.x))).attr('cy', d => d.y = Math.max(d.r, Math.min(height - d.r, d.y)));
+    label.attr('x', d => d.x).attr('y', d => d.y);
+  });
+
+  (data.top_pairs || []).slice(0, 12).forEach(p => {
+    const row = document.createElement('div');
+    row.style.cssText = 'font-family:var(--mono);font-size:0.8em;padding:4px 0;border-bottom:1px solid var(--border)';
+    row.innerHTML = `<span style="color:var(--text)">${p.a} · ${p.b}</span> <span style="color:var(--text-muted);float:right">${p.weight}</span>`;
+    pairsEl.appendChild(row);
+  });
+}
+
 let currentTab = null;
 function renderTab(name) {
   currentTab = name;  // tracked even for cached tabs, so resize redraw knows the target
@@ -2468,6 +2578,7 @@ function renderTab(name) {
     case 'psychoprofile': renderPsychoprofile(); break;
     case 'linguistic': renderLinguistic(); break;
     case 'entities': renderEntities(); break;
+    case 'network': renderNetwork(); break;
     case 'corpus': renderCorpus(); break;
     case 'search': renderSearch(); break;
     case 'askdad': renderAskDad(); break;
