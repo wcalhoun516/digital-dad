@@ -48,6 +48,39 @@ Format:
 
 <!-- entries below -->
 
+### 2026-07-14 — dashboard — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/51
+- Source: roadmap:#14
+- Summary: Roadmap **#14 (P2·L·analysis)** named deliverable — the **entity co-occurrence graph feeding a
+  new dashboard network viz**. The offline builder (`analysis/entity_graph.py` → committed, text-free
+  `entity_graph.json`) shipped in PR #43 but *explicitly deferred the dashboard viz*; this builds that
+  deferred slice as a **dashboard-category** run (fresh by rotation — the recent streak was
+  analysis/scraper/infra/ops). New **Network** tab: a D3 **force-directed** graph of who Dad writes about
+  *together* — nodes = people/orgs sized by `article_count` + colored by type, links weighted by
+  shared-article `weight`; draggable nodes, hover tooltip (type/articles/connections), org-vs-person
+  legend, and a "strongest pairs" sidebar from `top_pairs`. Distinct from the existing **Influence Map**
+  tab (a ranked *list* from `entities.json`) — this is the relational graph. **Wiring:** new
+  `/*__ENTITY_GRAPH_DATA__*/` placeholder in `viz/build_dashboard.py` with an **empty-graph stub** so CI /
+  fresh clones (no `entity_graph.json`) build clean and the tab shows a `make entity-graph` prompt instead
+  of an empty canvas. **Fully offline / unattended-safe:** reads the already-committed, **text-free**
+  artifact (no raw bodies → inlines like the other analysis JSON); no conductor/network/LLM. D3
+  `forceSimulation`/`forceLink` were already loaded (theme map). **§8.5 deepen:** added the tab to
+  `RESIZE_REDRAW_TABS` so the pixel-sized graph re-fits on viewport change (stateless + `renderNetwork`
+  clears the SVG first, so a redraw can't stack a second graph); edges filtered to endpoints surviving the
+  builder's `top_n` trim; labels only on larger nodes; architecture.md note. **TDD'd:** +9 tests
+  (`tests/test_dashboard_network.py`). **Verification:** `make verify` green (**576 passed**, up from 567;
+  ruff clean; dashboard builds); **live headless-Chromium passes** on the built `index.html` — desktop
+  1280×900 → 40 nodes / 201 edges / 40 labels / 12 top-pairs / tooltip on hover / **0 console errors**;
+  phone 375×812 → 40 nodes, **no horizontal overflow**, **0 console errors**. **Known limitation
+  (deferred, inherited from #14's builder):** entity *alias fragmentation* — "Fed" / "the Federal Reserve"
+  are separate nodes (the top pair here); alias-merging is a future builder-side slice. **Resume/backlog:**
+  §3 didn't resume — the 2 open `daily/*` PRs (#50 entity-stance, #48 structured-logging) are both
+  `ready-for-review`, not `in-progress`; under the 5-PR cap so work proceeded. **Cold-path pick:**
+  `plans/ready/` holds only 0008 (owner-interactive/paid/compute); no user pins. Verified the family
+  post-queue emphasis is drained (Reading Room #21, year-in-review #23, anthology #24 all built + wired),
+  so picked #14's deferred **dashboard** viz — genuinely unstarted, fully offline, family-facing, builds on
+  data already on `main`.
+
 ### 2026-07-12 — analysis — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/49
 - Source: roadmap:#16
