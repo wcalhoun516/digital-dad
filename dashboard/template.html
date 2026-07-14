@@ -2606,7 +2606,7 @@ window.addEventListener('DOMContentLoaded', () => {
 // dimensions. Re-render the active chart tab so it re-measures and refits — debounced
 // so a drag-resize fires once. Restricted to the stateless chart tabs: re-rendering an
 // interactive tab (Ask Dad chat, Corpus filters) would wipe the user's in-flight state.
-const RESIZE_REDRAW_TABS = new Set(['themes', 'timeline']);
+const RESIZE_REDRAW_TABS = new Set(['themes', 'timeline', 'network']);
 let _resizeTimer = null;
 window.addEventListener('resize', () => {
   clearTimeout(_resizeTimer);

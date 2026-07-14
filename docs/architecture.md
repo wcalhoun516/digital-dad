@@ -59,9 +59,12 @@ to `data/cron/emails/`, logs to `data/cron/on_this_day.jsonl`.
 
 `entity_graph.py` — also outside the default chain; run via `make entity-graph`. A pure/offline
 **derived** artifact: reads `entities.json`'s `per_article` lists and emits `entity_graph.json`,
-an undirected co-occurrence graph (nodes = people/orgs, edge weight = shared-article count) for
-a future dashboard network viz. Byline/photo-credit boilerplate is excluded by default
-(`--no-exclude` to keep it). No conductor/network. (Roadmap #14.)
+an undirected co-occurrence graph (nodes = people/orgs, edge weight = shared-article count).
+Byline/photo-credit boilerplate is excluded by default (`--no-exclude` to keep it). No
+conductor/network. Surfaced in the dashboard's **Network** tab — a D3 force-directed graph
+injected via `build_dashboard`'s `/*__ENTITY_GRAPH_DATA__*/` placeholder (empty-graph stub in
+CI / fresh clones, prompting `make entity-graph`); it re-fits on viewport change like the other
+pixel-sized chart tabs. (Roadmap #14.)
 
 `calhoun_isms.py` — also outside the default chain; run via `make calhoun-isms`. A pure/offline
 **derived** artifact: reads `themes.json`'s per-article theme assignments plus the corpus bodies

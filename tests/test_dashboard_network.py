@@ -74,3 +74,10 @@ def test_network_has_empty_stub_prompt():
     html = TEMPLATE.read_text()
     # When the graph is empty (CI stub), the tab prompts to build it rather than drawing nothing.
     assert "make entity-graph" in html
+
+
+def test_network_redraws_on_resize():
+    html = TEMPLATE.read_text()
+    # The force graph measures its container at render time, so — like themes/timeline — it must
+    # re-fit on viewport change. It's stateless (no in-flight user input) so a redraw is safe.
+    assert "new Set(['themes', 'timeline', 'network'])" in html
