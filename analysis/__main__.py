@@ -71,7 +71,7 @@ def build_parser() -> argparse.ArgumentParser:
         "modules",
         nargs="*",
         default=["all"],
-        choices=["all"] + ALL_MODULES,
+        metavar="{all," + ",".join(ALL_MODULES) + "}",
         help="Which analysis modules to run (default: all)",
     )
     parser.add_argument("--dry-run", action="store_true", help="Estimate costs without calling APIs")
@@ -87,7 +87,8 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main():
-    args = build_parser().parse_args()
+    parser = build_parser()
+    args = parser.parse_args()
 
     if args.verbose:
         log.setLevel("DEBUG")
@@ -99,6 +100,12 @@ def main():
     router = "conductor_remote" if args.remote else "conductor_local"
 
     modules = args.modules
+    invalid = [m for m in modules if m not in {"all", *ALL_MODULES}]
+    if invalid:
+        parser.error(
+            f"argument modules: invalid choice: {invalid[0]!r} "
+            f"(choose from 'all', {', '.join(repr(m) for m in ALL_MODULES)})"
+        )
     if "all" in modules:
         modules = ALL_MODULES
 
