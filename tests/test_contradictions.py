@@ -32,8 +32,13 @@ def test_stance_score_matches_on_word_boundaries():
 
 # --- mentions ---------------------------------------------------------------
 
-def test_mentions_case_insensitive():
-    assert c.mentions("the fed raised rates", "Fed") is True
+def test_mentions_matches_proper_noun_form():
+    assert c.mentions("the Fed raised rates", "Fed") is True
+
+
+def test_mentions_is_case_sensitive_to_avoid_common_word_collisions():
+    # "Jack" the person must not match the verb "jack" in "jack up the stimulus"
+    assert c.mentions("would jack up the stimulus", "Jack") is False
 
 
 def test_mentions_absent():
@@ -168,6 +173,44 @@ def test_find_contradictions_excludes_boilerplate_by_default():
     ents = _entities(people=[("George Calhoun", 50)])
     result = c.find_contradictions(articles, ents, min_mentions=1, min_observations=1)
     assert result["contradictions"] == []
+
+
+# --- _stance_observations (quote-quality word band) -------------------------
+
+def test_stance_observations_drops_run_on_sentences():
+    # A glued run-on far above the band should not become a stance observation/quote.
+    run_on = "The Fed is strong " + "and ".join(["really"] * 60) + " good."
+    articles = [{"slug": "a", "date": "2020-01-01", "title": "A", "body": run_on}]
+    obs = c._stance_observations(articles, "Fed", max_sentence_words=45)
+    assert obs == []
+
+
+def test_stance_observations_keeps_focused_sentence():
+    articles = [{"slug": "a", "date": "2020-01-01", "title": "A",
+                 "body": "The Fed is a reckless failure."}]
+    obs = c._stance_observations(articles, "Fed", max_sentence_words=45)
+    assert len(obs) == 1
+    assert obs[0]["stance"] < 0
+
+
+# --- alias dedup ------------------------------------------------------------
+
+def test_find_contradictions_dedupes_case_insensitive_aliases():
+    articles = [
+        {"slug": "a", "date": "2019-01-01", "title": "A",
+         "body": "COVID is a disaster. COVID is a dangerous crisis."},
+        {"slug": "b", "date": "2019-02-01", "title": "B",
+         "body": "COVID is a failure and a threat."},
+        {"slug": "c", "date": "2021-01-01", "title": "C",
+         "body": "COVID is a success now. COVID is a strong recovery."},
+        {"slug": "d", "date": "2021-02-01", "title": "D",
+         "body": "COVID is a healthy, promising recovery."},
+    ]
+    ents = _entities(people=[("COVID", 4), ("Covid", 4)])
+    result = c.find_contradictions(articles, ents, min_observations=4,
+                                   min_mentions=3, min_delta=1.0)
+    covid_rows = [r for r in result["contradictions"] if r["entity"].lower() == "covid"]
+    assert len(covid_rows) == 1
 
 
 # --- run --------------------------------------------------------------------

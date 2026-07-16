@@ -63,10 +63,15 @@ def stance_score(sentence: str) -> int:
 
 
 def mentions(sentence: str, entity: str) -> bool:
-    """True if ``entity`` appears in ``sentence`` as a whole word/phrase (case-insensitive)."""
+    """True if ``entity`` appears in ``sentence`` as a whole word/phrase.
+
+    Matched **case-sensitively** so a proper-noun subject ("Jack") is not confused with a
+    common word ("jack up the stimulus"). Corpus subjects are capitalized in prose, so this
+    trades a few sentence-start edge cases for far fewer false positives.
+    """
     if not entity:
         return False
-    return re.search(rf"\b{re.escape(entity)}\b", sentence, flags=re.IGNORECASE) is not None
+    return re.search(rf"\b{re.escape(entity)}\b", sentence) is not None
 
 
 def split_observations(observations: list[dict]) -> tuple[list[dict], list[dict]]:
@@ -143,6 +148,7 @@ def _target_entities(
 ) -> list[tuple[str, str]]:
     """(name, type) targets from entities.json, above the mention floor and not excluded."""
     targets: list[tuple[str, str]] = []
+    seen: set[str] = set()
     for key, etype in (("top_people", "person"), ("top_organizations", "organization")):
         for ent in entities_data.get(key, []):
             name = ent.get("name", "") if isinstance(ent, dict) else str(ent)
@@ -151,18 +157,37 @@ def _target_entities(
                 continue
             if count < min_mentions:
                 continue
+            # Collapse case-only aliases ("COVID"/"Covid") — they yield identical observations.
+            key_cf = name.casefold()
+            if key_cf in seen:
+                continue
+            seen.add(key_cf)
             targets.append((name, etype))
     return targets
 
 
-def _stance_observations(articles: list[dict], entity: str) -> list[dict]:
-    """Every sentence that names ``entity`` and carries a nonzero stance, with its metadata."""
+def _stance_observations(
+    articles: list[dict],
+    entity: str,
+    *,
+    min_sentence_words: int = 5,
+    max_sentence_words: int = 45,
+) -> list[dict]:
+    """Every sentence that names ``entity`` and carries a nonzero stance, with its metadata.
+
+    Sentences outside ``[min_sentence_words, max_sentence_words]`` are skipped: the corpus has
+    glued run-ons (missing spaces after periods) that would otherwise dominate as bloated,
+    unreadable "quotes" and muddy the stance signal.
+    """
     observations: list[dict] = []
     for article in articles:
         text = clean_text(article.get("body", ""))
-        if not text or entity.lower() not in text.lower():
+        if not text or entity not in text:
             continue
         for sentence in split_sentences(text):
+            n_words = len(_WORD_RE.findall(sentence))
+            if not (min_sentence_words <= n_words <= max_sentence_words):
+                continue
             if not mentions(sentence, entity):
                 continue
             score = stance_score(sentence)
@@ -185,6 +210,8 @@ def find_contradictions(
     min_observations: int = 4,
     min_mentions: int = 4,
     min_delta: float = 1.0,
+    min_sentence_words: int = 5,
+    max_sentence_words: int = 45,
     exclude: frozenset[str] | None = None,
 ) -> dict:
     """Build the mind-change board (pure; no I/O).
@@ -201,7 +228,11 @@ def find_contradictions(
     scanned = 0
     for name, etype in targets:
         scanned += 1
-        observations = _stance_observations(articles, name)
+        observations = _stance_observations(
+            articles, name,
+            min_sentence_words=min_sentence_words,
+            max_sentence_words=max_sentence_words,
+        )
         reversal = detect_reversal(
             observations, min_observations=min_observations, min_delta=min_delta
         )
@@ -219,6 +250,8 @@ def find_contradictions(
                 "min_observations": min_observations,
                 "min_mentions": min_mentions,
                 "min_delta": min_delta,
+                "min_sentence_words": min_sentence_words,
+                "max_sentence_words": max_sentence_words,
             },
         },
         "contradictions": contradictions,
@@ -252,6 +285,8 @@ def run(
     min_observations: int = 4,
     min_mentions: int = 4,
     min_delta: float = 1.0,
+    min_sentence_words: int = 5,
+    max_sentence_words: int = 45,
     exclude: frozenset[str] | None = None,
     write: bool = True,
 ) -> dict:
@@ -271,6 +306,8 @@ def run(
         min_observations=min_observations,
         min_mentions=min_mentions,
         min_delta=min_delta,
+        min_sentence_words=min_sentence_words,
+        max_sentence_words=max_sentence_words,
         exclude=exclude,
     )
 
@@ -302,6 +339,9 @@ def main(argv: list[str] | None = None) -> int:
                         help="Only consider subjects appearing in ≥ N articles (default 4).")
     parser.add_argument("--min-delta", type=float, default=1.0,
                         help="Minimum early→late mean-stance swing to flag (default 1.0).")
+    parser.add_argument("--max-sentence-words", type=int, default=45,
+                        help="Skip stance sentences longer than N words — filters glued "
+                             "run-ons (default 45).")
     parser.add_argument("--no-exclude", action="store_true",
                         help="Keep author/photo boilerplate subjects (off by default).")
     parser.add_argument("--dry-run", action="store_true",
@@ -312,6 +352,7 @@ def main(argv: list[str] | None = None) -> int:
         min_observations=args.min_observations,
         min_mentions=args.min_mentions,
         min_delta=args.min_delta,
+        max_sentence_words=args.max_sentence_words,
         exclude=frozenset() if args.no_exclude else None,
         write=not args.dry_run,
     )
