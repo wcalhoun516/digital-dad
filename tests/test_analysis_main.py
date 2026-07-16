@@ -2,7 +2,18 @@
 
 import hashlib
 
-from analysis.__main__ import _corpus_fingerprint
+from analysis.__main__ import _corpus_fingerprint, build_parser
+
+
+class TestVerboseFlag:
+    def test_verbose_long_flag_sets_true(self):
+        assert build_parser().parse_args(["--verbose"]).verbose is True
+
+    def test_verbose_short_flag_sets_true(self):
+        assert build_parser().parse_args(["-v"]).verbose is True
+
+    def test_verbose_defaults_false(self):
+        assert build_parser().parse_args([]).verbose is False
 
 
 class TestCorpusFingerprint:
