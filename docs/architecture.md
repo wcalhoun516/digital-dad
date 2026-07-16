@@ -30,8 +30,12 @@ body — the basis for change detection.
 
 ## 2. Analysis (`analysis/`)
 
-CLI: `python -m analysis [modules] [--dry-run] [--force] [--remote]`. Modules run in order:
-`linguistic · themes · entities · psychoprofile · semantic_search · predictions`.
+CLI: `python -m analysis [modules] [--dry-run] [--force] [--remote] [--verbose]`. Modules run in
+order: `linguistic · themes · entities · psychoprofile · semantic_search · predictions`.
+
+**Logging** (`analysis/utils.py`): modules emit progress through a shared `log`
+(`setup_logging()`, logger `digital-dad.analysis`, mirroring `scraper/utils.py`) rather than
+`print`. `--verbose`/`-v` drops the level to DEBUG (e.g. themes' per-`k` silhouette scores).
 
 **Corpus fingerprinting** (`__main__.py`): an MD5 over all article slugs + content_hashes.
 Each completed module appends a line to `data/analysis/runs.jsonl` with the fingerprint it

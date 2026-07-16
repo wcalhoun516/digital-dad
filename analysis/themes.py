@@ -3,7 +3,7 @@
 import re
 from collections import defaultdict
 
-from .utils import load_articles, clean_text, save_analysis
+from .utils import load_articles, clean_text, log, save_analysis
 
 
 def run(articles: list[dict] | None = None, min_k: int = 4, max_k: int = 10) -> dict:
@@ -18,7 +18,7 @@ def run(articles: list[dict] | None = None, min_k: int = 4, max_k: int = 10) -> 
     if not articles:
         raise ValueError("No articles to analyze. Run `make scrape` first.")
 
-    print(f"Clustering {len(articles)} articles into themes...")
+    log.info("Clustering %d articles into themes...", len(articles))
 
     # Prepare documents
     docs = []
@@ -30,7 +30,7 @@ def run(articles: list[dict] | None = None, min_k: int = 4, max_k: int = 10) -> 
             valid_articles.append(article)
 
     if len(docs) < min_k:
-        print(f"Only {len(docs)} articles — too few for clustering. Using 2 clusters.")
+        log.warning("Only %d articles — too few for clustering. Using 2 clusters.", len(docs))
         min_k = max_k = 2
 
     # TF-IDF vectorization
@@ -54,12 +54,12 @@ def run(articles: list[dict] | None = None, min_k: int = 4, max_k: int = 10) -> 
             labels = km.fit_predict(tfidf_matrix)
             if len(set(labels)) > 1:
                 score = silhouette_score(tfidf_matrix, labels, sample_size=min(1000, len(docs)))
-                print(f"  k={k}: silhouette={score:.3f}")
+                log.debug("k=%d: silhouette=%.3f", k, score)
                 if score > best_score:
                     best_score = score
                     best_k = k
 
-    print(f"Selected k={best_k} (silhouette={best_score:.3f})")
+    log.info("Selected k=%d (silhouette=%.3f)", best_k, best_score)
 
     # Final clustering
     km = KMeans(n_clusters=best_k, random_state=42, n_init=10)
@@ -127,7 +127,7 @@ def run(articles: list[dict] | None = None, min_k: int = 4, max_k: int = 10) -> 
     }
 
     path = save_analysis("themes.json", result)
-    print(f"Theme analysis saved to {path}")
+    log.info("Theme analysis saved to %s", path)
     return result
 
 

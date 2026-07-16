@@ -1,6 +1,7 @@
 """Shared utilities for the analysis pipeline."""
 
 import json
+import logging
 import re
 from pathlib import Path
 
@@ -8,6 +9,27 @@ DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 RAW_DIR = DATA_DIR / "raw"
 ANALYSIS_DIR = DATA_DIR / "analysis"
 MANIFEST_PATH = DATA_DIR / "manifest.json"
+
+
+def setup_logging(level: str = "INFO") -> logging.Logger:
+    """Configure and return the shared analysis logger.
+
+    Mirrors ``scraper/utils.py``: one named logger, a single StreamHandler, and an
+    idempotent handler guard so repeated calls (module import + a CLI ``--verbose``
+    tweak) never stack duplicate handlers. Unknown level strings fall back to INFO.
+    """
+    logger = logging.getLogger("digital-dad.analysis")
+    if not logger.handlers:
+        handler = logging.StreamHandler()
+        handler.setFormatter(
+            logging.Formatter("%(asctime)s [%(levelname)s] %(message)s", datefmt="%H:%M:%S")
+        )
+        logger.addHandler(handler)
+    logger.setLevel(getattr(logging, level.upper(), logging.INFO))
+    return logger
+
+
+log = setup_logging()
 
 
 def load_manifest() -> dict:
