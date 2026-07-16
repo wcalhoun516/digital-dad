@@ -67,12 +67,15 @@ an undirected co-occurrence graph (nodes = people/orgs, edge weight = shared-art
 a future dashboard network viz. Byline/photo-credit boilerplate is excluded by default
 (`--no-exclude` to keep it). No conductor/network. (Roadmap #14.)
 
-`calhoun_isms.py` — also outside the default chain; run via `make calhoun-isms`. A pure/offline
-**derived** artifact: reads `themes.json`'s per-article theme assignments plus the corpus bodies
-and emits `calhoun_isms.json`, the most quotable/aphoristic sentences grouped by theme (+ an
-overall board). "Quotable" is a transparent heuristic — self-contained sentences in a memorable
-length band that carry aphoristic signals (`X is …`, absolutes like `always`/`never`, contrast),
-with newsy specifics (dates, `%`, "Powell said") scored down. No conductor/network. (Roadmap #16.)
+`entity_stance.py` — also outside the default chain; run via `make entity-stance`. A pure/offline
+**derived** artifact: joins `entities.json`'s `per_article` lists to the corpus bodies and emits
+`entity_stance.json`, a per-entity **yearly stance trajectory** (mean tone of the sentences that
+name an entity, per year) plus warming/cooling trend boards, for a future dashboard "stance over
+time" viz. Because nltk/VADER is absent here, tone is a **transparent heuristic** — a small
+curated polarity lexicon scored per sentence with a light negation flip — so it surfaces *trends*,
+not ground-truth sentiment. The artifact is text-free (names/years/scores only), so it's
+committable like `entity_graph.json`. Same byline/photo-credit exclusion. No conductor/network.
+(Roadmap #17.)
 
 ## 3. The conductor (LLM abstraction)
 
