@@ -26,6 +26,10 @@ data/analysis/embeddings.json
 # `make reading-room`; never committed (licensing), CI inlines an empty stub instead.
 data/analysis/reading_room.json
 
+# Calhoun-isms (roadmap #16) — embeds sentence excerpts of article bodies, so regenerate on
+# demand with `make calhoun-isms`; never committed (licensing), same posture as reading_room.
+data/analysis/calhoun_isms.json
+
 # Weekly cron logs (the directory is kept via .gitkeep)
 data/cron/*.log
 data/cron/*.out

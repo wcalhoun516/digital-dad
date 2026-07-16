@@ -4,7 +4,7 @@ import math
 import re
 from collections import Counter, defaultdict
 
-from .utils import load_articles, clean_text, save_analysis
+from .utils import load_articles, clean_text, log, save_analysis
 
 # Common English words for TF-IDF comparison (top ~200)
 COMMON_ENGLISH = set("""
@@ -152,7 +152,7 @@ def run(articles: list[dict] | None = None) -> dict:
     if not articles:
         raise ValueError("No articles to analyze. Run `make scrape` first.")
 
-    print(f"Analyzing {len(articles)} articles...")
+    log.info("Analyzing %d articles...", len(articles))
 
     per_article = []
     all_sentence_lengths: list[int] = []
@@ -215,5 +215,5 @@ def run(articles: list[dict] | None = None) -> dict:
     }
 
     path = save_analysis("linguistics.json", result)
-    print(f"Linguistic analysis saved to {path}")
+    log.info("Linguistic analysis saved to %s", path)
     return result
