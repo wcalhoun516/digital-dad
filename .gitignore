@@ -30,6 +30,10 @@ data/analysis/reading_room.json
 # demand with `make calhoun-isms`; never committed (licensing), same posture as reading_room.
 data/analysis/calhoun_isms.json
 
+# Contradiction / mind-change finder (roadmap #15) — embeds sentence excerpts of article
+# bodies, so regenerate on demand with `make contradictions`; never committed (licensing).
+data/analysis/contradictions.json
+
 # Weekly cron logs (the directory is kept via .gitkeep)
 data/cron/*.log
 data/cron/*.out

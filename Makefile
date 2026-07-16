@@ -4,7 +4,7 @@ PYTHON := .venv/bin/python
 # ruff findings (broadening the scope is a follow-up roadmap item, #1-3/cleanup).
 LINT_PATHS := tests
 
-.PHONY: scrape manifest-check coverage-audit analyze training dashboard all serve share search on-this-day send-on-this-day adjudicate backfill-verdicts entity-graph calhoun-isms rag-eval voice-eval voice-trials clean test lint fmt lint-json hooks verify verify-responsive
+.PHONY: scrape manifest-check coverage-audit analyze training dashboard all serve share search on-this-day send-on-this-day adjudicate backfill-verdicts entity-graph calhoun-isms contradictions rag-eval voice-eval voice-trials clean test lint fmt lint-json hooks verify verify-responsive
 
 scrape:
 	$(PYTHON) -m scraper $(ARGS)
@@ -103,6 +103,14 @@ entity-graph:
 # ARGS e.g. --dry-run, --top 15, --min-words 6, --max-words 34.
 calhoun-isms:
 	$(PYTHON) -m analysis.calhoun_isms $(ARGS)
+
+# Contradiction / mind-change finder (roadmap #15): subjects (people/orgs) whose stance
+# reversed sign between Dad's earlier and later writing, derived from data/analysis/entities.json
+# + the corpus (run `make analyze` first). Pure/offline — no conductor, no network — so it's
+# safe in automation. Writes data/analysis/contradictions.json; ARGS e.g. --dry-run,
+# --min-mentions 6, --min-delta 1.5, --min-observations 6, or --no-exclude.
+contradictions:
+	$(PYTHON) -m analysis.contradictions $(ARGS)
 
 # RAG faithfulness eval baseline for Ask Dad (plan 0007). Owner-gated: the generation +
 # judge passes make conductor calls (judge defaults to paid T3), so it refuses to run if
