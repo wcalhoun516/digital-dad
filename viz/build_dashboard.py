@@ -19,6 +19,7 @@ PLACEHOLDERS = {
     "/*__PREDICTIONS_DATA__*/": DATA_DIR / "analysis" / "predictions.json",
     "/*__GEO_LLM_DATA__*/": DATA_DIR / "analysis" / "geo_llm.json",
     "/*__READING_ROOM_DATA__*/": DATA_DIR / "analysis" / "reading_room.json",
+    "/*__ENTITY_STANCE_DATA__*/": DATA_DIR / "analysis" / "entity_stance.json",
 }
 
 # When an embeddings export is missing, inline an empty stub so the dashboard
@@ -30,6 +31,9 @@ _EMPTY_DEFAULTS = {
     # Reading Room embeds full bodies, so it is git-ignored; CI / fresh clones inline an
     # empty room and the tab shows a "run make reading-room" prompt instead of article text.
     "/*__READING_ROOM_DATA__*/": '{"entries":[],"count":0,"themes":[]}',
+    # entity_stance.json is text-free (names/years/scores) but may not exist before the first
+    # `make entity-stance` — inline an empty graph so the tab shows a build prompt, not a blank.
+    "/*__ENTITY_STANCE_DATA__*/": '{"meta":{},"entities":[],"warming":[],"cooling":[]}',
 }
 
 

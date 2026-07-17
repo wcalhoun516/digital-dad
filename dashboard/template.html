@@ -649,6 +649,7 @@ footer {
   <button data-tab="askdad">Ask Dad</button>
   <button data-tab="trackrecord">Track Record</button>
   <button data-tab="reading-room">Reading Room</button>
+  <button data-tab="stance">Stance</button>
   <button data-tab="geollm">Geo-LLM</button>
 </nav>
 
@@ -886,6 +887,20 @@ footer {
   </div>
 </div>
 
+<div class="tab-content" id="tab-stance">
+  <h2>Stance Over Time</h2>
+  <p class="section-desc">How his tone toward the people and institutions he wrote about warmed or cooled over the years. Tone is a transparent word-polarity proxy over the sentences that name each subject &mdash; a directional read, not a verdict.</p>
+  <div id="stance-body">
+    <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start">
+      <div style="flex:2;min-width:300px">
+        <svg id="stance-chart" style="width:100%;height:auto"></svg>
+        <div id="stance-legend" style="display:flex;flex-wrap:wrap;gap:10px 16px;margin-top:10px"></div>
+      </div>
+      <div id="stance-boards" style="flex:1;min-width:220px"></div>
+    </div>
+  </div>
+</div>
+
 <footer>
   Digital Dad &middot; A project about preserving intellectual legacy &middot; Built with D3.js, Python, and the local-llm-conductor
 </footer>
@@ -904,6 +919,7 @@ const EMBEDDINGS_DATA = /*__EMBEDDINGS_DATA__*/;
 const PREDICTIONS_DATA = /*__PREDICTIONS_DATA__*/;
 const GEO_LLM_DATA = /*__GEO_LLM_DATA__*/;
 const READING_ROOM_DATA = /*__READING_ROOM_DATA__*/;
+const ENTITY_STANCE_DATA = /*__ENTITY_STANCE_DATA__*/;
 </script>
 
 <script>
@@ -2456,6 +2472,115 @@ function renderReadingRoom() {
   open(entries[0].slug);
 }
 
+// ===== STANCE OVER TIME (roadmap #17 viz) =====
+// Multi-line chart of each tracked subject's yearly mean tone, plus the builder's
+// warming/cooling boards. Reads the text-free, committed ENTITY_STANCE_DATA. Idempotent
+// (clears its SVG/legend/boards first) so a resize redraw can't stack duplicate lines.
+function renderStance() {
+  const esc = s => (s || '').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  const data = ENTITY_STANCE_DATA || {};
+  const entities = (data.entities || []).filter(e => (e.trajectory || []).length);
+  const svg = d3.select('#stance-chart');
+  const legend = document.getElementById('stance-legend');
+  const boards = document.getElementById('stance-boards');
+  svg.selectAll('*').remove();
+  legend.innerHTML = '';
+  boards.innerHTML = '';
+
+  if (!entities.length) {
+    boards.innerHTML = '<p class="section-desc">No stance data loaded. Run <code>make entity-stance</code> then <code>make dashboard</code> to chart how his tone toward each subject shifted over time.</p>';
+    return;
+  }
+
+  // Palette (reused from the theme/network tabs' categorical feel).
+  const palette = ['#c9a84c','#6aa9c9','#c96a8a','#7ac96a','#b06ac9','#c9926a','#6ac9b0','#c9c16a'];
+  const color = {};
+  entities.forEach((e, i) => { color[e.id] = palette[i % palette.length]; });
+
+  // Union of years across every trajectory → an evenly-spaced ordinal x-axis.
+  const years = Array.from(new Set(
+    entities.flatMap(e => e.trajectory.map(p => p.year))
+  )).sort();
+
+  const parent = svg.node().parentElement.getBoundingClientRect();
+  const w = Math.max(320, parent.width), h = 300;
+  const margin = { top: 12, right: 12, bottom: 28, left: 42 };
+  svg.attr('viewBox', `0 0 ${w} ${h}`);
+
+  const x = d3.scalePoint().domain(years).range([margin.left, w - margin.right]).padding(0.5);
+  const vals = entities.flatMap(e => e.trajectory.map(p => p.mean_stance));
+  const extent = Math.max(0.05, d3.max(vals.map(Math.abs)) || 0.05);
+  const y = d3.scaleLinear().domain([-extent, extent]).nice().range([h - margin.bottom, margin.top]);
+
+  // Zero baseline — the neutral-tone reference the warming/cooling story hinges on.
+  svg.append('line')
+    .attr('x1', margin.left).attr('x2', w - margin.right)
+    .attr('y1', y(0)).attr('y2', y(0))
+    .attr('stroke', '#4a4a4a').attr('stroke-dasharray', '3,3');
+
+  const line = d3.line()
+    .x(p => x(p.year)).y(p => y(p.mean_stance))
+    .curve(d3.curveMonotoneX);
+
+  const tooltip = d3.select('#tooltip');
+  entities.forEach(e => {
+    const c = color[e.id];
+    const g = svg.append('g').attr('data-entity', e.id);
+    g.append('path')
+      .datum(e.trajectory)
+      .attr('fill', 'none').attr('stroke', c).attr('stroke-width', 2)
+      .attr('d', line);
+    g.selectAll('circle')
+      .data(e.trajectory)
+      .join('circle')
+      .attr('cx', p => x(p.year)).attr('cy', p => y(p.mean_stance)).attr('r', 3)
+      .attr('fill', c)
+      .on('mousemove', (event, p) => {
+        tooltip.style('display', 'block')
+          .style('left', (event.pageX + 12) + 'px')
+          .style('top', (event.pageY - 10) + 'px')
+          .html(`<strong>${esc(e.name)}</strong><br>${esc(p.year)}: tone ${p.mean_stance.toFixed(3)}<br>${p.n_sentences} sentence(s), ${p.n_articles} article(s)`);
+      })
+      .on('mouseleave', () => tooltip.style('display', 'none'));
+  });
+
+  svg.append('g')
+    .attr('transform', `translate(0,${h - margin.bottom})`)
+    .call(d3.axisBottom(x))
+    .selectAll('text').attr('fill', '#8a8580').style('font-size', '10px');
+  svg.append('g')
+    .attr('transform', `translate(${margin.left},0)`)
+    .call(d3.axisLeft(y).ticks(5))
+    .selectAll('text').attr('fill', '#8a8580').style('font-size', '10px');
+  svg.selectAll('.domain, .tick line').attr('stroke', '#2a2a2a');
+
+  // Legend — click a subject to isolate/restore its line.
+  entities.forEach(e => {
+    const item = document.createElement('span');
+    item.style.cssText = 'display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:0.8em;color:var(--text-muted)';
+    item.innerHTML = `<span style="width:12px;height:12px;background:${color[e.id]};display:inline-block;border-radius:2px"></span>${esc(e.name)}`;
+    let on = true;
+    item.addEventListener('click', () => {
+      on = !on;
+      item.style.opacity = on ? '1' : '0.35';
+      svg.select(`g[data-entity="${e.id}"]`).style('display', on ? '' : 'none');
+    });
+    legend.appendChild(item);
+  });
+
+  // Warming / cooling boards from the builder's precomputed trend lists.
+  const boardRows = (items, arrow, tint) => (items || []).map(it =>
+    `<div style="display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px solid var(--border)">
+       <span>${esc(it.name)}</span>
+       <span style="font-family:var(--mono);color:${tint}">${arrow} ${it.trend_delta >= 0 ? '+' : ''}${it.trend_delta.toFixed(2)}</span>
+     </div>`).join('') || '<p class="section-desc" style="margin:0">None.</p>';
+  boards.innerHTML =
+    `<h3 style="font-size:1em;margin:0 0 6px;color:var(--text)">Warmed to &uarr;</h3>
+     ${boardRows(data.warming, '&uarr;', '#7ac96a')}
+     <h3 style="font-size:1em;margin:18px 0 6px;color:var(--text)">Cooled on &darr;</h3>
+     ${boardRows(data.cooling, '&darr;', '#c96a8a')}`;
+}
+
 let currentTab = null;
 function renderTab(name) {
   currentTab = name;  // tracked even for cached tabs, so resize redraw knows the target
@@ -2463,6 +2588,7 @@ function renderTab(name) {
   rendered[name] = true;
   switch(name) {
     case 'reading-room': renderReadingRoom(); break;
+    case 'stance': renderStance(); break;
     case 'themes': renderThemeMap(); break;
     case 'timeline': renderTimeline(); break;
     case 'psychoprofile': renderPsychoprofile(); break;
@@ -2495,7 +2621,7 @@ window.addEventListener('DOMContentLoaded', () => {
 // dimensions. Re-render the active chart tab so it re-measures and refits — debounced
 // so a drag-resize fires once. Restricted to the stateless chart tabs: re-rendering an
 // interactive tab (Ask Dad chat, Corpus filters) would wipe the user's in-flight state.
-const RESIZE_REDRAW_TABS = new Set(['themes', 'timeline']);
+const RESIZE_REDRAW_TABS = new Set(['themes', 'timeline', 'stance']);
 let _resizeTimer = null;
 window.addEventListener('resize', () => {
   clearTimeout(_resizeTimer);
