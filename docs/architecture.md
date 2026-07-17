@@ -30,8 +30,12 @@ body — the basis for change detection.
 
 ## 2. Analysis (`analysis/`)
 
-CLI: `python -m analysis [modules] [--dry-run] [--force] [--remote]`. Modules run in order:
-`linguistic · themes · entities · psychoprofile · semantic_search · predictions`.
+CLI: `python -m analysis [modules] [--dry-run] [--force] [--remote] [--verbose]`. Modules run in
+order: `linguistic · themes · entities · psychoprofile · semantic_search · predictions`.
+
+**Logging** (`analysis/utils.py`): modules emit progress through a shared `log`
+(`setup_logging()`, logger `digital-dad.analysis`, mirroring `scraper/utils.py`) rather than
+`print`. `--verbose`/`-v` drops the level to DEBUG (e.g. themes' per-`k` silhouette scores).
 
 **Corpus fingerprinting** (`__main__.py`): an MD5 over all article slugs + content_hashes.
 Each completed module appends a line to `data/analysis/runs.jsonl` with the fingerprint it
@@ -59,16 +63,22 @@ to `data/cron/emails/`, logs to `data/cron/on_this_day.jsonl`.
 
 `entity_graph.py` — also outside the default chain; run via `make entity-graph`. A pure/offline
 **derived** artifact: reads `entities.json`'s `per_article` lists and emits `entity_graph.json`,
-an undirected co-occurrence graph (nodes = people/orgs, edge weight = shared-article count) for
-a future dashboard network viz. Byline/photo-credit boilerplate is excluded by default
-(`--no-exclude` to keep it). No conductor/network. (Roadmap #14.)
+an undirected co-occurrence graph (nodes = people/orgs, edge weight = shared-article count).
+Byline/photo-credit boilerplate is excluded by default (`--no-exclude` to keep it). No
+conductor/network. Surfaced in the dashboard's **Network** tab — a D3 force-directed graph
+injected via `build_dashboard`'s `/*__ENTITY_GRAPH_DATA__*/` placeholder (empty-graph stub in
+CI / fresh clones, prompting `make entity-graph`); it re-fits on viewport change like the other
+pixel-sized chart tabs. (Roadmap #14.)
 
-`calhoun_isms.py` — also outside the default chain; run via `make calhoun-isms`. A pure/offline
-**derived** artifact: reads `themes.json`'s per-article theme assignments plus the corpus bodies
-and emits `calhoun_isms.json`, the most quotable/aphoristic sentences grouped by theme (+ an
-overall board). "Quotable" is a transparent heuristic — self-contained sentences in a memorable
-length band that carry aphoristic signals (`X is …`, absolutes like `always`/`never`, contrast),
-with newsy specifics (dates, `%`, "Powell said") scored down. No conductor/network. (Roadmap #16.)
+`entity_stance.py` — also outside the default chain; run via `make entity-stance`. A pure/offline
+**derived** artifact: joins `entities.json`'s `per_article` lists to the corpus bodies and emits
+`entity_stance.json`, a per-entity **yearly stance trajectory** (mean tone of the sentences that
+name an entity, per year) plus warming/cooling trend boards, for a future dashboard "stance over
+time" viz. Because nltk/VADER is absent here, tone is a **transparent heuristic** — a small
+curated polarity lexicon scored per sentence with a light negation flip — so it surfaces *trends*,
+not ground-truth sentiment. The artifact is text-free (names/years/scores only), so it's
+committable like `entity_graph.json`. Same byline/photo-credit exclusion. No conductor/network.
+(Roadmap #17.)
 
 `contradictions.py` — also outside the default chain; run via `make contradictions`. A
 pure/offline **derived** artifact: reads `entities.json`'s frequent people/orgs plus the corpus
