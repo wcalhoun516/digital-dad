@@ -48,42 +48,65 @@ Format:
 
 <!-- entries below -->
 
-### 2026-07-13 — analysis — ready-for-review
-- PR: https://github.com/wcalhoun516/digital-dad/pull/50
-- Source: roadmap:#17
-- Summary: Roadmap **#17 (P2·M·analysis)** — **per-entity stance over time** (his evolving view of the
-  Fed, Bitcoin, the ECB…), first slice: the pure/offline **builder** (dashboard viz deferred). New
-  `analysis/entity_stance.py` mirrors `entity_graph.py` (#14): joins `entities.json`'s `per_article`
-  lists to the corpus bodies and emits `entity_stance.json` — per entity a **yearly stance
-  trajectory** (mean tone of the sentences that name it, per year) + `overall_stance` +
-  warming/cooling **trend boards**. **Key env constraint:** nltk/VADER is absent here (all
-  `linguistics.json` sentiment is `{}`), so stance is a **transparent heuristic**, not a model — a
-  small curated polarity lexicon scored per sentence (`sentence_polarity`, positive−negative with a
-  light 3-token **negation flip**); honest proxy for *tone trends*, not ground-truth sentiment. Reuses
-  `entity_graph`'s `article_entities`/`entity_id`/exclude set; sums are accumulated at the **sentence
-  level** so yearly/overall means are exact (not means-of-means). `run()` + `python -m
-  analysis.entity_stance` CLI (`--dry-run`/`--top`/`--min-articles`/`--min-mentions`/`--threshold`/
-  `--exclude`/`--no-exclude`) + `make entity-stance` + architecture note. **§8.5 deepen:** the smoke
-  run surfaced Forbes image-credit boilerplate ("Photo") as the top warming entity, so added a
-  stance-scoped `_EXTRA_EXCLUDE` (photo/photographer/illustration/image) on top of the shared byline
-  set — kept **stance-local** so `entity_graph`'s committed artifact is untouched; plus negation-window
-  boundary + sentence-weighting edge tests. **TDD'd:** +22 tests (`tests/test_entity_stance.py`).
-  **Licensing:** artifact is **text-free** (names/years/scores only) → committable like
-  `entity_graph.json` (contrast the gitignored `calhoun_isms.json`). **Verification:** `make verify`
-  green (**565 passed**, up from 543; ruff clean; dashboard builds); real-corpus smoke (`--top 6
-  --min-articles 5`): 199 articles → genuine trends (Covid warming, Treasury cooling, "Photo" noise
-  gone), 7 KB valid JSON. **Known limitation (documented, deferred like #14):** entity alias
-  fragmentation — "Fed" / "the Federal Reserve" / "The Federal Reserve" score as separate entities;
-  alias-merging + the dashboard "stance over time" viz are future slices. **Cold-path pick:**
-  `plans/ready/` holds only 0008 (26c/26d/26e/26f owner-interactive/paid/compute/sibling-repo — not
-  unattended-safe); no user pins. PRs #49 (07-12 analysis) and #48 (07-11 ops) are both
-  ready-for-review-but-unmerged, so §3 didn't resume either. Rotation (last worked by category):
-  analysis 07-12, ops 07-11, scraper 07-08, infra 07-07, dashboard 07-05, family 07-04 — training
-  (06-20)/docs (06-25) drained or compute-heavy (#26/#27); family/dashboard drained; infra/ops/scraper
-  only have continuation slices (ops #7 sits in unmerged #48 → a parallel PR would conflict).
-  **analysis** held the only genuinely-unstarted, fully-offline roadmap items (#15 P3
-  contradiction-finder, #17 P2 stance) — #17 wins on priority. **Backlog:** 2 open `daily/*` PRs
-  (#48/#49) before this run — under 5.
+### 2026-07-14 — dashboard — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/51
+- Source: roadmap:#14
+- Summary: Roadmap **#14 (P2·L·analysis)** named deliverable — the **entity co-occurrence graph feeding a
+  new dashboard network viz**. The offline builder (`analysis/entity_graph.py` → committed, text-free
+  `entity_graph.json`) shipped in PR #43 but *explicitly deferred the dashboard viz*; this builds that
+  deferred slice as a **dashboard-category** run (fresh by rotation — the recent streak was
+  analysis/scraper/infra/ops). New **Network** tab: a D3 **force-directed** graph of who Dad writes about
+  *together* — nodes = people/orgs sized by `article_count` + colored by type, links weighted by
+  shared-article `weight`; draggable nodes, hover tooltip (type/articles/connections), org-vs-person
+  legend, and a "strongest pairs" sidebar from `top_pairs`. Distinct from the existing **Influence Map**
+  tab (a ranked *list* from `entities.json`) — this is the relational graph. **Wiring:** new
+  `/*__ENTITY_GRAPH_DATA__*/` placeholder in `viz/build_dashboard.py` with an **empty-graph stub** so CI /
+  fresh clones (no `entity_graph.json`) build clean and the tab shows a `make entity-graph` prompt instead
+  of an empty canvas. **Fully offline / unattended-safe:** reads the already-committed, **text-free**
+  artifact (no raw bodies → inlines like the other analysis JSON); no conductor/network/LLM. D3
+  `forceSimulation`/`forceLink` were already loaded (theme map). **§8.5 deepen:** added the tab to
+  `RESIZE_REDRAW_TABS` so the pixel-sized graph re-fits on viewport change (stateless + `renderNetwork`
+  clears the SVG first, so a redraw can't stack a second graph); edges filtered to endpoints surviving the
+  builder's `top_n` trim; labels only on larger nodes; architecture.md note. **TDD'd:** +9 tests
+  (`tests/test_dashboard_network.py`). **Verification:** `make verify` green (**576 passed**, up from 567;
+  ruff clean; dashboard builds); **live headless-Chromium passes** on the built `index.html` — desktop
+  1280×900 → 40 nodes / 201 edges / 40 labels / 12 top-pairs / tooltip on hover / **0 console errors**;
+  phone 375×812 → 40 nodes, **no horizontal overflow**, **0 console errors**. **Known limitation
+  (deferred, inherited from #14's builder):** entity *alias fragmentation* — "Fed" / "the Federal Reserve"
+  are separate nodes (the top pair here); alias-merging is a future builder-side slice. **Resume/backlog:**
+  §3 didn't resume — the 2 open `daily/*` PRs (#50 entity-stance, #48 structured-logging) are both
+  `ready-for-review`, not `in-progress`; under the 5-PR cap so work proceeded. **Cold-path pick:**
+  `plans/ready/` holds only 0008 (owner-interactive/paid/compute); no user pins. Verified the family
+  post-queue emphasis is drained (Reading Room #21, year-in-review #23, anthology #24 all built + wired),
+  so picked #14's deferred **dashboard** viz — genuinely unstarted, fully offline, family-facing, builds on
+  data already on `main`.
+
+### 2026-07-12 — analysis — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/49
+- Source: roadmap:#16
+- Summary: Roadmap **#16 (P3·S·analysis)** — **"Calhoun-isms": most quotable/aphoristic sentences per
+  theme.** New `analysis/calhoun_isms.py`, a deterministic/offline builder modeled on `entity_graph.py`
+  (#14): reads `themes.json`'s per-article theme assignments + the corpus bodies, scores every sentence
+  with **transparent heuristics**, and emits `calhoun_isms.json` (top aphorisms per theme + an overall
+  board). Gate (`is_quotable`): declarative, memorable word band (8–30), capitalized, no
+  antecedent-needing opener (`But`/`This`/`It`/…), no URL noise. Score (`quotability_score`,
+  deterministic additive): length term peaking ~14 words + bonuses for absolutes
+  (`always`/`never`/`no one`), a definitional `X is …`, and contrast; penalties for attribution
+  ("Powell said") and newsy digits. `run()` + `python -m analysis.calhoun_isms` CLI
+  (`--dry-run`/`--top`/`--min-words`/`--max-words`/`--min-score`) + `make calhoun-isms` + architecture
+  note. **§8.5 deepen:** `--min-score` filler filter + overall-board dedup-by-text. **TDD'd:** +24 tests
+  (`tests/test_calhoun_isms.py`). **Licensing:** the artifact embeds body-text excerpts, so it's
+  **gitignored** (regenerate on demand), mirroring `reading_room.json`. **Verification:** `make verify`
+  green (**567 passed**, up from 543; ruff clean; dashboard builds); real-corpus smoke → 9 themes / 199
+  articles, genuine aphorisms surfaced, 33 KB valid JSON correctly ignored by git. **Cold-path pick:**
+  `plans/ready/` holds only 0008 (26c/26d/26f owner-interactive/paid/compute — not unattended-safe); no
+  user pins. PR #48 (07-11 ops/structured-logging, on its own unmerged branch) is
+  ready-for-review-but-unmerged, so §3 didn't resume it and a parallel logging PR off `main` would
+  conflict. Rotation (last worked by category, from merged `main` + known open PRs): ops 07-11, scraper
+  07-08, infra 07-07, analysis 07-06, dashboard 07-05, family 07-04 — training (06-20)/docs (06-25) are
+  drained or conductor-heavy (#27), dashboard/family drained, leaving **analysis** the least-recent
+  category with a genuinely-unstarted, fully-offline item: **#16**. **Backlog:** 1 open `daily/*` PR
+  (#48) before this run — well under the 5 threshold.
 
 ### 2026-07-08 — scraper — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/45
