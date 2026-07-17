@@ -73,3 +73,11 @@ def test_stance_has_empty_stub_prompt():
 def test_stance_is_resize_redraw_tab():
     html = TEMPLATE.read_text()
     assert "RESIZE_REDRAW_TABS = new Set(['themes', 'timeline', 'stance'])" in html
+
+
+def test_desktop_nav_wraps_so_added_tab_cannot_overflow():
+    # Adding a 12th tab pushes the non-wrapping desktop nav past 1280px, causing a
+    # horizontal scroll. The base `nav` rule must wrap so extra tabs flow to a second row.
+    html = TEMPLATE.read_text()
+    nav_rule = html.split("nav {", 1)[1].split("}", 1)[0]
+    assert "flex-wrap: wrap" in nav_rule
