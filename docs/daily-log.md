@@ -48,6 +48,34 @@ Format:
 
 <!-- entries below -->
 
+### 2026-07-17 — dashboard — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/53
+- Source: roadmap:#17
+- Summary: Roadmap **#17 (P2·M·analysis)** deferred-viz slice — the **"stance over time" dashboard
+  tab**. The `entity_stance.py` builder shipped in #50 emitting the committed, text-free
+  `entity_stance.json` and *explicitly deferred* its dashboard viz; this builds it — the exact
+  analog of open PR #51 (network viz on #14's builder). New **Stance** tab: a D3 **multi-line**
+  chart of each subject's yearly `mean_stance` trajectory (zero baseline, per-point hover tooltip,
+  click-to-isolate legend) + the builder's warming/cooling trend boards. Wired like Reading Room:
+  `/*__ENTITY_STANCE_DATA__*/` placeholder + empty-graph default in `build_dashboard.py`, a
+  `renderStance()` dispatched from `renderTab`, added to `RESIZE_REDRAW_TABS`, empty-stub → a
+  `make entity-stance` prompt. **Fully offline/unattended-safe** (reads committed text-free JSON;
+  no conductor/network/LLM); builds only on **merged `main`** — no dependency on the unmerged
+  #51/#52. **Regression caught + fixed in the browser pass:** adding a 12th nav button pushed the
+  non-wrapping desktop nav to 1325px (a 45px horizontal scroll) — added `flex-wrap: wrap` to the
+  base `nav` rule (no-op ≤11 tabs; wraps the overflow row) + a structural guard test. TDD'd: +10
+  tests (`tests/test_dashboard_stance.py`). **Verification:** `make verify` green (**608 passed**,
+  up from 598; ruff clean; dashboard builds); headless-Chromium pass on the built `index.html` —
+  Stance tab desktop 1280×900 & phone 375×812: 8 paths / 34 circles rendered, tooltip shows on
+  hover, **0 console errors, no horizontal overflow at either width**. **Task pivot note:** branch
+  is slugged `year-in-review` but roadmap #23 is already shipped (`analysis/year_in_review.py` on
+  `main`) — my §1 read a stale pre-fetch `main`; re-ran §5b against real `main` and pivoted to #17.
+  **Cold-path pick:** hot-path queue drained (0008 remainder owner-interactive), no pins, roadmap
+  nearly exhausted — #14-viz/#15 already claimed by #51/#52, leaving #17's deferred viz the
+  remaining genuinely-unstarted, fully-offline slice (strong family payoff). **Deferred (inherited
+  from #17 builder):** entity **alias fragmentation** ("Fed" / "the Federal Reserve" are separate
+  lines). **Backlog:** 2 open `daily/*` PRs (#51/#52) before this run — under 5.
+
 ### 2026-07-13 — analysis — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/50
 - Source: roadmap:#17
