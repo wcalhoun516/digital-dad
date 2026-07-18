@@ -48,38 +48,40 @@ Format:
 
 <!-- entries below -->
 
-### 2026-07-14 — dashboard — ready-for-review
-- PR: https://github.com/wcalhoun516/digital-dad/pull/51
-- Source: roadmap:#14
-- Summary: Roadmap **#14 (P2·L·analysis)** named deliverable — the **entity co-occurrence graph feeding a
-  new dashboard network viz**. The offline builder (`analysis/entity_graph.py` → committed, text-free
-  `entity_graph.json`) shipped in PR #43 but *explicitly deferred the dashboard viz*; this builds that
-  deferred slice as a **dashboard-category** run (fresh by rotation — the recent streak was
-  analysis/scraper/infra/ops). New **Network** tab: a D3 **force-directed** graph of who Dad writes about
-  *together* — nodes = people/orgs sized by `article_count` + colored by type, links weighted by
-  shared-article `weight`; draggable nodes, hover tooltip (type/articles/connections), org-vs-person
-  legend, and a "strongest pairs" sidebar from `top_pairs`. Distinct from the existing **Influence Map**
-  tab (a ranked *list* from `entities.json`) — this is the relational graph. **Wiring:** new
-  `/*__ENTITY_GRAPH_DATA__*/` placeholder in `viz/build_dashboard.py` with an **empty-graph stub** so CI /
-  fresh clones (no `entity_graph.json`) build clean and the tab shows a `make entity-graph` prompt instead
-  of an empty canvas. **Fully offline / unattended-safe:** reads the already-committed, **text-free**
-  artifact (no raw bodies → inlines like the other analysis JSON); no conductor/network/LLM. D3
-  `forceSimulation`/`forceLink` were already loaded (theme map). **§8.5 deepen:** added the tab to
-  `RESIZE_REDRAW_TABS` so the pixel-sized graph re-fits on viewport change (stateless + `renderNetwork`
-  clears the SVG first, so a redraw can't stack a second graph); edges filtered to endpoints surviving the
-  builder's `top_n` trim; labels only on larger nodes; architecture.md note. **TDD'd:** +9 tests
-  (`tests/test_dashboard_network.py`). **Verification:** `make verify` green (**576 passed**, up from 567;
-  ruff clean; dashboard builds); **live headless-Chromium passes** on the built `index.html` — desktop
-  1280×900 → 40 nodes / 201 edges / 40 labels / 12 top-pairs / tooltip on hover / **0 console errors**;
-  phone 375×812 → 40 nodes, **no horizontal overflow**, **0 console errors**. **Known limitation
-  (deferred, inherited from #14's builder):** entity *alias fragmentation* — "Fed" / "the Federal Reserve"
-  are separate nodes (the top pair here); alias-merging is a future builder-side slice. **Resume/backlog:**
-  §3 didn't resume — the 2 open `daily/*` PRs (#50 entity-stance, #48 structured-logging) are both
-  `ready-for-review`, not `in-progress`; under the 5-PR cap so work proceeded. **Cold-path pick:**
-  `plans/ready/` holds only 0008 (owner-interactive/paid/compute); no user pins. Verified the family
-  post-queue emphasis is drained (Reading Room #21, year-in-review #23, anthology #24 all built + wired),
-  so picked #14's deferred **dashboard** viz — genuinely unstarted, fully offline, family-facing, builds on
-  data already on `main`.
+### 2026-07-16 — analysis — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/52
+- Source: roadmap:#15
+- Summary: Roadmap **#15 (P3·M·analysis)** — **contradiction / mind-change finder**, builder slice
+  (dashboard viz deferred, mirroring #14/#16/#17). New `analysis/contradictions.py`, a pure/offline
+  builder in the `entity_graph`/`calhoun_isms` mould: reads `entities.json`'s frequent people/orgs +
+  the corpus bodies, scores Dad's **stance toward each subject over time** via a small transparent
+  polarity lexicon (positive − negative words on word boundaries, per sentence naming the subject),
+  and emits gitignored `contradictions.json` — subjects whose mean stance **reversed sign** between
+  his earlier vs. later writing, each with representative early/late quotes + `warmed`/`cooled`
+  direction, sorted by swing. `run()` + `python -m analysis.contradictions` CLI (`--dry-run`,
+  `--min-mentions`, `--min-observations`, `--min-delta`, `--max-sentence-words`, `--no-exclude`) +
+  `make contradictions` + architecture note. **§8.5 deepen** fixed three quality bugs the first
+  smoke run exposed: (1) **case-sensitive** proper-noun matching (so "Jack" ≠ the verb in "jack up
+  the stimulus"); (2) a **word-band** on stance sentences (≤45 words) so the corpus's glued run-ons
+  don't become bloated quotes; (3) **case-insensitive alias dedup** ("COVID"/"Covid" → one row).
+  **TDD'd:** +25 tests (`tests/test_contradictions.py`). **Offline/unattended-safe:** stdlib only,
+  no conductor/network/LLM; builds only on data already on `main` (does **not** depend on the
+  unmerged #50 entity-stance PR). **Licensing:** artifact embeds body excerpts → gitignored
+  (regenerate on demand), same posture as `calhoun_isms.json`/`reading_room.json`. **Verification:**
+  `make verify` green (**592 passed**, up from 567; ruff clean; dashboard builds); real-corpus smoke
+  (offline) → **2 clean, defensible flips** (Covid *warmed*, Tesla *cooled*) of 71 scanned subjects.
+  **Resume/backlog:** §3 didn't resume — the 3 open `daily/*` PRs (#51 entity-network-viz, #50
+  entity-stance, #48 structured-logging) are all `ready-for-review`, not `in-progress`; under the
+  5-PR cap so work proceeded. **Cold-path pick:** `plans/ready/` holds only 0008 (owner-interactive
+  QLoRA/paid-judge/sibling-repo `models.yaml`/decide — not unattended-safe); no user pins. Verified
+  the more-stale categories are drained/blocked: family (06-03) fully drained (`reading_room`/
+  `year_in_review`/`anthology` + On-This-Day auto-send all shipped), training's only item #27 is
+  conductor/compute-heavy, docs #28 shipped, infra #1–7 shipped, scraper #10's remaining slices are
+  blocked on a re-scrape (forbidden to commit regenerated data). That left **analysis #15** — a
+  genuinely-unstarted (no `contradictions.py` existed), fully-offline, family-facing item in the
+  established module pattern, fitting the roadmap's post-family "analytical-depth" emphasis.
+  **Deferred (next slice):** dashboard tab + entity **alias merging** (Fed / the Federal Reserve /
+  Jerome Powell still separate subjects, inherited from #14's builder).
 
 ### 2026-07-12 — analysis — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/49

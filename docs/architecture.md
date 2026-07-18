@@ -80,6 +80,16 @@ not ground-truth sentiment. The artifact is text-free (names/years/scores only),
 committable like `entity_graph.json`. Same byline/photo-credit exclusion. No conductor/network.
 (Roadmap #17.)
 
+`contradictions.py` — also outside the default chain; run via `make contradictions`. A
+pure/offline **derived** artifact: reads `entities.json`'s frequent people/orgs plus the corpus
+bodies and emits `contradictions.json`, the subjects whose stance *reversed sign* between Dad's
+earlier and later writing ("where did he change his mind?"). Each sentence naming a subject is
+scored by a small transparent polarity lexicon (positive − negative words on word boundaries);
+a subject is flagged when the mean stance of its earlier vs. later mentions have opposite signs
+and the gap clears `--min-delta`. It's a coarse candidate finder (no negation/sarcasm modeling)
+for a human to read, not a verdict — byline/photo boilerplate excluded by default (`--no-exclude`
+to keep it). No conductor/network. (Roadmap #15.)
+
 ## 3. The conductor (LLM abstraction)
 
 All model calls go to a **local OpenAI-compatible server** at `http://127.0.0.1:8080/v1`
