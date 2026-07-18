@@ -25,6 +25,7 @@ from analysis.embedding_compare import (
     recall_at_k,
     reciprocal_rank,
     retrieval_metrics,
+    unknown_models,
     write_report,
 )
 
@@ -298,6 +299,20 @@ class TestAggregateAndReport:
         assert payload["summary"] == summary
         assert len(payload["records"]) == 2
         assert "generated_at" in payload
+
+
+class TestUnknownModels:
+    def test_all_present(self):
+        assert unknown_models(["a", "b"], ["a", "b", "c"]) == []
+
+    def test_reports_missing_in_order(self):
+        assert unknown_models(["x", "a", "y"], ["a"]) == ["x", "y"]
+
+    def test_dedups_missing(self):
+        assert unknown_models(["x", "x"], ["a"]) == ["x"]
+
+    def test_empty_available(self):
+        assert unknown_models(["a"], []) == ["a"]
 
 
 class TestLoadQueries:

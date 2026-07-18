@@ -298,6 +298,22 @@ def write_report(
     return summary
 
 
+def unknown_models(requested: list[str], available: list[str]) -> list[str]:
+    """Return the requested model ids that aren't in *available*, preserving order.
+
+    A tiny preflight so a typo'd or not-yet-registered embedder id gives a clear
+    message before we start embedding, instead of a mid-run conductor 404.
+    """
+    have = set(available)
+    seen: set[str] = set()
+    missing: list[str] = []
+    for m in requested:
+        if m not in have and m not in seen:
+            missing.append(m)
+            seen.add(m)
+    return missing
+
+
 def load_queries(path: Path = QUERIES_PATH) -> list[dict]:
     """Load the gold query set (``{queries: [{query, relevant_slugs}]}``).
 
@@ -359,6 +375,17 @@ def _live_embed(base_url: str = CONDUCTOR_BASE_URL, batch_size: int = 16):
     return embed
 
 
+def _available_model_ids(base_url: str = CONDUCTOR_BASE_URL) -> list[str]:
+    """Best-effort list of model ids the conductor exposes (empty on any error)."""
+    try:
+        from openai import OpenAI
+
+        client = OpenAI(base_url=base_url, api_key="local")
+        return [m.id for m in client.models.list().data]
+    except Exception:  # pragma: no cover - network/env guard; preflight is optional
+        return []
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="python -m analysis.embedding_compare",
@@ -397,6 +424,19 @@ def main(argv: list[str] | None = None) -> int:
 
     if not require_conductor(base_url=CONDUCTOR_BASE_URL):
         return 2
+
+    # Preflight the model ids so a typo / not-yet-registered embedder fails clearly
+    # here rather than as a mid-run conductor 404. Skipped if listing is unavailable.
+    available = _available_model_ids()
+    if available:
+        missing = unknown_models(model_ids, available)
+        if missing:
+            print(
+                f"Unknown embedder id(s): {', '.join(missing)}. "
+                "Register them in the conductor's models.yaml (or fix the spelling) "
+                "before comparing. Available: " + ", ".join(sorted(available))
+            )
+            return 1
 
     articles = load_articles()
     if args.limit is not None:
