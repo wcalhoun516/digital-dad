@@ -48,6 +48,43 @@ Format:
 
 <!-- entries below -->
 
+### 2026-07-18 — training — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/54
+- Source: roadmap:#27
+- Summary: Roadmap **#27 (P3·M·training)** — **embedding-model comparison before ever swapping the
+  pinned `sbert-mpnet-v2`** (the mechanism decision **D2** explicitly defers to: "evaluate
+  alternatives first"). New `analysis/embedding_compare.py`, an offline harness in the established
+  `rag_eval`/`voice_eval` injected-seam pattern: the one networked part — `embed(model_id, texts)` —
+  is a seam, so all ranking + comparison math is pure and TDD'd. It ranks the corpus per query with
+  each candidate model and reports **two things**: (1) **retrieval quality** — precision@k /
+  recall@k / MRR against a committed, text-free gold set `eval/embedding_queries.json` (5 queries →
+  8 real corpus slugs, all verified against the manifest); (2) **baseline agreement** —
+  `overlap_at_k` (Jaccard top-k) + `kendall_tau` of each candidate's rankings vs. the pinned model,
+  the **label-free "is it safe to swap?" number**. `compare_models()` + `aggregate` + `write_report`
+  + `load_queries` + live `_live_embed` conductor seam + `main()` CLI gated on `require_conductor()`
+  + `make embedding-compare` + architecture.md D2/#27 note. **§8.5 deepen:** an `unknown_models`
+  model-id **preflight** (queries the conductor's `/models`, prints a clean "register it in
+  models.yaml / fix the spelling" message instead of a mid-run 404) — surfaced when the offline
+  smoke revealed the conductor 404s on unknown ids. TDD'd: **+40 tests**
+  (`tests/test_embedding_compare.py`). **Real live run (not just a fake-embed smoke):** the conductor
+  turned out to expose a second real embedder (`nomic-embed-text`) alongside the pinned one, so I ran
+  the actual comparison over the full 199-article corpus — pinned **`sbert-mpnet-v2` (MRR 0.556, P@1
+  0.40)** edges out **`nomic-embed-text` (MRR 0.529, P@1 0.40)**, and they agree only **~60–69% on
+  top-k** (overlap@1 0.60, overlap@3 0.69, Kendall-τ 0.56): a swap would meaningfully reshuffle
+  retrieval — exactly the D2 evidence. Free local embedders (not paid T3); the
+  `data/analysis/embedding_compare.json` report is owner-run, **not committed** (same posture as
+  `rag_eval.json`). **Verification:** `make verify` green (**647 passed**, up from 607; ruff clean;
+  dashboard builds). **Cold-path pick:** hot-path queue drained (0008's remaining steps are
+  owner-interactive compute / sibling-repo `models.yaml`); no user pins; over the last 7 runs on
+  `main` (07-14 dashboard, 07-12 analysis, 07-08 scraper, 07-07 infra, 07-06 analysis, 07-01
+  scraper, 06-25 docs) **`training` and `family` are both absent** — `family` is now fully drained
+  (#22/#23/#24 all shipped; `analysis/anthology.py` + `year_in_review.py` on `main`), and `training`
+  (last worked 06-20) has **#27 as its only genuinely-unstarted item** (26/0008 is owner-gated
+  compute). **Backlog:** 2 open `daily/*` PRs (#52/#53, both ready-for-review-but-unmerged) before
+  this run — under 5; §3 didn't resume either (both `ready-for-review`, not `in-progress`).
+  **Deferred (in PR):** expand the gold query set (only 5 today), a dashboard tab for the report, and
+  folding into `make analyze` once a real candidate model is chosen.
+
 ### 2026-07-14 — dashboard — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/51
 - Source: roadmap:#14
