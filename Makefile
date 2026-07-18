@@ -4,7 +4,7 @@ PYTHON := .venv/bin/python
 # ruff findings (broadening the scope is a follow-up roadmap item, #1-3/cleanup).
 LINT_PATHS := tests
 
-.PHONY: scrape manifest-check coverage-audit analyze training dashboard all serve share search on-this-day send-on-this-day adjudicate backfill-verdicts entity-graph entity-stance rag-eval voice-eval voice-trials clean test lint fmt lint-json hooks verify verify-responsive
+.PHONY: scrape manifest-check coverage-audit analyze training dashboard all serve share search on-this-day send-on-this-day adjudicate backfill-verdicts entity-graph entity-stance embedding-compare rag-eval voice-eval voice-trials clean test lint fmt lint-json hooks verify verify-responsive
 
 scrape:
 	$(PYTHON) -m scraper $(ARGS)
@@ -111,6 +111,14 @@ entity-stance:
 # --judge-tier 2. Run deliberately (NOT from automation).
 rag-eval:
 	$(PYTHON) -m analysis.rag_eval $(ARGS)
+
+# Embedding-model comparison before ever swapping the pinned sbert-mpnet-v2 (decision D2,
+# roadmap #27). Owner-gated: a live pass embeds the corpus with each candidate model via the
+# conductor, so it refuses to run if the conductor is down. Reads eval/embedding_queries.json,
+# writes data/analysis/embedding_compare.json. ARGS e.g. --models nomic-embed-text bge-small
+# --limit 40. Run deliberately (NOT from automation).
+embedding-compare:
+	$(PYTHON) -m analysis.embedding_compare $(ARGS)
 
 # Voice-fidelity blind-A/B eval for the Geo-LLM fine-tune (plan 0008 step 26d). Owner-gated:
 # the judge pass makes conductor calls (defaults to paid T3), so it refuses to run if the

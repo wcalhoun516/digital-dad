@@ -80,6 +80,16 @@ not ground-truth sentiment. The artifact is text-free (names/years/scores only),
 committable like `entity_graph.json`. Same byline/photo-credit exclusion. No conductor/network.
 (Roadmap #17.)
 
+`embedding_compare.py` — the **embedding-model comparison harness** behind decision **D2** ("evaluate
+alternatives before swapping the pinned `sbert-mpnet-v2`"). Run via `make embedding-compare`;
+owner-gated on conductor reachability. Following `rag_eval`/`voice_eval`, the one networked seam —
+`embed(model_id, texts)` — is injected, so the ranking + comparison math is pure and TDD'd offline.
+It ranks the corpus per query with each candidate model and reports two things: **retrieval quality**
+(precision@k / recall@k / MRR against the committed, text-free gold set `eval/embedding_queries.json`)
+and **baseline agreement** (top-k overlap + Kendall-tau of each candidate's rankings vs. the pinned
+model — the label-free "is it safe to swap?" number). Writes `data/analysis/embedding_compare.json`
+(owner-run, not committed). Dashboard viz + a larger gold set are deferred. (Roadmap #27.)
+
 ## 3. The conductor (LLM abstraction)
 
 All model calls go to a **local OpenAI-compatible server** at `http://127.0.0.1:8080/v1`
