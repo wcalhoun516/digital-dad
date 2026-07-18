@@ -645,6 +645,7 @@ footer {
   <button data-tab="psychoprofile">Psychoprofile</button>
   <button data-tab="linguistic">Linguistic DNA</button>
   <button data-tab="entities">Influence Map</button>
+  <button data-tab="network">Network</button>
   <button data-tab="corpus">Raw Corpus</button>
   <button data-tab="search">Search</button>
   <button data-tab="askdad">Ask Dad</button>
@@ -714,6 +715,24 @@ footer {
   <h2>Influence Map</h2>
   <p class="section-desc">Who and what does he cite? Named entities extracted from the full corpus.</p>
   <div id="entities-content"></div>
+</div>
+
+<!-- Tab 5b: Network (entity co-occurrence graph, roadmap #14) -->
+<div class="tab-content" id="tab-network">
+  <h2>Network</h2>
+  <p class="section-desc">Who he writes about <em>together</em>. Each node is a person or organization; a line links two that share an article, thicker the more often. Drag a node; hover for detail.</p>
+  <div id="network-body">
+    <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start">
+      <div style="flex:3;min-width:300px">
+        <div class="cluster-legend" id="network-legend"></div>
+        <svg id="network-svg"></svg>
+      </div>
+      <div style="flex:1;min-width:220px">
+        <h4 style="margin:0 0 8px">Strongest pairs</h4>
+        <div id="network-top-pairs"></div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Tab 6: Raw Corpus -->
@@ -2595,6 +2614,7 @@ function renderTab(name) {
     case 'psychoprofile': renderPsychoprofile(); break;
     case 'linguistic': renderLinguistic(); break;
     case 'entities': renderEntities(); break;
+    case 'network': renderNetwork(); break;
     case 'corpus': renderCorpus(); break;
     case 'search': renderSearch(); break;
     case 'askdad': renderAskDad(); break;

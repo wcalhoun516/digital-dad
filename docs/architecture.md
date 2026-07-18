@@ -63,9 +63,12 @@ to `data/cron/emails/`, logs to `data/cron/on_this_day.jsonl`.
 
 `entity_graph.py` — also outside the default chain; run via `make entity-graph`. A pure/offline
 **derived** artifact: reads `entities.json`'s `per_article` lists and emits `entity_graph.json`,
-an undirected co-occurrence graph (nodes = people/orgs, edge weight = shared-article count) for
-a future dashboard network viz. Byline/photo-credit boilerplate is excluded by default
-(`--no-exclude` to keep it). No conductor/network. (Roadmap #14.)
+an undirected co-occurrence graph (nodes = people/orgs, edge weight = shared-article count).
+Byline/photo-credit boilerplate is excluded by default (`--no-exclude` to keep it). No
+conductor/network. Surfaced in the dashboard's **Network** tab — a D3 force-directed graph
+injected via `build_dashboard`'s `/*__ENTITY_GRAPH_DATA__*/` placeholder (empty-graph stub in
+CI / fresh clones, prompting `make entity-graph`); it re-fits on viewport change like the other
+pixel-sized chart tabs. (Roadmap #14.)
 
 `entity_stance.py` — also outside the default chain; run via `make entity-stance`. A pure/offline
 **derived** artifact: joins `entities.json`'s `per_article` lists to the corpus bodies and emits
@@ -78,6 +81,16 @@ and the tab shows a `make entity-stance` prompt. Because nltk/VADER is absent he
 negation flip — so it surfaces *trends*, not ground-truth sentiment. The artifact is text-free
 (names/years/scores only), so it's committable like `entity_graph.json`. Same byline/photo-credit
 exclusion. No conductor/network. (Roadmap #17.)
+
+`contradictions.py` — also outside the default chain; run via `make contradictions`. A
+pure/offline **derived** artifact: reads `entities.json`'s frequent people/orgs plus the corpus
+bodies and emits `contradictions.json`, the subjects whose stance *reversed sign* between Dad's
+earlier and later writing ("where did he change his mind?"). Each sentence naming a subject is
+scored by a small transparent polarity lexicon (positive − negative words on word boundaries);
+a subject is flagged when the mean stance of its earlier vs. later mentions have opposite signs
+and the gap clears `--min-delta`. It's a coarse candidate finder (no negation/sarcasm modeling)
+for a human to read, not a verdict — byline/photo boilerplate excluded by default (`--no-exclude`
+to keep it). No conductor/network. (Roadmap #15.)
 
 ## 3. The conductor (LLM abstraction)
 
