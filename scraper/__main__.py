@@ -40,6 +40,21 @@ def known_urls(manifest: dict) -> set[str]:
     return {a["url"] for a in manifest["articles"]}
 
 
+def upsert_article(articles: list[dict], entry: dict) -> None:
+    """Insert ``entry`` into ``articles`` in place, matching an existing entry on
+    **slug** (not URL). Matching on URL let an article rediscovered under a URL variant
+    append a second same-slug entry — the root cause of #8's duplicate slugs.
+    """
+    slug = entry.get("slug", "")
+    existing_idx = next(
+        (i for i, a in enumerate(articles) if a.get("slug", "") == slug), None
+    )
+    if existing_idx is not None:
+        articles[existing_idx] = entry
+    else:
+        articles.append(entry)
+
+
 # ---------------------------------------------------------------------------
 # URL discovery
 # ---------------------------------------------------------------------------
@@ -223,14 +238,8 @@ def main():
             "content_hash": content_hash,
         }
 
-        # Replace existing entry or append
-        existing_idx = next(
-            (i for i, a in enumerate(manifest["articles"]) if a["url"] == url), None
-        )
-        if existing_idx is not None:
-            manifest["articles"][existing_idx] = manifest_entry
-        else:
-            manifest["articles"].append(manifest_entry)
+        # Replace existing entry (matched on slug) or append.
+        upsert_article(manifest["articles"], manifest_entry)
 
         success += 1
 
