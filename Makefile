@@ -4,7 +4,7 @@ PYTHON := .venv/bin/python
 # ruff findings (broadening the scope is a follow-up roadmap item, #1-3/cleanup).
 LINT_PATHS := tests
 
-.PHONY: scrape manifest-check coverage-audit analyze training dashboard all serve share search on-this-day send-on-this-day adjudicate backfill-verdicts entity-graph calhoun-isms contradictions rag-eval voice-eval voice-trials clean test lint fmt lint-json hooks verify verify-responsive
+.PHONY: scrape manifest-check manifest-dedup coverage-audit analyze training dashboard all serve share search on-this-day send-on-this-day adjudicate backfill-verdicts entity-graph calhoun-isms contradictions rag-eval voice-eval voice-trials clean test lint fmt lint-json hooks verify verify-responsive
 
 scrape:
 	$(PYTHON) -m scraper $(ARGS)
@@ -14,6 +14,13 @@ scrape:
 # ARGS=--strict to exit non-zero on issues (for CI), or ARGS=--json for machine output.
 manifest-check:
 	$(PYTHON) -m scraper.manifest_check $(ARGS)
+
+# Collapse duplicate-slug entries in data/manifest.json (the de-dup fix manifest_check
+# only reports; roadmap #8 follow-up). Report-only by default (exit 0, changes nothing);
+# ARGS=--apply writes <manifest>.dedup.json, ARGS="--apply --in-place" rewrites it,
+# ARGS="--apply --backfill-hashes" also fills missing content_hash from raw bodies.
+manifest-dedup:
+	$(PYTHON) -m scraper.manifest_dedup $(ARGS)
 
 # Audit corpus coverage against the author's full Forbes footprint (roadmap #9): report
 # articles we know exist (via Wayback CDX) but haven't scraped, plus the missing date ranges.
