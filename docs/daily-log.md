@@ -48,6 +48,39 @@ Format:
 
 <!-- entries below -->
 
+### 2026-07-19 — scraper — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/55
+- Source: roadmap:#8 (follow-up)
+- Summary: Roadmap **#8 follow-up** — the **manifest de-dup / repair fix** that `manifest_check`
+  (PR #18) only *reports*. New `scraper/manifest_dedup.py`: a pure, offline `dedup_articles()`
+  collapses duplicate-slug manifest entries to one canonical entry (deterministic keep-rule:
+  prefer an entry with a `content_hash`, then no query string, then https, then shorter URL, then
+  first-seen) + `backfill_hashes()` (fills a missing `content_hash` from the raw body via an
+  injected reader seam) + `format_dedup_report`, all TDD'd (**21 tests**). The CLI mirrors
+  `manifest_check`/`coverage_audit`: **report-only by default (exit 0, mutates nothing)**;
+  `--apply` writes a *separate* `<manifest>.dedup.json`, `--in-place` rewrites the manifest,
+  `--backfill-hashes` fills hashes. `make manifest-dedup` + a `scraper/README.md` section.
+  **§8.5 deepen (root cause):** the scraper upserted manifest entries by **URL**, so an article
+  rediscovered under a URL variant appended a *second* same-slug entry (the source of the 23 dup
+  slugs). Extracted `upsert_article(articles, entry)` in `scraper/__main__.py` matching on
+  **slug**, TDD'd (**+5 tests**) and wired into the scrape loop — future scrapes no longer accrete
+  dup slugs. **Real-corpus smoke (report + apply to a temp file, committed manifest untouched):**
+  199 → **176 entries** (matches #18's 23-dup-slug finding), and `--backfill-hashes` filled 146
+  entries → **0 still missing content_hash**. **Verification:** `make verify` green (**658
+  passed**, up from 632; +26 new tests across `tests/test_manifest_dedup.py` +
+  `tests/test_scraper_upsert.py`; ruff clean; dashboard builds); **no data artifact committed**
+  (`data/manifest.json` untouched — the repaired manifest is owner-run/reviewed, same posture as
+  the other report-only scraper tools). **Cold-path pick:** hot-path queue drained (only 0008
+  remains — owner-interactive compute / sibling-repo `models.yaml`); no user pins; over `main`'s
+  last-7 run history (07-16 analysis, 07-14 dashboard, 07-13/07-12 analysis, 07-11 ops, 07-08
+  scraper, 07-07 infra) **`family`/`docs` are drained and `infra`/`ops` items are all shipped
+  (#5/#6/#7 done)** — leaving **scraper** the least-recently-worked category (last 07-08) with a
+  genuinely-unstarted, real, fully-offline item: #8's deferred de-dup fix for a documented live
+  bug. **Backlog:** 2 open `daily/*` PRs (#54/#53) before this run — under 5; §3 didn't resume
+  either (both `ready-for-review`, not `in-progress`). **Deferred (in PR):** an optional
+  post-scrape self-heal that runs the de-dup automatically, and surfacing the repaired counts in
+  the dashboard.
+
 ### 2026-07-16 — analysis — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/52
 - Source: roadmap:#15
