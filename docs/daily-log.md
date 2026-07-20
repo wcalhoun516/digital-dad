@@ -48,11 +48,34 @@ Format:
 
 <!-- entries below -->
 
-### 2026-07-20 — dashboard — in-progress
-- PR: (opening)
+### 2026-07-20 — dashboard — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/56
 - Source: roadmap:#16 (deferred dashboard viz)
-- Summary: Surfacing the already-built `analysis/calhoun_isms.py` (#16) as a **Calhoun-isms**
-  dashboard tab — Dad's most quotable lines, currently orphaned in a git-ignored JSON. In progress.
+- Summary: Roadmap **#16 (P3·S·analysis)** deferred **viz slice** — a new **Calhoun-isms** dashboard
+  tab that finally surfaces the already-built `analysis/calhoun_isms.py` (shipped PR #49 as "the data
+  layer a dashboard tab could later render"): Dad's most quotable/aphoristic lines, until now orphaned
+  in a git-ignored JSON nobody could see. Thin offline layer over a committed builder — the exact
+  analog of merged **#51** (network viz) and open **#53** (stance viz). New `renderCalhounIsms()`
+  draws an overall "most quotable" board + per-theme aphorism cards with a theme filter; each quote
+  **click-through deep-links to its column** in the Raw Corpus via the existing `deepLinkToCorpus()`.
+  Wired through `build_dashboard`'s `/*__CALHOUN_ISMS_DATA__*/` placeholder with an empty-board stub
+  → CI / fresh clones show a "run `make calhoun-isms`" prompt (the artifact embeds body excerpts, so
+  it's **git-ignored** like `reading_room.json` — **no data artifact committed**). **§8.5 deepen:**
+  (1) added `flex-wrap: wrap` to the desktop `nav` — the 13th tab overflowed the centered flex row
+  (+guard test); (2) **fixed a latent bug**: `make calhoun-isms` was `.PHONY`-declared but had *no
+  recipe*, so it was a silent no-op — added the one-line rule (mirrors `make contradictions`); (3)
+  architecture.md note. **TDD'd:** +9 tests (`tests/test_dashboard_calhoun_isms.py`). **Verification:**
+  `make verify` green (**641 passed**, up from 632; ruff clean; dashboard builds) + a real-corpus
+  headless browser pass (Playwright, local — artifact git-ignored) **12/12** across desktop & phone
+  (tab renders 100 quote cards, overall board present, no h-overflow, clean console, quote→corpus
+  deep-link highlights the row). **Cold-path pick:** hot-path drained (only 0008 remains —
+  owner-interactive compute / sibling-repo `models.yaml`); no user pins; the stale categories
+  (`family` last 06-03, `docs` 06-25) are **both drained** (#21/#23/#24 + #28 all shipped), and
+  `training` #27 is in flight (open #54). Among the remaining orphaned builders (`intellectual_arc`
+  #13, `contradictions` #15, `calhoun_isms` #16), #16 is the highest **family/emotional payoff** —
+  which the roadmap explicitly prioritizes post-queue. **Backlog:** 3 open `daily/*` PRs (#55/#54/#53)
+  before this run — under 5; §3 didn't resume (all `ready-for-review`, not `in-progress`).
+  **Deferred (in PR):** a "most quotable" spotlight on the Themes tab; family favorite/share.
 
 ### 2026-07-16 — analysis — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/52
