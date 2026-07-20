@@ -48,6 +48,12 @@ Format:
 
 <!-- entries below -->
 
+### 2026-07-20 — dashboard — in-progress
+- PR: (opening)
+- Source: roadmap:#16 (deferred dashboard viz)
+- Summary: Surfacing the already-built `analysis/calhoun_isms.py` (#16) as a **Calhoun-isms**
+  dashboard tab — Dad's most quotable lines, currently orphaned in a git-ignored JSON. In progress.
+
 ### 2026-07-16 — analysis — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/52
 - Source: roadmap:#15
