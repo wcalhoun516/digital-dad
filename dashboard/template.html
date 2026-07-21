@@ -144,6 +144,10 @@ h3 {
   border-radius: 50%;
 }
 
+/* Intellectual Arc: a legend-selected theme band gets a subtle ring while the rest dim. */
+.arc-seg { transition: opacity 0.15s ease; }
+.arc-seg.arc-highlight { box-shadow: inset 0 0 0 2px var(--text); }
+
 /* ===== TOOLTIP ===== */
 .tooltip {
   position: absolute;
@@ -2618,7 +2622,7 @@ function renderIntellectualArc() {
   html += '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:28px">';
   byYear.forEach(y => {
     const segs = (y.themes || []).map(t =>
-      `<div title="${esc(t.label)} — ${t.count} of ${y.total} (${pct(t.share)})" style="width:${(t.share*100).toFixed(1)}%;background:${clusterColor(t.cluster_id)};height:100%"></div>`
+      `<div class="arc-seg" data-arc-cluster="${t.cluster_id}" title="${esc(t.label)} — ${t.count} of ${y.total} (${pct(t.share)})" style="width:${(t.share*100).toFixed(1)}%;background:${clusterColor(t.cluster_id)};height:100%"></div>`
     ).join('');
     const yr = esc(y.year) + (y.partial ? ' <span style="color:var(--text-muted);font-size:0.85em">(partial)</span>' : '');
     html += `<div style="display:flex;align-items:center;gap:10px">
@@ -2633,8 +2637,9 @@ function renderIntellectualArc() {
   const seen = new Map();
   byYear.forEach(y => (y.themes || []).forEach(t => { if (!seen.has(t.cluster_id)) seen.set(t.cluster_id, t.label); }));
   if (seen.size) {
-    html += '<div class="cluster-legend" style="margin-bottom:30px">';
-    seen.forEach((label, cid) => { html += `<span style="margin-right:16px;font-size:0.85em">${swatch(cid)}${esc(label)}</span>`; });
+    html += '<div class="cluster-legend" id="arc-legend" style="margin-bottom:30px">';
+    html += '<span style="margin-right:16px;font-size:0.78em;color:var(--text-muted)">Click a theme to trace it &rarr;</span>';
+    seen.forEach((label, cid) => { html += `<span class="arc-legend-item" data-arc-cluster="${cid}" style="cursor:pointer;margin-right:16px;font-size:0.85em">${swatch(cid)}${esc(label)}</span>`; });
     html += '</div>';
   }
 
@@ -2658,6 +2663,24 @@ function renderIntellectualArc() {
   }
 
   body.innerHTML = html;
+
+  // Click a legend theme to trace its band across every year (dim the rest); click again to clear.
+  let arcActive = null;
+  const segEls = Array.from(body.querySelectorAll('.arc-seg'));
+  body.querySelectorAll('.arc-legend-item').forEach(el => {
+    el.addEventListener('click', () => {
+      const cid = el.dataset.arcCluster;
+      arcActive = (arcActive === cid) ? null : cid;
+      segEls.forEach(seg => {
+        const on = arcActive === null || seg.dataset.arcCluster === arcActive;
+        seg.classList.toggle('arc-highlight', arcActive !== null && seg.dataset.arcCluster === arcActive);
+        seg.style.opacity = on ? '1' : '0.15';
+      });
+      body.querySelectorAll('.arc-legend-item').forEach(li => {
+        li.style.fontWeight = (arcActive !== null && li.dataset.arcCluster === arcActive) ? '700' : '400';
+      });
+    });
+  });
 }
 
 let currentTab = null;

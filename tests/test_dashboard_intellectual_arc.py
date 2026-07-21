@@ -78,6 +78,22 @@ def test_arc_has_empty_stub_prompt():
     assert "make intellectual-arc" in html
 
 
+def test_arc_reuses_cluster_color_for_theme_consistency():
+    html = TEMPLATE.read_text()
+    # Bars must reuse the shared clusterColor() palette so a theme reads the same color here
+    # as on the Theme Map / Timeline.
+    assert "clusterColor(t.cluster_id)" in html
+
+
+def test_arc_legend_click_highlights_theme_band():
+    html = TEMPLATE.read_text()
+    # §8.5 deepen: clicking a legend theme highlights that theme's segments across every year
+    # bar (dims the rest), mirroring the Reading Room theme filter. Segments are tagged with the
+    # cluster id and the legend wires a click handler that toggles the highlight.
+    assert "data-arc-cluster" in html
+    assert "arc-highlight" in html
+
+
 def test_desktop_nav_wraps_for_thirteenth_tab():
     html = TEMPLATE.read_text()
     # The 13th tab overflows the centered desktop flex row; the base `nav` rule must wrap.
