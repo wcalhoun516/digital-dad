@@ -48,6 +48,51 @@ Format:
 
 <!-- entries below -->
 
+### 2026-07-21 — dashboard — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/57
+- Source: roadmap:#13 (deferred dashboard viz)
+- Summary: Roadmap **#13 (P2·M·analysis)** deferred **viz slice** — a new **Intellectual Arc**
+  dashboard tab surfacing the already-merged `analysis/intellectual_arc.py` builder (data layer
+  shipped 2026-06-27). Until now its `intellectual_arc.json` (committed + **text-free**) sat on
+  `main` with nothing rendering it. Thin offline dashboard layer over a committed builder — the
+  exact analog of merged **#51** (network tab over `entity_graph`) / open **#56** (Calhoun-isms).
+  New `renderIntellectualArc()` draws: the deterministic **narrative** + headline stats
+  (span, dated pieces, first→last dominant theme, most-grown/most-declined); a **per-year stacked
+  theme-composition** bar chart (segments reuse the shared `clusterColor()` palette so a theme
+  reads the same as on Theme Map / Timeline; partial in-progress years dimmed & flagged); and
+  **year-over-year shift cards** (rising / fading / emergent + any lead-theme change). Wired
+  through `build_dashboard`'s `/*__INTELLECTUAL_ARC_DATA__*/` placeholder with an empty-arc stub
+  (CI / fresh clones show a `make intellectual-arc` prompt). Because the artifact is **committed +
+  text-free** (theme labels/shares + a deterministic narrative — no body excerpts), the tab renders
+  **real data on merge**, unlike the git-ignored calhoun_isms/reading_room tabs — **no data artifact
+  committed** (the build output `index.html` stays git-ignored). Also added desktop `nav {
+  flex-wrap: wrap }` — the 13th tab overflowed the centered flex row (same fix as #56, but
+  independently, since #56 is unmerged). **§8.5 deepen:** legend **click-to-trace** — clicking a
+  theme rings its band (`box-shadow` inset) across every year and dims the rest; re-click clears
+  (mirrors the Reading Room theme filter). **TDD'd:** +11 tests
+  (`tests/test_dashboard_intellectual_arc.py`) — placeholder/empty-stub wiring, nav tab + dispatch,
+  narrative/by_year/shifts rendering, `clusterColor` reuse, legend-highlight, and a nav flex-wrap
+  guard. **Verification:** `make verify` green (**643 passed**, up from 632; ruff clean; dashboard
+  builds) + a real-corpus headless browser pass (Playwright, local — build artifact git-ignored):
+  desktop & phone both render the narrative + 35 theme segments with **no h-overflow and a clean
+  console**, and the legend click dims 29/35 while ringing the selected theme's 6 year-segments,
+  clearing back to 35 on re-click. Also **documented** the previously-undocumented
+  `intellectual_arc.py` builder + the new tab in `architecture.md`. **Cold-path pick:** hot-path
+  drained (only 0008 remains — 26c/26d/26e/26f all owner-interactive compute / paid / sibling-repo
+  `models.yaml`); no user pins. The staler categories are drained/blocked: **family** (last 06-03)
+  fully drained (#21/#23/#24 shipped), **docs** (06-25) drained (#28 shipped), **infra/ops** (07-07)
+  drained (#7 structured-logging merged as #48 on 07-16, so #1–7 all shipped), **training** #26
+  owner-blocked + #27 in flight (open #54), **scraper** #10 remaining slices blocked on a re-scrape
+  (forbidden to commit regenerated data). That left the two genuinely-orphaned analysis builders
+  with no merged dashboard viz — `intellectual_arc` **#13 (P2)** and `contradictions` **#15 (P3)**
+  (calhoun_isms #16 / entity_stance #17 already have viz in flight on #56 / #53). Per §5b
+  "highest-priority not-yet-started," **#13 (P2) wins over #15 (P3)** — and it's the higher
+  family/emotional payoff (the sweep of Dad's focus over 7 years, Fed/Financial → Tariffs/Crypto).
+  **Backlog:** 4 open `daily/*` PRs (#56/#55/#54/#53) before this run — under 5; §3 didn't resume
+  (all `ready-for-review`, not `in-progress`). **Deferred (in PR):** deep-link a theme segment to
+  the Theme Map filtered to that cluster; a small `contradictions` #15 tab as the last orphaned
+  builder.
+
 ### 2026-07-16 — analysis — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/52
 - Source: roadmap:#15
