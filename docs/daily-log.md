@@ -48,6 +48,14 @@ Format:
 
 <!-- entries below -->
 
+### 2026-07-22 — none — skipped
+- PR: (skip marker — see today's `[skipped]` draft PR)
+- Source: n/a (backlog full)
+- Summary: **Stood down per §2** — 5 open `daily/*` PRs (#57, #56, #55, #54, #53), all
+  `ready-for-review` and awaiting the owner's merge, which hits the ≥5 cap. No new work started.
+  Opened a `[skipped] backlog full` draft PR and did not proceed to §3+. Owner action: review /
+  merge the queued PRs to free the backlog so tomorrow's run can pick up work again.
+
 ### 2026-07-16 — analysis — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/52
 - Source: roadmap:#15
