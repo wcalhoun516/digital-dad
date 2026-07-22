@@ -49,7 +49,7 @@ Format:
 <!-- entries below -->
 
 ### 2026-07-22 — none — skipped
-- PR: (skip marker — see today's `[skipped]` draft PR)
+- PR: https://github.com/wcalhoun516/digital-dad/pull/58 (skip marker)
 - Source: n/a (backlog full)
 - Summary: **Stood down per §2** — 5 open `daily/*` PRs (#57, #56, #55, #54, #53), all
   `ready-for-review` and awaiting the owner's merge, which hits the ≥5 cap. No new work started.
