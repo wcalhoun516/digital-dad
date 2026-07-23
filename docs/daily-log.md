@@ -48,6 +48,16 @@ Format:
 
 <!-- entries below -->
 
+### 2026-07-23 — none — skipped
+- PR: (skip marker — new draft PR for 2026-07-23)
+- Source: n/a (backlog full)
+- Summary: **Stood down per §2** — 6 open `daily/*` PRs (#58 prior skip marker + 5 work PRs
+  #57, #56, #55, #54, #53), which meets/exceeds the ≥5 cap on its own (the 5 work PRs are all
+  `ready-for-review` and awaiting the owner's merge). No new work started. Opened a
+  `[skipped] backlog full` draft PR and did not proceed to §3+. Owner action: review / merge the
+  queued PRs (and close stale skip markers #58/this one) to free the backlog so a future run can
+  pick up work again.
+
 ### 2026-07-16 — analysis — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/52
 - Source: roadmap:#15
