@@ -127,6 +127,14 @@ contradictions:
 rag-eval:
 	$(PYTHON) -m analysis.rag_eval $(ARGS)
 
+# Embedding-model comparison before ever swapping the pinned sbert-mpnet-v2 (decision D2,
+# roadmap #27). Owner-gated: a live pass embeds the corpus with each candidate model via the
+# conductor, so it refuses to run if the conductor is down. Reads eval/embedding_queries.json,
+# writes data/analysis/embedding_compare.json. ARGS e.g. --models nomic-embed-text bge-small
+# --limit 40. Run deliberately (NOT from automation).
+embedding-compare:
+	$(PYTHON) -m analysis.embedding_compare $(ARGS)
+
 # Voice-fidelity blind-A/B eval for the Geo-LLM fine-tune (plan 0008 step 26d). Owner-gated:
 # the judge pass makes conductor calls (defaults to paid T3), so it refuses to run if the
 # conductor is down. Reads eval/voice_trials.json (owner-produced once 26c's adapter exists),
