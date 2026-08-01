@@ -657,6 +657,7 @@ footer {
   <button data-tab="trackrecord">Track Record</button>
   <button data-tab="reading-room">Reading Room</button>
   <button data-tab="calhoun-isms">Calhoun-isms</button>
+  <button data-tab="contradictions">Second Thoughts</button>
   <button data-tab="geollm">Geo-LLM</button>
 </nav>
 
@@ -926,6 +927,13 @@ footer {
   <div id="calhoun-isms-body"></div>
 </div>
 
+<!-- Tab 13: Second Thoughts (contradiction / mind-change finder) -->
+<div class="tab-content" id="tab-contradictions">
+  <h2>Second Thoughts</h2>
+  <p class="section-desc">Subjects Dad's stance <em>reversed</em> on over the years — where he warmed to, or cooled on, a person or institution. Each shows his earliest vs. latest take; click a quote to find its column.</p>
+  <div id="contradictions-body"></div>
+</div>
+
 <footer>
   Digital Dad &middot; A project about preserving intellectual legacy &middot; Built with D3.js, Python, and the local-llm-conductor
 </footer>
@@ -946,6 +954,8 @@ const GEO_LLM_DATA = /*__GEO_LLM_DATA__*/;
 const READING_ROOM_DATA = /*__READING_ROOM_DATA__*/;
 const ENTITY_GRAPH_DATA = /*__ENTITY_GRAPH_DATA__*/;
 const INTELLECTUAL_ARC_DATA = /*__INTELLECTUAL_ARC_DATA__*/;
+const CALHOUN_ISMS_DATA = /*__CALHOUN_ISMS_DATA__*/;
+const CONTRADICTIONS_DATA = /*__CONTRADICTIONS_DATA__*/;
 </script>
 
 <script>
@@ -2564,6 +2574,72 @@ function renderCalhounIsms() {
   });
 }
 
+// ===== SECOND THOUGHTS (roadmap #15) — contradiction / mind-change finder from CONTRADICTIONS_DATA =====
+// Reads the git-ignored contradictions.json (built by `make contradictions`): subjects whose mean
+// stance reversed sign between Dad's earlier and later writing. The artifact embeds body excerpts,
+// so in CI / fresh clones CONTRADICTIONS_DATA is the empty stub and the tab shows a build prompt.
+// Each card pairs the earliest vs. latest take; both quotes deep-link via shared deepLinkToCorpus().
+function renderContradictions() {
+  const esc = s => (s || '').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  const data = CONTRADICTIONS_DATA || {};
+  const rows = data.contradictions || [];
+  const body = document.getElementById('contradictions-body');
+  if (!rows.length) {
+    body.innerHTML = '<p class="section-desc">No mind-changes loaded. Run <code>make contradictions</code> then <code>make dashboard</code> to surface where Dad revised a view over the years.</p>';
+    return;
+  }
+
+  const year = q => (q && q.date ? String(q.date).slice(0, 4) : '');
+  const quote = (q, label) =>
+    `<blockquote class="ct-quote" data-slug="${esc(q.slug)}" data-title="${esc(q.title)}"
+        title="Find this column in the Raw Corpus"
+        style="margin:0;padding:12px 14px;border-left:3px solid var(--border);background:var(--bg-card);cursor:pointer;border-radius:0 4px 4px 0;flex:1;min-width:0">
+       <div style="font-family:var(--mono);font-size:0.68em;letter-spacing:0.05em;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px">${label}${year(q) ? ' &middot; ' + year(q) : ''}</div>
+       <div style="line-height:1.5;color:var(--text)">&ldquo;${esc(q.sentence)}&rdquo;</div>
+       <div style="font-family:var(--mono);font-size:0.7em;color:var(--text-muted);margin-top:8px">${esc(q.title)}${q.date ? ' &middot; ' + esc(q.date) : ''}</div>
+     </blockquote>`;
+
+  const card = c => {
+    const warmed = c.direction === 'warmed';
+    const badgeColor = warmed ? '#3da35d' : '#4d9de0';
+    const swing = Math.abs(Number(c.delta) || 0).toFixed(2);
+    return `<article class="ct-card" data-direction="${esc(c.direction)}" style="margin-bottom:26px;padding-bottom:22px;border-bottom:1px solid var(--border)">
+       <header style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+         <span style="font-size:1.15em;font-weight:600;color:var(--text)">${esc(c.entity)}</span>
+         <span style="font-family:var(--mono);font-size:0.7em;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:${badgeColor};border:1px solid ${badgeColor};padding:2px 8px;border-radius:3px">${warmed ? 'Warmed' : 'Cooled'}</span>
+         <span style="font-family:var(--mono);font-size:0.72em;color:var(--text-muted)">swing ${swing} &middot; ${Number(c.n_observations) || 0} mentions</span>
+       </header>
+       <div class="ct-quotes" style="display:flex;gap:12px;flex-wrap:wrap">
+         ${quote(c.early_quote || {}, 'Earlier')}
+         ${quote(c.late_quote || {}, 'Later')}
+       </div>
+     </article>`;
+  };
+
+  const filterOpts = ['<option value="">All changes</option>',
+    '<option value="warmed">Warmed to</option>',
+    '<option value="cooled">Cooled on</option>'].join('');
+  const parts = [
+    `<div style="margin-bottom:16px">
+       <select id="ct-direction-filter" style="background:var(--bg-card);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:0.8em;padding:8px 10px;border-radius:0;cursor:pointer">${filterOpts}</select>
+     </div>`,
+    rows.map(card).join(''),
+  ];
+  body.innerHTML = parts.join('');
+
+  const filter = document.getElementById('ct-direction-filter');
+  if (filter) filter.addEventListener('change', () => {
+    const want = filter.value;
+    body.querySelectorAll('.ct-card').forEach(el => {
+      el.style.display = (!want || el.dataset.direction === want) ? '' : 'none';
+    });
+  });
+
+  body.querySelectorAll('.ct-quote').forEach(el => {
+    el.addEventListener('click', () => deepLinkToCorpus(el.dataset.slug, el.dataset.title));
+  });
+}
+
 // ===== NETWORK (roadmap #14) — entity co-occurrence force graph from ENTITY_GRAPH_DATA =====
 // Reads the committed, text-free entity_graph.json (nodes = people/orgs, edges = shared-article
 // counts). In CI / fresh clones ENTITY_GRAPH_DATA is the empty stub, so the tab prompts a build.
@@ -2765,6 +2841,7 @@ function renderTab(name) {
   switch(name) {
     case 'reading-room': renderReadingRoom(); break;
     case 'calhoun-isms': renderCalhounIsms(); break;
+    case 'contradictions': renderContradictions(); break;
     case 'themes': renderThemeMap(); break;
     case 'timeline': renderTimeline(); break;
     case 'psychoprofile': renderPsychoprofile(); break;

@@ -48,6 +48,40 @@ Format:
 
 <!-- entries below -->
 
+### 2026-08-01 — dashboard — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/60
+- Source: roadmap:#15 (deferred dashboard viz) + red-main regression fix
+- Summary: **Fixed red `main`** first, then shipped the last orphaned analysis-builder viz.
+  **(1) Regression fix:** a prior merge (PR #56, calhoun-isms tab) dropped the
+  `CALHOUN_ISMS_DATA` const, the `/*__CALHOUN_ISMS_DATA__*/` `build_dashboard` placeholder, and its
+  empty-default — so `renderCalhounIsms()` referenced an **undefined global** and **4
+  `test_dashboard_calhoun_isms.py` tests were failing on `main`** (`make verify` red). Restored the
+  three lines → main green (**718 passed**, was 4 failed / 714 passed). Confirmed live: clicking the
+  Calhoun-isms tab renders real data with **0 console errors** (was a `ReferenceError`).
+  **(2) Feature (roadmap #15 deferred viz):** every analysis builder had a dashboard tab except
+  `contradictions.py` (merged #52). Added a **Second Thoughts** tab surfacing its mind-change
+  finder — warmed/cooled cards per reversed-stance subject pairing his earliest vs. latest take,
+  each quote deep-linking into the Raw Corpus, plus a direction filter. Wired like the
+  Calhoun-isms / Reading Room tabs (`/*__CONTRADICTIONS_DATA__*/` → git-ignored
+  `contradictions.json` with a valid empty-default; empty-board build prompt on CI / fresh clones).
+  **TDD'd:** +8 guard tests (`tests/test_dashboard_contradictions.py`) — including the const +
+  placeholder assertions that *would have caught* the calhoun-isms regression. **Offline /
+  unattended-safe:** no conductor/network/LLM; builds only on merged `main`, independent of the
+  open #53 (stance viz) tab. **Verification:** `make verify` green (**726 passed**, ruff clean,
+  dashboard builds); real-corpus `make contradictions` → 2 defensible flips (Covid *warmed* 43 obs,
+  Tesla *cooled* 23 obs); headless-Chromium browser pass (build artifact git-ignored) desktop
+  1280×900 + phone 375×812 → 2 cards / 4 quotes / Warmed+Cooled badges, direction filter works,
+  **0 console errors, 0px h-overflow** (15-tab nav wraps via the existing `flex-wrap`). **Backlog:**
+  3 open `daily/*` PRs (#53 + skip markers #58/#59) before this run — under 5; §3 didn't resume
+  (#53 is `ready-for-review`, not `in-progress`). **Cold-path pick:** hot-path drained (only 0008
+  remains — all owner-interactive compute / paid / sibling-repo); no user pins; staler categories
+  drained/blocked (family/docs/infra shipped, training #26 owner-blocked + #27 merged #54, scraper
+  #10 blocked on re-scrape, analysis #11 owner-gated-paid). **Note — stale base:** this run's
+  starting branch (`daily/2026-07-23-skip`) predated the merges of #54–#57, so §1 was re-run against
+  the real `origin/main`; the red-main regression was discovered there. **Deferred:** entity
+  **alias-merge** (Fed / the Federal Reserve / Powell still separate) would sharpen this tab, the
+  Network graph, and the stance viz together.
+
 ### 2026-07-21 — dashboard — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/57
 - Source: roadmap:#13 (deferred dashboard viz)
