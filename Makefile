@@ -105,6 +105,14 @@ entity-graph:
 entity-stance:
 	$(PYTHON) -m analysis.entity_stance $(ARGS)
 
+# Contradiction / mind-change finder (roadmap #15): subjects (people/orgs) whose stance
+# reversed sign between Dad's earlier and later writing, derived from data/analysis/entities.json
+# + the corpus (run `make analyze` first). Pure/offline — no conductor, no network — so it's
+# safe in automation. Writes data/analysis/contradictions.json; ARGS e.g. --dry-run,
+# --min-mentions 6, --min-delta 1.5, --min-observations 6, or --no-exclude.
+contradictions:
+	$(PYTHON) -m analysis.contradictions $(ARGS)
+
 # RAG faithfulness eval baseline for Ask Dad (plan 0007). Owner-gated: the generation +
 # judge passes make conductor calls (judge defaults to paid T3), so it refuses to run if
 # the conductor is down. Writes data/analysis/rag_eval.json. ARGS e.g. --limit 5 or
