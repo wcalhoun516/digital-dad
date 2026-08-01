@@ -22,6 +22,7 @@ PLACEHOLDERS = {
     "/*__ENTITY_GRAPH_DATA__*/": DATA_DIR / "analysis" / "entity_graph.json",
     "/*__INTELLECTUAL_ARC_DATA__*/": DATA_DIR / "analysis" / "intellectual_arc.json",
     "/*__CALHOUN_ISMS_DATA__*/": DATA_DIR / "analysis" / "calhoun_isms.json",
+    "/*__CONTRADICTIONS_DATA__*/": DATA_DIR / "analysis" / "contradictions.json",
 }
 
 # When an embeddings export is missing, inline an empty stub so the dashboard
@@ -43,6 +44,10 @@ _EMPTY_DEFAULTS = {
     # Calhoun-isms (#16). Git-ignored (the artifact embeds body excerpts), so CI / fresh clones
     # that haven't run `make calhoun-isms` inline an empty board and the tab shows a build prompt.
     "/*__CALHOUN_ISMS_DATA__*/": '{"meta":{},"themes":[],"overall_top":[]}',
+    # Contradictions / mind-changes (#15). Git-ignored (the artifact embeds body excerpts), so
+    # CI / fresh clones that haven't run `make contradictions` inline an empty board and the tab
+    # shows a build prompt.
+    "/*__CONTRADICTIONS_DATA__*/": '{"meta":{},"contradictions":[]}',
 }
 
 
