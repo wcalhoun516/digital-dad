@@ -101,6 +101,21 @@ injected via `build_dashboard`'s `/*__CALHOUN_ISMS_DATA__*/` placeholder with an
 in CI / fresh clones (prompting `make calhoun-isms`); each quote deep-links into the Raw Corpus tab
 via the shared `deepLinkToCorpus()` helper. No conductor/network. (Roadmap #16.)
 
+`intellectual_arc.py` — also outside the default chain; run via `make intellectual-arc`. A
+pure/offline **derived** artifact: bins `themes.json`'s clustered articles by calendar year and
+emits `intellectual_arc.json` — each year's theme composition (per-cluster share + a dominant
+theme), the consecutive year-over-year `shifts` (rising / fading / emergent / vanished + any
+change of lead theme), an `overall` summary (most-grown / most-declined theme across the span,
+first→last dominant), and a **deterministic** prose `narrative` assembled from those numbers
+(no LLM). Thin in-progress years are flagged `partial` so they can't anchor the conclusion. The
+artifact is text-free (theme labels/counts/shares only), so it's committable like
+`entity_graph.json`. No conductor/network. Surfaced in the dashboard's **Intellectual Arc** tab
+— the narrative + headline stats, a per-year stacked theme-composition bar chart (segment colors
+reuse the shared `clusterColor()` palette, so a theme reads the same as on the Theme Map /
+Timeline; click a legend theme to trace its band across every year), and year-over-year shift
+cards — injected via `build_dashboard`'s `/*__INTELLECTUAL_ARC_DATA__*/` placeholder (empty-arc
+stub in CI / fresh clones, prompting `make intellectual-arc`). (Roadmap #13.)
+
 ## 3. The conductor (LLM abstraction)
 
 All model calls go to a **local OpenAI-compatible server** at `http://127.0.0.1:8080/v1`

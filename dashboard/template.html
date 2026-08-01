@@ -144,6 +144,10 @@ h3 {
   border-radius: 50%;
 }
 
+/* Intellectual Arc: a legend-selected theme band gets a subtle ring while the rest dim. */
+.arc-seg { transition: opacity 0.15s ease; }
+.arc-seg.arc-highlight { box-shadow: inset 0 0 0 2px var(--text); }
+
 /* ===== TOOLTIP ===== */
 .tooltip {
   position: absolute;
@@ -646,6 +650,7 @@ footer {
   <button data-tab="linguistic">Linguistic DNA</button>
   <button data-tab="entities">Influence Map</button>
   <button data-tab="network">Network</button>
+  <button data-tab="intellectual-arc">Intellectual Arc</button>
   <button data-tab="corpus">Raw Corpus</button>
   <button data-tab="search">Search</button>
   <button data-tab="askdad">Ask Dad</button>
@@ -733,6 +738,13 @@ footer {
       </div>
     </div>
   </div>
+</div>
+
+<!-- Tab 5c: Intellectual Arc (year-over-year theme evolution, roadmap #13) -->
+<div class="tab-content" id="tab-intellectual-arc">
+  <h2>Intellectual Arc</h2>
+  <p class="section-desc">How his focus shifted, year by year. A deterministic read of the theme clusters over time — what rose, what faded, what broke through.</p>
+  <div id="arc-body"></div>
 </div>
 
 <!-- Tab 6: Raw Corpus -->
@@ -933,7 +945,7 @@ const PREDICTIONS_DATA = /*__PREDICTIONS_DATA__*/;
 const GEO_LLM_DATA = /*__GEO_LLM_DATA__*/;
 const READING_ROOM_DATA = /*__READING_ROOM_DATA__*/;
 const ENTITY_GRAPH_DATA = /*__ENTITY_GRAPH_DATA__*/;
-const CALHOUN_ISMS_DATA = /*__CALHOUN_ISMS_DATA__*/;
+const INTELLECTUAL_ARC_DATA = /*__INTELLECTUAL_ARC_DATA__*/;
 </script>
 
 <script>
@@ -2642,6 +2654,109 @@ function renderNetwork() {
   });
 }
 
+// ===== INTELLECTUAL ARC (roadmap #13) — year-over-year theme evolution from INTELLECTUAL_ARC_DATA =====
+// Reads the committed, text-free intellectual_arc.json (per-year theme shares + a deterministic
+// narrative). In CI / fresh clones it's the empty stub, so the tab prompts a build. Theme colors
+// reuse clusterColor() so the bars match the Theme Map / Timeline.
+function renderIntellectualArc() {
+  const body = document.getElementById('arc-body');
+  const data = INTELLECTUAL_ARC_DATA || {};
+  const byYear = data.by_year || [];
+  const esc = s => (s || '').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  const pct = x => Math.round((x || 0) * 100) + '%';
+
+  if (!byYear.length) {
+    body.innerHTML = '<p class="section-desc">No arc yet. Run <code>make intellectual-arc</code> then <code>make dashboard</code> to trace the year-over-year theme evolution.</p>';
+    return;
+  }
+
+  const o = data.overall || {};
+  const swatch = cid => `<span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${clusterColor(cid)};margin-right:5px;vertical-align:middle"></span>`;
+
+  // --- Narrative + headline stats ---
+  const stat = (label, val) => `<div style="min-width:120px"><div style="font-family:var(--mono);font-size:0.7em;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em">${label}</div><div style="font-size:1.02em;color:var(--text);margin-top:3px">${val}</div></div>`;
+  const stats = [];
+  if (o.span) stats.push(stat('Span', esc(o.span)));
+  if (o.n_articles) stats.push(stat('Dated pieces', o.n_articles));
+  if (o.first_dominant) stats.push(stat('Opened on', swatch(o.first_dominant.cluster_id) + esc(o.first_dominant.label)));
+  if (o.last_dominant) stats.push(stat('Landed on', swatch(o.last_dominant.cluster_id) + esc(o.last_dominant.label)));
+  let html = '<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:6px;padding:18px 20px;margin-bottom:26px">';
+  if (data.narrative) html += `<p style="font-size:1.08em;line-height:1.7;margin:0 0 16px;color:var(--text)">${esc(data.narrative)}</p>`;
+  html += `<div style="display:flex;gap:24px;flex-wrap:wrap">${stats.join('')}</div>`;
+  const mg = o.most_grown, md = o.most_declined;
+  const movers = [];
+  if (mg && mg.delta_share > 0) movers.push(`${swatch(mg.cluster_id)}<strong>${esc(mg.label)}</strong> grew the most (${pct(mg.first_share)} &rarr; ${pct(mg.last_share)})`);
+  if (md && md.delta_share < 0) movers.push(`${swatch(md.cluster_id)}<strong>${esc(md.label)}</strong> receded the most (${pct(md.first_share)} &rarr; ${pct(md.last_share)})`);
+  if (movers.length) html += `<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);font-size:0.92em;color:var(--text-muted);line-height:1.9">${movers.join('<br>')}</div>`;
+  html += '</div>';
+
+  // --- Per-year theme composition (stacked share bars) ---
+  html += '<h3 style="font-size:1.05em;margin:0 0 4px">Theme composition, year by year</h3>';
+  html += '<p class="section-desc" style="margin-top:0">Each bar is a year; segments are theme clusters sized by share of that year\'s writing. Hover a segment for detail.</p>';
+  html += '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:28px">';
+  byYear.forEach(y => {
+    const segs = (y.themes || []).map(t =>
+      `<div class="arc-seg" data-arc-cluster="${t.cluster_id}" title="${esc(t.label)} — ${t.count} of ${y.total} (${pct(t.share)})" style="width:${(t.share*100).toFixed(1)}%;background:${clusterColor(t.cluster_id)};height:100%"></div>`
+    ).join('');
+    const yr = esc(y.year) + (y.partial ? ' <span style="color:var(--text-muted);font-size:0.85em">(partial)</span>' : '');
+    html += `<div style="display:flex;align-items:center;gap:10px">
+      <div style="width:78px;font-family:var(--mono);font-size:0.82em;color:var(--text-muted);text-align:right">${yr}</div>
+      <div style="flex:1;display:flex;height:22px;border-radius:3px;overflow:hidden;opacity:${y.partial ? 0.55 : 1}">${segs}</div>
+      <div style="width:34px;font-family:var(--mono);font-size:0.75em;color:var(--text-muted)">${y.total}</div>
+    </div>`;
+  });
+  html += '</div>';
+
+  // Legend: clusters seen across the arc (first-seen order), deduped by cluster_id.
+  const seen = new Map();
+  byYear.forEach(y => (y.themes || []).forEach(t => { if (!seen.has(t.cluster_id)) seen.set(t.cluster_id, t.label); }));
+  if (seen.size) {
+    html += '<div class="cluster-legend" id="arc-legend" style="margin-bottom:30px">';
+    html += '<span style="margin-right:16px;font-size:0.78em;color:var(--text-muted)">Click a theme to trace it &rarr;</span>';
+    seen.forEach((label, cid) => { html += `<span class="arc-legend-item" data-arc-cluster="${cid}" style="cursor:pointer;margin-right:16px;font-size:0.85em">${swatch(cid)}${esc(label)}</span>`; });
+    html += '</div>';
+  }
+
+  // --- Year-over-year shifts ---
+  const shifts = (data.shifts || []).filter(s => s.dominant_change || (s.rising||[]).length || (s.emergent||[]).length);
+  if (shifts.length) {
+    html += '<h3 style="font-size:1.05em;margin:0 0 4px">Where the focus turned</h3>';
+    html += '<p class="section-desc" style="margin-top:0">Year-to-year shifts: which themes rose, faded, or broke through.</p>';
+    html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px">';
+    const line = (t, dir) => `<div style="font-size:0.85em;padding:2px 0">${swatch(t.cluster_id)}${esc(t.label)} <span style="color:var(--text-muted);float:right">${dir}${Math.abs(Math.round(t.delta_share*100))}%</span></div>`;
+    shifts.forEach(s => {
+      html += '<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:6px;padding:14px 16px">';
+      html += `<div style="font-family:var(--mono);font-size:0.8em;color:var(--accent);margin-bottom:8px">${esc(s.from_year)} &rarr; ${esc(s.to_year)}</div>`;
+      if (s.dominant_change) html += `<div style="font-size:0.85em;margin-bottom:8px;line-height:1.5">Lead theme moved from <strong>${esc(s.dominant_change.from.label)}</strong> to <strong>${esc(s.dominant_change.to.label)}</strong></div>`;
+      (s.emergent || []).slice(0, 3).forEach(t => { html += `<div style="font-size:0.85em;padding:2px 0">${swatch(t.cluster_id)}${esc(t.label)} <span style="color:#8cc084;float:right">new · ${pct(t.to_share)}</span></div>`; });
+      (s.rising || []).slice(0, 3).forEach(t => { html += line(t, '&uarr; '); });
+      (s.fading || []).slice(0, 2).forEach(t => { html += line(t, '&darr; '); });
+      html += '</div>';
+    });
+    html += '</div>';
+  }
+
+  body.innerHTML = html;
+
+  // Click a legend theme to trace its band across every year (dim the rest); click again to clear.
+  let arcActive = null;
+  const segEls = Array.from(body.querySelectorAll('.arc-seg'));
+  body.querySelectorAll('.arc-legend-item').forEach(el => {
+    el.addEventListener('click', () => {
+      const cid = el.dataset.arcCluster;
+      arcActive = (arcActive === cid) ? null : cid;
+      segEls.forEach(seg => {
+        const on = arcActive === null || seg.dataset.arcCluster === arcActive;
+        seg.classList.toggle('arc-highlight', arcActive !== null && seg.dataset.arcCluster === arcActive);
+        seg.style.opacity = on ? '1' : '0.15';
+      });
+      body.querySelectorAll('.arc-legend-item').forEach(li => {
+        li.style.fontWeight = (arcActive !== null && li.dataset.arcCluster === arcActive) ? '700' : '400';
+      });
+    });
+  });
+}
+
 let currentTab = null;
 function renderTab(name) {
   currentTab = name;  // tracked even for cached tabs, so resize redraw knows the target
@@ -2656,6 +2771,7 @@ function renderTab(name) {
     case 'linguistic': renderLinguistic(); break;
     case 'entities': renderEntities(); break;
     case 'network': renderNetwork(); break;
+    case 'intellectual-arc': renderIntellectualArc(); break;
     case 'corpus': renderCorpus(); break;
     case 'search': renderSearch(); break;
     case 'askdad': renderAskDad(); break;
