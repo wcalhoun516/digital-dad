@@ -80,15 +80,26 @@ not ground-truth sentiment. The artifact is text-free (names/years/scores only),
 committable like `entity_graph.json`. Same byline/photo-credit exclusion. No conductor/network.
 (Roadmap #17.)
 
-`contradictions.py` — also outside the default chain; run via `make contradictions`. A
-pure/offline **derived** artifact: reads `entities.json`'s frequent people/orgs plus the corpus
-bodies and emits `contradictions.json`, the subjects whose stance *reversed sign* between Dad's
-earlier and later writing ("where did he change his mind?"). Each sentence naming a subject is
-scored by a small transparent polarity lexicon (positive − negative words on word boundaries);
-a subject is flagged when the mean stance of its earlier vs. later mentions have opposite signs
-and the gap clears `--min-delta`. It's a coarse candidate finder (no negation/sarcasm modeling)
-for a human to read, not a verdict — byline/photo boilerplate excluded by default (`--no-exclude`
-to keep it). No conductor/network. (Roadmap #15.)
+`embedding_compare.py` — the **embedding-model comparison harness** behind decision **D2** ("evaluate
+alternatives before swapping the pinned `sbert-mpnet-v2`"). Run via `make embedding-compare`;
+owner-gated on conductor reachability. Following `rag_eval`/`voice_eval`, the one networked seam —
+`embed(model_id, texts)` — is injected, so the ranking + comparison math is pure and TDD'd offline.
+It ranks the corpus per query with each candidate model and reports two things: **retrieval quality**
+(precision@k / recall@k / MRR against the committed, text-free gold set `eval/embedding_queries.json`)
+and **baseline agreement** (top-k overlap + Kendall-tau of each candidate's rankings vs. the pinned
+model — the label-free "is it safe to swap?" number). Writes `data/analysis/embedding_compare.json`
+(owner-run, not committed). Dashboard viz + a larger gold set are deferred. (Roadmap #27.)
+
+`calhoun_isms.py` — also outside the default chain; run via `make calhoun-isms`. A pure/offline
+**derived** artifact: reads `themes.json`'s per-article theme assignments plus the corpus bodies,
+scores every sentence for "quotability" with transparent heuristics (length band + aphoristic
+markers like *always/never/no one*, minus attribution/newsy-digit penalties), and emits
+`calhoun_isms.json` — the strongest aphorisms grouped by theme plus an overall board. Because the
+artifact embeds short **body excerpts**, it is **git-ignored** (regenerate on demand), the same
+posture as `reading_room.json`. Surfaced in the dashboard's **Calhoun-isms** tab (roadmap #16),
+injected via `build_dashboard`'s `/*__CALHOUN_ISMS_DATA__*/` placeholder with an empty-board stub
+in CI / fresh clones (prompting `make calhoun-isms`); each quote deep-links into the Raw Corpus tab
+via the shared `deepLinkToCorpus()` helper. No conductor/network. (Roadmap #16.)
 
 `intellectual_arc.py` — also outside the default chain; run via `make intellectual-arc`. A
 pure/offline **derived** artifact: bins `themes.json`'s clustered articles by calendar year and

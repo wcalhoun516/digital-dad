@@ -656,6 +656,7 @@ footer {
   <button data-tab="askdad">Ask Dad</button>
   <button data-tab="trackrecord">Track Record</button>
   <button data-tab="reading-room">Reading Room</button>
+  <button data-tab="calhoun-isms">Calhoun-isms</button>
   <button data-tab="geollm">Geo-LLM</button>
 </nav>
 
@@ -916,6 +917,13 @@ footer {
       <div id="rr-reader" style="flex:2;min-width:280px"></div>
     </div>
   </div>
+</div>
+
+<!-- Tab 12: Calhoun-isms -->
+<div class="tab-content" id="tab-calhoun-isms">
+  <h2>Calhoun-isms</h2>
+  <p class="section-desc">His sharpest, most quotable lines — the aphorisms that land — pulled from the archive and grouped by theme. Click any line to find its column in the Raw Corpus.</p>
+  <div id="calhoun-isms-body"></div>
 </div>
 
 <footer>
@@ -2490,6 +2498,72 @@ function renderReadingRoom() {
   open(entries[0].slug);
 }
 
+// ===== CALHOUN-ISMS (roadmap #16) — most quotable/aphoristic sentences from CALHOUN_ISMS_DATA =====
+// Reads the git-ignored calhoun_isms.json (built by `make calhoun-isms`); the artifact embeds
+// short body excerpts, so in CI / fresh clones CALHOUN_ISMS_DATA is the empty stub and the tab
+// shows a build prompt. Each quote deep-links to its column via the shared deepLinkToCorpus().
+function renderCalhounIsms() {
+  const esc = s => (s || '').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  const data = CALHOUN_ISMS_DATA || {};
+  const themes = data.themes || [];
+  const overall = data.overall_top || [];
+  const body = document.getElementById('calhoun-isms-body');
+  if (!themes.length && !overall.length) {
+    body.innerHTML = '<p class="section-desc">No Calhoun-isms loaded. Run <code>make calhoun-isms</code> then <code>make dashboard</code> to surface his most quotable lines.</p>';
+    return;
+  }
+
+  const card = ism =>
+    `<blockquote class="ci-quote" data-slug="${esc(ism.slug)}" data-title="${esc(ism.title)}"
+        title="Find this column in the Raw Corpus"
+        style="margin:0;padding:14px 16px;border-left:3px solid var(--accent);background:var(--bg-card);cursor:pointer;border-radius:0 4px 4px 0">
+       <div style="font-size:1.05em;line-height:1.5;color:var(--text)">&ldquo;${esc(ism.text)}&rdquo;</div>
+       <div style="font-family:var(--mono);font-size:0.72em;color:var(--text-muted);margin-top:8px">${esc(ism.title)} &middot; ${esc(ism.date)}${ism.theme ? ' &middot; ' + esc(ism.theme) : ''}</div>
+     </blockquote>`;
+
+  const parts = [];
+  if (overall.length) {
+    parts.push(
+      `<section style="margin-bottom:34px">
+         <h3 style="font-size:1.15em;margin:0 0 14px;color:var(--accent)">Most quotable overall</h3>
+         <div style="display:grid;gap:12px">${overall.map(card).join('')}</div>
+       </section>`
+    );
+  }
+
+  const filterOpts = ['<option value="">All themes</option>']
+    .concat(themes.map(t => `<option value="${esc(t.theme)}">${esc(t.theme)}</option>`))
+    .join('');
+  parts.push(
+    `<div style="margin-bottom:16px">
+       <select id="ci-theme-filter" style="background:var(--bg-card);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:0.8em;padding:8px 10px;border-radius:0;cursor:pointer">${filterOpts}</select>
+     </div>`
+  );
+
+  parts.push(themes.map(t =>
+    `<section class="ci-theme" data-theme="${esc(t.theme)}" style="margin-bottom:30px">
+       <h3 style="font-size:1.05em;margin:0 0 12px;color:var(--text);border-bottom:1px solid var(--border);padding-bottom:6px">${esc(t.theme)}
+         <span style="font-family:var(--mono);font-size:0.7em;color:var(--text-muted);font-weight:normal">${(t.isms || []).length} of ${t.candidate_count}</span>
+       </h3>
+       <div style="display:grid;gap:12px">${(t.isms || []).map(card).join('')}</div>
+     </section>`
+  ).join(''));
+
+  body.innerHTML = parts.join('');
+
+  const filter = document.getElementById('ci-theme-filter');
+  if (filter) filter.addEventListener('change', () => {
+    const want = filter.value;
+    body.querySelectorAll('.ci-theme').forEach(el => {
+      el.style.display = (!want || el.dataset.theme === want) ? '' : 'none';
+    });
+  });
+
+  body.querySelectorAll('.ci-quote').forEach(el => {
+    el.addEventListener('click', () => deepLinkToCorpus(el.dataset.slug, el.dataset.title));
+  });
+}
+
 // ===== NETWORK (roadmap #14) — entity co-occurrence force graph from ENTITY_GRAPH_DATA =====
 // Reads the committed, text-free entity_graph.json (nodes = people/orgs, edges = shared-article
 // counts). In CI / fresh clones ENTITY_GRAPH_DATA is the empty stub, so the tab prompts a build.
@@ -2690,6 +2764,7 @@ function renderTab(name) {
   rendered[name] = true;
   switch(name) {
     case 'reading-room': renderReadingRoom(); break;
+    case 'calhoun-isms': renderCalhounIsms(); break;
     case 'themes': renderThemeMap(); break;
     case 'timeline': renderTimeline(); break;
     case 'psychoprofile': renderPsychoprofile(); break;
