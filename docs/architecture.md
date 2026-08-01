@@ -116,6 +116,19 @@ Timeline; click a legend theme to trace its band across every year), and year-ov
 cards — injected via `build_dashboard`'s `/*__INTELLECTUAL_ARC_DATA__*/` placeholder (empty-arc
 stub in CI / fresh clones, prompting `make intellectual-arc`). (Roadmap #13.)
 
+`contradictions.py` — also outside the default chain; run via `make contradictions`. A
+pure/offline **derived** artifact: reads `entities.json`'s frequent people/orgs plus the corpus
+bodies, scores Dad's stance toward each subject sentence-by-sentence via a small transparent
+polarity lexicon, and emits `contradictions.json` — subjects whose mean stance **reversed sign**
+between his earlier vs. later writing, each with a representative early/late quote and a
+`warmed`/`cooled` direction, sorted by swing. Because the artifact embeds **body excerpts**, it is
+**git-ignored** (regenerate on demand), the same posture as `calhoun_isms.json` / `reading_room.json`.
+Surfaced in the dashboard's **Second Thoughts** tab (roadmap #15): warmed/cooled cards pairing his
+earliest vs. latest take, each quote deep-linking into the Raw Corpus via `deepLinkToCorpus()`,
+plus a direction filter — injected via `build_dashboard`'s `/*__CONTRADICTIONS_DATA__*/` placeholder
+with an empty-board stub in CI / fresh clones (prompting `make contradictions`). No conductor/network.
+(Roadmap #15.)
+
 ## 3. The conductor (LLM abstraction)
 
 All model calls go to a **local OpenAI-compatible server** at `http://127.0.0.1:8080/v1`
