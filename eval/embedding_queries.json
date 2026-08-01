@@ -1,0 +1,32 @@
+{
+  "description": "Gold query set for the embedding-model comparison harness (roadmap #27, analysis/embedding_compare.py). Each entry pairs a natural-language query with the slug(s) of the corpus article(s) that most directly answer it, so a candidate embedder can be scored on precision@k / recall@k / MRR against the pinned sbert-mpnet-v2 (decision D2). This file is text-free (queries + public article slugs only), so it is committed like eval/questions.json. It is a deliberately small starter set — expand it (more queries, more relevant_slugs per query) to tighten the comparison. relevant_slugs must match slugs in data/manifest.json.",
+  "queries": [
+    {
+      "query": "Is Europe finally moving toward a shared fiscal union, a Hamiltonian moment?",
+      "relevant_slugs": ["europes-hamiltonian-moment-what-is-it-really"]
+    },
+    {
+      "query": "What is Warren Buffett's bet on the Japanese trading houses, and does value investing still work?",
+      "relevant_slugs": ["buffett-takes-on-japan-but-does-value-still-exist"]
+    },
+    {
+      "query": "Why did China block Jack Ma's Ant Group IPO?",
+      "relevant_slugs": [
+        "why-china-stopped-the-ant-groups-ipo-part-2-ants-dangerous-business-model",
+        "what-really-happened-to-jack-ma"
+      ]
+    },
+    {
+      "query": "What drove the GameStop short squeeze and the gamma swarm?",
+      "relevant_slugs": ["gamestop-the-second-surge-anatomy-of-a-gamma-swarm"]
+    },
+    {
+      "query": "Is the recent inflation spike real or just a statistical artifact in the CPI?",
+      "relevant_slugs": [
+        "the-inflation-bump-is-not-real-it-is-a-statistical-artifact",
+        "the-inflation-scare-doesnt-match-reality",
+        "there-is-no-inflation-the-june-cpi-headline-head-fake"
+      ]
+    }
+  ]
+}
