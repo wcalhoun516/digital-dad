@@ -120,6 +120,13 @@ entity-stance:
 contradictions:
 	$(PYTHON) -m analysis.contradictions $(ARGS)
 
+# Calhoun-isms (roadmap #16): the most quotable/aphoristic sentences per theme, derived from
+# data/analysis/themes.json + the corpus (run `make analyze` first). Pure/offline — no conductor,
+# no network. Writes the git-ignored data/analysis/calhoun_isms.json (embeds body excerpts);
+# surfaced in the dashboard's Calhoun-isms tab. ARGS e.g. --dry-run, --top 10, --min-score 2.
+calhoun-isms:
+	$(PYTHON) -m analysis.calhoun_isms $(ARGS)
+
 # RAG faithfulness eval baseline for Ask Dad (plan 0007). Owner-gated: the generation +
 # judge passes make conductor calls (judge defaults to paid T3), so it refuses to run if
 # the conductor is down. Writes data/analysis/rag_eval.json. ARGS e.g. --limit 5 or

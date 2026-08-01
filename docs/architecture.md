@@ -90,6 +90,17 @@ and **baseline agreement** (top-k overlap + Kendall-tau of each candidate's rank
 model — the label-free "is it safe to swap?" number). Writes `data/analysis/embedding_compare.json`
 (owner-run, not committed). Dashboard viz + a larger gold set are deferred. (Roadmap #27.)
 
+`calhoun_isms.py` — also outside the default chain; run via `make calhoun-isms`. A pure/offline
+**derived** artifact: reads `themes.json`'s per-article theme assignments plus the corpus bodies,
+scores every sentence for "quotability" with transparent heuristics (length band + aphoristic
+markers like *always/never/no one*, minus attribution/newsy-digit penalties), and emits
+`calhoun_isms.json` — the strongest aphorisms grouped by theme plus an overall board. Because the
+artifact embeds short **body excerpts**, it is **git-ignored** (regenerate on demand), the same
+posture as `reading_room.json`. Surfaced in the dashboard's **Calhoun-isms** tab (roadmap #16),
+injected via `build_dashboard`'s `/*__CALHOUN_ISMS_DATA__*/` placeholder with an empty-board stub
+in CI / fresh clones (prompting `make calhoun-isms`); each quote deep-links into the Raw Corpus tab
+via the shared `deepLinkToCorpus()` helper. No conductor/network. (Roadmap #16.)
+
 ## 3. The conductor (LLM abstraction)
 
 All model calls go to a **local OpenAI-compatible server** at `http://127.0.0.1:8080/v1`

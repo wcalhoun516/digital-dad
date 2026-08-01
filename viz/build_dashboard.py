@@ -20,6 +20,7 @@ PLACEHOLDERS = {
     "/*__GEO_LLM_DATA__*/": DATA_DIR / "analysis" / "geo_llm.json",
     "/*__READING_ROOM_DATA__*/": DATA_DIR / "analysis" / "reading_room.json",
     "/*__ENTITY_GRAPH_DATA__*/": DATA_DIR / "analysis" / "entity_graph.json",
+    "/*__CALHOUN_ISMS_DATA__*/": DATA_DIR / "analysis" / "calhoun_isms.json",
 }
 
 # When an embeddings export is missing, inline an empty stub so the dashboard
@@ -34,6 +35,9 @@ _EMPTY_DEFAULTS = {
     # Entity co-occurrence graph (#14). Committed + text-free, but CI / fresh clones that
     # haven't run `make entity-graph` inline an empty graph and the tab shows a build prompt.
     "/*__ENTITY_GRAPH_DATA__*/": '{"meta":{},"nodes":[],"edges":[],"top_pairs":[]}',
+    # Calhoun-isms (#16) embeds article-body excerpts, so it is git-ignored; CI / fresh clones
+    # inline an empty board and the tab shows a "run make calhoun-isms" prompt instead of quotes.
+    "/*__CALHOUN_ISMS_DATA__*/": '{"meta":{},"themes":[],"overall_top":[]}',
 }
 
 

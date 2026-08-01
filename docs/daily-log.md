@@ -48,38 +48,34 @@ Format:
 
 <!-- entries below -->
 
-### 2026-07-19 — scraper — ready-for-review
-- PR: https://github.com/wcalhoun516/digital-dad/pull/55
-- Source: roadmap:#8 (follow-up)
-- Summary: Roadmap **#8 follow-up** — the **manifest de-dup / repair fix** that `manifest_check`
-  (PR #18) only *reports*. New `scraper/manifest_dedup.py`: a pure, offline `dedup_articles()`
-  collapses duplicate-slug manifest entries to one canonical entry (deterministic keep-rule:
-  prefer an entry with a `content_hash`, then no query string, then https, then shorter URL, then
-  first-seen) + `backfill_hashes()` (fills a missing `content_hash` from the raw body via an
-  injected reader seam) + `format_dedup_report`, all TDD'd (**21 tests**). The CLI mirrors
-  `manifest_check`/`coverage_audit`: **report-only by default (exit 0, mutates nothing)**;
-  `--apply` writes a *separate* `<manifest>.dedup.json`, `--in-place` rewrites the manifest,
-  `--backfill-hashes` fills hashes. `make manifest-dedup` + a `scraper/README.md` section.
-  **§8.5 deepen (root cause):** the scraper upserted manifest entries by **URL**, so an article
-  rediscovered under a URL variant appended a *second* same-slug entry (the source of the 23 dup
-  slugs). Extracted `upsert_article(articles, entry)` in `scraper/__main__.py` matching on
-  **slug**, TDD'd (**+5 tests**) and wired into the scrape loop — future scrapes no longer accrete
-  dup slugs. **Real-corpus smoke (report + apply to a temp file, committed manifest untouched):**
-  199 → **176 entries** (matches #18's 23-dup-slug finding), and `--backfill-hashes` filled 146
-  entries → **0 still missing content_hash**. **Verification:** `make verify` green (**658
-  passed**, up from 632; +26 new tests across `tests/test_manifest_dedup.py` +
-  `tests/test_scraper_upsert.py`; ruff clean; dashboard builds); **no data artifact committed**
-  (`data/manifest.json` untouched — the repaired manifest is owner-run/reviewed, same posture as
-  the other report-only scraper tools). **Cold-path pick:** hot-path queue drained (only 0008
-  remains — owner-interactive compute / sibling-repo `models.yaml`); no user pins; over `main`'s
-  last-7 run history (07-16 analysis, 07-14 dashboard, 07-13/07-12 analysis, 07-11 ops, 07-08
-  scraper, 07-07 infra) **`family`/`docs` are drained and `infra`/`ops` items are all shipped
-  (#5/#6/#7 done)** — leaving **scraper** the least-recently-worked category (last 07-08) with a
-  genuinely-unstarted, real, fully-offline item: #8's deferred de-dup fix for a documented live
-  bug. **Backlog:** 2 open `daily/*` PRs (#54/#53) before this run — under 5; §3 didn't resume
-  either (both `ready-for-review`, not `in-progress`). **Deferred (in PR):** an optional
-  post-scrape self-heal that runs the de-dup automatically, and surfacing the repaired counts in
-  the dashboard.
+### 2026-07-20 — dashboard — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/56
+- Source: roadmap:#16 (deferred dashboard viz)
+- Summary: Roadmap **#16 (P3·S·analysis)** deferred **viz slice** — a new **Calhoun-isms** dashboard
+  tab that finally surfaces the already-built `analysis/calhoun_isms.py` (shipped PR #49 as "the data
+  layer a dashboard tab could later render"): Dad's most quotable/aphoristic lines, until now orphaned
+  in a git-ignored JSON nobody could see. Thin offline layer over a committed builder — the exact
+  analog of merged **#51** (network viz) and open **#53** (stance viz). New `renderCalhounIsms()`
+  draws an overall "most quotable" board + per-theme aphorism cards with a theme filter; each quote
+  **click-through deep-links to its column** in the Raw Corpus via the existing `deepLinkToCorpus()`.
+  Wired through `build_dashboard`'s `/*__CALHOUN_ISMS_DATA__*/` placeholder with an empty-board stub
+  → CI / fresh clones show a "run `make calhoun-isms`" prompt (the artifact embeds body excerpts, so
+  it's **git-ignored** like `reading_room.json` — **no data artifact committed**). **§8.5 deepen:**
+  (1) added `flex-wrap: wrap` to the desktop `nav` — the 13th tab overflowed the centered flex row
+  (+guard test); (2) **fixed a latent bug**: `make calhoun-isms` was `.PHONY`-declared but had *no
+  recipe*, so it was a silent no-op — added the one-line rule (mirrors `make contradictions`); (3)
+  architecture.md note. **TDD'd:** +9 tests (`tests/test_dashboard_calhoun_isms.py`). **Verification:**
+  `make verify` green (**641 passed**, up from 632; ruff clean; dashboard builds) + a real-corpus
+  headless browser pass (Playwright, local — artifact git-ignored) **12/12** across desktop & phone
+  (tab renders 100 quote cards, overall board present, no h-overflow, clean console, quote→corpus
+  deep-link highlights the row). **Cold-path pick:** hot-path drained (only 0008 remains —
+  owner-interactive compute / sibling-repo `models.yaml`); no user pins; the stale categories
+  (`family` last 06-03, `docs` 06-25) are **both drained** (#21/#23/#24 + #28 all shipped), and
+  `training` #27 is in flight (open #54). Among the remaining orphaned builders (`intellectual_arc`
+  #13, `contradictions` #15, `calhoun_isms` #16), #16 is the highest **family/emotional payoff** —
+  which the roadmap explicitly prioritizes post-queue. **Backlog:** 3 open `daily/*` PRs (#55/#54/#53)
+  before this run — under 5; §3 didn't resume (all `ready-for-review`, not `in-progress`).
+  **Deferred (in PR):** a "most quotable" spotlight on the Themes tab; family favorite/share.
 
 ### 2026-07-16 — analysis — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/52
