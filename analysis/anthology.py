@@ -312,10 +312,19 @@ def _chromium_render(html_path: Path, pdf_path: Path) -> None:
         try:
             page = browser.new_page()
             page.goto(Path(html_path).resolve().as_uri(), wait_until="networkidle")
+            # A muted "Page X of Y" in the bottom margin — an empty header template suppresses
+            # Chromium's default date/URL stamp.
+            footer = (
+                '<div style="width:100%;text-align:center;font-size:9px;color:#aaa;">'
+                "Page <span class='pageNumber'></span> of <span class='totalPages'></span></div>"
+            )
             page.pdf(
                 path=str(pdf_path),
                 format="Letter",
                 print_background=True,
+                display_header_footer=True,
+                header_template="<span></span>",
+                footer_template=footer,
                 margin={"top": "0.6in", "bottom": "0.6in", "left": "0.6in", "right": "0.6in"},
             )
         finally:

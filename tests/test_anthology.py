@@ -286,6 +286,17 @@ class TestRenderPdf:
         with pytest.raises(FileNotFoundError):
             render_pdf(tmp_path / "nope.html", tmp_path / "o.pdf", render=lambda h, p: None)
 
+    def test_defaults_to_chromium_seam(self, tmp_path, monkeypatch):
+        import analysis.anthology as mod
+
+        html = tmp_path / "anthology.html"
+        html.write_text("<html></html>")
+        pdf = tmp_path / "anthology.pdf"
+        seen = []
+        monkeypatch.setattr(mod, "_chromium_render", lambda h, p: seen.append((h, p)))
+        render_pdf(html, pdf)  # no render= injected → falls back to the default seam
+        assert seen == [(html, pdf)]
+
 
 class TestRunPdf:
     def test_pdf_true_generates_via_seam(self, tmp_path):
