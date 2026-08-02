@@ -298,6 +298,45 @@ def render_markdown(anthology: dict) -> str:
     return "\n".join(lines)
 
 
+def _chromium_render(html_path: Path, pdf_path: Path) -> None:
+    """Render ``html_path`` to ``pdf_path`` via headless Chromium (Playwright).
+
+    Honors the template's ``@media print`` rules (page breaks, background gold rules) so the
+    keepsake paginates properly. Kept as the default ``render_pdf`` seam so all orchestration
+    stays offline-testable; this is the only part that needs a browser.
+    """
+    from playwright.sync_api import sync_playwright
+
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        try:
+            page = browser.new_page()
+            page.goto(Path(html_path).resolve().as_uri(), wait_until="networkidle")
+            page.pdf(
+                path=str(pdf_path),
+                format="Letter",
+                print_background=True,
+                margin={"top": "0.6in", "bottom": "0.6in", "left": "0.6in", "right": "0.6in"},
+            )
+        finally:
+            browser.close()
+
+
+def render_pdf(html_path: Path, pdf_path: Path, *, render=None) -> Path:
+    """Render the print-ready anthology HTML at ``html_path`` to a PDF at ``pdf_path``.
+
+    Pure orchestration: validates the source exists, then delegates the actual rendering to
+    the ``render(html_path, pdf_path)`` seam (defaulting to headless Chromium). Returns the
+    written ``pdf_path``. Raises ``FileNotFoundError`` if the HTML is missing.
+    """
+    html_path = Path(html_path)
+    pdf_path = Path(pdf_path)
+    if not html_path.exists():
+        raise FileNotFoundError(f"anthology HTML not found: {html_path}")
+    (render or _chromium_render)(html_path, pdf_path)
+    return pdf_path
+
+
 def _load_json(path: Path, default):
     """Load JSON from ``path``; return ``default`` if it is missing or malformed."""
     path = Path(path)
@@ -327,12 +366,18 @@ def run(
     write: bool = True,
     calls_limit: int = 8,
     themes_n: int = 5,
+    pdf: bool = False,
+    pdf_render=None,
 ) -> dict:
     """Build the anthology and (unless ``write=False``) render it to disk.
 
     Deterministic and offline: reads ``themes.json`` + ``predictions.json`` (or the injected
     lists) and writes ``anthology.json`` (excerpt-level metadata, licensing-safe) plus a
     print-ready ``anthology.html`` to ``out_dir``. Makes no conductor/network/LLM calls.
+
+    When ``pdf=True`` (and ``write=True``), also renders ``anthology.pdf`` from that HTML via
+    ``render_pdf`` — the ``pdf_render`` seam defaults to headless Chromium. PDF rendering needs
+    the HTML on disk, so it is skipped in dry-run (``write=False``).
     """
     if theme_articles is None:
         theme_articles = _load_theme_articles()
@@ -345,7 +390,7 @@ def run(
     html_body = render_html(anthology)
     markdown = render_markdown(anthology)
 
-    json_file = html_file = None
+    json_file = html_file = pdf_file = None
     if write:
         out_dir = Path(out_dir)
         out_dir.mkdir(parents=True, exist_ok=True)
@@ -353,6 +398,8 @@ def run(
         json_file.write_text(json.dumps(anthology, indent=2, ensure_ascii=False) + "\n")
         html_file = out_dir / "anthology.html"
         html_file.write_text(html_body)
+        if pdf:
+            pdf_file = render_pdf(html_file, out_dir / "anthology.pdf", render=pdf_render)
 
     return {
         "anthology": anthology,
@@ -360,6 +407,7 @@ def run(
         "markdown": markdown,
         "json_file": str(json_file) if json_file else None,
         "html_file": str(html_file) if html_file else None,
+        "pdf_file": str(pdf_file) if pdf_file else None,
     }
 
 
@@ -374,19 +422,39 @@ def main(argv: list[str] | None = None) -> int:
         help="Number of dominant themes to feature as signature pieces (default: 5).",
     )
     parser.add_argument(
+        "--pdf", action="store_true",
+        help="Also render anthology.pdf from the HTML (headless Chromium; needs Playwright).",
+    )
+    parser.add_argument(
         "--dry-run", action="store_true",
         help="Print the anthology summary without writing anything to disk.",
     )
     args = parser.parse_args(argv)
 
-    result = run(
-        write=not args.dry_run, calls_limit=args.calls_limit, themes_n=args.themes
-    )
+    try:
+        result = run(
+            write=not args.dry_run,
+            calls_limit=args.calls_limit,
+            themes_n=args.themes,
+            pdf=args.pdf,
+        )
+    except Exception as exc:  # headless Chromium not installed / can't launch
+        msg = str(exc)
+        if "Executable doesn't exist" in msg or "playwright install" in msg:
+            print(f"SKIP PDF: headless Chromium unavailable ({msg.splitlines()[0]}).")
+            print("The print-ready HTML is still the interim path — 'Print → Save as PDF'.")
+            result = run(write=not args.dry_run, calls_limit=args.calls_limit, themes_n=args.themes)
+        else:
+            raise
+
     print(result["markdown"])
     if result["html_file"]:
         print(f"\nHTML saved:  {result['html_file']}")
         print(f"JSON saved:  {result['json_file']}")
-        print("Open the HTML in a browser and 'Print → Save as PDF' for a keepsake copy.")
+        if result["pdf_file"]:
+            print(f"PDF saved:   {result['pdf_file']}")
+        else:
+            print("Open the HTML in a browser and 'Print → Save as PDF' for a keepsake copy.")
     else:
         print("\nDry run — nothing written.")
     return 0
