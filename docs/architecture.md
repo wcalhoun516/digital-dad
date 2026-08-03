@@ -129,6 +129,17 @@ plus a direction filter — injected via `build_dashboard`'s `/*__CONTRADICTIONS
 with an empty-board stub in CI / fresh clones (prompting `make contradictions`). No conductor/network.
 (Roadmap #15.)
 
+`anthology.py` — a family keepsake, outside the default chain; run via `make anthology` (HTML +
+JSON) or `make anthology-pdf` (adds the PDF). Pure/offline: reads `themes.json` + `predictions.json`
+and assembles a "best of" — his vindicated **best calls** (most-committed first) and a **signature
+piece** per dominant theme — rendered as a print-ready Georgia-serif HTML document with `@media print`
+page breaks. `make anthology-pdf` turns that HTML into `anthology.pdf` via the `render_pdf(html, pdf)`
+helper, whose default seam is headless Chromium (Playwright, already a dev dep); the browser call is
+isolated behind that injectable seam so all orchestration stays offline-unit-tested (the same pattern
+as `rag_eval`/`voice_eval`/`embedding_compare`), and it degrades to a clear `SKIP PDF` (leaving the
+interim print-ready HTML) when no browser is present. The rendered `anthology.html`/`anthology.pdf`
+are **git-ignored** build outputs (regenerate on demand). No conductor/network. (Roadmap #24.)
+
 ## 3. The conductor (LLM abstraction)
 
 All model calls go to a **local OpenAI-compatible server** at `http://127.0.0.1:8080/v1`

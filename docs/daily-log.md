@@ -48,6 +48,37 @@ Format:
 
 <!-- entries below -->
 
+### 2026-08-02 — family — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/61
+- Source: roadmap:#24
+- Summary: Roadmap **#24 (P3·M·family)** — the anthology's **deferred binary-PDF slice**. The
+  builder (`analysis/anthology.py`) already shipped print-ready HTML but explicitly punted actual
+  PDF generation to "browser Print → Save as PDF." This PR closes that: a new
+  `render_pdf(html, pdf, *, render=None)` turns the print-ready HTML into an `anthology.pdf`
+  keepsake. The browser call is isolated behind an **injectable seam** (default `_chromium_render`
+  = headless Chromium via Playwright, already a dev dep) so *all* orchestration stays offline-
+  unit-tested — the same pattern as `rag_eval`/`voice_eval`/`embedding_compare`. Wired
+  `run(pdf=…, pdf_render=…)` + a `--pdf` CLI flag (degrades to a clear **SKIP PDF**, leaving the
+  interim HTML, when Chromium is absent — the `verify_responsive` pattern). Also filled two gaps:
+  the builder had **no make target** (added `make anthology` HTML/JSON + `make anthology-pdf`) and
+  **no architecture-doc note** (added one). **§8.5 deepen:** a muted "Page X of Y" PDF footer for
+  the multi-page printout, plus a default-seam fallback test. **TDD'd:** +7 tests
+  (`tests/test_anthology.py`, 25→32) — seam invocation, missing-HTML guard, default-seam fallback,
+  `run(pdf=)` integration, dry-run-skips-PDF, and `--pdf` CLI wiring. **Offline/unattended-safe:**
+  no conductor/network/LLM; the `anthology.{json,html,pdf}` build outputs are **git-ignored**
+  (regenerate on demand) so nothing regenerated lands in the PR. **Verification:** `make verify`
+  green (**733 passed**, up from 726; ruff clean; dashboard builds); real-corpus `make
+  anthology-pdf` → valid **%PDF-1.4, 151 KB, 5 pages** with rendered page-number footer.
+  **Backlog:** 3 open `daily/*` PRs before this run (#53 + skip markers #58/#59) — under 5; §3
+  didn't resume (#53 is `ready-for-review`, not `in-progress`). **Cold-path pick:** hot path
+  drained (only 0008 remains — 26c train / 26d live / 26f decide all owner-interactive compute);
+  no user pins. **family** is the least-recently-worked category (last 2026-06-03, absent from the
+  last 7 runs) and #24 was its one genuinely-unstarted, fully-offline, high-emotional-payoff slice
+  (a printable keepsake) — I confirmed the sibling family items are drained (`reading_room` #21,
+  On-This-Day autosend #22, `year_in_review` #23 all on `main`) and that #24's builder existed but
+  had *not* built a real PDF. **Deferred:** an optional cover image / dedication page, and folding a
+  signature Calhoun-ism epigraph per theme into the anthology.
+
 ### 2026-08-01 — dashboard — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/60
 - Source: roadmap:#15 (deferred dashboard viz) + red-main regression fix
