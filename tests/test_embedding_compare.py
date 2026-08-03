@@ -418,3 +418,14 @@ class TestCheckCLI:
         # --check must run fully offline: no --models, no conductor reachability.
         q, m = self._write(tmp_path, [{"query": "hi?", "relevant_slugs": ["a"]}])
         assert main(["--check", "--queries", str(q), "--manifest", str(m)]) == 0
+
+
+class TestCommittedGoldSet:
+    """Guard: the checked-in eval/embedding_queries.json stays valid against the
+    checked-in manifest, so a typo'd / renamed slug can't silently score 0."""
+
+    def test_committed_gold_set_validates_against_committed_manifest(self):
+        queries = load_queries()  # eval/embedding_queries.json
+        corpus_slugs = load_corpus_slugs()  # data/manifest.json
+        assert queries, "expected a non-empty committed gold query set"
+        assert validate_queries(queries, corpus_slugs) == []
