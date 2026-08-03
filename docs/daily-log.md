@@ -48,6 +48,40 @@ Format:
 
 <!-- entries below -->
 
+### 2026-08-03 — training — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/62
+- Source: roadmap:#27
+- Summary: Roadmap **#27 (P3·M·training)** — the embedding-model comparison harness, its
+  **deferred "curated gold query set" slice**. The `analysis/embedding_compare.py` builder shipped
+  (three #27 commits) but explicitly ships only a "deliberately small starter set" (5 queries) and
+  its hand-authored `relevant_slugs` were **unchecked** — a typo'd / renamed slug silently scores 0
+  in a live retrieval pass rather than erroring, and with no gold labels the harness's retrieval
+  metrics (precision@k / recall@k / MRR) are all zero. This slice closes that gap **fully offline**:
+  (1) new pure `validate_queries(queries, corpus_slugs)` (unknown slug, blank query, empty /
+  duplicate labels, duplicate query text — 1-based messages); (2) a `load_corpus_slugs()` reading the
+  committed **text-free** `data/manifest.json` + an offline `--check` CLI mode (runs *before* the
+  conductor gate, so it works unattended on CI / a fresh clone with no candidate models and no
+  conductor) + `make embedding-queries-check`; (3) **expanded the gold set 5 → 13 queries** across
+  Dad's major beats (EU Hamiltonian, Buffett/value, Ant Group, GameStop, CPI-artifact, CHIPS Act,
+  Fed funds rate, tariffs/recession, crypto, China Covid-data, Alibaba value-trap, Tesla/S&P 500,
+  China Japanification), every `relevant_slug` mapped to a real manifest article. **§8.5 deepen:** a
+  committed-set regression guard test (the checked-in gold set must stay valid against the checked-in
+  manifest) + an architecture.md note on the `--check` guard. **TDD'd:** +14 tests
+  (`tests/test_embedding_compare.py`, 40→54) — validator cases, the manifest loader, `--check` exit
+  codes / offline behavior, and the committed-set guard. **Offline / unattended-safe:** no conductor,
+  network, or LLM; the gold set is text-free (queries + public slugs), committed like
+  `eval/questions.json`; the harness output `data/analysis/embedding_compare.json` (a regenerated
+  artifact) is **not** touched. **Verification:** `make verify` green — **740 passed** (up from 726 on
+  main; +14), ruff clean, dashboard builds; `make embedding-queries-check` → *"13 queries; every
+  relevant_slug resolves to one of 176 corpus articles."* **Backlog:** 4 open `daily/*` PRs before this
+  run (#61 anthology + #53 stance-viz + skip markers #58/#59) — under 5; §3 didn't resume (#61/#53 are
+  `ready-for-review`, not `in-progress`). **Cold-path pick:** hot path drained (only 0008 remains —
+  26c train / 26d live / 26e sibling-repo `models.yaml` / 26f decide, all owner-interactive); no user
+  pins. **training** is the least-recently-worked category (last 2026-06-20, absent from the last 7
+  runs) and #27 had a genuinely-unstarted, fully-offline deferred slice; #25 shipped (plan 0007), #26
+  is owner-blocked. **Deferred:** the #27 dashboard viz, and semi-automating gold-label candidates
+  from the committed theme/entity artifacts.
+
 ### 2026-08-01 — dashboard — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/60
 - Source: roadmap:#15 (deferred dashboard viz) + red-main regression fix
