@@ -26,6 +26,7 @@ from analysis.embedding_compare import (
     reciprocal_rank,
     retrieval_metrics,
     unknown_models,
+    validate_queries,
     write_report,
 )
 
@@ -324,3 +325,56 @@ class TestLoadQueries:
 
     def test_missing_file_returns_empty(self, tmp_path):
         assert load_queries(tmp_path / "nope.json") == []
+
+
+class TestValidateQueries:
+    corpus = {"a", "b", "c"}
+
+    def test_clean_set_has_no_problems(self):
+        qs = [
+            {"query": "first?", "relevant_slugs": ["a"]},
+            {"query": "second?", "relevant_slugs": ["b", "c"]},
+        ]
+        assert validate_queries(qs, self.corpus) == []
+
+    def test_empty_set_is_a_problem(self):
+        problems = validate_queries([], self.corpus)
+        assert len(problems) == 1
+        assert "no queries" in problems[0].lower()
+
+    def test_unknown_slug_is_reported(self):
+        qs = [{"query": "q?", "relevant_slugs": ["a", "ghost"]}]
+        problems = validate_queries(qs, self.corpus)
+        assert any("ghost" in p for p in problems)
+
+    def test_blank_query_text_is_reported(self):
+        qs = [{"query": "   ", "relevant_slugs": ["a"]}]
+        problems = validate_queries(qs, self.corpus)
+        assert any("query" in p.lower() and "empty" in p.lower() for p in problems)
+
+    def test_empty_relevant_slugs_is_reported(self):
+        qs = [{"query": "q?", "relevant_slugs": []}]
+        problems = validate_queries(qs, self.corpus)
+        assert any("relevant_slugs" in p for p in problems)
+
+    def test_duplicate_slug_within_a_query_is_reported(self):
+        qs = [{"query": "q?", "relevant_slugs": ["a", "a"]}]
+        problems = validate_queries(qs, self.corpus)
+        assert any("duplicate" in p.lower() for p in problems)
+
+    def test_duplicate_query_text_is_reported(self):
+        qs = [
+            {"query": "same?", "relevant_slugs": ["a"]},
+            {"query": "same?", "relevant_slugs": ["b"]},
+        ]
+        problems = validate_queries(qs, self.corpus)
+        assert any("duplicate query" in p.lower() for p in problems)
+
+    def test_problem_names_the_offending_index(self):
+        qs = [
+            {"query": "ok?", "relevant_slugs": ["a"]},
+            {"query": "q?", "relevant_slugs": ["ghost"]},
+        ]
+        problems = validate_queries(qs, self.corpus)
+        # the bad entry is index 1 (queries are 1-based in the message)
+        assert any("2" in p for p in problems)

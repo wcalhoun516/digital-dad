@@ -314,6 +314,50 @@ def unknown_models(requested: list[str], available: list[str]) -> list[str]:
     return missing
 
 
+def validate_queries(queries: list[dict], corpus_slugs: set[str]) -> list[str]:
+    """Return human-readable problems with a gold query set (empty list = valid).
+
+    Purely offline structural validation against the real corpus slug set (from
+    ``data/manifest.json``), so a typo'd / renamed ``relevant_slug`` is caught up
+    front instead of silently scoring 0 in a live retrieval pass. Checks: the set
+    is non-empty; each entry has non-blank ``query`` text and a non-empty
+    ``relevant_slugs`` list; every slug is a known corpus slug; no duplicate slug
+    within a query; no duplicate ``query`` text across entries. Queries are
+    reported 1-based to match how a reviewer reads the file.
+    """
+    if not queries:
+        return ["gold query set has no queries"]
+
+    problems: list[str] = []
+    seen_queries: dict[str, int] = {}
+    for i, entry in enumerate(queries, 1):
+        query = entry.get("query")
+        if not isinstance(query, str) or not query.strip():
+            problems.append(f"query {i}: empty or non-string query text")
+        else:
+            if query in seen_queries:
+                problems.append(
+                    f"query {i}: duplicate query text (also query {seen_queries[query]})"
+                )
+            else:
+                seen_queries[query] = i
+
+        slugs = entry.get("relevant_slugs")
+        if not isinstance(slugs, list) or not slugs:
+            problems.append(f"query {i}: relevant_slugs is empty or not a list")
+            continue
+        seen_slugs: set[str] = set()
+        for slug in slugs:
+            if slug in seen_slugs:
+                problems.append(f"query {i}: duplicate relevant_slug {slug!r}")
+            seen_slugs.add(slug)
+            if slug not in corpus_slugs:
+                problems.append(
+                    f"query {i}: relevant_slug {slug!r} is not a corpus slug"
+                )
+    return problems
+
+
 def load_queries(path: Path = QUERIES_PATH) -> list[dict]:
     """Load the gold query set (``{queries: [{query, relevant_slugs}]}``).
 
