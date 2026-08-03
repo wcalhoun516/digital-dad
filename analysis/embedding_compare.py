@@ -39,6 +39,9 @@ from .utils import DATA_DIR, clean_text, load_articles
 # Repo-root-relative fixture (source-controlled input, not a generated artifact).
 QUERIES_PATH = Path(__file__).resolve().parent.parent / "eval" / "embedding_queries.json"
 REPORT_PATH = DATA_DIR / "analysis" / "embedding_compare.json"
+# Committed, text-free source of the corpus slug set — lets ``--check`` validate the
+# gold set on a fresh clone / CI without the gitignored raw articles.
+MANIFEST_PATH = DATA_DIR / "manifest.json"
 
 # The pinned production embedder — the default baseline every candidate is
 # measured against (decision D2).
@@ -358,6 +361,13 @@ def validate_queries(queries: list[dict], corpus_slugs: set[str]) -> list[str]:
     return problems
 
 
+def load_corpus_slugs(path: Path = MANIFEST_PATH) -> set[str]:
+    """Slugs of every article in the committed manifest (offline; no raw corpus)."""
+    path = Path(path)
+    data = json.loads(path.read_text())
+    return {a.get("slug") for a in data.get("articles", []) if a.get("slug")}
+
+
 def load_queries(path: Path = QUERIES_PATH) -> list[dict]:
     """Load the gold query set (``{queries: [{query, relevant_slugs}]}``).
 
@@ -451,6 +461,13 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--queries", type=Path, default=QUERIES_PATH,
                         help="gold query set (default: eval/embedding_queries.json); "
                              "absent → agreement-only mode")
+    parser.add_argument("--check", action="store_true",
+                        help="offline: validate the gold query set against the committed "
+                             "manifest (every relevant_slug must resolve to a corpus "
+                             "article) and exit — no conductor / no embedding")
+    parser.add_argument("--manifest", type=Path, default=MANIFEST_PATH,
+                        help="corpus manifest for --check slug validation "
+                             "(default: data/manifest.json)")
     parser.add_argument("--output", type=Path, default=REPORT_PATH,
                         help="report path (default: data/analysis/embedding_compare.json)")
     parser.add_argument("--ks", type=int, nargs="+", default=list(DEFAULT_KS),
@@ -458,6 +475,23 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--limit", type=int, default=None,
                         help="cap the corpus to N articles this run (faster smoke test)")
     args = parser.parse_args(argv)
+
+    # Offline gold-set validation — runs before the model/conductor requirements so
+    # it works unattended (CI, fresh clone) with no candidate models and no conductor.
+    if args.check:
+        corpus_slugs = load_corpus_slugs(args.manifest)
+        queries = load_queries(args.queries)
+        problems = validate_queries(queries, corpus_slugs)
+        if problems:
+            print(f"Gold query set INVALID — {len(problems)} problem(s):")
+            for p in problems:
+                print(f"  - {p}")
+            return 1
+        print(
+            f"Gold query set OK: {len(queries)} queries; every relevant_slug resolves "
+            f"to one of {len(corpus_slugs)} corpus articles."
+        )
+        return 0
 
     model_ids = list(args.models or [])
     if args.baseline not in model_ids:

@@ -17,7 +17,9 @@ from analysis.embedding_compare import (
     aggregate,
     compare_models,
     kendall_tau,
+    load_corpus_slugs,
     load_queries,
+    main,
     mrr,
     overlap_at_k,
     precision_at_k,
@@ -378,3 +380,41 @@ class TestValidateQueries:
         problems = validate_queries(qs, self.corpus)
         # the bad entry is index 1 (queries are 1-based in the message)
         assert any("2" in p for p in problems)
+
+
+class TestLoadCorpusSlugs:
+    def test_reads_slugs_from_manifest(self, tmp_path):
+        m = tmp_path / "manifest.json"
+        m.write_text(json.dumps({"articles": [{"slug": "a"}, {"slug": "b"}]}))
+        assert load_corpus_slugs(m) == {"a", "b"}
+
+    def test_skips_entries_without_a_slug(self, tmp_path):
+        m = tmp_path / "manifest.json"
+        m.write_text(json.dumps({"articles": [{"slug": "a"}, {"title": "no slug"}]}))
+        assert load_corpus_slugs(m) == {"a"}
+
+
+class TestCheckCLI:
+    def _write(self, tmp_path, queries):
+        q = tmp_path / "queries.json"
+        q.write_text(json.dumps({"queries": queries}))
+        m = tmp_path / "manifest.json"
+        m.write_text(json.dumps({"articles": [{"slug": "a"}, {"slug": "b"}]}))
+        return q, m
+
+    def test_check_returns_0_on_valid_set(self, tmp_path, capsys):
+        q, m = self._write(tmp_path, [{"query": "hi?", "relevant_slugs": ["a"]}])
+        rc = main(["--check", "--queries", str(q), "--manifest", str(m)])
+        assert rc == 0
+        assert "OK" in capsys.readouterr().out
+
+    def test_check_returns_1_and_lists_problems_on_invalid_set(self, tmp_path, capsys):
+        q, m = self._write(tmp_path, [{"query": "hi?", "relevant_slugs": ["ghost"]}])
+        rc = main(["--check", "--queries", str(q), "--manifest", str(m)])
+        assert rc == 1
+        assert "ghost" in capsys.readouterr().out
+
+    def test_check_does_not_touch_the_conductor(self, tmp_path):
+        # --check must run fully offline: no --models, no conductor reachability.
+        q, m = self._write(tmp_path, [{"query": "hi?", "relevant_slugs": ["a"]}])
+        assert main(["--check", "--queries", str(q), "--manifest", str(m)]) == 0
