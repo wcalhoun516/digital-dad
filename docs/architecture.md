@@ -88,7 +88,11 @@ It ranks the corpus per query with each candidate model and reports two things: 
 (precision@k / recall@k / MRR against the committed, text-free gold set `eval/embedding_queries.json`)
 and **baseline agreement** (top-k overlap + Kendall-tau of each candidate's rankings vs. the pinned
 model — the label-free "is it safe to swap?" number). Writes `data/analysis/embedding_compare.json`
-(owner-run, not committed). Dashboard viz + a larger gold set are deferred. (Roadmap #27.)
+(owner-run, not committed). The gold set's hand-authored `relevant_slugs` are guarded offline by
+`make embedding-queries-check` (`python -m analysis.embedding_compare --check`): it validates every
+slug against the committed `data/manifest.json` — no conductor, no embedding — so a typo'd / renamed
+slug fails loudly instead of silently scoring 0 in a live pass. A dashboard viz is still deferred.
+(Roadmap #27.)
 
 `calhoun_isms.py` — also outside the default chain; run via `make calhoun-isms`. A pure/offline
 **derived** artifact: reads `themes.json`'s per-article theme assignments plus the corpus bodies,
