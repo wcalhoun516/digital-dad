@@ -4,7 +4,7 @@ PYTHON := .venv/bin/python
 # ruff findings (broadening the scope is a follow-up roadmap item, #1-3/cleanup).
 LINT_PATHS := tests
 
-.PHONY: scrape manifest-check manifest-dedup coverage-audit analyze training dashboard all serve share search on-this-day send-on-this-day year-in-review anthology anthology-pdf adjudicate backfill-verdicts entity-graph calhoun-isms contradictions rag-eval voice-eval voice-trials clean test lint fmt lint-json hooks verify verify-responsive
+.PHONY: scrape manifest-check manifest-dedup coverage-audit analyze training dashboard all serve share search on-this-day send-on-this-day adjudicate backfill-verdicts entity-graph calhoun-isms contradictions rag-eval voice-eval voice-trials embedding-compare embedding-queries-check clean test lint fmt lint-json hooks verify verify-responsive
 
 scrape:
 	$(PYTHON) -m scraper $(ARGS)
@@ -153,6 +153,12 @@ rag-eval:
 # --limit 40. Run deliberately (NOT from automation).
 embedding-compare:
 	$(PYTHON) -m analysis.embedding_compare $(ARGS)
+
+# Offline validity check of the gold query set (eval/embedding_queries.json): every
+# relevant_slug must resolve to a corpus article in data/manifest.json. No conductor /
+# no embedding — safe to run anywhere (CI, fresh clone). Exit 1 on any problem.
+embedding-queries-check:
+	$(PYTHON) -m analysis.embedding_compare --check
 
 # Voice-fidelity blind-A/B eval for the Geo-LLM fine-tune (plan 0008 step 26d). Owner-gated:
 # the judge pass makes conductor calls (defaults to paid T3), so it refuses to run if the

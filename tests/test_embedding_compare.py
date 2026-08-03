@@ -17,7 +17,9 @@ from analysis.embedding_compare import (
     aggregate,
     compare_models,
     kendall_tau,
+    load_corpus_slugs,
     load_queries,
+    main,
     mrr,
     overlap_at_k,
     precision_at_k,
@@ -26,6 +28,7 @@ from analysis.embedding_compare import (
     reciprocal_rank,
     retrieval_metrics,
     unknown_models,
+    validate_queries,
     write_report,
 )
 
@@ -324,3 +327,105 @@ class TestLoadQueries:
 
     def test_missing_file_returns_empty(self, tmp_path):
         assert load_queries(tmp_path / "nope.json") == []
+
+
+class TestValidateQueries:
+    corpus = {"a", "b", "c"}
+
+    def test_clean_set_has_no_problems(self):
+        qs = [
+            {"query": "first?", "relevant_slugs": ["a"]},
+            {"query": "second?", "relevant_slugs": ["b", "c"]},
+        ]
+        assert validate_queries(qs, self.corpus) == []
+
+    def test_empty_set_is_a_problem(self):
+        problems = validate_queries([], self.corpus)
+        assert len(problems) == 1
+        assert "no queries" in problems[0].lower()
+
+    def test_unknown_slug_is_reported(self):
+        qs = [{"query": "q?", "relevant_slugs": ["a", "ghost"]}]
+        problems = validate_queries(qs, self.corpus)
+        assert any("ghost" in p for p in problems)
+
+    def test_blank_query_text_is_reported(self):
+        qs = [{"query": "   ", "relevant_slugs": ["a"]}]
+        problems = validate_queries(qs, self.corpus)
+        assert any("query" in p.lower() and "empty" in p.lower() for p in problems)
+
+    def test_empty_relevant_slugs_is_reported(self):
+        qs = [{"query": "q?", "relevant_slugs": []}]
+        problems = validate_queries(qs, self.corpus)
+        assert any("relevant_slugs" in p for p in problems)
+
+    def test_duplicate_slug_within_a_query_is_reported(self):
+        qs = [{"query": "q?", "relevant_slugs": ["a", "a"]}]
+        problems = validate_queries(qs, self.corpus)
+        assert any("duplicate" in p.lower() for p in problems)
+
+    def test_duplicate_query_text_is_reported(self):
+        qs = [
+            {"query": "same?", "relevant_slugs": ["a"]},
+            {"query": "same?", "relevant_slugs": ["b"]},
+        ]
+        problems = validate_queries(qs, self.corpus)
+        assert any("duplicate query" in p.lower() for p in problems)
+
+    def test_problem_names_the_offending_index(self):
+        qs = [
+            {"query": "ok?", "relevant_slugs": ["a"]},
+            {"query": "q?", "relevant_slugs": ["ghost"]},
+        ]
+        problems = validate_queries(qs, self.corpus)
+        # the bad entry is index 1 (queries are 1-based in the message)
+        assert any("2" in p for p in problems)
+
+
+class TestLoadCorpusSlugs:
+    def test_reads_slugs_from_manifest(self, tmp_path):
+        m = tmp_path / "manifest.json"
+        m.write_text(json.dumps({"articles": [{"slug": "a"}, {"slug": "b"}]}))
+        assert load_corpus_slugs(m) == {"a", "b"}
+
+    def test_skips_entries_without_a_slug(self, tmp_path):
+        m = tmp_path / "manifest.json"
+        m.write_text(json.dumps({"articles": [{"slug": "a"}, {"title": "no slug"}]}))
+        assert load_corpus_slugs(m) == {"a"}
+
+
+class TestCheckCLI:
+    def _write(self, tmp_path, queries):
+        q = tmp_path / "queries.json"
+        q.write_text(json.dumps({"queries": queries}))
+        m = tmp_path / "manifest.json"
+        m.write_text(json.dumps({"articles": [{"slug": "a"}, {"slug": "b"}]}))
+        return q, m
+
+    def test_check_returns_0_on_valid_set(self, tmp_path, capsys):
+        q, m = self._write(tmp_path, [{"query": "hi?", "relevant_slugs": ["a"]}])
+        rc = main(["--check", "--queries", str(q), "--manifest", str(m)])
+        assert rc == 0
+        assert "OK" in capsys.readouterr().out
+
+    def test_check_returns_1_and_lists_problems_on_invalid_set(self, tmp_path, capsys):
+        q, m = self._write(tmp_path, [{"query": "hi?", "relevant_slugs": ["ghost"]}])
+        rc = main(["--check", "--queries", str(q), "--manifest", str(m)])
+        assert rc == 1
+        assert "ghost" in capsys.readouterr().out
+
+    def test_check_does_not_touch_the_conductor(self, tmp_path):
+        # --check must run fully offline: no --models, no conductor reachability.
+        q, m = self._write(tmp_path, [{"query": "hi?", "relevant_slugs": ["a"]}])
+        assert main(["--check", "--queries", str(q), "--manifest", str(m)]) == 0
+
+
+class TestCommittedGoldSet:
+    """Guard: the checked-in eval/embedding_queries.json stays valid against the
+    checked-in manifest, so a typo'd / renamed slug can't silently score 0."""
+
+    def test_committed_gold_set_validates_against_committed_manifest(self):
+        queries = load_queries()  # eval/embedding_queries.json
+        corpus_slugs = load_corpus_slugs()  # data/manifest.json
+        assert queries, "expected a non-empty committed gold query set"
+        assert validate_queries(queries, corpus_slugs) == []
