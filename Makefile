@@ -79,6 +79,18 @@ send-on-this-day:
 year-in-review:
 	$(PYTHON) -m analysis.year_in_review $(ARGS)
 
+# Printable "best of" anthology keepsake (roadmap #24). Deterministic + offline (no conductor,
+# no network): builds from data/analysis/{themes,predictions}.json and writes the print-ready
+# data/analysis/anthology.html (+ anthology.json). ARGS e.g. --dry-run, --calls-limit 10.
+anthology:
+	$(PYTHON) -m analysis.anthology $(ARGS)
+
+# As `anthology`, but also renders data/analysis/anthology.pdf from that HTML via headless
+# Chromium (Playwright). Needs a browser, so it's a deliberate/local target (not automation):
+# if Chromium is unavailable it prints SKIP PDF and still leaves the print-ready HTML.
+anthology-pdf:
+	$(PYTHON) -m analysis.anthology --pdf $(ARGS)
+
 # Interactive: walk pending predictions, confirm/override the advisory LLM verdict.
 # Human verdicts win and are written back after each ruling (resumable). ARGS e.g. --limit 20.
 adjudicate:
