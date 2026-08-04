@@ -187,8 +187,11 @@ def build_stance(
         if not year:
             continue
         body = article.get("body", "")
+        # aliases=False: this module searches the body for each entity's *surface* name
+        # (mentioning_sentences below), so canonicalizing here would miss variant mentions
+        # ("Fed" vs "the Federal Reserve"). Alias-aware stance is a separate slice.
         for name, entity_type in article_entities(
-            record, min_mentions=min_mentions, exclude=resolved_exclude
+            record, min_mentions=min_mentions, exclude=resolved_exclude, aliases=False
         ):
             sentences = mentioning_sentences(clean_text(body), name)
             if not sentences:

@@ -51,6 +51,10 @@ ALIASES: dict[str, str] = {
 }
 
 _LEADING_THE = re.compile(r"^the\s+", re.IGNORECASE)
+# Trailing possessive: straight or curly apostrophe + optional s. The extractor's own
+# normalizer only strips the *straight* "'s", so "Federal Reserve’s" (curly) leaks through as a
+# separate entity; catch both here.
+_POSSESSIVE = re.compile(r"[’']s?$")
 
 
 def _strip_leading_the(name: str) -> str:
@@ -59,15 +63,22 @@ def _strip_leading_the(name: str) -> str:
     return stripped if stripped else name
 
 
+def _strip_possessive(name: str) -> str:
+    """Drop a trailing possessive (``'s`` / ``’s`` / apostrophe), unless it empties the name."""
+    stripped = _POSSESSIVE.sub("", name).strip()
+    return stripped if stripped else name
+
+
 def canonicalize(name: str) -> str:
     """Map an extracted entity surface form onto its canonical display name.
 
-    Whitespace-normalizes, strips a leading "the", then applies the curated :data:`ALIASES`
-    table (case-insensitive). Unknown names pass through with original casing preserved. Blank
-    input returns ``""``.
+    Whitespace-normalizes, strips a trailing possessive and a leading "the", then applies the
+    curated :data:`ALIASES` table (case-insensitive). Unknown names pass through with original
+    casing preserved. Blank input returns ``""``.
     """
     name = re.sub(r"\s+", " ", name or "").strip()
     if not name:
         return ""
+    name = _strip_possessive(name)
     name = _strip_leading_the(name).strip()
     return ALIASES.get(name.lower(), name)

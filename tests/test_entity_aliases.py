@@ -78,6 +78,23 @@ class TestPassthrough:
         assert ea.canonicalize("   ") == ""
 
 
+class TestPossessive:
+    @pytest.mark.parametrize(
+        "raw,expected",
+        [
+            ("Federal Reserve’s", "Federal Reserve"),  # curly apostrophe
+            ("Federal Reserve's", "Federal Reserve"),        # straight apostrophe
+            ("Fed’s", "Federal Reserve"),               # possessive + alias
+            ("Tesla's", "Tesla"),
+        ],
+    )
+    def test_strips_trailing_possessive(self, raw, expected):
+        assert ea.canonicalize(raw) == expected
+
+    def test_bare_apostrophe_name_is_not_emptied(self):
+        assert ea.canonicalize("'s") == "'s"
+
+
 class TestAliasMapHygiene:
     def test_canonical_values_are_stable_under_reapplication(self):
         # Canonicalizing an already-canonical name must be a fixed point (idempotent),
