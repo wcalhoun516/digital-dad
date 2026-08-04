@@ -48,6 +48,35 @@ Format:
 
 <!-- entries below -->
 
+### 2026-08-04 — analysis — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/63
+- Source: roadmap:#14
+- Summary: Roadmap **#14 (analysis)** — the long-deferred **entity alias-merge** gap. The spaCy
+  extractor emits many spellings for one subject (`the Federal Reserve` / `The Federal Reserve` /
+  `Federal Reserve` / `Fed`; `Covid`/`COVID`; `Treasury`/`Treasurys`; `Powell`/`Jerome Powell`;
+  `Ma`/`Jack Ma`), so downstream builders split a single subject across several nodes/trajectories.
+  This slice adds one shared, transparent, owner-editable canonicalizer and wires it into **two**
+  builders. (1) New pure/offline `analysis/entity_aliases.py`: `canonicalize(name)` whitespace-
+  normalizes, strips a trailing possessive (straight **and** curly `'s` — the extractor only strips
+  straight) + a single leading "the", then applies a curated corpus-specific ALIAS map (lowercased
+  keys, every value a fixed point). (2) `entity_graph.py`: aliased default-on with `--no-aliases`
+  off-switch + `aliases` meta param; `entity_nodes` collapses per-article by canonical id *before*
+  global aggregation so `article_count` stays a true distinct-article count; exclude matches the
+  canonical name. Regenerated `entity_graph.json`: 4 Fed nodes → 1 (69 articles, degree 28),
+  201→192 edges. **§8.5 deepen:** extended the same seam to `entity_stance.py` — because it searches
+  bodies for surface names, it searches with each *raw* name but groups results under the canonical
+  id and de-dups sentences that name two variants (set union) so a sentence scores once; regenerated
+  `entity_stance.json` (Fed variants → one 63-article trajectory). Architecture.md updated for both
+  builders. **TDD'd:** +32 tests (`tests/test_entity_aliases.py`: strip/alias/possessive/passthrough
+  + fixed-point & lowercase-key hygiene) plus alias-merge sections in `test_entity_graph.py` and
+  `test_entity_stance.py`. **Offline / unattended-safe:** no conductor/network/LLM; both regenerated
+  artifacts are text-free (names/years/scores only) and read committed `entities.json`. **Verification:**
+  `make verify` green — **789 passed**, ruff clean, dashboard builds. **Backlog:** open `daily/*` PRs
+  under 5; §3 didn't resume any in-progress PR. **Cold-path pick:** hot path drained, no user pins;
+  **analysis** was the least-recently-worked viable category and #14's alias-merge was the most-deferred
+  item (raised across #14/#15/#17 runs). **Deferred:** aliasing `contradictions`, and a dashboard viz
+  for the stance trajectories (PR #53).
+
 ### 2026-08-03 — training — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/62
 - Source: roadmap:#27
