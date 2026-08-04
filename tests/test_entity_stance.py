@@ -109,7 +109,7 @@ def entities_data():
 
 def test_build_stance_tracks_yearly_trajectory(articles, entities_data):
     result = es.build_stance(articles, entities_data, min_articles=1)
-    fed = next(e for e in result["entities"] if e["name"] == "Fed")
+    fed = next(e for e in result["entities"] if e["name"] == "Federal Reserve")
     years = {p["year"]: p["mean_stance"] for p in fed["trajectory"]}
     assert years["2020"] == 1.0
     assert years["2022"] == -1.0
@@ -118,10 +118,10 @@ def test_build_stance_tracks_yearly_trajectory(articles, entities_data):
 
 def test_build_stance_trend_is_cooling(articles, entities_data):
     result = es.build_stance(articles, entities_data, min_articles=1)
-    fed = next(e for e in result["entities"] if e["name"] == "Fed")
+    fed = next(e for e in result["entities"] if e["name"] == "Federal Reserve")
     assert fed["trend"] == "cooling"
     assert fed["trend_delta"] == -2.0
-    assert any(e["name"] == "Fed" for e in result["cooling"])
+    assert any(e["name"] == "Federal Reserve" for e in result["cooling"])
 
 
 def test_build_stance_excludes_byline_boilerplate(articles, entities_data):
@@ -168,7 +168,7 @@ def test_build_stance_overall_is_sentence_weighted():
         {"slug": "a2", "date": "2021-01-01", "orgs": [["ECB", 3]], "people": []},
     ]}
     result = es.build_stance(articles, entities_data, min_articles=1)
-    ecb = next(e for e in result["entities"] if e["name"] == "ECB")
+    ecb = next(e for e in result["entities"] if e["name"] == "European Central Bank")
     assert ecb["overall_stance"] == -0.5
 
 
@@ -176,7 +176,7 @@ def test_build_stance_overall_is_sentence_weighted():
 
 def test_render_markdown_names_the_entity_and_trend(articles, entities_data):
     md = es.render_markdown(es.build_stance(articles, entities_data, min_articles=1))
-    assert "Fed" in md
+    assert "Federal Reserve" in md
     assert "cooling" in md.lower()
 
 
@@ -184,3 +184,60 @@ def test_run_write_false_returns_without_io(articles, entities_data):
     result = es.run(articles=articles, entities_data=entities_data,
                     min_articles=1, write=False)
     assert result["meta"]["n_entities"] == 1
+
+
+# --- alias canonicalization (roadmap #14 alias-merge slice) -----------------
+
+def test_stance_merges_surface_variants_across_articles():
+    # a1 names the Fed as "Fed"; a2 as "the Federal Reserve" -> one canonical trajectory.
+    articles = [
+        {"slug": "a1", "date": "2020-01-01", "body": "The Fed delivered a success."},
+        {"slug": "a2", "date": "2022-01-01",
+         "body": "the Federal Reserve was a disaster."},
+    ]
+    entities_data = {"per_article": [
+        {"slug": "a1", "date": "2020-01-01", "orgs": [["Fed", 4]], "people": []},
+        {"slug": "a2", "date": "2022-01-01",
+         "orgs": [["the Federal Reserve", 4]], "people": []},
+    ]}
+    result = es.build_stance(articles, entities_data, min_articles=1)
+    names = [e["name"] for e in result["entities"]]
+    assert names == ["Federal Reserve"]
+    fed = result["entities"][0]
+    assert fed["article_count"] == 2
+    assert {p["year"] for p in fed["trajectory"]} == {"2020", "2022"}
+
+
+def test_stance_dedups_a_sentence_naming_two_variants():
+    # One sentence names both "Fed" and "the Federal Reserve": it must score once, not twice.
+    articles = [{"slug": "a1", "date": "2020-01-01",
+                 "body": "The Fed and the Federal Reserve delivered a success."}]
+    entities_data = {"per_article": [
+        {"slug": "a1", "date": "2020-01-01",
+         "orgs": [["Fed", 2], ["the Federal Reserve", 2]], "people": []}]}
+    result = es.build_stance(articles, entities_data, min_articles=1)
+    fed = next(e for e in result["entities"] if e["name"] == "Federal Reserve")
+    assert fed["total_sentences"] == 1
+
+
+def test_stance_aliases_off_keeps_variants_separate():
+    articles = [
+        {"slug": "a1", "date": "2020-01-01", "body": "The Fed delivered a success."},
+        {"slug": "a2", "date": "2022-01-01",
+         "body": "the Federal Reserve was a disaster."},
+    ]
+    entities_data = {"per_article": [
+        {"slug": "a1", "date": "2020-01-01", "orgs": [["Fed", 4]], "people": []},
+        {"slug": "a2", "date": "2022-01-01",
+         "orgs": [["the Federal Reserve", 4]], "people": []},
+    ]}
+    result = es.build_stance(articles, entities_data, min_articles=1, aliases=False)
+    names = {e["name"] for e in result["entities"]}
+    assert names == {"Fed", "the Federal Reserve"}
+
+
+def test_stance_records_aliases_param(articles, entities_data):
+    on = es.build_stance(articles, entities_data, min_articles=1)
+    assert on["meta"]["params"]["aliases"] is True
+    off = es.build_stance(articles, entities_data, min_articles=1, aliases=False)
+    assert off["meta"]["params"]["aliases"] is False

@@ -70,8 +70,9 @@ Federal Reserve` / `Fed` / `Federal Reserve's` → `Federal Reserve`; `Powell` �
 `Treasurys` → `Treasury`; `BLS` → `Bureau of Labor Statistics`) plus leading-"the"/possessive
 stripping — so one subject stops splitting across nodes (`--no-aliases` to disable). Merging
 happens per-article, so `article_count` stays a true distinct-article count. `entity_stance.py`
-does **not** alias (it searches bodies for each surface name; alias-aware stance is a later slice).
-No conductor/network. Surfaced in the dashboard's **Network** tab — a D3 force-directed graph
+aliases too (`--no-aliases` to disable): it searches bodies with each *raw* surface name but groups
+the results under the canonical id, de-duping sentences that name two variants so a sentence scores
+once. No conductor/network. Surfaced in the dashboard's **Network** tab — a D3 force-directed graph
 injected via `build_dashboard`'s `/*__ENTITY_GRAPH_DATA__*/` placeholder (empty-graph stub in
 CI / fresh clones, prompting `make entity-graph`); it re-fits on viewport change like the other
 pixel-sized chart tabs. (Roadmap #14.)
