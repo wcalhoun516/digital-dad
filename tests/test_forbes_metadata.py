@@ -193,6 +193,64 @@ class TestNormalizeByline:
         )
 
 
+class TestNormalizedVariants:
+    """`bylines_normalized`: the distinct clean authors behind the raw variants."""
+
+    def test_dedups_variants_that_normalize_to_same_author(self):
+        html = """
+        <meta name="author" content="George Calhoun">
+        <a rel="author" href="/x">George Calhoun, Contributor</a>
+        """
+        md = extract_metadata(_soup(html), ARTICLE_URL)
+        assert md["byline_variants"] == ["George Calhoun", "George Calhoun, Contributor"]
+        assert md["bylines_normalized"] == ["George Calhoun"]
+
+    def test_keeps_distinct_co_authors_in_order(self):
+        html = """
+        <meta name="author" content="George Calhoun, Contributor">
+        <a rel="author" href="/y">By Jane Doe</a>
+        """
+        md = extract_metadata(_soup(html), ARTICLE_URL)
+        assert md["bylines_normalized"] == ["George Calhoun", "Jane Doe"]
+
+    def test_drops_variants_that_normalize_to_empty(self):
+        html = '<a rel="author" href="/x">Contributor</a>'
+        md = extract_metadata(_soup(html), ARTICLE_URL)
+        assert md["byline_variants"] == ["Contributor"]
+        assert md["bylines_normalized"] == []
+
+    def test_empty_when_no_author(self):
+        md = extract_metadata(_soup("<html></html>"), ARTICLE_URL)
+        assert md["bylines_normalized"] == []
+
+
+class TestNormalizeBylineEdgeCases:
+    def test_strips_trailing_period_after_role(self):
+        assert (
+            forbes_requests.normalize_byline("George Calhoun, Contributor.")
+            == "George Calhoun"
+        )
+
+    def test_role_only_normalizes_to_empty(self):
+        assert forbes_requests.normalize_byline("Contributor") == ""
+
+    def test_tolerates_spacing_around_comma(self):
+        assert (
+            forbes_requests.normalize_byline("George Calhoun ,  Contributor")
+            == "George Calhoun"
+        )
+
+    def test_uppercase_by_prefix_stripped(self):
+        assert forbes_requests.normalize_byline("BY George Calhoun") == "George Calhoun"
+
+    def test_non_contributor_role_passes_through(self):
+        # We only strip the "Contributor" family; other roles are left untouched.
+        assert (
+            forbes_requests.normalize_byline("Jane Doe, Staff Writer")
+            == "Jane Doe, Staff Writer"
+        )
+
+
 class TestExtractMetadataShape:
     def test_returns_all_expected_keys(self):
         md = extract_metadata(_soup("<html></html>"), ARTICLE_URL)
@@ -203,6 +261,7 @@ class TestExtractMetadataShape:
             "section",
             "byline",
             "byline_variants",
+            "bylines_normalized",
         }
 
 

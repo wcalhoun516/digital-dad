@@ -185,13 +185,19 @@ def extract_metadata(soup: BeautifulSoup, url: str) -> dict:
     byline plus any distinct byline variants seen on the page.
     """
     variants = _bylines(soup)
+    normalized: list[str] = []
+    for variant in variants:
+        clean = normalize_byline(variant)
+        if clean and clean not in normalized:
+            normalized.append(clean)
     return {
         "canonical_url": _canonical_url(soup, url),
         "published_date": _published_date(soup, url),
         "updated_date": _modified_date(soup),
         "section": _section(soup),
-        "byline": normalize_byline(variants[0]) if variants else "",
+        "byline": normalized[0] if normalized else "",
         "byline_variants": variants,
+        "bylines_normalized": normalized,
     }
 
 
