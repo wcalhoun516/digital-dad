@@ -129,6 +129,30 @@ def _section(soup: BeautifulSoup) -> str:
     return ""
 
 
+# Role suffixes Forbes appends to a contributor byline ("Contributor", "Senior
+# Contributor", …). Matched at the end of a byline whether comma-separated
+# ("George Calhoun, Contributor") or glued on by author-class text extraction
+# ("George CalhounContributor").
+_BYLINE_ROLE_RE = re.compile(
+    r",?\s*(senior\s+|staff\s+|former\s+|guest\s+)?contributor\b.*$",
+    re.IGNORECASE,
+)
+_BYLINE_PREFIX_RE = re.compile(r"^by[:\s]+", re.IGNORECASE)
+
+
+def normalize_byline(name: str) -> str:
+    """Canonicalize one raw byline string to a clean author name (offline; roadmap #10).
+
+    Strips a leading ``By``/``By:`` prefix and a trailing Forbes role suffix
+    (``Contributor``/``Senior Contributor``, comma-separated or glued), then
+    collapses whitespace. A byline with no such noise passes through unchanged.
+    """
+    name = re.sub(r"\s+", " ", name).strip()
+    name = _BYLINE_PREFIX_RE.sub("", name)
+    name = _BYLINE_ROLE_RE.sub("", name)
+    return name.strip(" ,")
+
+
 def _bylines(soup: BeautifulSoup) -> list[str]:
     """Distinct author-name strings, in first-seen order (byline variants)."""
     candidates: list[str] = []
@@ -166,7 +190,7 @@ def extract_metadata(soup: BeautifulSoup, url: str) -> dict:
         "published_date": _published_date(soup, url),
         "updated_date": _modified_date(soup),
         "section": _section(soup),
-        "byline": variants[0] if variants else "",
+        "byline": normalize_byline(variants[0]) if variants else "",
         "byline_variants": variants,
     }
 

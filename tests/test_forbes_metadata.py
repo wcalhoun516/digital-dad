@@ -135,6 +135,63 @@ class TestBylines:
         assert md["byline"] == ""
         assert md["byline_variants"] == []
 
+    def test_primary_byline_is_normalized_but_variants_stay_raw(self):
+        html = """
+        <a rel="author" href="/x">By George Calhoun, Senior Contributor</a>
+        """
+        md = extract_metadata(_soup(html), ARTICLE_URL)
+        # Primary byline is cleaned …
+        assert md["byline"] == "George Calhoun"
+        # … while the raw variant is preserved for provenance.
+        assert md["byline_variants"] == ["By George Calhoun, Senior Contributor"]
+
+
+class TestNormalizeByline:
+    """The pure byline-normalization pass (roadmap #10 deferred slice)."""
+
+    def test_passthrough_clean_name(self):
+        assert forbes_requests.normalize_byline("George Calhoun") == "George Calhoun"
+
+    def test_strips_leading_by_prefix(self):
+        assert forbes_requests.normalize_byline("By George Calhoun") == "George Calhoun"
+
+    def test_strips_leading_by_colon_prefix(self):
+        assert forbes_requests.normalize_byline("By: George Calhoun") == "George Calhoun"
+
+    def test_strips_trailing_contributor_after_comma(self):
+        assert (
+            forbes_requests.normalize_byline("George Calhoun, Contributor")
+            == "George Calhoun"
+        )
+
+    def test_strips_trailing_senior_contributor(self):
+        assert (
+            forbes_requests.normalize_byline("George Calhoun, Senior Contributor")
+            == "George Calhoun"
+        )
+
+    def test_strips_glued_contributor_suffix(self):
+        assert (
+            forbes_requests.normalize_byline("George CalhounContributor")
+            == "George Calhoun"
+        )
+
+    def test_collapses_internal_whitespace(self):
+        assert forbes_requests.normalize_byline("George   Calhoun") == "George Calhoun"
+
+    def test_strips_surrounding_whitespace(self):
+        assert forbes_requests.normalize_byline("  George Calhoun  ") == "George Calhoun"
+
+    def test_empty_and_whitespace_only(self):
+        assert forbes_requests.normalize_byline("") == ""
+        assert forbes_requests.normalize_byline("   ") == ""
+
+    def test_combined_prefix_and_role_suffix(self):
+        assert (
+            forbes_requests.normalize_byline("By George Calhoun, Senior Contributor")
+            == "George Calhoun"
+        )
+
 
 class TestExtractMetadataShape:
     def test_returns_all_expected_keys(self):
