@@ -48,6 +48,42 @@ Format:
 
 <!-- entries below -->
 
+### 2026-08-05 — scraper — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/64
+- Source: roadmap:#10
+- Summary: Roadmap **#10 (P3·M·scraper)** — the explicitly-deferred **byline-normalization pass**
+  (the #10 first slice, PR #45, shipped the metadata extractor but left byline cleanup as a future
+  slice). `extract_metadata` collected raw byline variants but did **zero** cleanup — `byline` was
+  just `variants[0]`, so a scraped page yielded messy authorship (`By George Calhoun`,
+  `George Calhoun, Contributor`, or the glued author-class form `George CalhounContributor`). This
+  slice adds one pure, offline `normalize_byline(name)` in `scraper/forbes_requests.py`: collapses
+  whitespace, strips a leading `By`/`By:` prefix, and strips a trailing Forbes role suffix
+  (`Contributor`/`Senior/Staff/Former/Guest Contributor`, comma-separated **or** glued). It's
+  conservative — a clean name, or a non-`Contributor` role (`Jane Doe, Staff Writer`), passes
+  through untouched. **§8.5 deepen:** `extract_metadata` now emits a **`bylines_normalized`** field
+  (each raw variant normalized, empties dropped, deduped in first-seen order — the distinct clean
+  authors) and picks the primary `byline` as its first entry, so an all-noise first variant
+  (`Contributor` → `George Calhoun`) no longer wins; `byline_variants` stays **raw** for provenance.
+  Docs updated (`scraper/README.md` table + `docs/architecture.md` scraper section). **TDD'd:** +20
+  tests (`tests/test_forbes_metadata.py`, 26→46) — passthrough/prefix/role/glued/whitespace/empty,
+  the metadata-wiring (normalized primary vs. raw variants), normalized-variant dedup + co-author
+  order + drop-to-empty, and edge cases (trailing period, role-only, comma spacing, uppercase `By`,
+  non-`Contributor` passthrough) + the shape guard. **Offline / unattended-safe:** pure stdlib
+  string ops on an already-parsed tree; no conductor/network/LLM, **no re-scrape** (an extraction
+  change — the corpus back-fills clean bylines on the next `make scrape`; no regenerated data
+  committed). **Verification:** `make verify` green — **767 passed** (up from 747 on main; +20),
+  ruff clean (tests/ + the touched `forbes_requests.py`), dashboard builds. **Backlog:** 4 open
+  `daily/*` PRs before this run (#63 aliases + #53 stance-viz + skip markers #58/#59) — under 5; §3
+  didn't resume (#63/#53 are `ready-for-review`, not `in-progress`). **Cold-path pick:** hot path
+  drained (only 0008 remains — all owner-interactive compute/paid/sibling-repo); no user pins.
+  Absent-from-last-7 categories (infra/family/docs) are all drained (roadmap #1–7, #21/#23/#24, #28
+  shipped); of the remaining viable categories **scraper** is least-recently-worked (2026-07-08 vs
+  analysis 08-04 / training 08-03 / dashboard 08-01), and #10 had a genuinely-unstarted,
+  fully-offline slice that needs no re-scrape and no unmerged code. Chose it over "alias
+  `contradictions`" (the other 08-04 deferral) because that depends on `analysis/entity_aliases.py`,
+  which is only on the **unmerged** #63. **Deferred:** re-scrape/back-fill the corpus with the new
+  fields, and surface `byline`/`section`/`canonical_url` in the manifest + dashboard.
+
 ### 2026-08-04 — analysis — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/63
 - Source: roadmap:#14
@@ -76,6 +112,7 @@ Format:
   **analysis** was the least-recently-worked viable category and #14's alias-merge was the most-deferred
   item (raised across #14/#15/#17 runs). **Deferred:** aliasing `contradictions`, and a dashboard viz
   for the stance trajectories (PR #53).
+
 
 ### 2026-08-03 — training — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/62
