@@ -48,6 +48,18 @@ Format:
 
 <!-- entries below -->
 
+### 2026-08-06 — none — skipped
+- PR: skipped (backlog full)
+- Source: none
+- Summary: **Stood down per §2** — 5 open `daily/*` PRs (≥5 threshold), so no new work started.
+  Open: **#64** (08-05 byline-normalization, scraper, ready-for-review), **#63** (08-04
+  entity-alias-canonicalization, analysis, ready-for-review), **#53** (07-17 stance-over-time
+  dashboard viz, ready-for-review), and two stale skip markers **#59** (07-23) / **#58** (07-22).
+  Three of the five are substantive `ready-for-review` PRs awaiting the owner's merge; the backlog
+  is genuinely full of reviewable work, not churn. §3 resume was not reached (§2 stand-down halts
+  before it). **Owner action to unblock tomorrow:** merge/close #64/#63/#53 and close the stale skip
+  markers #58/#59 — the agent can't close PRs (§11), so the count stays at 5 until a human clears it.
+
 ### 2026-08-03 — training — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/62
 - Source: roadmap:#27
