@@ -18,6 +18,7 @@ from collections import Counter
 from itertools import combinations
 from pathlib import Path
 
+from .entity_aliases import canonicalize
 from .utils import ANALYSIS_DIR
 
 ENTITIES_PATH = ANALYSIS_DIR / "entities.json"
@@ -48,26 +49,32 @@ def entity_id(name: str, entity_type: str) -> str:
 
 
 def article_entities(
-    record: dict, *, min_mentions: int = 1, exclude=None
+    record: dict, *, min_mentions: int = 1, exclude=None, aliases: bool = True
 ) -> set[tuple[str, str]]:
     """The set of ``(name, type)`` entities in one ``per_article`` record.
 
     ``record`` is one entry of ``entities.json``'s ``per_article`` list: ``{slug, date,
     orgs: [[name, count], ...], people: [[name, count], ...]}``. Entities mentioned fewer than
     ``min_mentions`` times, blank names, and names in ``exclude`` (case-insensitive; defaults
-    to :data:`_DEFAULT_EXCLUDE`) are dropped.
+    to :data:`_DEFAULT_EXCLUDE`) are dropped. When ``aliases`` is set (default), each name is
+    passed through :func:`analysis.entity_aliases.canonicalize` first, so surface-form variants
+    (``Fed`` / ``the Federal Reserve``) collapse to one entity (the ``set`` dedups them here).
     """
     excluded = _norm_exclude(exclude)
+    canon = canonicalize if aliases else (lambda s: s)
     out: set[tuple[str, str]] = set()
     for kind, entity_type in (("orgs", "org"), ("people", "person")):
         for name, count in record.get(kind, []):
-            if name and count >= min_mentions and name.lower() not in excluded:
-                out.add((name, entity_type))
+            if not name or count < min_mentions:
+                continue
+            cname = canon(name)
+            if cname and cname.lower() not in excluded:
+                out.add((cname, entity_type))
     return out
 
 
 def cooccurrence_edges(
-    per_article: list[dict], *, min_mentions: int = 1, exclude=None
+    per_article: list[dict], *, min_mentions: int = 1, exclude=None, aliases: bool = True
 ) -> dict:
     """Count the articles in which each entity pair co-occurs.
 
@@ -80,7 +87,7 @@ def cooccurrence_edges(
         ids = sorted(
             entity_id(name, entity_type)
             for name, entity_type in article_entities(
-                record, min_mentions=min_mentions, exclude=exclude
+                record, min_mentions=min_mentions, exclude=exclude, aliases=aliases
             )
         )
         slug = record.get("slug")
@@ -92,29 +99,45 @@ def cooccurrence_edges(
     return edges
 
 
-def entity_nodes(per_article: list[dict], *, min_mentions: int = 1, exclude=None) -> dict:
+def entity_nodes(
+    per_article: list[dict], *, min_mentions: int = 1, exclude=None, aliases: bool = True
+) -> dict:
     """Aggregate per-entity stats across all articles.
 
     Returns ``{id: {id, name, type, article_count, total_mentions}}``. ``article_count`` is the
     number of distinct articles the entity appears in (with at least ``min_mentions`` mentions);
     ``total_mentions`` sums the raw counts. Names in ``exclude`` are dropped (see
-    :func:`article_entities`).
+    :func:`article_entities`). When ``aliases`` is set (default), names are canonicalized first;
+    variants that collapse to one entity **within a single article** are counted as one article
+    (their mentions summed) so ``article_count`` stays a true distinct-article count.
     """
     excluded = _norm_exclude(exclude)
+    canon = canonicalize if aliases else (lambda s: s)
     nodes: dict[str, dict] = {}
     for record in per_article:
+        # Collapse this record's entities by canonical id first, so a variant pair in the same
+        # article (e.g. "Fed" + "the Federal Reserve") counts once toward article_count.
+        this_article: dict[str, dict] = {}
         for kind, entity_type in (("orgs", "org"), ("people", "person")):
             for name, count in record.get(kind, []):
-                if not name or count < min_mentions or name.lower() in excluded:
+                if not name or count < min_mentions:
                     continue
-                nid = entity_id(name, entity_type)
-                node = nodes.setdefault(
-                    nid,
-                    {"id": nid, "name": name, "type": entity_type,
-                     "article_count": 0, "total_mentions": 0},
+                cname = canon(name)
+                if not cname or cname.lower() in excluded:
+                    continue
+                nid = entity_id(cname, entity_type)
+                slot = this_article.setdefault(
+                    nid, {"name": cname, "type": entity_type, "mentions": 0}
                 )
-                node["article_count"] += 1
-                node["total_mentions"] += count
+                slot["mentions"] += count
+        for nid, slot in this_article.items():
+            node = nodes.setdefault(
+                nid,
+                {"id": nid, "name": slot["name"], "type": slot["type"],
+                 "article_count": 0, "total_mentions": 0},
+            )
+            node["article_count"] += 1
+            node["total_mentions"] += slot["mentions"]
     return nodes
 
 
@@ -141,16 +164,20 @@ def build_graph(
     min_cooccur: int = 2,
     min_mentions: int = 1,
     exclude=None,
+    aliases: bool = True,
 ) -> dict:
     """Assemble the co-occurrence graph (pure; no I/O).
 
     Keeps the ``top_n`` most-written-about entities (by article_count, then total_mentions),
     draws edges between them for pairs that co-occur at least ``min_cooccur`` times, and records
     each node's ``degree``. ``exclude`` drops boilerplate entities (defaults to
-    :data:`_DEFAULT_EXCLUDE`). Fully deterministic: nodes and edges sort on stable keys.
+    :data:`_DEFAULT_EXCLUDE`); ``aliases`` (default on) canonicalizes surface-form variants
+    onto one entity. Fully deterministic: nodes and edges sort on stable keys.
     """
     per_article = entities_data.get("per_article", [])
-    all_nodes = entity_nodes(per_article, min_mentions=min_mentions, exclude=exclude)
+    all_nodes = entity_nodes(
+        per_article, min_mentions=min_mentions, exclude=exclude, aliases=aliases
+    )
 
     selected = sorted(
         all_nodes.values(),
@@ -158,7 +185,9 @@ def build_graph(
     )[:top_n]
     kept = {n["id"] for n in selected}
 
-    raw = cooccurrence_edges(per_article, min_mentions=min_mentions, exclude=exclude)
+    raw = cooccurrence_edges(
+        per_article, min_mentions=min_mentions, exclude=exclude, aliases=aliases
+    )
     edges = []
     degree: Counter = Counter()
     for (a, b), info in raw.items():
@@ -186,6 +215,7 @@ def build_graph(
                 "top_n": top_n,
                 "min_cooccur": min_cooccur,
                 "min_mentions": min_mentions,
+                "aliases": aliases,
                 "excluded": sorted(_norm_exclude(exclude)),
             },
         },
@@ -236,6 +266,7 @@ def run(
     min_cooccur: int = 2,
     min_mentions: int = 1,
     exclude=None,
+    aliases: bool = True,
     write: bool = True,
 ) -> dict:
     """Build the entity co-occurrence graph and (unless ``write=False``) write it to disk.
@@ -252,6 +283,7 @@ def run(
         min_cooccur=min_cooccur,
         min_mentions=min_mentions,
         exclude=exclude,
+        aliases=aliases,
     )
 
     if write:
@@ -277,6 +309,9 @@ def main(argv: list[str] | None = None) -> int:
                              "boilerplate set.")
     parser.add_argument("--no-exclude", action="store_true",
                         help="Disable the default boilerplate exclude set (keep all entities).")
+    parser.add_argument("--no-aliases", action="store_true",
+                        help="Disable surface-form canonicalization (keep raw variant names, "
+                             "e.g. 'Fed' and 'the Federal Reserve' as separate nodes).")
     parser.add_argument("--dry-run", action="store_true",
                         help="Print the summary without writing entity_graph.json.")
     args = parser.parse_args(argv)
@@ -293,6 +328,7 @@ def main(argv: list[str] | None = None) -> int:
         min_cooccur=args.min_cooccur,
         min_mentions=args.min_mentions,
         exclude=exclude,
+        aliases=not args.no_aliases,
         write=not args.dry_run,
     )
     print(render_markdown(graph))

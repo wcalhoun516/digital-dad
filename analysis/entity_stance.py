@@ -20,6 +20,7 @@ counts, and years — **no article-body text** — so it is committable exactly 
 import argparse
 import re
 
+from .entity_aliases import canonicalize
 from .entity_graph import _DEFAULT_EXCLUDE, _norm_exclude, article_entities, entity_id
 from .utils import ANALYSIS_DIR, clean_text, load_articles, save_analysis
 
@@ -161,6 +162,7 @@ def build_stance(
     min_mentions: int = 1,
     threshold: float = 0.25,
     exclude=None,
+    aliases: bool = True,
 ) -> dict:
     """Assemble per-entity yearly stance trajectories (pure; no I/O).
 
@@ -171,9 +173,15 @@ def build_stance(
     means-of-means. Keeps entities mentioned in at least ``min_articles`` articles, ranks by
     article_count, caps at ``top_n``, and labels each entity's trend. ``exclude`` drops
     boilerplate (defaults to `entity_graph`'s set). Fully deterministic.
+
+    When ``aliases`` is set (default), surface-form variants are folded onto one canonical
+    subject (``Fed`` / ``the Federal Reserve`` → ``Federal Reserve``): sentences are still found
+    by each *raw* surface name (so no mention is missed) but scored under the canonical id, and
+    the per-article sentence set is de-duplicated so a sentence naming two variants counts once.
     """
     body_by_slug = {a.get("slug"): a for a in articles}
     resolved_exclude = _resolve_exclude(exclude)
+    canon = canonicalize if aliases else (lambda s: s)
 
     # id -> {id, name, type, article_slugs: set, by_year: {year: [sum, n_sentences, {slugs}]}}
     acc: dict[str, dict] = {}
@@ -186,17 +194,28 @@ def build_stance(
         year = (record.get("date") or article.get("date") or "")[:4]
         if not year:
             continue
-        body = article.get("body", "")
+        cleaned = clean_text(article.get("body", ""))
+        # Group this article's raw surface names by canonical id first. exclude is matched on the
+        # raw name (boilerplate like "Photo"/"George Calhoun" isn't aliased). Sentences are found
+        # per raw surface, then unioned into a set so a variant pair in one sentence isn't double
+        # counted.
+        by_canon: dict[str, dict] = {}
         for name, entity_type in article_entities(
-            record, min_mentions=min_mentions, exclude=resolved_exclude
+            record, min_mentions=min_mentions, exclude=resolved_exclude, aliases=False
         ):
-            sentences = mentioning_sentences(clean_text(body), name)
-            if not sentences:
+            cname = canon(name)
+            nid = entity_id(cname, entity_type)
+            slot = by_canon.setdefault(
+                nid, {"name": cname, "type": entity_type, "sentences": set()}
+            )
+            slot["sentences"].update(mentioning_sentences(cleaned, name))
+
+        for nid, slot in by_canon.items():
+            if not slot["sentences"]:
                 continue
-            scores = [sentence_polarity(s) for s in sentences]
-            nid = entity_id(name, entity_type)
+            scores = [sentence_polarity(s) for s in slot["sentences"]]
             node = acc.setdefault(nid, {
-                "id": nid, "name": name, "type": entity_type,
+                "id": nid, "name": slot["name"], "type": slot["type"],
                 "article_slugs": set(), "by_year": {},
             })
             node["article_slugs"].add(slug)
@@ -259,6 +278,7 @@ def build_stance(
                 "min_articles": min_articles,
                 "min_mentions": min_mentions,
                 "threshold": threshold,
+                "aliases": aliases,
                 "excluded": sorted(resolved_exclude),
             },
         },
@@ -316,6 +336,7 @@ def run(
     min_mentions: int = 1,
     threshold: float = 0.25,
     exclude=None,
+    aliases: bool = True,
     write: bool = True,
 ) -> dict:
     """Build the per-entity stance trajectories and (unless ``write=False``) write it to disk.
@@ -337,6 +358,7 @@ def run(
         min_mentions=min_mentions,
         threshold=threshold,
         exclude=exclude,
+        aliases=aliases,
     )
 
     if write:
@@ -363,6 +385,9 @@ def main(argv: list[str] | None = None) -> int:
                              "boilerplate set.")
     parser.add_argument("--no-exclude", action="store_true",
                         help="Disable the default boilerplate exclude set (keep all entities).")
+    parser.add_argument("--no-aliases", action="store_true",
+                        help="Disable surface-form canonicalization (keep raw variant names, "
+                             "e.g. 'Fed' and 'the Federal Reserve' as separate subjects).")
     parser.add_argument("--dry-run", action="store_true",
                         help="Print the summary without writing entity_stance.json.")
     args = parser.parse_args(argv)
@@ -380,6 +405,7 @@ def main(argv: list[str] | None = None) -> int:
         min_mentions=args.min_mentions,
         threshold=args.threshold,
         exclude=exclude,
+        aliases=not args.no_aliases,
         write=not args.dry_run,
     )
     print(render_markdown(result))

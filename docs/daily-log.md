@@ -48,70 +48,209 @@ Format:
 
 <!-- entries below -->
 
-### 2026-07-17 — dashboard — ready-for-review
-- PR: https://github.com/wcalhoun516/digital-dad/pull/53
-- Source: roadmap:#17
-- Summary: Roadmap **#17 (P2·M·analysis)** deferred-viz slice — the **"stance over time" dashboard
-  tab**. The `entity_stance.py` builder shipped in #50 emitting the committed, text-free
-  `entity_stance.json` and *explicitly deferred* its dashboard viz; this builds it — the exact
-  analog of open PR #51 (network viz on #14's builder). New **Stance** tab: a D3 **multi-line**
-  chart of each subject's yearly `mean_stance` trajectory (zero baseline, per-point hover tooltip,
-  click-to-isolate legend) + the builder's warming/cooling trend boards. Wired like Reading Room:
-  `/*__ENTITY_STANCE_DATA__*/` placeholder + empty-graph default in `build_dashboard.py`, a
-  `renderStance()` dispatched from `renderTab`, added to `RESIZE_REDRAW_TABS`, empty-stub → a
-  `make entity-stance` prompt. **Fully offline/unattended-safe** (reads committed text-free JSON;
-  no conductor/network/LLM); builds only on **merged `main`** — no dependency on the unmerged
-  #51/#52. **Regression caught + fixed in the browser pass:** adding a 12th nav button pushed the
-  non-wrapping desktop nav to 1325px (a 45px horizontal scroll) — added `flex-wrap: wrap` to the
-  base `nav` rule (no-op ≤11 tabs; wraps the overflow row) + a structural guard test. TDD'd: +10
-  tests (`tests/test_dashboard_stance.py`). **Verification:** `make verify` green (**608 passed**,
-  up from 598; ruff clean; dashboard builds); headless-Chromium pass on the built `index.html` —
-  Stance tab desktop 1280×900 & phone 375×812: 8 paths / 34 circles rendered, tooltip shows on
-  hover, **0 console errors, no horizontal overflow at either width**. **Task pivot note:** branch
-  is slugged `year-in-review` but roadmap #23 is already shipped (`analysis/year_in_review.py` on
-  `main`) — my §1 read a stale pre-fetch `main`; re-ran §5b against real `main` and pivoted to #17.
-  **Cold-path pick:** hot-path queue drained (0008 remainder owner-interactive), no pins, roadmap
-  nearly exhausted — #14-viz/#15 already claimed by #51/#52, leaving #17's deferred viz the
-  remaining genuinely-unstarted, fully-offline slice (strong family payoff). **Deferred (inherited
-  from #17 builder):** entity **alias fragmentation** ("Fed" / "the Federal Reserve" are separate
-  lines). **Backlog:** 2 open `daily/*` PRs (#51/#52) before this run — under 5.
+### 2026-08-04 — analysis — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/63
+- Source: roadmap:#14
+- Summary: Roadmap **#14 (analysis)** — the long-deferred **entity alias-merge** gap. The spaCy
+  extractor emits many spellings for one subject (`the Federal Reserve` / `The Federal Reserve` /
+  `Federal Reserve` / `Fed`; `Covid`/`COVID`; `Treasury`/`Treasurys`; `Powell`/`Jerome Powell`;
+  `Ma`/`Jack Ma`), so downstream builders split a single subject across several nodes/trajectories.
+  This slice adds one shared, transparent, owner-editable canonicalizer and wires it into **two**
+  builders. (1) New pure/offline `analysis/entity_aliases.py`: `canonicalize(name)` whitespace-
+  normalizes, strips a trailing possessive (straight **and** curly `'s` — the extractor only strips
+  straight) + a single leading "the", then applies a curated corpus-specific ALIAS map (lowercased
+  keys, every value a fixed point). (2) `entity_graph.py`: aliased default-on with `--no-aliases`
+  off-switch + `aliases` meta param; `entity_nodes` collapses per-article by canonical id *before*
+  global aggregation so `article_count` stays a true distinct-article count; exclude matches the
+  canonical name. Regenerated `entity_graph.json`: 4 Fed nodes → 1 (69 articles, degree 28),
+  201→192 edges. **§8.5 deepen:** extended the same seam to `entity_stance.py` — because it searches
+  bodies for surface names, it searches with each *raw* name but groups results under the canonical
+  id and de-dups sentences that name two variants (set union) so a sentence scores once; regenerated
+  `entity_stance.json` (Fed variants → one 63-article trajectory). Architecture.md updated for both
+  builders. **TDD'd:** +32 tests (`tests/test_entity_aliases.py`: strip/alias/possessive/passthrough
+  + fixed-point & lowercase-key hygiene) plus alias-merge sections in `test_entity_graph.py` and
+  `test_entity_stance.py`. **Offline / unattended-safe:** no conductor/network/LLM; both regenerated
+  artifacts are text-free (names/years/scores only) and read committed `entities.json`. **Verification:**
+  `make verify` green — **789 passed**, ruff clean, dashboard builds. **Backlog:** open `daily/*` PRs
+  under 5; §3 didn't resume any in-progress PR. **Cold-path pick:** hot path drained, no user pins;
+  **analysis** was the least-recently-worked viable category and #14's alias-merge was the most-deferred
+  item (raised across #14/#15/#17 runs). **Deferred:** aliasing `contradictions`, and a dashboard viz
+  for the stance trajectories (PR #53).
 
-### 2026-07-13 — analysis — ready-for-review
-- PR: https://github.com/wcalhoun516/digital-dad/pull/50
-- Source: roadmap:#17
-- Summary: Roadmap **#17 (P2·M·analysis)** — **per-entity stance over time** (his evolving view of the
-  Fed, Bitcoin, the ECB…), first slice: the pure/offline **builder** (dashboard viz deferred). New
-  `analysis/entity_stance.py` mirrors `entity_graph.py` (#14): joins `entities.json`'s `per_article`
-  lists to the corpus bodies and emits `entity_stance.json` — per entity a **yearly stance
-  trajectory** (mean tone of the sentences that name it, per year) + `overall_stance` +
-  warming/cooling **trend boards**. **Key env constraint:** nltk/VADER is absent here (all
-  `linguistics.json` sentiment is `{}`), so stance is a **transparent heuristic**, not a model — a
-  small curated polarity lexicon scored per sentence (`sentence_polarity`, positive−negative with a
-  light 3-token **negation flip**); honest proxy for *tone trends*, not ground-truth sentiment. Reuses
-  `entity_graph`'s `article_entities`/`entity_id`/exclude set; sums are accumulated at the **sentence
-  level** so yearly/overall means are exact (not means-of-means). `run()` + `python -m
-  analysis.entity_stance` CLI (`--dry-run`/`--top`/`--min-articles`/`--min-mentions`/`--threshold`/
-  `--exclude`/`--no-exclude`) + `make entity-stance` + architecture note. **§8.5 deepen:** the smoke
-  run surfaced Forbes image-credit boilerplate ("Photo") as the top warming entity, so added a
-  stance-scoped `_EXTRA_EXCLUDE` (photo/photographer/illustration/image) on top of the shared byline
-  set — kept **stance-local** so `entity_graph`'s committed artifact is untouched; plus negation-window
-  boundary + sentence-weighting edge tests. **TDD'd:** +22 tests (`tests/test_entity_stance.py`).
-  **Licensing:** artifact is **text-free** (names/years/scores only) → committable like
-  `entity_graph.json` (contrast the gitignored `calhoun_isms.json`). **Verification:** `make verify`
-  green (**565 passed**, up from 543; ruff clean; dashboard builds); real-corpus smoke (`--top 6
-  --min-articles 5`): 199 articles → genuine trends (Covid warming, Treasury cooling, "Photo" noise
-  gone), 7 KB valid JSON. **Known limitation (documented, deferred like #14):** entity alias
-  fragmentation — "Fed" / "the Federal Reserve" / "The Federal Reserve" score as separate entities;
-  alias-merging + the dashboard "stance over time" viz are future slices. **Cold-path pick:**
-  `plans/ready/` holds only 0008 (26c/26d/26e/26f owner-interactive/paid/compute/sibling-repo — not
-  unattended-safe); no user pins. PRs #49 (07-12 analysis) and #48 (07-11 ops) are both
-  ready-for-review-but-unmerged, so §3 didn't resume either. Rotation (last worked by category):
-  analysis 07-12, ops 07-11, scraper 07-08, infra 07-07, dashboard 07-05, family 07-04 — training
-  (06-20)/docs (06-25) drained or compute-heavy (#26/#27); family/dashboard drained; infra/ops/scraper
-  only have continuation slices (ops #7 sits in unmerged #48 → a parallel PR would conflict).
-  **analysis** held the only genuinely-unstarted, fully-offline roadmap items (#15 P3
-  contradiction-finder, #17 P2 stance) — #17 wins on priority. **Backlog:** 2 open `daily/*` PRs
-  (#48/#49) before this run — under 5.
+### 2026-08-03 — training — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/62
+- Source: roadmap:#27
+- Summary: Roadmap **#27 (P3·M·training)** — the embedding-model comparison harness, its
+  **deferred "curated gold query set" slice**. The `analysis/embedding_compare.py` builder shipped
+  (three #27 commits) but explicitly ships only a "deliberately small starter set" (5 queries) and
+  its hand-authored `relevant_slugs` were **unchecked** — a typo'd / renamed slug silently scores 0
+  in a live retrieval pass rather than erroring, and with no gold labels the harness's retrieval
+  metrics (precision@k / recall@k / MRR) are all zero. This slice closes that gap **fully offline**:
+  (1) new pure `validate_queries(queries, corpus_slugs)` (unknown slug, blank query, empty /
+  duplicate labels, duplicate query text — 1-based messages); (2) a `load_corpus_slugs()` reading the
+  committed **text-free** `data/manifest.json` + an offline `--check` CLI mode (runs *before* the
+  conductor gate, so it works unattended on CI / a fresh clone with no candidate models and no
+  conductor) + `make embedding-queries-check`; (3) **expanded the gold set 5 → 13 queries** across
+  Dad's major beats (EU Hamiltonian, Buffett/value, Ant Group, GameStop, CPI-artifact, CHIPS Act,
+  Fed funds rate, tariffs/recession, crypto, China Covid-data, Alibaba value-trap, Tesla/S&P 500,
+  China Japanification), every `relevant_slug` mapped to a real manifest article. **§8.5 deepen:** a
+  committed-set regression guard test (the checked-in gold set must stay valid against the checked-in
+  manifest) + an architecture.md note on the `--check` guard. **TDD'd:** +14 tests
+  (`tests/test_embedding_compare.py`, 40→54) — validator cases, the manifest loader, `--check` exit
+  codes / offline behavior, and the committed-set guard. **Offline / unattended-safe:** no conductor,
+  network, or LLM; the gold set is text-free (queries + public slugs), committed like
+  `eval/questions.json`; the harness output `data/analysis/embedding_compare.json` (a regenerated
+  artifact) is **not** touched. **Verification:** `make verify` green — **740 passed** (up from 726 on
+  main; +14), ruff clean, dashboard builds; `make embedding-queries-check` → *"13 queries; every
+  relevant_slug resolves to one of 176 corpus articles."* **Backlog:** 4 open `daily/*` PRs before this
+  run (#61 anthology + #53 stance-viz + skip markers #58/#59) — under 5; §3 didn't resume (#61/#53 are
+  `ready-for-review`, not `in-progress`). **Cold-path pick:** hot path drained (only 0008 remains —
+  26c train / 26d live / 26e sibling-repo `models.yaml` / 26f decide, all owner-interactive); no user
+  pins. **training** is the least-recently-worked category (last 2026-06-20, absent from the last 7
+  runs) and #27 had a genuinely-unstarted, fully-offline deferred slice; #25 shipped (plan 0007), #26
+  is owner-blocked. **Deferred:** the #27 dashboard viz, and semi-automating gold-label candidates
+  from the committed theme/entity artifacts.
+
+### 2026-08-01 — dashboard — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/60
+- Source: roadmap:#15 (deferred dashboard viz) + red-main regression fix
+- Summary: **Fixed red `main`** first, then shipped the last orphaned analysis-builder viz.
+  **(1) Regression fix:** a prior merge (PR #56, calhoun-isms tab) dropped the
+  `CALHOUN_ISMS_DATA` const, the `/*__CALHOUN_ISMS_DATA__*/` `build_dashboard` placeholder, and its
+  empty-default — so `renderCalhounIsms()` referenced an **undefined global** and **4
+  `test_dashboard_calhoun_isms.py` tests were failing on `main`** (`make verify` red). Restored the
+  three lines → main green (**718 passed**, was 4 failed / 714 passed). Confirmed live: clicking the
+  Calhoun-isms tab renders real data with **0 console errors** (was a `ReferenceError`).
+  **(2) Feature (roadmap #15 deferred viz):** every analysis builder had a dashboard tab except
+  `contradictions.py` (merged #52). Added a **Second Thoughts** tab surfacing its mind-change
+  finder — warmed/cooled cards per reversed-stance subject pairing his earliest vs. latest take,
+  each quote deep-linking into the Raw Corpus, plus a direction filter. Wired like the
+  Calhoun-isms / Reading Room tabs (`/*__CONTRADICTIONS_DATA__*/` → git-ignored
+  `contradictions.json` with a valid empty-default; empty-board build prompt on CI / fresh clones).
+  **TDD'd:** +8 guard tests (`tests/test_dashboard_contradictions.py`) — including the const +
+  placeholder assertions that *would have caught* the calhoun-isms regression. **Offline /
+  unattended-safe:** no conductor/network/LLM; builds only on merged `main`, independent of the
+  open #53 (stance viz) tab. **Verification:** `make verify` green (**726 passed**, ruff clean,
+  dashboard builds); real-corpus `make contradictions` → 2 defensible flips (Covid *warmed* 43 obs,
+  Tesla *cooled* 23 obs); headless-Chromium browser pass (build artifact git-ignored) desktop
+  1280×900 + phone 375×812 → 2 cards / 4 quotes / Warmed+Cooled badges, direction filter works,
+  **0 console errors, 0px h-overflow** (15-tab nav wraps via the existing `flex-wrap`). **Backlog:**
+  3 open `daily/*` PRs (#53 + skip markers #58/#59) before this run — under 5; §3 didn't resume
+  (#53 is `ready-for-review`, not `in-progress`). **Cold-path pick:** hot-path drained (only 0008
+  remains — all owner-interactive compute / paid / sibling-repo); no user pins; staler categories
+  drained/blocked (family/docs/infra shipped, training #26 owner-blocked + #27 merged #54, scraper
+  #10 blocked on re-scrape, analysis #11 owner-gated-paid). **Note — stale base:** this run's
+  starting branch (`daily/2026-07-23-skip`) predated the merges of #54–#57, so §1 was re-run against
+  the real `origin/main`; the red-main regression was discovered there. **Deferred:** entity
+  **alias-merge** (Fed / the Federal Reserve / Powell still separate) would sharpen this tab, the
+  Network graph, and the stance viz together.
+
+### 2026-07-21 — dashboard — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/57
+- Source: roadmap:#13 (deferred dashboard viz)
+- Summary: Roadmap **#13 (P2·M·analysis)** deferred **viz slice** — a new **Intellectual Arc**
+  dashboard tab surfacing the already-merged `analysis/intellectual_arc.py` builder (data layer
+  shipped 2026-06-27). Until now its `intellectual_arc.json` (committed + **text-free**) sat on
+  `main` with nothing rendering it. Thin offline dashboard layer over a committed builder — the
+  exact analog of merged **#51** (network tab over `entity_graph`) / open **#56** (Calhoun-isms).
+  New `renderIntellectualArc()` draws: the deterministic **narrative** + headline stats
+  (span, dated pieces, first→last dominant theme, most-grown/most-declined); a **per-year stacked
+  theme-composition** bar chart (segments reuse the shared `clusterColor()` palette so a theme
+  reads the same as on Theme Map / Timeline; partial in-progress years dimmed & flagged); and
+  **year-over-year shift cards** (rising / fading / emergent + any lead-theme change). Wired
+  through `build_dashboard`'s `/*__INTELLECTUAL_ARC_DATA__*/` placeholder with an empty-arc stub
+  (CI / fresh clones show a `make intellectual-arc` prompt). Because the artifact is **committed +
+  text-free** (theme labels/shares + a deterministic narrative — no body excerpts), the tab renders
+  **real data on merge**, unlike the git-ignored calhoun_isms/reading_room tabs — **no data artifact
+  committed** (the build output `index.html` stays git-ignored). Also added desktop `nav {
+  flex-wrap: wrap }` — the 13th tab overflowed the centered flex row (same fix as #56, but
+  independently, since #56 is unmerged). **§8.5 deepen:** legend **click-to-trace** — clicking a
+  theme rings its band (`box-shadow` inset) across every year and dims the rest; re-click clears
+  (mirrors the Reading Room theme filter). **TDD'd:** +11 tests
+  (`tests/test_dashboard_intellectual_arc.py`) — placeholder/empty-stub wiring, nav tab + dispatch,
+  narrative/by_year/shifts rendering, `clusterColor` reuse, legend-highlight, and a nav flex-wrap
+  guard. **Verification:** `make verify` green (**643 passed**, up from 632; ruff clean; dashboard
+  builds) + a real-corpus headless browser pass (Playwright, local — build artifact git-ignored):
+  desktop & phone both render the narrative + 35 theme segments with **no h-overflow and a clean
+  console**, and the legend click dims 29/35 while ringing the selected theme's 6 year-segments,
+  clearing back to 35 on re-click. Also **documented** the previously-undocumented
+  `intellectual_arc.py` builder + the new tab in `architecture.md`. **Cold-path pick:** hot-path
+  drained (only 0008 remains — 26c/26d/26e/26f all owner-interactive compute / paid / sibling-repo
+  `models.yaml`); no user pins. The staler categories are drained/blocked: **family** (last 06-03)
+  fully drained (#21/#23/#24 shipped), **docs** (06-25) drained (#28 shipped), **infra/ops** (07-07)
+  drained (#7 structured-logging merged as #48 on 07-16, so #1–7 all shipped), **training** #26
+  owner-blocked + #27 in flight (open #54), **scraper** #10 remaining slices blocked on a re-scrape
+  (forbidden to commit regenerated data). That left the two genuinely-orphaned analysis builders
+  with no merged dashboard viz — `intellectual_arc` **#13 (P2)** and `contradictions` **#15 (P3)**
+  (calhoun_isms #16 / entity_stance #17 already have viz in flight on #56 / #53). Per §5b
+  "highest-priority not-yet-started," **#13 (P2) wins over #15 (P3)** — and it's the higher
+  family/emotional payoff (the sweep of Dad's focus over 7 years, Fed/Financial → Tariffs/Crypto).
+  **Backlog:** 4 open `daily/*` PRs (#56/#55/#54/#53) before this run — under 5; §3 didn't resume
+  (all `ready-for-review`, not `in-progress`). **Deferred (in PR):** deep-link a theme segment to
+  the Theme Map filtered to that cluster; a small `contradictions` #15 tab as the last orphaned
+  builder.
+
+### 2026-07-16 — analysis — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/52
+- Source: roadmap:#15
+- Summary: Roadmap **#15 (P3·M·analysis)** — **contradiction / mind-change finder**, builder slice
+  (dashboard viz deferred, mirroring #14/#16/#17). New `analysis/contradictions.py`, a pure/offline
+  builder in the `entity_graph`/`calhoun_isms` mould: reads `entities.json`'s frequent people/orgs +
+  the corpus bodies, scores Dad's **stance toward each subject over time** via a small transparent
+  polarity lexicon (positive − negative words on word boundaries, per sentence naming the subject),
+  and emits gitignored `contradictions.json` — subjects whose mean stance **reversed sign** between
+  his earlier vs. later writing, each with representative early/late quotes + `warmed`/`cooled`
+  direction, sorted by swing. `run()` + `python -m analysis.contradictions` CLI (`--dry-run`,
+  `--min-mentions`, `--min-observations`, `--min-delta`, `--max-sentence-words`, `--no-exclude`) +
+  `make contradictions` + architecture note. **§8.5 deepen** fixed three quality bugs the first
+  smoke run exposed: (1) **case-sensitive** proper-noun matching (so "Jack" ≠ the verb in "jack up
+  the stimulus"); (2) a **word-band** on stance sentences (≤45 words) so the corpus's glued run-ons
+  don't become bloated quotes; (3) **case-insensitive alias dedup** ("COVID"/"Covid" → one row).
+  **TDD'd:** +25 tests (`tests/test_contradictions.py`). **Offline/unattended-safe:** stdlib only,
+  no conductor/network/LLM; builds only on data already on `main` (does **not** depend on the
+  unmerged #50 entity-stance PR). **Licensing:** artifact embeds body excerpts → gitignored
+  (regenerate on demand), same posture as `calhoun_isms.json`/`reading_room.json`. **Verification:**
+  `make verify` green (**592 passed**, up from 567; ruff clean; dashboard builds); real-corpus smoke
+  (offline) → **2 clean, defensible flips** (Covid *warmed*, Tesla *cooled*) of 71 scanned subjects.
+  **Resume/backlog:** §3 didn't resume — the 3 open `daily/*` PRs (#51 entity-network-viz, #50
+  entity-stance, #48 structured-logging) are all `ready-for-review`, not `in-progress`; under the
+  5-PR cap so work proceeded. **Cold-path pick:** `plans/ready/` holds only 0008 (owner-interactive
+  QLoRA/paid-judge/sibling-repo `models.yaml`/decide — not unattended-safe); no user pins. Verified
+  the more-stale categories are drained/blocked: family (06-03) fully drained (`reading_room`/
+  `year_in_review`/`anthology` + On-This-Day auto-send all shipped), training's only item #27 is
+  conductor/compute-heavy, docs #28 shipped, infra #1–7 shipped, scraper #10's remaining slices are
+  blocked on a re-scrape (forbidden to commit regenerated data). That left **analysis #15** — a
+  genuinely-unstarted (no `contradictions.py` existed), fully-offline, family-facing item in the
+  established module pattern, fitting the roadmap's post-family "analytical-depth" emphasis.
+  **Deferred (next slice):** dashboard tab + entity **alias merging** (Fed / the Federal Reserve /
+  Jerome Powell still separate subjects, inherited from #14's builder).
+
+### 2026-07-12 — analysis — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/49
+- Source: roadmap:#16
+- Summary: Roadmap **#16 (P3·S·analysis)** — **"Calhoun-isms": most quotable/aphoristic sentences per
+  theme.** New `analysis/calhoun_isms.py`, a deterministic/offline builder modeled on `entity_graph.py`
+  (#14): reads `themes.json`'s per-article theme assignments + the corpus bodies, scores every sentence
+  with **transparent heuristics**, and emits `calhoun_isms.json` (top aphorisms per theme + an overall
+  board). Gate (`is_quotable`): declarative, memorable word band (8–30), capitalized, no
+  antecedent-needing opener (`But`/`This`/`It`/…), no URL noise. Score (`quotability_score`,
+  deterministic additive): length term peaking ~14 words + bonuses for absolutes
+  (`always`/`never`/`no one`), a definitional `X is …`, and contrast; penalties for attribution
+  ("Powell said") and newsy digits. `run()` + `python -m analysis.calhoun_isms` CLI
+  (`--dry-run`/`--top`/`--min-words`/`--max-words`/`--min-score`) + `make calhoun-isms` + architecture
+  note. **§8.5 deepen:** `--min-score` filler filter + overall-board dedup-by-text. **TDD'd:** +24 tests
+  (`tests/test_calhoun_isms.py`). **Licensing:** the artifact embeds body-text excerpts, so it's
+  **gitignored** (regenerate on demand), mirroring `reading_room.json`. **Verification:** `make verify`
+  green (**567 passed**, up from 543; ruff clean; dashboard builds); real-corpus smoke → 9 themes / 199
+  articles, genuine aphorisms surfaced, 33 KB valid JSON correctly ignored by git. **Cold-path pick:**
+  `plans/ready/` holds only 0008 (26c/26d/26f owner-interactive/paid/compute — not unattended-safe); no
+  user pins. PR #48 (07-11 ops/structured-logging, on its own unmerged branch) is
+  ready-for-review-but-unmerged, so §3 didn't resume it and a parallel logging PR off `main` would
+  conflict. Rotation (last worked by category, from merged `main` + known open PRs): ops 07-11, scraper
+  07-08, infra 07-07, analysis 07-06, dashboard 07-05, family 07-04 — training (06-20)/docs (06-25) are
+  drained or conductor-heavy (#27), dashboard/family drained, leaving **analysis** the least-recent
+  category with a genuinely-unstarted, fully-offline item: **#16**. **Backlog:** 1 open `daily/*` PR
+  (#48) before this run — well under the 5 threshold.
 
 ### 2026-07-08 — scraper — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/45

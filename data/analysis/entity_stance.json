@@ -1,12 +1,13 @@
 {
   "meta": {
     "total_articles": 199,
-    "n_entities": 6,
+    "n_entities": 30,
     "params": {
-      "top_n": 6,
-      "min_articles": 5,
+      "top_n": 30,
+      "min_articles": 2,
       "min_mentions": 1,
       "threshold": 0.25,
+      "aliases": true,
       "excluded": [
         "afp",
         "calhoun",
@@ -25,97 +26,49 @@
   },
   "entities": [
     {
-      "id": "org:the Federal Reserve",
-      "name": "the Federal Reserve",
+      "id": "org:Federal Reserve",
+      "name": "Federal Reserve",
       "type": "org",
-      "article_count": 49,
-      "total_sentences": 183,
-      "overall_stance": 0.0328,
+      "article_count": 63,
+      "total_sentences": 712,
+      "overall_stance": -0.0337,
       "trend": "steady",
-      "trend_delta": 0.0,
+      "trend_delta": 0.0758,
       "trajectory": [
         {
           "year": "2020",
-          "mean_stance": 0.0,
-          "n_sentences": 20,
-          "n_articles": 6
-        },
-        {
-          "year": "2021",
-          "mean_stance": 0.0,
-          "n_sentences": 19,
+          "mean_stance": -0.0758,
+          "n_sentences": 66,
           "n_articles": 7
         },
         {
+          "year": "2021",
+          "mean_stance": 0.0303,
+          "n_sentences": 99,
+          "n_articles": 14
+        },
+        {
           "year": "2022",
-          "mean_stance": 0.0417,
-          "n_sentences": 48,
-          "n_articles": 10
+          "mean_stance": -0.0309,
+          "n_sentences": 97,
+          "n_articles": 11
         },
         {
           "year": "2023",
-          "mean_stance": -0.0208,
-          "n_sentences": 48,
-          "n_articles": 12
+          "mean_stance": -0.0749,
+          "n_sentences": 227,
+          "n_articles": 14
         },
         {
           "year": "2024",
-          "mean_stance": 0.1786,
-          "n_sentences": 28,
-          "n_articles": 10
+          "mean_stance": -0.0137,
+          "n_sentences": 146,
+          "n_articles": 11
         },
         {
           "year": "2025",
           "mean_stance": 0.0,
-          "n_sentences": 20,
-          "n_articles": 4
-        }
-      ]
-    },
-    {
-      "id": "org:Fed",
-      "name": "Fed",
-      "type": "org",
-      "article_count": 48,
-      "total_sentences": 523,
-      "overall_stance": -0.0554,
-      "trend": "steady",
-      "trend_delta": 0.0833,
-      "trajectory": [
-        {
-          "year": "2020",
-          "mean_stance": -0.0833,
-          "n_sentences": 48,
-          "n_articles": 4
-        },
-        {
-          "year": "2021",
-          "mean_stance": 0.0286,
-          "n_sentences": 70,
-          "n_articles": 9
-        },
-        {
-          "year": "2022",
-          "mean_stance": -0.1042,
-          "n_sentences": 48,
-          "n_articles": 7
-        },
-        {
-          "year": "2023",
-          "mean_stance": -0.0904,
-          "n_sentences": 177,
-          "n_articles": 13
-        },
-        {
-          "year": "2024",
-          "mean_stance": -0.0496,
-          "n_sentences": 121,
-          "n_articles": 9
-        },
-        {
-          "year": "2025",
-          "mean_stance": 0.0,
-          "n_sentences": 59,
+          "n_sentences": 77,
           "n_articles": 6
         }
       ]
@@ -124,17 +77,17 @@
       "id": "person:Covid",
       "name": "Covid",
       "type": "person",
-      "article_count": 35,
-      "total_sentences": 448,
-      "overall_stance": -0.058,
+      "article_count": 40,
+      "total_sentences": 499,
+      "overall_stance": -0.0701,
       "trend": "warming",
-      "trend_delta": 0.3201,
+      "trend_delta": 0.4688,
       "trajectory": [
         {
           "year": "2020",
-          "mean_stance": -0.3636,
-          "n_sentences": 11,
-          "n_articles": 5
+          "mean_stance": -0.4688,
+          "n_sentences": 32,
+          "n_articles": 9
         },
         {
           "year": "2021",
@@ -156,9 +109,9 @@
         },
         {
           "year": "2024",
-          "mean_stance": -0.0435,
-          "n_sentences": 46,
-          "n_articles": 1
+          "mean_stance": 0.0,
+          "n_sentences": 76,
+          "n_articles": 2
         }
       ]
     },
@@ -166,23 +119,23 @@
       "id": "org:Treasury",
       "name": "Treasury",
       "type": "org",
-      "article_count": 23,
-      "total_sentences": 154,
-      "overall_stance": -0.0325,
+      "article_count": 27,
+      "total_sentences": 193,
+      "overall_stance": -0.0725,
       "trend": "cooling",
-      "trend_delta": -0.6667,
+      "trend_delta": -0.5538,
       "trajectory": [
         {
           "year": "2020",
-          "mean_stance": 0.1667,
-          "n_sentences": 12,
-          "n_articles": 2
+          "mean_stance": 0.1538,
+          "n_sentences": 13,
+          "n_articles": 3
         },
         {
           "year": "2021",
-          "mean_stance": 0.0,
-          "n_sentences": 59,
-          "n_articles": 7
+          "mean_stance": -0.0137,
+          "n_sentences": 73,
+          "n_articles": 9
         },
         {
           "year": "2022",
@@ -192,27 +145,75 @@
         },
         {
           "year": "2023",
-          "mean_stance": 0.0,
-          "n_sentences": 5,
-          "n_articles": 2
+          "mean_stance": -0.3846,
+          "n_sentences": 13,
+          "n_articles": 3
         },
         {
           "year": "2024",
+          "mean_stance": -0.08,
+          "n_sentences": 25,
+          "n_articles": 5
+        },
+        {
+          "year": "2025",
+          "mean_stance": -0.0968,
+          "n_sentences": 62,
+          "n_articles": 4
+        },
+        {
+          "year": "2026",
+          "mean_stance": -0.4,
+          "n_sentences": 5,
+          "n_articles": 1
+        }
+      ]
+    },
+    {
+      "id": "person:Jerome Powell",
+      "name": "Jerome Powell",
+      "type": "person",
+      "article_count": 23,
+      "total_sentences": 72,
+      "overall_stance": 0.0,
+      "trend": "steady",
+      "trend_delta": 0.0,
+      "trajectory": [
+        {
+          "year": "2020",
+          "mean_stance": 0.0,
+          "n_sentences": 7,
+          "n_articles": 3
+        },
+        {
+          "year": "2021",
+          "mean_stance": 0.0625,
+          "n_sentences": 16,
+          "n_articles": 5
+        },
+        {
+          "year": "2022",
+          "mean_stance": -0.0588,
+          "n_sentences": 17,
+          "n_articles": 4
+        },
+        {
+          "year": "2023",
           "mean_stance": 0.0,
           "n_sentences": 19,
           "n_articles": 5
         },
         {
-          "year": "2025",
-          "mean_stance": -0.1091,
-          "n_sentences": 55,
-          "n_articles": 4
+          "year": "2024",
+          "mean_stance": 0.0,
+          "n_sentences": 8,
+          "n_articles": 3
         },
         {
-          "year": "2026",
-          "mean_stance": -0.5,
-          "n_sentences": 2,
-          "n_articles": 1
+          "year": "2025",
+          "mean_stance": 0.0,
+          "n_sentences": 5,
+          "n_articles": 3
         }
       ]
     },
@@ -253,55 +254,811 @@
       ]
     },
     {
-      "id": "org:The Federal Reserve",
-      "name": "The Federal Reserve",
+      "id": "person:Jack Ma",
+      "name": "Jack Ma",
+      "type": "person",
+      "article_count": 17,
+      "total_sentences": 221,
+      "overall_stance": 0.0181,
+      "trend": "steady",
+      "trend_delta": 0.0556,
+      "trajectory": [
+        {
+          "year": "2020",
+          "mean_stance": -0.0556,
+          "n_sentences": 18,
+          "n_articles": 4
+        },
+        {
+          "year": "2021",
+          "mean_stance": 0.0255,
+          "n_sentences": 196,
+          "n_articles": 11
+        },
+        {
+          "year": "2022",
+          "mean_stance": 0.0,
+          "n_sentences": 6,
+          "n_articles": 1
+        },
+        {
+          "year": "2026",
+          "mean_stance": 0.0,
+          "n_sentences": 1,
+          "n_articles": 1
+        }
+      ]
+    },
+    {
+      "id": "org:PCE",
+      "name": "PCE",
       "type": "org",
-      "article_count": 18,
-      "total_sentences": 60,
-      "overall_stance": 0.0333,
+      "article_count": 17,
+      "total_sentences": 119,
+      "overall_stance": 0.0168,
+      "trend": "steady",
+      "trend_delta": -0.1429,
+      "trajectory": [
+        {
+          "year": "2021",
+          "mean_stance": 0.0,
+          "n_sentences": 23,
+          "n_articles": 3
+        },
+        {
+          "year": "2022",
+          "mean_stance": 0.0625,
+          "n_sentences": 48,
+          "n_articles": 5
+        },
+        {
+          "year": "2023",
+          "mean_stance": -0.0303,
+          "n_sentences": 33,
+          "n_articles": 4
+        },
+        {
+          "year": "2024",
+          "mean_stance": 0.125,
+          "n_sentences": 8,
+          "n_articles": 3
+        },
+        {
+          "year": "2025",
+          "mean_stance": -0.1429,
+          "n_sentences": 7,
+          "n_articles": 2
+        }
+      ]
+    },
+    {
+      "id": "person:Xi Jinping",
+      "name": "Xi Jinping",
+      "type": "person",
+      "article_count": 17,
+      "total_sentences": 28,
+      "overall_stance": -0.1786,
       "trend": "cooling",
       "trend_delta": -0.3333,
       "trajectory": [
         {
           "year": "2020",
-          "mean_stance": 0.3333,
-          "n_sentences": 3,
-          "n_articles": 1
+          "mean_stance": -0.1667,
+          "n_sentences": 12,
+          "n_articles": 7
         },
         {
           "year": "2021",
           "mean_stance": -0.0909,
           "n_sentences": 11,
-          "n_articles": 4
+          "n_articles": 5
         },
         {
           "year": "2022",
-          "mean_stance": 0.2222,
-          "n_sentences": 9,
+          "mean_stance": -0.3333,
+          "n_sentences": 3,
           "n_articles": 3
         },
         {
           "year": "2023",
-          "mean_stance": -0.0455,
-          "n_sentences": 22,
+          "mean_stance": -0.5,
+          "n_sentences": 2,
+          "n_articles": 2
+        }
+      ]
+    },
+    {
+      "id": "org:Congress",
+      "name": "Congress",
+      "type": "org",
+      "article_count": 17,
+      "total_sentences": 27,
+      "overall_stance": -0.1481,
+      "trend": "steady",
+      "trend_delta": 0.2,
+      "trajectory": [
+        {
+          "year": "2020",
+          "mean_stance": -0.2,
+          "n_sentences": 10,
+          "n_articles": 5
+        },
+        {
+          "year": "2021",
+          "mean_stance": -0.1111,
+          "n_sentences": 9,
           "n_articles": 6
         },
         {
-          "year": "2024",
-          "mean_stance": 0.0769,
-          "n_sentences": 13,
-          "n_articles": 3
+          "year": "2022",
+          "mean_stance": -0.3333,
+          "n_sentences": 3,
+          "n_articles": 2
+        },
+        {
+          "year": "2023",
+          "mean_stance": 0.0,
+          "n_sentences": 2,
+          "n_articles": 2
         },
         {
           "year": "2025",
+          "mean_stance": 0.0,
+          "n_sentences": 3,
+          "n_articles": 2
+        }
+      ]
+    },
+    {
+      "id": "org:Bureau of Labor Statistics",
+      "name": "Bureau of Labor Statistics",
+      "type": "org",
+      "article_count": 16,
+      "total_sentences": 49,
+      "overall_stance": -0.0816,
+      "trend": "steady",
+      "trend_delta": -0.0952,
+      "trajectory": [
+        {
+          "year": "2021",
+          "mean_stance": 0.0,
+          "n_sentences": 9,
+          "n_articles": 5
+        },
+        {
+          "year": "2022",
+          "mean_stance": -0.1333,
+          "n_sentences": 15,
+          "n_articles": 6
+        },
+        {
+          "year": "2023",
+          "mean_stance": 0.0,
+          "n_sentences": 4,
+          "n_articles": 4
+        },
+        {
+          "year": "2025",
+          "mean_stance": -0.0952,
+          "n_sentences": 21,
+          "n_articles": 1
+        }
+      ]
+    },
+    {
+      "id": "org:Huawei",
+      "name": "Huawei",
+      "type": "org",
+      "article_count": 13,
+      "total_sentences": 187,
+      "overall_stance": -0.0535,
+      "trend": "steady",
+      "trend_delta": -0.0554,
+      "trajectory": [
+        {
+          "year": "2020",
+          "mean_stance": -0.0446,
+          "n_sentences": 157,
+          "n_articles": 9
+        },
+        {
+          "year": "2021",
+          "mean_stance": -0.1,
+          "n_sentences": 30,
+          "n_articles": 4
+        }
+      ]
+    },
+    {
+      "id": "org:IPO",
+      "name": "IPO",
+      "type": "org",
+      "article_count": 13,
+      "total_sentences": 81,
+      "overall_stance": -0.0741,
+      "trend": "steady",
+      "trend_delta": 0.0635,
+      "trajectory": [
+        {
+          "year": "2020",
+          "mean_stance": -0.0635,
+          "n_sentences": 63,
+          "n_articles": 7
+        },
+        {
+          "year": "2021",
+          "mean_stance": -0.1333,
+          "n_sentences": 15,
+          "n_articles": 5
+        },
+        {
+          "year": "2022",
+          "mean_stance": 0.0,
+          "n_sentences": 3,
+          "n_articles": 1
+        }
+      ]
+    },
+    {
+      "id": "org:Apple",
+      "name": "Apple",
+      "type": "org",
+      "article_count": 13,
+      "total_sentences": 53,
+      "overall_stance": 0.2642,
+      "trend": "cooling",
+      "trend_delta": -0.359,
+      "trajectory": [
+        {
+          "year": "2020",
+          "mean_stance": 0.359,
+          "n_sentences": 39,
+          "n_articles": 4
+        },
+        {
+          "year": "2021",
+          "mean_stance": 0.0,
+          "n_sentences": 11,
+          "n_articles": 7
+        },
+        {
+          "year": "2022",
+          "mean_stance": 0.0,
+          "n_sentences": 1,
+          "n_articles": 1
+        },
+        {
+          "year": "2023",
           "mean_stance": 0.0,
           "n_sentences": 2,
           "n_articles": 1
         }
       ]
+    },
+    {
+      "id": "org:Ant Group",
+      "name": "Ant Group",
+      "type": "org",
+      "article_count": 13,
+      "total_sentences": 28,
+      "overall_stance": -0.0357,
+      "trend": "steady",
+      "trend_delta": 0.125,
+      "trajectory": [
+        {
+          "year": "2020",
+          "mean_stance": -0.125,
+          "n_sentences": 8,
+          "n_articles": 3
+        },
+        {
+          "year": "2021",
+          "mean_stance": 0.0,
+          "n_sentences": 19,
+          "n_articles": 9
+        },
+        {
+          "year": "2022",
+          "mean_stance": 0.0,
+          "n_sentences": 1,
+          "n_articles": 1
+        }
+      ]
+    },
+    {
+      "id": "org:Ant",
+      "name": "Ant",
+      "type": "org",
+      "article_count": 11,
+      "total_sentences": 235,
+      "overall_stance": -0.0681,
+      "trend": "warming",
+      "trend_delta": 1.0979,
+      "trajectory": [
+        {
+          "year": "2020",
+          "mean_stance": -0.0979,
+          "n_sentences": 194,
+          "n_articles": 4
+        },
+        {
+          "year": "2021",
+          "mean_stance": 0.0,
+          "n_sentences": 38,
+          "n_articles": 6
+        },
+        {
+          "year": "2022",
+          "mean_stance": 1.0,
+          "n_sentences": 3,
+          "n_articles": 1
+        }
+      ]
+    },
+    {
+      "id": "org:Tesla",
+      "name": "Tesla",
+      "type": "org",
+      "article_count": 11,
+      "total_sentences": 159,
+      "overall_stance": 0.0692,
+      "trend": "cooling",
+      "trend_delta": -0.4815,
+      "trajectory": [
+        {
+          "year": "2020",
+          "mean_stance": 0.4815,
+          "n_sentences": 27,
+          "n_articles": 2
+        },
+        {
+          "year": "2021",
+          "mean_stance": -0.0153,
+          "n_sentences": 131,
+          "n_articles": 8
+        },
+        {
+          "year": "2022",
+          "mean_stance": 0.0,
+          "n_sentences": 1,
+          "n_articles": 1
+        }
+      ]
+    },
+    {
+      "id": "person:Larry Summers",
+      "name": "Larry Summers",
+      "type": "person",
+      "article_count": 11,
+      "total_sentences": 18,
+      "overall_stance": -0.1111,
+      "trend": "warming",
+      "trend_delta": 0.6667,
+      "trajectory": [
+        {
+          "year": "2021",
+          "mean_stance": -0.6667,
+          "n_sentences": 6,
+          "n_articles": 2
+        },
+        {
+          "year": "2022",
+          "mean_stance": 0.0,
+          "n_sentences": 3,
+          "n_articles": 2
+        },
+        {
+          "year": "2023",
+          "mean_stance": 0.0,
+          "n_sentences": 4,
+          "n_articles": 3
+        },
+        {
+          "year": "2024",
+          "mean_stance": 1.0,
+          "n_sentences": 2,
+          "n_articles": 2
+        },
+        {
+          "year": "2025",
+          "mean_stance": 0.0,
+          "n_sentences": 3,
+          "n_articles": 2
+        }
+      ]
+    },
+    {
+      "id": "person:Twitter @GeoCalhoun520",
+      "name": "Twitter @GeoCalhoun520",
+      "type": "person",
+      "article_count": 11,
+      "total_sentences": 14,
+      "overall_stance": 0.0,
+      "trend": "steady",
+      "trend_delta": 0.0,
+      "trajectory": [
+        {
+          "year": "2020",
+          "mean_stance": 0.0,
+          "n_sentences": 1,
+          "n_articles": 1
+        },
+        {
+          "year": "2021",
+          "mean_stance": 0.0,
+          "n_sentences": 13,
+          "n_articles": 10
+        }
+      ]
+    },
+    {
+      "id": "org:S&P",
+      "name": "S&P",
+      "type": "org",
+      "article_count": 10,
+      "total_sentences": 112,
+      "overall_stance": 0.0357,
+      "trend": "steady",
+      "trend_delta": 0.0,
+      "trajectory": [
+        {
+          "year": "2020",
+          "mean_stance": 0.0,
+          "n_sentences": 20,
+          "n_articles": 4
+        },
+        {
+          "year": "2021",
+          "mean_stance": 0.0519,
+          "n_sentences": 77,
+          "n_articles": 4
+        },
+        {
+          "year": "2022",
+          "mean_stance": 0.0,
+          "n_sentences": 14,
+          "n_articles": 1
+        },
+        {
+          "year": "2025",
+          "mean_stance": 0.0,
+          "n_sentences": 1,
+          "n_articles": 1
+        }
+      ]
+    },
+    {
+      "id": "org:NASDAQ",
+      "name": "NASDAQ",
+      "type": "org",
+      "article_count": 10,
+      "total_sentences": 30,
+      "overall_stance": -0.0667,
+      "trend": "steady",
+      "trend_delta": 0.0,
+      "trajectory": [
+        {
+          "year": "2020",
+          "mean_stance": -0.0667,
+          "n_sentences": 30,
+          "n_articles": 10
+        }
+      ]
+    },
+    {
+      "id": "org:Intel",
+      "name": "Intel",
+      "type": "org",
+      "article_count": 9,
+      "total_sentences": 68,
+      "overall_stance": 0.0441,
+      "trend": "steady",
+      "trend_delta": -0.125,
+      "trajectory": [
+        {
+          "year": "2020",
+          "mean_stance": 0.2,
+          "n_sentences": 5,
+          "n_articles": 2
+        },
+        {
+          "year": "2021",
+          "mean_stance": -0.0476,
+          "n_sentences": 21,
+          "n_articles": 5
+        },
+        {
+          "year": "2022",
+          "mean_stance": 0.0,
+          "n_sentences": 2,
+          "n_articles": 1
+        },
+        {
+          "year": "2023",
+          "mean_stance": 0.075,
+          "n_sentences": 40,
+          "n_articles": 1
+        }
+      ]
+    },
+    {
+      "id": "person:Warren Buffett",
+      "name": "Warren Buffett",
+      "type": "person",
+      "article_count": 9,
+      "total_sentences": 27,
+      "overall_stance": 0.0,
+      "trend": "steady",
+      "trend_delta": 0.0,
+      "trajectory": [
+        {
+          "year": "2020",
+          "mean_stance": 0.0,
+          "n_sentences": 20,
+          "n_articles": 4
+        },
+        {
+          "year": "2021",
+          "mean_stance": -0.2,
+          "n_sentences": 5,
+          "n_articles": 3
+        },
+        {
+          "year": "2023",
+          "mean_stance": 1.0,
+          "n_sentences": 1,
+          "n_articles": 1
+        },
+        {
+          "year": "2025",
+          "mean_stance": 0.0,
+          "n_sentences": 1,
+          "n_articles": 1
+        }
+      ]
+    },
+    {
+      "id": "org:Omicron",
+      "name": "Omicron",
+      "type": "org",
+      "article_count": 9,
+      "total_sentences": 26,
+      "overall_stance": -0.0385,
+      "trend": "steady",
+      "trend_delta": 0.2,
+      "trajectory": [
+        {
+          "year": "2022",
+          "mean_stance": -0.2,
+          "n_sentences": 5,
+          "n_articles": 3
+        },
+        {
+          "year": "2023",
+          "mean_stance": 0.0,
+          "n_sentences": 15,
+          "n_articles": 4
+        },
+        {
+          "year": "2024",
+          "mean_stance": 0.0,
+          "n_sentences": 6,
+          "n_articles": 2
+        }
+      ]
+    },
+    {
+      "id": "person:Core",
+      "name": "Core",
+      "type": "person",
+      "article_count": 8,
+      "total_sentences": 42,
+      "overall_stance": 0.0476,
+      "trend": "steady",
+      "trend_delta": 0.2222,
+      "trajectory": [
+        {
+          "year": "2021",
+          "mean_stance": 0.0,
+          "n_sentences": 16,
+          "n_articles": 3
+        },
+        {
+          "year": "2022",
+          "mean_stance": 0.0,
+          "n_sentences": 17,
+          "n_articles": 3
+        },
+        {
+          "year": "2023",
+          "mean_stance": 0.2222,
+          "n_sentences": 9,
+          "n_articles": 2
+        }
+      ]
+    },
+    {
+      "id": "org:Amazon",
+      "name": "Amazon",
+      "type": "org",
+      "article_count": 8,
+      "total_sentences": 34,
+      "overall_stance": 0.1176,
+      "trend": "warming",
+      "trend_delta": 0.25,
+      "trajectory": [
+        {
+          "year": "2020",
+          "mean_stance": 0.0,
+          "n_sentences": 13,
+          "n_articles": 3
+        },
+        {
+          "year": "2021",
+          "mean_stance": 0.0,
+          "n_sentences": 5,
+          "n_articles": 2
+        },
+        {
+          "year": "2022",
+          "mean_stance": 0.25,
+          "n_sentences": 16,
+          "n_articles": 3
+        }
+      ]
+    },
+    {
+      "id": "org:Photo Illustration",
+      "name": "Photo Illustration",
+      "type": "org",
+      "article_count": 8,
+      "total_sentences": 22,
+      "overall_stance": -0.0455,
+      "trend": "steady",
+      "trend_delta": 0.0,
+      "trajectory": [
+        {
+          "year": "2020",
+          "mean_stance": 0.0,
+          "n_sentences": 7,
+          "n_articles": 3
+        },
+        {
+          "year": "2021",
+          "mean_stance": -0.1,
+          "n_sentences": 10,
+          "n_articles": 3
+        },
+        {
+          "year": "2023",
+          "mean_stance": 0.0,
+          "n_sentences": 5,
+          "n_articles": 2
+        }
+      ]
+    },
+    {
+      "id": "org:Senate",
+      "name": "Senate",
+      "type": "org",
+      "article_count": 8,
+      "total_sentences": 22,
+      "overall_stance": 0.2273,
+      "trend": "steady",
+      "trend_delta": 0.0,
+      "trajectory": [
+        {
+          "year": "2020",
+          "mean_stance": 0.0,
+          "n_sentences": 4,
+          "n_articles": 2
+        },
+        {
+          "year": "2021",
+          "mean_stance": 0.2857,
+          "n_sentences": 7,
+          "n_articles": 4
+        },
+        {
+          "year": "2022",
+          "mean_stance": 0.375,
+          "n_sentences": 8,
+          "n_articles": 1
+        },
+        {
+          "year": "2023",
+          "mean_stance": 0.0,
+          "n_sentences": 3,
+          "n_articles": 1
+        }
+      ]
+    },
+    {
+      "id": "org:InterDigital Communications",
+      "name": "InterDigital Communications",
+      "type": "org",
+      "article_count": 8,
+      "total_sentences": 18,
+      "overall_stance": 0.0,
+      "trend": "steady",
+      "trend_delta": 0.0,
+      "trajectory": [
+        {
+          "year": "2020",
+          "mean_stance": 0.0,
+          "n_sentences": 18,
+          "n_articles": 8
+        }
+      ]
+    },
+    {
+      "id": "person:Elon Musk",
+      "name": "Elon Musk",
+      "type": "person",
+      "article_count": 8,
+      "total_sentences": 12,
+      "overall_stance": -0.1667,
+      "trend": "steady",
+      "trend_delta": -0.1818,
+      "trajectory": [
+        {
+          "year": "2020",
+          "mean_stance": 0.0,
+          "n_sentences": 1,
+          "n_articles": 1
+        },
+        {
+          "year": "2021",
+          "mean_stance": -0.1818,
+          "n_sentences": 11,
+          "n_articles": 7
+        }
+      ]
+    },
+    {
+      "id": "org:New York Stock Exchange",
+      "name": "New York Stock Exchange",
+      "type": "org",
+      "article_count": 8,
+      "total_sentences": 10,
+      "overall_stance": 0.0,
+      "trend": "steady",
+      "trend_delta": 0.0,
+      "trajectory": [
+        {
+          "year": "2020",
+          "mean_stance": 0.0,
+          "n_sentences": 3,
+          "n_articles": 2
+        },
+        {
+          "year": "2021",
+          "mean_stance": 0.0,
+          "n_sentences": 3,
+          "n_articles": 3
+        },
+        {
+          "year": "2022",
+          "mean_stance": 0.0,
+          "n_sentences": 4,
+          "n_articles": 3
+        }
+      ]
     }
   ],
   "warming": [
+    {
+      "name": "Ant",
+      "type": "org",
+      "trend_delta": 1.0979,
+      "overall_stance": -0.0681
+    },
+    {
+      "name": "Larry Summers",
+      "type": "person",
+      "trend_delta": 0.6667,
+      "overall_stance": -0.1111
+    },
     {
       "name": "EU",
       "type": "org",
@@ -311,22 +1068,40 @@
     {
       "name": "Covid",
       "type": "person",
-      "trend_delta": 0.3201,
-      "overall_stance": -0.058
+      "trend_delta": 0.4688,
+      "overall_stance": -0.0701
+    },
+    {
+      "name": "Amazon",
+      "type": "org",
+      "trend_delta": 0.25,
+      "overall_stance": 0.1176
     }
   ],
   "cooling": [
     {
       "name": "Treasury",
       "type": "org",
-      "trend_delta": -0.6667,
-      "overall_stance": -0.0325
+      "trend_delta": -0.5538,
+      "overall_stance": -0.0725
     },
     {
-      "name": "The Federal Reserve",
+      "name": "Tesla",
       "type": "org",
+      "trend_delta": -0.4815,
+      "overall_stance": 0.0692
+    },
+    {
+      "name": "Apple",
+      "type": "org",
+      "trend_delta": -0.359,
+      "overall_stance": 0.2642
+    },
+    {
+      "name": "Xi Jinping",
+      "type": "person",
       "trend_delta": -0.3333,
-      "overall_stance": 0.0333
+      "overall_stance": -0.1786
     }
   ]
 }

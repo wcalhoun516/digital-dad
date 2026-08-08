@@ -2,11 +2,12 @@
   "meta": {
     "total_articles": 199,
     "n_nodes": 40,
-    "n_edges": 201,
+    "n_edges": 192,
     "params": {
       "top_n": 40,
       "min_cooccur": 2,
       "min_mentions": 1,
+      "aliases": true,
       "excluded": [
         "afp",
         "calhoun",
@@ -20,36 +21,36 @@
   },
   "nodes": [
     {
-      "id": "org:the Federal Reserve",
-      "name": "the Federal Reserve",
+      "id": "org:Federal Reserve",
+      "name": "Federal Reserve",
       "type": "org",
-      "article_count": 54,
-      "total_mentions": 139,
-      "degree": 26
-    },
-    {
-      "id": "org:Fed",
-      "name": "Fed",
-      "type": "org",
-      "article_count": 53,
-      "total_mentions": 483,
-      "degree": 23
+      "article_count": 69,
+      "total_mentions": 666,
+      "degree": 28
     },
     {
       "id": "person:Covid",
       "name": "Covid",
       "type": "person",
-      "article_count": 39,
-      "total_mentions": 188,
+      "article_count": 44,
+      "total_mentions": 232,
       "degree": 24
     },
     {
       "id": "org:Treasury",
       "name": "Treasury",
       "type": "org",
+      "article_count": 31,
+      "total_mentions": 176,
+      "degree": 19
+    },
+    {
+      "id": "person:Jerome Powell",
+      "name": "Jerome Powell",
+      "type": "person",
       "article_count": 27,
-      "total_mentions": 139,
-      "degree": 18
+      "total_mentions": 81,
+      "degree": 15
     },
     {
       "id": "person:Photo",
@@ -57,7 +58,7 @@
       "type": "person",
       "article_count": 24,
       "total_mentions": 28,
-      "degree": 19
+      "degree": 16
     },
     {
       "id": "org:EU",
@@ -65,7 +66,15 @@
       "type": "org",
       "article_count": 21,
       "total_mentions": 91,
-      "degree": 10
+      "degree": 12
+    },
+    {
+      "id": "person:Jack Ma",
+      "name": "Jack Ma",
+      "type": "person",
+      "article_count": 20,
+      "total_mentions": 180,
+      "degree": 11
     },
     {
       "id": "org:PCE",
@@ -73,31 +82,23 @@
       "type": "org",
       "article_count": 20,
       "total_mentions": 81,
-      "degree": 12
-    },
-    {
-      "id": "person:Powell",
-      "name": "Powell",
-      "type": "person",
-      "article_count": 19,
-      "total_mentions": 58,
-      "degree": 13
-    },
-    {
-      "id": "org:The Federal Reserve",
-      "name": "The Federal Reserve",
-      "type": "org",
-      "article_count": 18,
-      "total_mentions": 24,
-      "degree": 12
-    },
-    {
-      "id": "person:Jack Ma",
-      "name": "Jack Ma",
-      "type": "person",
-      "article_count": 17,
-      "total_mentions": 98,
       "degree": 8
+    },
+    {
+      "id": "org:Bureau of Labor Statistics",
+      "name": "Bureau of Labor Statistics",
+      "type": "org",
+      "article_count": 20,
+      "total_mentions": 51,
+      "degree": 12
+    },
+    {
+      "id": "person:Xi Jinping",
+      "name": "Xi Jinping",
+      "type": "person",
+      "article_count": 18,
+      "total_mentions": 20,
+      "degree": 13
     },
     {
       "id": "org:Congress",
@@ -108,12 +109,12 @@
       "degree": 12
     },
     {
-      "id": "person:Jerome Powell",
-      "name": "Jerome Powell",
-      "type": "person",
+      "id": "org:Ant Group",
+      "name": "Ant Group",
+      "type": "org",
       "article_count": 16,
-      "total_mentions": 23,
-      "degree": 15
+      "total_mentions": 22,
+      "degree": 10
     },
     {
       "id": "org:Huawei",
@@ -129,7 +130,7 @@
       "type": "org",
       "article_count": 14,
       "total_mentions": 66,
-      "degree": 10
+      "degree": 12
     },
     {
       "id": "org:Apple",
@@ -137,15 +138,7 @@
       "type": "org",
       "article_count": 14,
       "total_mentions": 55,
-      "degree": 10
-    },
-    {
-      "id": "org:the Bureau of Labor Statistics",
-      "name": "the Bureau of Labor Statistics",
-      "type": "org",
-      "article_count": 14,
-      "total_mentions": 17,
-      "degree": 14
+      "degree": 11
     },
     {
       "id": "person:Twitter @GeoCalhoun520",
@@ -153,15 +146,15 @@
       "type": "person",
       "article_count": 14,
       "total_mentions": 14,
-      "degree": 13
+      "degree": 9
     },
     {
       "id": "org:Ant",
       "name": "Ant",
       "type": "org",
       "article_count": 13,
-      "total_mentions": 155,
-      "degree": 7
+      "total_mentions": 170,
+      "degree": 9
     },
     {
       "id": "org:Tesla",
@@ -169,7 +162,7 @@
       "type": "org",
       "article_count": 13,
       "total_mentions": 89,
-      "degree": 8
+      "degree": 10
     },
     {
       "id": "person:Larry Summers",
@@ -177,15 +170,7 @@
       "type": "person",
       "article_count": 13,
       "total_mentions": 18,
-      "degree": 12
-    },
-    {
-      "id": "person:Xi Jinping",
-      "name": "Xi Jinping",
-      "type": "person",
-      "article_count": 13,
-      "total_mentions": 15,
-      "degree": 7
+      "degree": 9
     },
     {
       "id": "org:Intel",
@@ -196,20 +181,12 @@
       "degree": 4
     },
     {
-      "id": "person:Ma",
-      "name": "Ma",
+      "id": "person:Warren Buffett",
+      "name": "Warren Buffett",
       "type": "person",
-      "article_count": 12,
-      "total_mentions": 67,
-      "degree": 6
-    },
-    {
-      "id": "org:Treasurys",
-      "name": "Treasurys",
-      "type": "org",
       "article_count": 11,
-      "total_mentions": 35,
-      "degree": 7
+      "total_mentions": 27,
+      "degree": 8
     },
     {
       "id": "org:NASDAQ",
@@ -228,28 +205,12 @@
       "degree": 5
     },
     {
-      "id": "person:COVID",
-      "name": "COVID",
-      "type": "person",
-      "article_count": 10,
-      "total_mentions": 38,
-      "degree": 9
-    },
-    {
       "id": "org:Amazon",
       "name": "Amazon",
       "type": "org",
       "article_count": 10,
       "total_mentions": 33,
-      "degree": 7
-    },
-    {
-      "id": "person:Warren Buffett",
-      "name": "Warren Buffett",
-      "type": "person",
-      "article_count": 10,
-      "total_mentions": 21,
-      "degree": 8
+      "degree": 9
     },
     {
       "id": "person:Core",
@@ -257,7 +218,7 @@
       "type": "person",
       "article_count": 10,
       "total_mentions": 12,
-      "degree": 8
+      "degree": 5
     },
     {
       "id": "org:Photo Illustration",
@@ -281,7 +242,7 @@
       "type": "org",
       "article_count": 9,
       "total_mentions": 18,
-      "degree": 7
+      "degree": 8
     },
     {
       "id": "org:Senate",
@@ -296,24 +257,24 @@
       "name": "Exxon",
       "type": "org",
       "article_count": 9,
-      "total_mentions": 13,
-      "degree": 5
+      "total_mentions": 14,
+      "degree": 6
     },
     {
-      "id": "org:the New York Stock Exchange",
-      "name": "the New York Stock Exchange",
+      "id": "person:Elon Musk",
+      "name": "Elon Musk",
+      "type": "person",
+      "article_count": 9,
+      "total_mentions": 12,
+      "degree": 13
+    },
+    {
+      "id": "org:New York Stock Exchange",
+      "name": "New York Stock Exchange",
       "type": "org",
       "article_count": 9,
       "total_mentions": 10,
-      "degree": 2
-    },
-    {
-      "id": "org:BLS",
-      "name": "BLS",
-      "type": "org",
-      "article_count": 8,
-      "total_mentions": 30,
-      "degree": 8
+      "degree": 3
     },
     {
       "id": "org:Finance",
@@ -329,67 +290,62 @@
       "type": "org",
       "article_count": 8,
       "total_mentions": 16,
+      "degree": 8
+    },
+    {
+      "id": "org:Photo",
+      "name": "Photo",
+      "type": "org",
+      "article_count": 8,
+      "total_mentions": 8,
+      "degree": 6
+    },
+    {
+      "id": "org:European Central Bank",
+      "name": "European Central Bank",
+      "type": "org",
+      "article_count": 7,
+      "total_mentions": 25,
+      "degree": 6
+    },
+    {
+      "id": "person:Ant",
+      "name": "Ant",
+      "type": "person",
+      "article_count": 7,
+      "total_mentions": 17,
       "degree": 7
     },
     {
-      "id": "org:Federal Reserve",
-      "name": "Federal Reserve",
-      "type": "org",
-      "article_count": 8,
-      "total_mentions": 9,
+      "id": "person:Alexander Hamilton",
+      "name": "Alexander Hamilton",
+      "type": "person",
+      "article_count": 7,
+      "total_mentions": 16,
+      "degree": 6
+    },
+    {
+      "id": "person:Putin",
+      "name": "Putin",
+      "type": "person",
+      "article_count": 7,
+      "total_mentions": 15,
       "degree": 8
+    },
+    {
+      "id": "org:site'sTerms of Service",
+      "name": "site'sTerms of Service",
+      "type": "org",
+      "article_count": 7,
+      "total_mentions": 14,
+      "degree": 4
     }
   ],
   "edges": [
     {
-      "source": "org:Fed",
-      "target": "org:the Federal Reserve",
-      "weight": 42,
-      "articles": [
-        "a-deflation-alert-hidden-in-the-latest-consumer-price-indicators",
-        "a-long-overdue-reckoning-for-the-bureau-of-labor-statistics",
-        "collateral-damage-from-fed-policy-3-money-market-funds-a-powder-keg",
-        "decoding-the-inflation-signals-how-to-read-and-correct-the-latest-cpi-figure",
-        "dissecting-the-consumer-price-index-pt-1-inflation-is-over",
-        "does-inflation-still-exist-does-anyone-really-know",
-        "does-raising-the-fed-funds-rate-tame-inflation-is-there-collateral-damage",
-        "get-ready-for-more-inflation-panic-porn-the-may-cpi-release",
-        "how-covid-19-will-change-finance-ford-the-fed-and-the-bond-market",
-        "inflation-is-a-fever-is-it-a-common-cold-or-economic-leukemia",
-        "inflation-is-a-fever-is-it-as-mild-as-a-common-cold-or-something-more-serious",
-        "is-price-gouging-real-whos-doing-it-is-it-driving-inflation",
-        "jackson-hole-the-federal-reserve-does-shark-week-for-the-markets",
-        "janet-yellen-forgets-how-to-do-fedspeak-or-whats-that-floating-in-the-punchbowl",
-        "shortages-gluts-deflation-the-bottlenecks-in-the-economy-are-breaking",
-        "tapering-talking-tightening-the-federal-reserves-masterful-messaging",
-        "tariff-uncertainties-part-2-the-link-to-inflation",
-        "tariff-uncertainties-part-3-the-bond-markets",
-        "the-egg-crisis-another-pseudo-inflation-phenomenon",
-        "the-fed-doesnt-just-print-money-it-also-prints-alpha",
-        "the-federal-reserve-has-an-egg-problem-and-a-chicken-and-egg-problem",
-        "the-feds-rate-cut-a-soft-landing-or-fake-news",
-        "the-feds-two-pronged-monetary-blitzkrieg-pt-1-surveying-the-damage",
-        "the-flawed-cpi-the-fallacy-of-year-over-year-inflation-reporting",
-        "the-inflation-bump-is-not-real-it-is-a-statistical-artifact",
-        "the-long-and-variable-lag-a-dangerous-monetary-policy-myth",
-        "the-market-fears-the-fed-more-than-hamas",
-        "the-markets-big-fear-is-not-geopolitics-it-is-the-federal-reserve",
-        "the-verdict-on-the-2021-2023-inflation-transitory-on-all-counts",
-        "update-on-interest-rates-is-the-federal-reserve-shooting-blanks",
-        "what-is-really-driving-inflation-today",
-        "what-is-structural-inflation-pt-1-a-compelling-case-study",
-        "what-is-transitory-inflation-1-the-facts",
-        "what-is-transitory-inflation-2-the-politics",
-        "why-the-federal-reserve-gets-inflation-wrong-and-why-monetary-policy-is-always-l",
-        "will-the-fed-cut-interest-rates-does-it-matter-recent-history-says-no",
-        "would-you-buy-a-used-car-from-this-economist-is-inflation-real",
-        "yes-todays-inflation-is-transitory-the-pundits-have-it-wrong"
-      ]
-    },
-    {
-      "source": "org:Fed",
-      "target": "person:Powell",
-      "weight": 19,
+      "source": "org:Federal Reserve",
+      "target": "person:Jerome Powell",
+      "weight": 26,
       "articles": [
         "a-deflation-alert-hidden-in-the-latest-consumer-price-indicators",
         "commodity-price-increases-do-not-create-inflation",
@@ -397,46 +353,78 @@
         "does-inflation-still-exist-does-anyone-really-know",
         "inflation-the-media-screams-but-the-market-is-unfazed",
         "jackson-hole-the-federal-reserve-does-shark-week-for-the-markets",
+        "tapering-talking-tightening-the-federal-reserves-masterful-messaging",
         "tariff-uncertainties-part-2-the-link-to-inflation",
         "tariff-uncertainties-part-3-the-bond-markets",
+        "the-fed-doesnt-just-print-money-it-also-prints-alpha",
         "the-feds-rate-cut-a-soft-landing-or-fake-news",
         "the-inflation-bump-is-not-real-it-is-a-statistical-artifact",
         "the-long-and-variable-lag-a-dangerous-monetary-policy-myth",
+        "the-markets-big-fear-is-not-geopolitics-it-is-the-federal-reserve",
+        "the-verdict-on-the-2021-2023-inflation-transitory-on-all-counts",
+        "update-on-interest-rates-is-the-federal-reserve-shooting-blanks",
+        "what-is-really-driving-inflation-today",
         "what-is-transitory-inflation-1-the-facts",
         "what-is-transitory-inflation-2-the-politics",
         "why-the-federal-reserve-gets-inflation-wrong-and-why-monetary-policy-is-always-l",
+        "will-the-fed-cut-interest-rates-does-it-matter-recent-history-says-no",
+        "would-you-buy-a-used-car-from-this-economist-is-inflation-real"
+      ]
+    },
+    {
+      "source": "org:Federal Reserve",
+      "target": "org:Treasury",
+      "weight": 21,
+      "articles": [
+        "collateral-damage-from-fed-policy-3-money-market-funds-a-powder-keg",
+        "collateral-damage-from-fed-policy-part-2-a-broken-housing-market",
+        "decoding-the-inflation-signals-how-to-read-and-correct-the-latest-cpi-figure",
+        "inflation-the-media-screams-but-the-market-is-unfazed",
+        "janet-yellen-forgets-how-to-do-fedspeak-or-whats-that-floating-in-the-punchbowl",
+        "media-laziness-in-evaluating-economic-data-inflation-gas-prices-china-russia",
+        "shortages-gluts-deflation-the-bottlenecks-in-the-economy-are-breaking",
+        "tapering-talking-tightening-the-federal-reserves-masterful-messaging",
+        "tariff-uncertainties-part-3-the-bond-markets",
+        "the-feds-rate-cut-a-soft-landing-or-fake-news",
+        "the-feds-two-pronged-monetary-blitzkrieg-pt-1-surveying-the-damage",
+        "the-market-fears-the-fed-more-than-hamas",
+        "the-markets-big-fear-is-not-geopolitics-it-is-the-federal-reserve",
+        "the-media-is-trying-to-rebrand-the-recovery-as-inflation-pressure",
+        "the-new-inflation-scare-is-the-economy-really-in-danger",
+        "the-tariff-scorecard-did-we-miss-the-apocalypse-or-was-it-just-postponed",
+        "update-on-interest-rates-is-the-federal-reserve-shooting-blanks",
+        "what-are-the-true-fundamentals-behind-the-treasury-bond-rout",
+        "what-is-the-bond-market-telling-us-now-maybe-nothing-at-all",
         "will-the-fed-cut-interest-rates-does-it-matter-recent-history-says-no"
       ]
     },
     {
-      "source": "org:Fed",
-      "target": "org:The Federal Reserve",
-      "weight": 18,
+      "source": "org:Bureau of Labor Statistics",
+      "target": "org:Federal Reserve",
+      "weight": 20,
       "articles": [
         "a-deflation-alert-hidden-in-the-latest-consumer-price-indicators",
-        "collateral-damage-from-fed-policy-part-2-a-broken-housing-market",
-        "does-inflation-still-exist-does-anyone-really-know",
+        "a-long-overdue-reckoning-for-the-bureau-of-labor-statistics",
+        "decoding-the-inflation-signals-how-to-read-and-correct-the-latest-cpi-figure",
+        "dissecting-the-consumer-price-index-pt-1-inflation-is-over",
         "get-ready-for-more-inflation-panic-porn-the-may-cpi-release",
-        "inflation-is-over-what-comes-next",
-        "media-laziness-in-evaluating-economic-data-inflation-gas-prices-china-russia",
-        "tapering-talking-tightening-the-federal-reserves-masterful-messaging",
-        "the-egg-crisis-another-pseudo-inflation-phenomenon",
-        "the-feds-rate-cut-a-soft-landing-or-fake-news",
-        "the-market-fears-the-fed-more-than-hamas",
-        "the-new-inflation-scare-is-the-economy-really-in-danger",
-        "the-tariff-scorecard-did-we-miss-the-apocalypse-or-was-it-just-postponed",
-        "update-on-interest-rates-is-the-federal-reserve-shooting-blanks",
-        "what-is-really-driving-inflation-today",
-        "what-is-structural-inflation-pt-1-a-compelling-case-study",
-        "what-is-the-bond-market-telling-us-now-maybe-nothing-at-all",
-        "what-is-transitory-inflation-1-the-facts",
-        "yes-todays-inflation-is-transitory-the-pundits-have-it-wrong"
+        "inflation-the-media-screams-but-the-market-is-unfazed",
+        "more-problems-with-inflation-coping-with-volatility",
+        "shortages-gluts-deflation-the-bottlenecks-in-the-economy-are-breaking",
+        "the-31-flavors-of-inflation-do-we-really-understand-these-numbers",
+        "the-flawed-cpi-the-fallacy-of-year-over-year-inflation-reporting",
+        "the-inflation-figures-are-grossly-inflated-heres-how",
+        "the-media-is-trying-to-rebrand-the-recovery-as-inflation-pressure",
+        "there-is-no-inflation-the-june-cpi-headline-head-fake",
+        "what-is-transitory-inflation-2-the-politics",
+        "why-the-federal-reserve-gets-inflation-wrong-and-why-monetary-policy-is-always-l",
+        "would-you-buy-a-used-car-from-this-economist-is-inflation-real"
       ]
     },
     {
-      "source": "org:PCE",
-      "target": "org:the Federal Reserve",
-      "weight": 18,
+      "source": "org:Federal Reserve",
+      "target": "org:PCE",
+      "weight": 20,
       "articles": [
         "a-deflation-alert-hidden-in-the-latest-consumer-price-indicators",
         "decoding-the-inflation-signals-how-to-read-and-correct-the-latest-cpi-figure",
@@ -444,10 +432,12 @@
         "get-ready-for-more-inflation-panic-porn-the-may-cpi-release",
         "inflation-is-a-fever-is-it-a-common-cold-or-economic-leukemia",
         "inflation-is-a-fever-is-it-as-mild-as-a-common-cold-or-something-more-serious",
+        "inflation-is-over-what-comes-next",
         "tariff-uncertainties-part-2-the-link-to-inflation",
         "the-31-flavors-of-inflation-do-we-really-understand-these-numbers",
         "the-flawed-cpi-the-fallacy-of-year-over-year-inflation-reporting",
         "the-inflation-figures-are-grossly-inflated-heres-how",
+        "the-tariff-scorecard-did-we-miss-the-apocalypse-or-was-it-just-postponed",
         "the-verdict-on-the-2021-2023-inflation-transitory-on-all-counts",
         "there-is-no-inflation-the-june-cpi-headline-head-fake",
         "why-the-federal-reserve-gets-inflation-wrong-and-why-monetary-policy-is-always-l",
@@ -456,149 +446,97 @@
       ]
     },
     {
-      "source": "org:Fed",
-      "target": "org:Treasury",
-      "weight": 17,
-      "articles": [
-        "collateral-damage-from-fed-policy-3-money-market-funds-a-powder-keg",
-        "collateral-damage-from-fed-policy-part-2-a-broken-housing-market",
-        "decoding-the-inflation-signals-how-to-read-and-correct-the-latest-cpi-figure",
-        "inflation-the-media-screams-but-the-market-is-unfazed",
-        "janet-yellen-forgets-how-to-do-fedspeak-or-whats-that-floating-in-the-punchbowl",
-        "media-laziness-in-evaluating-economic-data-inflation-gas-prices-china-russia",
-        "shortages-gluts-deflation-the-bottlenecks-in-the-economy-are-breaking",
-        "tariff-uncertainties-part-3-the-bond-markets",
-        "the-feds-rate-cut-a-soft-landing-or-fake-news",
-        "the-feds-two-pronged-monetary-blitzkrieg-pt-1-surveying-the-damage",
-        "the-markets-big-fear-is-not-geopolitics-it-is-the-federal-reserve",
-        "the-new-inflation-scare-is-the-economy-really-in-danger",
-        "the-tariff-scorecard-did-we-miss-the-apocalypse-or-was-it-just-postponed",
-        "update-on-interest-rates-is-the-federal-reserve-shooting-blanks",
-        "what-is-the-bond-market-telling-us-now-maybe-nothing-at-all",
-        "will-the-fed-cut-interest-rates-does-it-matter-recent-history-says-no"
-      ]
-    },
-    {
-      "source": "org:Fed",
-      "target": "org:PCE",
-      "weight": 16,
-      "articles": [
-        "a-deflation-alert-hidden-in-the-latest-consumer-price-indicators",
-        "decoding-the-inflation-signals-how-to-read-and-correct-the-latest-cpi-figure",
-        "dissecting-the-consumer-price-index-pt-1-inflation-is-over",
-        "get-ready-for-more-inflation-panic-porn-the-may-cpi-release",
-        "inflation-is-a-fever-is-it-a-common-cold-or-economic-leukemia",
-        "inflation-is-a-fever-is-it-as-mild-as-a-common-cold-or-something-more-serious",
-        "inflation-is-over-what-comes-next",
-        "tariff-uncertainties-part-2-the-link-to-inflation",
-        "the-flawed-cpi-the-fallacy-of-year-over-year-inflation-reporting",
-        "the-tariff-scorecard-did-we-miss-the-apocalypse-or-was-it-just-postponed",
-        "the-verdict-on-the-2021-2023-inflation-transitory-on-all-counts",
-        "why-the-federal-reserve-gets-inflation-wrong-and-why-monetary-policy-is-always-l",
-        "would-you-buy-a-used-car-from-this-economist-is-inflation-real",
-        "yes-todays-inflation-is-transitory-the-pundits-have-it-wrong"
-      ]
-    },
-    {
-      "source": "org:the Federal Reserve",
-      "target": "person:Powell",
-      "weight": 16,
-      "articles": [
-        "a-deflation-alert-hidden-in-the-latest-consumer-price-indicators",
-        "dissecting-the-consumer-price-index-pt-1-inflation-is-over",
-        "does-inflation-still-exist-does-anyone-really-know",
-        "jackson-hole-the-federal-reserve-does-shark-week-for-the-markets",
-        "tariff-uncertainties-part-2-the-link-to-inflation",
-        "tariff-uncertainties-part-3-the-bond-markets",
-        "the-feds-rate-cut-a-soft-landing-or-fake-news",
-        "the-inflation-bump-is-not-real-it-is-a-statistical-artifact",
-        "the-long-and-variable-lag-a-dangerous-monetary-policy-myth",
-        "what-is-transitory-inflation-1-the-facts",
-        "what-is-transitory-inflation-2-the-politics",
-        "why-the-federal-reserve-gets-inflation-wrong-and-why-monetary-policy-is-always-l",
-        "will-the-fed-cut-interest-rates-does-it-matter-recent-history-says-no"
-      ]
-    },
-    {
-      "source": "org:Fed",
-      "target": "person:Jerome Powell",
+      "source": "org:Ant Group",
+      "target": "person:Jack Ma",
       "weight": 15,
       "articles": [
-        "a-deflation-alert-hidden-in-the-latest-consumer-price-indicators",
-        "jackson-hole-the-federal-reserve-does-shark-week-for-the-markets",
-        "tapering-talking-tightening-the-federal-reserves-masterful-messaging",
-        "tariff-uncertainties-part-2-the-link-to-inflation",
-        "the-fed-doesnt-just-print-money-it-also-prints-alpha",
-        "the-feds-rate-cut-a-soft-landing-or-fake-news",
-        "the-markets-big-fear-is-not-geopolitics-it-is-the-federal-reserve",
-        "the-verdict-on-the-2021-2023-inflation-transitory-on-all-counts",
-        "update-on-interest-rates-is-the-federal-reserve-shooting-blanks",
-        "what-is-really-driving-inflation-today",
-        "what-is-transitory-inflation-1-the-facts",
-        "what-is-transitory-inflation-2-the-politics",
-        "why-the-federal-reserve-gets-inflation-wrong-and-why-monetary-policy-is-always-l",
-        "would-you-buy-a-used-car-from-this-economist-is-inflation-real"
-      ]
-    },
-    {
-      "source": "org:the Federal Reserve",
-      "target": "person:Jerome Powell",
-      "weight": 15,
-      "articles": [
-        "a-deflation-alert-hidden-in-the-latest-consumer-price-indicators",
-        "jackson-hole-the-federal-reserve-does-shark-week-for-the-markets",
-        "tapering-talking-tightening-the-federal-reserves-masterful-messaging",
-        "tariff-uncertainties-part-2-the-link-to-inflation",
-        "the-fed-doesnt-just-print-money-it-also-prints-alpha",
-        "the-feds-rate-cut-a-soft-landing-or-fake-news",
-        "the-markets-big-fear-is-not-geopolitics-it-is-the-federal-reserve",
-        "the-verdict-on-the-2021-2023-inflation-transitory-on-all-counts",
-        "update-on-interest-rates-is-the-federal-reserve-shooting-blanks",
-        "what-is-really-driving-inflation-today",
-        "what-is-transitory-inflation-1-the-facts",
-        "what-is-transitory-inflation-2-the-politics",
-        "why-the-federal-reserve-gets-inflation-wrong-and-why-monetary-policy-is-always-l",
-        "would-you-buy-a-used-car-from-this-economist-is-inflation-real"
-      ]
-    },
-    {
-      "source": "org:The Federal Reserve",
-      "target": "org:the Federal Reserve",
-      "weight": 12,
-      "articles": [
-        "a-deflation-alert-hidden-in-the-latest-consumer-price-indicators",
-        "does-inflation-still-exist-does-anyone-really-know",
-        "get-ready-for-more-inflation-panic-porn-the-may-cpi-release",
-        "tapering-talking-tightening-the-federal-reserves-masterful-messaging",
-        "the-egg-crisis-another-pseudo-inflation-phenomenon",
-        "the-feds-rate-cut-a-soft-landing-or-fake-news",
-        "the-market-fears-the-fed-more-than-hamas",
-        "update-on-interest-rates-is-the-federal-reserve-shooting-blanks",
-        "what-is-really-driving-inflation-today",
-        "what-is-structural-inflation-pt-1-a-compelling-case-study",
-        "what-is-transitory-inflation-1-the-facts",
-        "yes-todays-inflation-is-transitory-the-pundits-have-it-wrong"
-      ]
-    },
-    {
-      "source": "person:Jack Ma",
-      "target": "person:Ma",
-      "weight": 12,
-      "articles": [
-        "alibaba-is-a-spring-loaded-value-play-ready-to-explode",
         "alibaba-update-its-down-75-is-it-still-a-value-play",
+        "alibaba-update-whoops-is-this-stock-really-a-value-trap",
         "beijings-jack-ma-kabuki-play-continues-is-alibaba-a-value-play",
+        "didi-means-war-a-financial-cold-war-with-china",
         "jack-ma-reappears-but-what-does-the-market-see",
         "jack-mas-hostage-video-fake-news-the-old-fashioned-way",
         "kill-chicken-scare-monkey-杀鸡儆猴-beijings-philosophy-of-regulation-wont-work",
-        "the-latest-jack-ma-sighting-is-it-for-real",
+        "the-ant-group-part-4-fintech-or-bank-why-it-matters",
         "the-sad-end-of-jack-ma-inc",
         "what-really-happened-to-jack-ma",
-        "why-china-stepped-on-the-ant-group-part-1-a-bubble-looming"
+        "why-china-stepped-on-the-ant-group-part-1-a-bubble-looming",
+        "why-china-stopped-the-ant-groups-ipo-part-2-ants-dangerous-business-model"
       ]
     },
     {
-      "source": "org:Fed",
+      "source": "org:Ant",
+      "target": "person:Jack Ma",
+      "weight": 13,
+      "articles": [
+        "alibaba-update-its-down-75-is-it-still-a-value-play",
+        "alibaba-update-whoops-is-this-stock-really-a-value-trap",
+        "ants-botched-ipo-part-3-the-regulators-performed-a-radical-value-ectomy",
+        "beijings-jack-ma-kabuki-play-continues-is-alibaba-a-value-play",
+        "didi-means-war-a-financial-cold-war-with-china",
+        "jack-ma-reappears-but-what-does-the-market-see",
+        "jack-mas-hostage-video-fake-news-the-old-fashioned-way",
+        "the-ant-group-part-4-fintech-or-bank-why-it-matters",
+        "the-sad-end-of-jack-ma-inc",
+        "why-china-stepped-on-the-ant-group-part-1-a-bubble-looming",
+        "why-china-stopped-the-ant-groups-ipo-part-2-ants-dangerous-business-model"
+      ]
+    },
+    {
+      "source": "org:Bureau of Labor Statistics",
+      "target": "org:PCE",
+      "weight": 13,
+      "articles": [
+        "a-deflation-alert-hidden-in-the-latest-consumer-price-indicators",
+        "decoding-the-inflation-signals-how-to-read-and-correct-the-latest-cpi-figure",
+        "dissecting-the-consumer-price-index-pt-1-inflation-is-over",
+        "get-ready-for-more-inflation-panic-porn-the-may-cpi-release",
+        "the-31-flavors-of-inflation-do-we-really-understand-these-numbers",
+        "the-flawed-cpi-the-fallacy-of-year-over-year-inflation-reporting",
+        "the-inflation-figures-are-grossly-inflated-heres-how",
+        "there-is-no-inflation-the-june-cpi-headline-head-fake",
+        "why-the-federal-reserve-gets-inflation-wrong-and-why-monetary-policy-is-always-l",
+        "would-you-buy-a-used-car-from-this-economist-is-inflation-real"
+      ]
+    },
+    {
+      "source": "org:Federal Reserve",
+      "target": "person:Covid",
+      "weight": 13,
+      "articles": [
+        "a-check-on-market-sentiment-has-the-pandemic-changed-the-signal",
+        "how-covid-19-will-change-finance-ford-the-fed-and-the-bond-market",
+        "how-covid-19-will-change-finance-whatever-it-takes-vs-full-faith-and-credit",
+        "jackson-hole-the-federal-reserve-does-shark-week-for-the-markets",
+        "media-laziness-in-evaluating-economic-data-inflation-gas-prices-china-russia",
+        "shortages-gluts-deflation-the-bottlenecks-in-the-economy-are-breaking",
+        "the-federal-reserve-has-an-egg-problem-and-a-chicken-and-egg-problem",
+        "the-missing-factor-in-explanations-of-chinas-economic-distress-covid-part-1-the-",
+        "the-missing-factor-in-explanations-of-chinas-economic-distress-covid-part-2-esti",
+        "what-is-structural-inflation-pt-1-a-compelling-case-study",
+        "what-is-transitory-inflation-1-the-facts",
+        "would-you-buy-a-used-car-from-this-economist-is-inflation-real"
+      ]
+    },
+    {
+      "source": "org:Ant",
+      "target": "org:Ant Group",
+      "weight": 12,
+      "articles": [
+        "alibaba-update-its-down-75-is-it-still-a-value-play",
+        "alibaba-update-whoops-is-this-stock-really-a-value-trap",
+        "beijings-jack-ma-kabuki-play-continues-is-alibaba-a-value-play",
+        "didi-means-war-a-financial-cold-war-with-china",
+        "jack-ma-reappears-but-what-does-the-market-see",
+        "jack-mas-hostage-video-fake-news-the-old-fashioned-way",
+        "the-ant-group-part-4-fintech-or-bank-why-it-matters",
+        "the-sad-end-of-jack-ma-inc",
+        "why-china-stepped-on-the-ant-group-part-1-a-bubble-looming",
+        "why-china-stopped-the-ant-groups-ipo-part-2-ants-dangerous-business-model"
+      ]
+    },
+    {
+      "source": "org:Federal Reserve",
       "target": "person:Larry Summers",
       "weight": 11,
       "articles": [
@@ -615,20 +553,20 @@
       ]
     },
     {
-      "source": "org:the Bureau of Labor Statistics",
-      "target": "org:the Federal Reserve",
+      "source": "org:IPO",
+      "target": "person:Jack Ma",
       "weight": 11,
       "articles": [
-        "a-long-overdue-reckoning-for-the-bureau-of-labor-statistics",
-        "decoding-the-inflation-signals-how-to-read-and-correct-the-latest-cpi-figure",
-        "more-problems-with-inflation-coping-with-volatility",
-        "shortages-gluts-deflation-the-bottlenecks-in-the-economy-are-breaking",
-        "the-31-flavors-of-inflation-do-we-really-understand-these-numbers",
-        "the-flawed-cpi-the-fallacy-of-year-over-year-inflation-reporting",
-        "the-inflation-figures-are-grossly-inflated-heres-how",
-        "what-is-transitory-inflation-2-the-politics",
-        "why-the-federal-reserve-gets-inflation-wrong-and-why-monetary-policy-is-always-l",
-        "would-you-buy-a-used-car-from-this-economist-is-inflation-real"
+        "alibaba-is-a-spring-loaded-value-play-ready-to-explode",
+        "alibaba-update-its-down-75-is-it-still-a-value-play",
+        "alibaba-update-whoops-is-this-stock-really-a-value-trap",
+        "ants-botched-ipo-part-3-the-regulators-performed-a-radical-value-ectomy",
+        "beijings-jack-ma-kabuki-play-continues-is-alibaba-a-value-play",
+        "didi-means-war-a-financial-cold-war-with-china",
+        "the-ant-group-part-4-fintech-or-bank-why-it-matters",
+        "the-sad-end-of-jack-ma-inc",
+        "why-china-stepped-on-the-ant-group-part-1-a-bubble-looming",
+        "why-china-stopped-the-ant-groups-ipo-part-2-ants-dangerous-business-model"
       ]
     },
     {
@@ -648,55 +586,7 @@
       ]
     },
     {
-      "source": "org:Ant",
-      "target": "person:Jack Ma",
-      "weight": 10,
-      "articles": [
-        "alibaba-update-its-down-75-is-it-still-a-value-play",
-        "alibaba-update-whoops-is-this-stock-really-a-value-trap",
-        "ants-botched-ipo-part-3-the-regulators-performed-a-radical-value-ectomy",
-        "beijings-jack-ma-kabuki-play-continues-is-alibaba-a-value-play",
-        "jack-ma-reappears-but-what-does-the-market-see",
-        "jack-mas-hostage-video-fake-news-the-old-fashioned-way",
-        "the-ant-group-part-4-fintech-or-bank-why-it-matters",
-        "the-sad-end-of-jack-ma-inc",
-        "why-china-stepped-on-the-ant-group-part-1-a-bubble-looming"
-      ]
-    },
-    {
-      "source": "org:Fed",
-      "target": "org:the Bureau of Labor Statistics",
-      "weight": 10,
-      "articles": [
-        "a-long-overdue-reckoning-for-the-bureau-of-labor-statistics",
-        "decoding-the-inflation-signals-how-to-read-and-correct-the-latest-cpi-figure",
-        "inflation-the-media-screams-but-the-market-is-unfazed",
-        "shortages-gluts-deflation-the-bottlenecks-in-the-economy-are-breaking",
-        "the-flawed-cpi-the-fallacy-of-year-over-year-inflation-reporting",
-        "what-is-transitory-inflation-2-the-politics",
-        "why-the-federal-reserve-gets-inflation-wrong-and-why-monetary-policy-is-always-l",
-        "would-you-buy-a-used-car-from-this-economist-is-inflation-real"
-      ]
-    },
-    {
-      "source": "org:Treasury",
-      "target": "org:the Federal Reserve",
-      "weight": 10,
-      "articles": [
-        "collateral-damage-from-fed-policy-3-money-market-funds-a-powder-keg",
-        "decoding-the-inflation-signals-how-to-read-and-correct-the-latest-cpi-figure",
-        "janet-yellen-forgets-how-to-do-fedspeak-or-whats-that-floating-in-the-punchbowl",
-        "shortages-gluts-deflation-the-bottlenecks-in-the-economy-are-breaking",
-        "tariff-uncertainties-part-3-the-bond-markets",
-        "the-feds-rate-cut-a-soft-landing-or-fake-news",
-        "the-feds-two-pronged-monetary-blitzkrieg-pt-1-surveying-the-damage",
-        "the-markets-big-fear-is-not-geopolitics-it-is-the-federal-reserve",
-        "update-on-interest-rates-is-the-federal-reserve-shooting-blanks",
-        "will-the-fed-cut-interest-rates-does-it-matter-recent-history-says-no"
-      ]
-    },
-    {
-      "source": "org:the Federal Reserve",
+      "source": "org:Bureau of Labor Statistics",
       "target": "person:Core",
       "weight": 10,
       "articles": [
@@ -708,6 +598,65 @@
         "the-flawed-cpi-the-fallacy-of-year-over-year-inflation-reporting",
         "the-inflation-figures-are-grossly-inflated-heres-how",
         "there-is-no-inflation-the-june-cpi-headline-head-fake"
+      ]
+    },
+    {
+      "source": "org:Federal Reserve",
+      "target": "person:Core",
+      "weight": 10,
+      "articles": [
+        "a-deflation-alert-hidden-in-the-latest-consumer-price-indicators",
+        "dissecting-the-consumer-price-index-pt-1-inflation-is-over",
+        "get-ready-for-more-inflation-panic-porn-the-may-cpi-release",
+        "more-problems-with-inflation-coping-with-volatility",
+        "the-31-flavors-of-inflation-do-we-really-understand-these-numbers",
+        "the-flawed-cpi-the-fallacy-of-year-over-year-inflation-reporting",
+        "the-inflation-figures-are-grossly-inflated-heres-how",
+        "there-is-no-inflation-the-june-cpi-headline-head-fake"
+      ]
+    },
+    {
+      "source": "org:Ant Group",
+      "target": "org:IPO",
+      "weight": 9,
+      "articles": [
+        "alibaba-update-its-down-75-is-it-still-a-value-play",
+        "alibaba-update-whoops-is-this-stock-really-a-value-trap",
+        "beijings-jack-ma-kabuki-play-continues-is-alibaba-a-value-play",
+        "didi-means-war-a-financial-cold-war-with-china",
+        "the-ant-group-part-4-fintech-or-bank-why-it-matters",
+        "the-sad-end-of-jack-ma-inc",
+        "why-china-stepped-on-the-ant-group-part-1-a-bubble-looming",
+        "why-china-stopped-the-ant-groups-ipo-part-2-ants-dangerous-business-model"
+      ]
+    },
+    {
+      "source": "org:Bureau of Labor Statistics",
+      "target": "person:Jerome Powell",
+      "weight": 9,
+      "articles": [
+        "a-deflation-alert-hidden-in-the-latest-consumer-price-indicators",
+        "dissecting-the-consumer-price-index-pt-1-inflation-is-over",
+        "inflation-the-media-screams-but-the-market-is-unfazed",
+        "what-is-transitory-inflation-2-the-politics",
+        "why-the-federal-reserve-gets-inflation-wrong-and-why-monetary-policy-is-always-l",
+        "would-you-buy-a-used-car-from-this-economist-is-inflation-real"
+      ]
+    },
+    {
+      "source": "org:Omicron",
+      "target": "person:Covid",
+      "weight": 9,
+      "articles": [
+        "beijing-is-intentionally-underreporting-chinas-covid-death-rate-part-2",
+        "chinas-covid-catastrophe-5-the-unvaxxed-elderly-are-a-deadly-accelerant",
+        "chinas-covid-exit-wave-2-is-it-over",
+        "chinas-covid-exit-wave-3-what-other-countries-zero-covid-exits-show",
+        "chinas-covid-exit-wave-4-flattening-the-curve",
+        "chinas-manipulation-of-covid-data-the-two-smoking-guns",
+        "part-3-anomalies-in-the-chinese-covid-data-evidence-of-manipulation",
+        "the-missing-factor-in-explanations-of-chinas-economic-distress-covid-part-1-the-",
+        "the-missing-factor-in-explanations-of-chinas-economic-distress-covid-part-2-esti"
       ]
     },
     {
@@ -725,60 +674,33 @@
       ]
     },
     {
-      "source": "org:the Federal Reserve",
-      "target": "person:Covid",
+      "source": "person:Covid",
+      "target": "person:Photo",
       "weight": 9,
       "articles": [
-        "a-check-on-market-sentiment-has-the-pandemic-changed-the-signal",
+        "a-strange-new-bubble-in-chinese-a-shares-a-is-for-arbitrage",
+        "beijing-is-intentionally-underreporting-chinas-covid-death-rate-part-1",
+        "chinas-covid-catastrophe-contextual-evidence-part-1-demography-economics",
+        "chinas-covid-exit-wave-2-is-it-over",
+        "chinas-manipulation-of-covid-data-the-two-smoking-guns",
+        "how-covid-19-will-change-finance-fear-federalism-and-fixed-income",
         "jackson-hole-the-federal-reserve-does-shark-week-for-the-markets",
-        "shortages-gluts-deflation-the-bottlenecks-in-the-economy-are-breaking",
-        "the-federal-reserve-has-an-egg-problem-and-a-chicken-and-egg-problem",
-        "the-missing-factor-in-explanations-of-chinas-economic-distress-covid-part-1-the-",
-        "what-is-structural-inflation-pt-1-a-compelling-case-study",
-        "what-is-transitory-inflation-1-the-facts",
+        "the-impact-of-chinas-zero-covid-exit-is-china-really-vaccinated",
         "would-you-buy-a-used-car-from-this-economist-is-inflation-real"
       ]
     },
     {
-      "source": "org:the Federal Reserve",
-      "target": "person:Larry Summers",
-      "weight": 9,
-      "articles": [
-        "a-deflation-alert-hidden-in-the-latest-consumer-price-indicators",
-        "inflation-is-a-fever-is-it-a-common-cold-or-economic-leukemia",
-        "inflation-is-a-fever-is-it-as-mild-as-a-common-cold-or-something-more-serious",
-        "shortages-gluts-deflation-the-bottlenecks-in-the-economy-are-breaking",
-        "tariff-uncertainties-part-2-the-link-to-inflation",
-        "the-inflation-bump-is-not-real-it-is-a-statistical-artifact",
-        "what-is-really-driving-inflation-today",
-        "what-is-transitory-inflation-2-the-politics"
-      ]
-    },
-    {
-      "source": "org:BLS",
-      "target": "org:the Federal Reserve",
+      "source": "org:Ant",
+      "target": "person:Xi Jinping",
       "weight": 8,
       "articles": [
-        "a-long-overdue-reckoning-for-the-bureau-of-labor-statistics",
-        "dissecting-the-consumer-price-index-pt-1-inflation-is-over",
-        "more-problems-with-inflation-coping-with-volatility",
-        "the-31-flavors-of-inflation-do-we-really-understand-these-numbers",
-        "there-is-no-inflation-the-june-cpi-headline-head-fake",
-        "would-you-buy-a-used-car-from-this-economist-is-inflation-real"
-      ]
-    },
-    {
-      "source": "org:Fed",
-      "target": "person:Covid",
-      "weight": 8,
-      "articles": [
-        "jackson-hole-the-federal-reserve-does-shark-week-for-the-markets",
-        "media-laziness-in-evaluating-economic-data-inflation-gas-prices-china-russia",
-        "shortages-gluts-deflation-the-bottlenecks-in-the-economy-are-breaking",
-        "the-federal-reserve-has-an-egg-problem-and-a-chicken-and-egg-problem",
-        "what-is-structural-inflation-pt-1-a-compelling-case-study",
-        "what-is-transitory-inflation-1-the-facts",
-        "would-you-buy-a-used-car-from-this-economist-is-inflation-real"
+        "alibaba-update-its-down-75-is-it-still-a-value-play",
+        "ants-botched-ipo-part-3-the-regulators-performed-a-radical-value-ectomy",
+        "beijings-jack-ma-kabuki-play-continues-is-alibaba-a-value-play",
+        "jack-ma-reappears-but-what-does-the-market-see",
+        "jack-mas-hostage-video-fake-news-the-old-fashioned-way",
+        "the-ant-group-part-4-fintech-or-bank-why-it-matters",
+        "why-china-stepped-on-the-ant-group-part-1-a-bubble-looming"
       ]
     },
     {
@@ -810,21 +732,6 @@
       ]
     },
     {
-      "source": "org:IPO",
-      "target": "person:Jack Ma",
-      "weight": 8,
-      "articles": [
-        "alibaba-is-a-spring-loaded-value-play-ready-to-explode",
-        "alibaba-update-its-down-75-is-it-still-a-value-play",
-        "alibaba-update-whoops-is-this-stock-really-a-value-trap",
-        "ants-botched-ipo-part-3-the-regulators-performed-a-radical-value-ectomy",
-        "beijings-jack-ma-kabuki-play-continues-is-alibaba-a-value-play",
-        "the-ant-group-part-4-fintech-or-bank-why-it-matters",
-        "the-sad-end-of-jack-ma-inc",
-        "why-china-stepped-on-the-ant-group-part-1-a-bubble-looming"
-      ]
-    },
-    {
       "source": "org:InterDigital Communications",
       "target": "org:NASDAQ",
       "weight": 8,
@@ -839,60 +746,83 @@
       ]
     },
     {
-      "source": "org:Omicron",
-      "target": "person:Covid",
+      "source": "org:PCE",
+      "target": "person:Jerome Powell",
       "weight": 8,
       "articles": [
-        "beijing-is-intentionally-underreporting-chinas-covid-death-rate-part-2",
-        "chinas-covid-catastrophe-5-the-unvaxxed-elderly-are-a-deadly-accelerant",
-        "chinas-covid-exit-wave-2-is-it-over",
-        "chinas-covid-exit-wave-3-what-other-countries-zero-covid-exits-show",
-        "chinas-covid-exit-wave-4-flattening-the-curve",
-        "chinas-manipulation-of-covid-data-the-two-smoking-guns",
-        "part-3-anomalies-in-the-chinese-covid-data-evidence-of-manipulation",
-        "the-missing-factor-in-explanations-of-chinas-economic-distress-covid-part-1-the-"
-      ]
-    },
-    {
-      "source": "person:Covid",
-      "target": "person:Photo",
-      "weight": 8,
-      "articles": [
-        "a-strange-new-bubble-in-chinese-a-shares-a-is-for-arbitrage",
-        "beijing-is-intentionally-underreporting-chinas-covid-death-rate-part-1",
-        "chinas-covid-catastrophe-contextual-evidence-part-1-demography-economics",
-        "chinas-covid-exit-wave-2-is-it-over",
-        "chinas-manipulation-of-covid-data-the-two-smoking-guns",
-        "jackson-hole-the-federal-reserve-does-shark-week-for-the-markets",
-        "the-impact-of-chinas-zero-covid-exit-is-china-really-vaccinated",
+        "a-deflation-alert-hidden-in-the-latest-consumer-price-indicators",
+        "dissecting-the-consumer-price-index-pt-1-inflation-is-over",
+        "tariff-uncertainties-part-2-the-link-to-inflation",
+        "the-verdict-on-the-2021-2023-inflation-transitory-on-all-counts",
+        "why-the-federal-reserve-gets-inflation-wrong-and-why-monetary-policy-is-always-l",
         "would-you-buy-a-used-car-from-this-economist-is-inflation-real"
       ]
     },
     {
-      "source": "person:Jerome Powell",
-      "target": "person:Powell",
+      "source": "org:Treasury",
+      "target": "person:Jerome Powell",
       "weight": 8,
       "articles": [
-        "a-deflation-alert-hidden-in-the-latest-consumer-price-indicators",
-        "jackson-hole-the-federal-reserve-does-shark-week-for-the-markets",
-        "tariff-uncertainties-part-2-the-link-to-inflation",
+        "inflation-the-media-screams-but-the-market-is-unfazed",
+        "tapering-talking-tightening-the-federal-reserves-masterful-messaging",
+        "tariff-uncertainties-part-3-the-bond-markets",
         "the-feds-rate-cut-a-soft-landing-or-fake-news",
-        "what-is-transitory-inflation-1-the-facts",
-        "what-is-transitory-inflation-2-the-politics",
-        "why-the-federal-reserve-gets-inflation-wrong-and-why-monetary-policy-is-always-l"
+        "the-markets-big-fear-is-not-geopolitics-it-is-the-federal-reserve",
+        "update-on-interest-rates-is-the-federal-reserve-shooting-blanks",
+        "will-the-fed-cut-interest-rates-does-it-matter-recent-history-says-no"
+      ]
+    },
+    {
+      "source": "person:Jack Ma",
+      "target": "person:Xi Jinping",
+      "weight": 8,
+      "articles": [
+        "alibaba-update-its-down-75-is-it-still-a-value-play",
+        "ants-botched-ipo-part-3-the-regulators-performed-a-radical-value-ectomy",
+        "beijings-jack-ma-kabuki-play-continues-is-alibaba-a-value-play",
+        "jack-ma-reappears-but-what-does-the-market-see",
+        "jack-mas-hostage-video-fake-news-the-old-fashioned-way",
+        "the-ant-group-part-4-fintech-or-bank-why-it-matters",
+        "why-china-stepped-on-the-ant-group-part-1-a-bubble-looming"
       ]
     },
     {
       "source": "org:Ant",
-      "target": "person:Ma",
+      "target": "person:Ant",
+      "weight": 7,
+      "articles": [
+        "alibaba-update-its-down-75-is-it-still-a-value-play",
+        "ants-botched-ipo-part-3-the-regulators-performed-a-radical-value-ectomy",
+        "the-ant-group-part-4-fintech-or-bank-why-it-matters",
+        "the-sad-end-of-jack-ma-inc",
+        "why-china-stepped-on-the-ant-group-part-1-a-bubble-looming",
+        "why-china-stopped-the-ant-groups-ipo-part-2-ants-dangerous-business-model"
+      ]
+    },
+    {
+      "source": "org:Ant Group",
+      "target": "person:Xi Jinping",
       "weight": 7,
       "articles": [
         "alibaba-update-its-down-75-is-it-still-a-value-play",
         "beijings-jack-ma-kabuki-play-continues-is-alibaba-a-value-play",
         "jack-ma-reappears-but-what-does-the-market-see",
         "jack-mas-hostage-video-fake-news-the-old-fashioned-way",
-        "the-sad-end-of-jack-ma-inc",
+        "the-ant-group-part-4-fintech-or-bank-why-it-matters",
         "why-china-stepped-on-the-ant-group-part-1-a-bubble-looming"
+      ]
+    },
+    {
+      "source": "org:EU",
+      "target": "person:Covid",
+      "weight": 7,
+      "articles": [
+        "germanys-pearl-harbor-moment-the-wars-weightiest-consequence",
+        "how-covid-19-will-change-finance-fear-federalism-and-fixed-income",
+        "how-covid-19-will-change-finance-whatever-it-takes-vs-full-faith-and-credit",
+        "the-inflation-scare-doesnt-match-reality",
+        "whatever-it-takes-or-whatever-germany-allows",
+        "why-a-liberal-arts-education-is-the-best-foundation-for-a-career-in-finance"
       ]
     },
     {
@@ -909,44 +839,43 @@
       ]
     },
     {
-      "source": "org:PCE",
-      "target": "org:the Bureau of Labor Statistics",
+      "source": "org:IPO",
+      "target": "person:Ant",
       "weight": 7,
       "articles": [
-        "decoding-the-inflation-signals-how-to-read-and-correct-the-latest-cpi-figure",
-        "the-31-flavors-of-inflation-do-we-really-understand-these-numbers",
-        "the-flawed-cpi-the-fallacy-of-year-over-year-inflation-reporting",
-        "the-inflation-figures-are-grossly-inflated-heres-how",
-        "why-the-federal-reserve-gets-inflation-wrong-and-why-monetary-policy-is-always-l",
-        "would-you-buy-a-used-car-from-this-economist-is-inflation-real"
+        "alibaba-update-its-down-75-is-it-still-a-value-play",
+        "ants-botched-ipo-part-3-the-regulators-performed-a-radical-value-ectomy",
+        "the-ant-group-part-4-fintech-or-bank-why-it-matters",
+        "the-sad-end-of-jack-ma-inc",
+        "why-china-stepped-on-the-ant-group-part-1-a-bubble-looming",
+        "why-china-stopped-the-ant-groups-ipo-part-2-ants-dangerous-business-model"
       ]
     },
     {
-      "source": "org:The Federal Reserve",
-      "target": "org:Treasury",
+      "source": "person:Ant",
+      "target": "person:Jack Ma",
       "weight": 7,
       "articles": [
-        "collateral-damage-from-fed-policy-part-2-a-broken-housing-market",
+        "alibaba-update-its-down-75-is-it-still-a-value-play",
+        "ants-botched-ipo-part-3-the-regulators-performed-a-radical-value-ectomy",
+        "the-ant-group-part-4-fintech-or-bank-why-it-matters",
+        "the-sad-end-of-jack-ma-inc",
+        "why-china-stepped-on-the-ant-group-part-1-a-bubble-looming",
+        "why-china-stopped-the-ant-groups-ipo-part-2-ants-dangerous-business-model"
+      ]
+    },
+    {
+      "source": "person:Covid",
+      "target": "person:Xi Jinping",
+      "weight": 7,
+      "articles": [
+        "alibaba-update-its-down-75-is-it-still-a-value-play",
+        "carthage-must-be-destroyed-or-will-covid-19-kill-huawei",
+        "chinas-covid-catastrophe-5-the-unvaxxed-elderly-are-a-deadly-accelerant",
+        "chinas-covid-exit-wave-2-is-it-over",
         "media-laziness-in-evaluating-economic-data-inflation-gas-prices-china-russia",
-        "the-feds-rate-cut-a-soft-landing-or-fake-news",
-        "the-new-inflation-scare-is-the-economy-really-in-danger",
-        "the-tariff-scorecard-did-we-miss-the-apocalypse-or-was-it-just-postponed",
-        "update-on-interest-rates-is-the-federal-reserve-shooting-blanks",
-        "what-is-the-bond-market-telling-us-now-maybe-nothing-at-all"
-      ]
-    },
-    {
-      "source": "org:Treasury",
-      "target": "org:Treasurys",
-      "weight": 7,
-      "articles": [
-        "hedge-funds-got-clipped-by-epic-fury-they-forgot-to-hedge",
-        "tariff-uncertainties-part-3-the-bond-markets",
-        "tariff-uncertainties-part-4-a-little-qa-trump-trade-china",
-        "the-feds-two-pronged-monetary-blitzkrieg-pt-1-surveying-the-damage",
-        "the-markets-big-fear-is-not-geopolitics-it-is-the-federal-reserve",
-        "what-are-the-true-fundamentals-behind-the-treasury-bond-rout",
-        "what-is-the-bond-market-telling-us-now-maybe-nothing-at-all"
+        "shortages-gluts-deflation-the-bottlenecks-in-the-economy-are-breaking",
+        "will-electoral-chaos-wreck-the-market"
       ]
     },
     {
@@ -974,15 +903,27 @@
       ]
     },
     {
-      "source": "org:Ant",
-      "target": "person:Xi Jinping",
+      "source": "org:Amazon",
+      "target": "person:Jack Ma",
       "weight": 6,
       "articles": [
+        "alibaba-update-its-down-75-is-it-still-a-value-play",
+        "alibaba-update-whoops-is-this-stock-really-a-value-trap",
         "ants-botched-ipo-part-3-the-regulators-performed-a-radical-value-ectomy",
-        "beijings-jack-ma-kabuki-play-continues-is-alibaba-a-value-play",
-        "jack-ma-reappears-but-what-does-the-market-see",
-        "jack-mas-hostage-video-fake-news-the-old-fashioned-way",
-        "why-china-stepped-on-the-ant-group-part-1-a-bubble-looming"
+        "the-sad-end-of-jack-ma-inc",
+        "why-china-stopped-the-ant-groups-ipo-part-2-ants-dangerous-business-model"
+      ]
+    },
+    {
+      "source": "org:Ant Group",
+      "target": "person:Ant",
+      "weight": 6,
+      "articles": [
+        "alibaba-update-its-down-75-is-it-still-a-value-play",
+        "the-ant-group-part-4-fintech-or-bank-why-it-matters",
+        "the-sad-end-of-jack-ma-inc",
+        "why-china-stepped-on-the-ant-group-part-1-a-bubble-looming",
+        "why-china-stopped-the-ant-groups-ipo-part-2-ants-dangerous-business-model"
       ]
     },
     {
@@ -995,28 +936,6 @@
         "problems-with-the-inflation-figures-the-cpi-has-a-kink-in-it",
         "the-stock-split-anomaly-how-apple-tesla-created-powerful-alpha-last-month",
         "will-tesla-break-the-sp-500-pt-4-managing-insane-trading-volume"
-      ]
-    },
-    {
-      "source": "org:BLS",
-      "target": "org:PCE",
-      "weight": 6,
-      "articles": [
-        "dissecting-the-consumer-price-index-pt-1-inflation-is-over",
-        "the-31-flavors-of-inflation-do-we-really-understand-these-numbers",
-        "there-is-no-inflation-the-june-cpi-headline-head-fake",
-        "would-you-buy-a-used-car-from-this-economist-is-inflation-real"
-      ]
-    },
-    {
-      "source": "org:BLS",
-      "target": "person:Core",
-      "weight": 6,
-      "articles": [
-        "dissecting-the-consumer-price-index-pt-1-inflation-is-over",
-        "more-problems-with-inflation-coping-with-volatility",
-        "the-31-flavors-of-inflation-do-we-really-understand-these-numbers",
-        "there-is-no-inflation-the-june-cpi-headline-head-fake"
       ]
     },
     {
@@ -1042,69 +961,18 @@
       ]
     },
     {
-      "source": "org:Fed",
-      "target": "org:Federal Reserve",
+      "source": "org:EU",
+      "target": "person:Alexander Hamilton",
       "weight": 6,
       "articles": [
-        "decoding-the-inflation-signals-how-to-read-and-correct-the-latest-cpi-figure",
-        "does-raising-the-fed-funds-rate-tame-inflation-is-there-collateral-damage",
-        "jackson-hole-the-federal-reserve-does-shark-week-for-the-markets",
-        "tapering-talking-tightening-the-federal-reserves-masterful-messaging",
-        "the-new-inflation-scare-is-the-economy-really-in-danger",
-        "what-is-the-bond-market-telling-us-now-maybe-nothing-at-all"
+        "europes-hamiltonian-moment-what-is-it-really",
+        "germanys-pearl-harbor-moment-the-wars-weightiest-consequence",
+        "gradually-then-suddenly-clarity-comes-to-the-eu",
+        "the-european-unions-next-step-a-hamiltonian-commonwealth"
       ]
     },
     {
-      "source": "org:Fed",
-      "target": "org:Treasurys",
-      "weight": 6,
-      "articles": [
-        "tapering-talking-tightening-the-federal-reserves-masterful-messaging",
-        "tariff-uncertainties-part-3-the-bond-markets",
-        "the-feds-two-pronged-monetary-blitzkrieg-pt-1-surveying-the-damage",
-        "the-market-fears-the-fed-more-than-hamas",
-        "the-markets-big-fear-is-not-geopolitics-it-is-the-federal-reserve",
-        "what-is-the-bond-market-telling-us-now-maybe-nothing-at-all"
-      ]
-    },
-    {
-      "source": "org:PCE",
-      "target": "person:Jerome Powell",
-      "weight": 6,
-      "articles": [
-        "a-deflation-alert-hidden-in-the-latest-consumer-price-indicators",
-        "tariff-uncertainties-part-2-the-link-to-inflation",
-        "the-verdict-on-the-2021-2023-inflation-transitory-on-all-counts",
-        "why-the-federal-reserve-gets-inflation-wrong-and-why-monetary-policy-is-always-l",
-        "would-you-buy-a-used-car-from-this-economist-is-inflation-real"
-      ]
-    },
-    {
-      "source": "org:PCE",
-      "target": "person:Powell",
-      "weight": 6,
-      "articles": [
-        "a-deflation-alert-hidden-in-the-latest-consumer-price-indicators",
-        "dissecting-the-consumer-price-index-pt-1-inflation-is-over",
-        "tariff-uncertainties-part-2-the-link-to-inflation",
-        "why-the-federal-reserve-gets-inflation-wrong-and-why-monetary-policy-is-always-l"
-      ]
-    },
-    {
-      "source": "org:The Federal Reserve",
-      "target": "person:Jerome Powell",
-      "weight": 6,
-      "articles": [
-        "a-deflation-alert-hidden-in-the-latest-consumer-price-indicators",
-        "tapering-talking-tightening-the-federal-reserves-masterful-messaging",
-        "the-feds-rate-cut-a-soft-landing-or-fake-news",
-        "update-on-interest-rates-is-the-federal-reserve-shooting-blanks",
-        "what-is-really-driving-inflation-today",
-        "what-is-transitory-inflation-1-the-facts"
-      ]
-    },
-    {
-      "source": "org:the Federal Reserve",
+      "source": "org:Federal Reserve",
       "target": "person:Photo",
       "weight": 6,
       "articles": [
@@ -1116,32 +984,65 @@
       ]
     },
     {
-      "source": "person:Jack Ma",
-      "target": "person:Xi Jinping",
+      "source": "org:Federal Reserve",
+      "target": "person:Twitter @GeoCalhoun520",
       "weight": 6,
       "articles": [
-        "ants-botched-ipo-part-3-the-regulators-performed-a-radical-value-ectomy",
-        "beijings-jack-ma-kabuki-play-continues-is-alibaba-a-value-play",
-        "jack-ma-reappears-but-what-does-the-market-see",
-        "jack-mas-hostage-video-fake-news-the-old-fashioned-way",
-        "why-china-stepped-on-the-ant-group-part-1-a-bubble-looming"
+        "get-ready-for-more-inflation-panic-porn-the-may-cpi-release",
+        "the-media-is-trying-to-rebrand-the-recovery-as-inflation-pressure",
+        "there-is-no-inflation-the-june-cpi-headline-head-fake",
+        "what-are-the-true-fundamentals-behind-the-treasury-bond-rout",
+        "what-is-the-bond-market-telling-us-now-maybe-nothing-at-all"
       ]
     },
     {
-      "source": "org:Congress",
-      "target": "org:Fed",
+      "source": "person:Jerome Powell",
+      "target": "person:Larry Summers",
+      "weight": 6,
+      "articles": [
+        "a-deflation-alert-hidden-in-the-latest-consumer-price-indicators",
+        "tariff-uncertainties-part-2-the-link-to-inflation",
+        "the-inflation-bump-is-not-real-it-is-a-statistical-artifact",
+        "what-is-really-driving-inflation-today",
+        "what-is-transitory-inflation-2-the-politics"
+      ]
+    },
+    {
+      "source": "org:Amazon",
+      "target": "org:Ant Group",
       "weight": 5,
       "articles": [
-        "a-long-overdue-reckoning-for-the-bureau-of-labor-statistics",
-        "janet-yellen-forgets-how-to-do-fedspeak-or-whats-that-floating-in-the-punchbowl",
-        "the-markets-big-fear-is-not-geopolitics-it-is-the-federal-reserve",
-        "what-is-transitory-inflation-2-the-politics",
-        "would-you-buy-a-used-car-from-this-economist-is-inflation-real"
+        "alibaba-update-its-down-75-is-it-still-a-value-play",
+        "alibaba-update-whoops-is-this-stock-really-a-value-trap",
+        "the-sad-end-of-jack-ma-inc",
+        "why-china-stopped-the-ant-groups-ipo-part-2-ants-dangerous-business-model"
+      ]
+    },
+    {
+      "source": "org:Amazon",
+      "target": "person:Ant",
+      "weight": 5,
+      "articles": [
+        "alibaba-update-its-down-75-is-it-still-a-value-play",
+        "ants-botched-ipo-part-3-the-regulators-performed-a-radical-value-ectomy",
+        "the-sad-end-of-jack-ma-inc",
+        "why-china-stopped-the-ant-groups-ipo-part-2-ants-dangerous-business-model"
+      ]
+    },
+    {
+      "source": "org:Bureau of Labor Statistics",
+      "target": "org:Treasury",
+      "weight": 5,
+      "articles": [
+        "decoding-the-inflation-signals-how-to-read-and-correct-the-latest-cpi-figure",
+        "inflation-the-media-screams-but-the-market-is-unfazed",
+        "shortages-gluts-deflation-the-bottlenecks-in-the-economy-are-breaking",
+        "the-media-is-trying-to-rebrand-the-recovery-as-inflation-pressure"
       ]
     },
     {
       "source": "org:Congress",
-      "target": "org:the Federal Reserve",
+      "target": "org:Federal Reserve",
       "weight": 5,
       "articles": [
         "a-long-overdue-reckoning-for-the-bureau-of-labor-statistics",
@@ -1174,42 +1075,43 @@
       ]
     },
     {
-      "source": "org:Fed",
-      "target": "person:Core",
+      "source": "org:Federal Reserve",
+      "target": "org:S&P",
       "weight": 5,
       "articles": [
-        "a-deflation-alert-hidden-in-the-latest-consumer-price-indicators",
-        "dissecting-the-consumer-price-index-pt-1-inflation-is-over",
-        "get-ready-for-more-inflation-panic-porn-the-may-cpi-release",
-        "the-flawed-cpi-the-fallacy-of-year-over-year-inflation-reporting"
+        "problems-with-the-inflation-figures-the-cpi-has-a-kink-in-it",
+        "the-false-promises-of-economic-forecasting-newly-exposed-by-the-tariff-whiplash",
+        "the-fed-doesnt-just-print-money-it-also-prints-alpha",
+        "the-hierarchy-of-financial-superpowers-whos-really-on-top",
+        "will-tesla-break-the-sp-500part-2-the-mechanics-of-market-turmoil"
       ]
     },
     {
-      "source": "org:Fed",
-      "target": "person:Photo",
+      "source": "org:Federal Reserve",
+      "target": "person:Warren Buffett",
       "weight": 5,
       "articles": [
-        "jackson-hole-the-federal-reserve-does-shark-week-for-the-markets",
-        "janet-yellen-forgets-how-to-do-fedspeak-or-whats-that-floating-in-the-punchbowl",
-        "why-the-federal-reserve-gets-inflation-wrong-and-why-monetary-policy-is-always-l",
-        "would-you-buy-a-used-car-from-this-economist-is-inflation-real"
+        "commodity-price-increases-do-not-create-inflation",
+        "is-inflation-created-by-corporate-greed-evidence-from-the-current-egg-flation-ep",
+        "the-hierarchy-of-financial-superpowers-whos-really-on-top",
+        "the-inflation-bump-is-not-real-it-is-a-statistical-artifact"
       ]
     },
     {
       "source": "org:IPO",
-      "target": "person:Ma",
+      "target": "person:Xi Jinping",
       "weight": 5,
       "articles": [
-        "alibaba-is-a-spring-loaded-value-play-ready-to-explode",
         "alibaba-update-its-down-75-is-it-still-a-value-play",
+        "ants-botched-ipo-part-3-the-regulators-performed-a-radical-value-ectomy",
         "beijings-jack-ma-kabuki-play-continues-is-alibaba-a-value-play",
-        "the-sad-end-of-jack-ma-inc",
+        "the-ant-group-part-4-fintech-or-bank-why-it-matters",
         "why-china-stepped-on-the-ant-group-part-1-a-bubble-looming"
       ]
     },
     {
       "source": "org:InterDigital Communications",
-      "target": "person:COVID",
+      "target": "person:Covid",
       "weight": 5,
       "articles": [
         "carthage-must-be-destroyed-or-will-covid-19-kill-huawei",
@@ -1220,15 +1122,15 @@
       ]
     },
     {
-      "source": "org:PCE",
-      "target": "org:The Federal Reserve",
+      "source": "org:NASDAQ",
+      "target": "person:Covid",
       "weight": 5,
       "articles": [
-        "a-deflation-alert-hidden-in-the-latest-consumer-price-indicators",
-        "get-ready-for-more-inflation-panic-porn-the-may-cpi-release",
-        "inflation-is-over-what-comes-next",
-        "the-tariff-scorecard-did-we-miss-the-apocalypse-or-was-it-just-postponed",
-        "yes-todays-inflation-is-transitory-the-pundits-have-it-wrong"
+        "a-check-on-market-sentiment-has-the-pandemic-changed-the-signal",
+        "carthage-must-be-destroyed-or-will-covid-19-kill-huawei",
+        "how-covid-19-will-change-finance-fear-federalism-and-fixed-income",
+        "how-covid-19-will-change-finance-ford-the-fed-and-the-bond-market",
+        "how-covid-19-will-change-finance-whatever-it-takes-vs-full-faith-and-credit"
       ]
     },
     {
@@ -1257,91 +1159,13 @@
     },
     {
       "source": "org:Treasury",
-      "target": "org:the Bureau of Labor Statistics",
-      "weight": 5,
-      "articles": [
-        "decoding-the-inflation-signals-how-to-read-and-correct-the-latest-cpi-figure",
-        "inflation-the-media-screams-but-the-market-is-unfazed",
-        "shortages-gluts-deflation-the-bottlenecks-in-the-economy-are-breaking",
-        "the-media-is-trying-to-rebrand-the-recovery-as-inflation-pressure"
-      ]
-    },
-    {
-      "source": "org:Treasury",
-      "target": "person:Powell",
-      "weight": 5,
-      "articles": [
-        "inflation-the-media-screams-but-the-market-is-unfazed",
-        "tariff-uncertainties-part-3-the-bond-markets",
-        "the-feds-rate-cut-a-soft-landing-or-fake-news",
-        "will-the-fed-cut-interest-rates-does-it-matter-recent-history-says-no"
-      ]
-    },
-    {
-      "source": "org:Treasurys",
-      "target": "org:the Federal Reserve",
-      "weight": 5,
-      "articles": [
-        "tapering-talking-tightening-the-federal-reserves-masterful-messaging",
-        "tariff-uncertainties-part-3-the-bond-markets",
-        "the-feds-two-pronged-monetary-blitzkrieg-pt-1-surveying-the-damage",
-        "the-market-fears-the-fed-more-than-hamas",
-        "the-markets-big-fear-is-not-geopolitics-it-is-the-federal-reserve"
-      ]
-    },
-    {
-      "source": "org:the Bureau of Labor Statistics",
-      "target": "person:Powell",
-      "weight": 5,
-      "articles": [
-        "inflation-the-media-screams-but-the-market-is-unfazed",
-        "what-is-transitory-inflation-2-the-politics",
-        "why-the-federal-reserve-gets-inflation-wrong-and-why-monetary-policy-is-always-l"
-      ]
-    },
-    {
-      "source": "person:COVID",
       "target": "person:Covid",
       "weight": 5,
       "articles": [
-        "carthage-must-be-destroyed-or-will-covid-19-kill-huawei",
-        "chinas-covid-catastrophe-contextual-evidence-part-1-demography-economics",
-        "chinas-covid-data-gaps-and-inaccuracies-new-reports-from-science-and-nature",
-        "the-impact-of-chinas-zero-covid-exit-is-china-really-vaccinated",
-        "the-missing-factor-in-explanations-of-chinas-economic-distress-covid-part-1-the-"
-      ]
-    },
-    {
-      "source": "person:Larry Summers",
-      "target": "person:Powell",
-      "weight": 5,
-      "articles": [
-        "a-deflation-alert-hidden-in-the-latest-consumer-price-indicators",
-        "tariff-uncertainties-part-2-the-link-to-inflation",
-        "the-inflation-bump-is-not-real-it-is-a-statistical-artifact",
-        "what-is-transitory-inflation-2-the-politics"
-      ]
-    },
-    {
-      "source": "person:Ma",
-      "target": "person:Xi Jinping",
-      "weight": 5,
-      "articles": [
-        "beijings-jack-ma-kabuki-play-continues-is-alibaba-a-value-play",
-        "jack-ma-reappears-but-what-does-the-market-see",
-        "jack-mas-hostage-video-fake-news-the-old-fashioned-way",
-        "why-china-stepped-on-the-ant-group-part-1-a-bubble-looming"
-      ]
-    },
-    {
-      "source": "org:Amazon",
-      "target": "person:Jack Ma",
-      "weight": 4,
-      "articles": [
-        "alibaba-update-its-down-75-is-it-still-a-value-play",
-        "alibaba-update-whoops-is-this-stock-really-a-value-trap",
-        "ants-botched-ipo-part-3-the-regulators-performed-a-radical-value-ectomy",
-        "the-sad-end-of-jack-ma-inc"
+        "media-laziness-in-evaluating-economic-data-inflation-gas-prices-china-russia",
+        "media-negativity-is-the-bond-rout-real-should-we-panic-over-inflation",
+        "shortages-gluts-deflation-the-bottlenecks-in-the-economy-are-breaking",
+        "the-inflation-scare-doesnt-match-reality"
       ]
     },
     {
@@ -1355,24 +1179,23 @@
       ]
     },
     {
-      "source": "org:BLS",
-      "target": "org:Fed",
+      "source": "org:Bureau of Labor Statistics",
+      "target": "person:Photo",
       "weight": 4,
       "articles": [
-        "a-long-overdue-reckoning-for-the-bureau-of-labor-statistics",
-        "dissecting-the-consumer-price-index-pt-1-inflation-is-over",
+        "the-inflation-figures-are-grossly-inflated-heres-how",
+        "why-the-federal-reserve-gets-inflation-wrong-and-why-monetary-policy-is-always-l",
         "would-you-buy-a-used-car-from-this-economist-is-inflation-real"
       ]
     },
     {
-      "source": "org:BLS",
-      "target": "org:the Bureau of Labor Statistics",
+      "source": "org:Bureau of Labor Statistics",
+      "target": "person:Twitter @GeoCalhoun520",
       "weight": 4,
       "articles": [
-        "a-long-overdue-reckoning-for-the-bureau-of-labor-statistics",
-        "more-problems-with-inflation-coping-with-volatility",
-        "the-31-flavors-of-inflation-do-we-really-understand-these-numbers",
-        "would-you-buy-a-used-car-from-this-economist-is-inflation-real"
+        "get-ready-for-more-inflation-panic-porn-the-may-cpi-release",
+        "the-media-is-trying-to-rebrand-the-recovery-as-inflation-pressure",
+        "there-is-no-inflation-the-june-cpi-headline-head-fake"
       ]
     },
     {
@@ -1399,11 +1222,12 @@
     },
     {
       "source": "org:EU",
-      "target": "person:Covid",
+      "target": "org:European Central Bank",
       "weight": 4,
       "articles": [
-        "germanys-pearl-harbor-moment-the-wars-weightiest-consequence",
-        "the-inflation-scare-doesnt-match-reality",
+        "how-covid-19-will-change-finance-fear-federalism-and-fixed-income",
+        "how-covid-19-will-change-finance-whatever-it-takes-vs-full-faith-and-credit",
+        "whatever-it-takes-or-whatever-germany-allows",
         "why-a-liberal-arts-education-is-the-best-foundation-for-a-career-in-finance"
       ]
     },
@@ -1419,25 +1243,47 @@
       ]
     },
     {
-      "source": "org:Federal Reserve",
-      "target": "org:Treasury",
+      "source": "org:European Central Bank",
+      "target": "org:Federal Reserve",
       "weight": 4,
       "articles": [
-        "decoding-the-inflation-signals-how-to-read-and-correct-the-latest-cpi-figure",
-        "the-media-is-trying-to-rebrand-the-recovery-as-inflation-pressure",
-        "the-new-inflation-scare-is-the-economy-really-in-danger",
-        "what-is-the-bond-market-telling-us-now-maybe-nothing-at-all"
+        "how-covid-19-will-change-finance-whatever-it-takes-vs-full-faith-and-credit",
+        "more-problems-with-inflation-coping-with-volatility",
+        "the-hierarchy-of-financial-superpowers-whos-really-on-top",
+        "what-are-the-true-fundamentals-behind-the-treasury-bond-rout"
+      ]
+    },
+    {
+      "source": "org:European Central Bank",
+      "target": "person:Covid",
+      "weight": 4,
+      "articles": [
+        "how-covid-19-will-change-finance-fear-federalism-and-fixed-income",
+        "how-covid-19-will-change-finance-whatever-it-takes-vs-full-faith-and-credit",
+        "whatever-it-takes-or-whatever-germany-allows",
+        "why-a-liberal-arts-education-is-the-best-foundation-for-a-career-in-finance"
       ]
     },
     {
       "source": "org:Federal Reserve",
-      "target": "org:the Federal Reserve",
+      "target": "org:NASDAQ",
       "weight": 4,
       "articles": [
-        "decoding-the-inflation-signals-how-to-read-and-correct-the-latest-cpi-figure",
-        "does-raising-the-fed-funds-rate-tame-inflation-is-there-collateral-damage",
-        "jackson-hole-the-federal-reserve-does-shark-week-for-the-markets",
-        "tapering-talking-tightening-the-federal-reserves-masterful-messaging"
+        "a-check-on-market-sentiment-has-the-pandemic-changed-the-signal",
+        "does-inflation-still-exist-does-anyone-really-know",
+        "how-covid-19-will-change-finance-ford-the-fed-and-the-bond-market",
+        "how-covid-19-will-change-finance-whatever-it-takes-vs-full-faith-and-credit"
+      ]
+    },
+    {
+      "source": "org:Federal Reserve",
+      "target": "org:site'sTerms of Service",
+      "weight": 4,
+      "articles": [
+        "is-price-gouging-real-whos-doing-it-is-it-driving-inflation",
+        "the-feds-rate-cut-a-soft-landing-or-fake-news",
+        "the-missing-factor-in-explanations-of-chinas-economic-distress-covid-part-2-esti",
+        "update-on-interest-rates-is-the-federal-reserve-shooting-blanks"
       ]
     },
     {
@@ -1452,7 +1298,7 @@
     },
     {
       "source": "org:IDCC",
-      "target": "person:COVID",
+      "target": "person:Covid",
       "weight": 4,
       "articles": [
         "carthage-must-be-destroyed-or-will-covid-19-kill-huawei",
@@ -1470,17 +1316,6 @@
         "alibaba-update-its-down-75-is-it-still-a-value-play",
         "alibaba-update-whoops-is-this-stock-really-a-value-trap",
         "didi-means-war-a-financial-cold-war-with-china"
-      ]
-    },
-    {
-      "source": "org:NASDAQ",
-      "target": "person:COVID",
-      "weight": 4,
-      "articles": [
-        "carthage-must-be-destroyed-or-will-covid-19-kill-huawei",
-        "how-covid-19-will-change-finance-fear-federalism-and-fixed-income",
-        "how-covid-19-will-change-finance-ford-the-fed-and-the-bond-market",
-        "how-covid-19-will-change-finance-whatever-it-takes-vs-full-faith-and-credit"
       ]
     },
     {
@@ -1505,6 +1340,17 @@
     },
     {
       "source": "org:Tesla",
+      "target": "person:Elon Musk",
+      "weight": 4,
+      "articles": [
+        "gamestop-tesla-do-asset-bubbles-exist-can-they-be-managed",
+        "will-tesla-break-the-sp-500-index-part-1",
+        "will-tesla-break-the-sp-500-pt-4-managing-insane-trading-volume",
+        "will-tesla-break-the-sp-500part-2-the-mechanics-of-market-turmoil"
+      ]
+    },
+    {
+      "source": "org:Tesla",
       "target": "person:Twitter @GeoCalhoun520",
       "weight": 4,
       "articles": [
@@ -1514,55 +1360,45 @@
       ]
     },
     {
-      "source": "org:The Federal Reserve",
-      "target": "person:Powell",
+      "source": "org:Treasury",
+      "target": "person:Alexander Hamilton",
       "weight": 4,
       "articles": [
-        "a-deflation-alert-hidden-in-the-latest-consumer-price-indicators",
-        "does-inflation-still-exist-does-anyone-really-know",
-        "the-feds-rate-cut-a-soft-landing-or-fake-news",
-        "what-is-transitory-inflation-1-the-facts"
+        "europes-hamiltonian-moment-what-is-it-really",
+        "the-european-unions-next-step-a-hamiltonian-commonwealth"
       ]
     },
     {
       "source": "org:Treasury",
-      "target": "person:Covid",
+      "target": "person:Twitter @GeoCalhoun520",
       "weight": 4,
       "articles": [
-        "media-laziness-in-evaluating-economic-data-inflation-gas-prices-china-russia",
-        "shortages-gluts-deflation-the-bottlenecks-in-the-economy-are-breaking",
-        "the-inflation-scare-doesnt-match-reality"
+        "media-negativity-is-the-bond-rout-real-should-we-panic-over-inflation",
+        "the-media-is-trying-to-rebrand-the-recovery-as-inflation-pressure",
+        "what-are-the-true-fundamentals-behind-the-treasury-bond-rout",
+        "what-is-the-bond-market-telling-us-now-maybe-nothing-at-all"
       ]
     },
     {
-      "source": "org:the Bureau of Labor Statistics",
-      "target": "person:Core",
+      "source": "person:Ant",
+      "target": "person:Xi Jinping",
       "weight": 4,
       "articles": [
-        "more-problems-with-inflation-coping-with-volatility",
-        "the-31-flavors-of-inflation-do-we-really-understand-these-numbers",
-        "the-flawed-cpi-the-fallacy-of-year-over-year-inflation-reporting",
-        "the-inflation-figures-are-grossly-inflated-heres-how"
+        "alibaba-update-its-down-75-is-it-still-a-value-play",
+        "ants-botched-ipo-part-3-the-regulators-performed-a-radical-value-ectomy",
+        "the-ant-group-part-4-fintech-or-bank-why-it-matters",
+        "why-china-stepped-on-the-ant-group-part-1-a-bubble-looming"
       ]
     },
     {
-      "source": "org:the Bureau of Labor Statistics",
-      "target": "person:Jerome Powell",
+      "source": "person:Covid",
+      "target": "person:Jack Ma",
       "weight": 4,
       "articles": [
-        "what-is-transitory-inflation-2-the-politics",
-        "why-the-federal-reserve-gets-inflation-wrong-and-why-monetary-policy-is-always-l",
-        "would-you-buy-a-used-car-from-this-economist-is-inflation-real"
-      ]
-    },
-    {
-      "source": "org:the Bureau of Labor Statistics",
-      "target": "person:Photo",
-      "weight": 4,
-      "articles": [
-        "the-inflation-figures-are-grossly-inflated-heres-how",
-        "why-the-federal-reserve-gets-inflation-wrong-and-why-monetary-policy-is-always-l",
-        "would-you-buy-a-used-car-from-this-economist-is-inflation-real"
+        "alibaba-update-its-down-75-is-it-still-a-value-play",
+        "alibaba-update-whoops-is-this-stock-really-a-value-trap",
+        "didi-means-war-a-financial-cold-war-with-china",
+        "the-latest-jack-ma-sighting-is-it-for-real"
       ]
     },
     {
@@ -1574,17 +1410,6 @@
         "what-is-transitory-inflation-1-the-facts",
         "will-electoral-chaos-wreck-the-market",
         "would-you-buy-a-used-car-from-this-economist-is-inflation-real"
-      ]
-    },
-    {
-      "source": "person:Jerome Powell",
-      "target": "person:Larry Summers",
-      "weight": 4,
-      "articles": [
-        "a-deflation-alert-hidden-in-the-latest-consumer-price-indicators",
-        "tariff-uncertainties-part-2-the-link-to-inflation",
-        "what-is-really-driving-inflation-today",
-        "what-is-transitory-inflation-2-the-politics"
       ]
     },
     {
@@ -1618,6 +1443,16 @@
       ]
     },
     {
+      "source": "org:Ant Group",
+      "target": "person:Covid",
+      "weight": 3,
+      "articles": [
+        "alibaba-update-its-down-75-is-it-still-a-value-play",
+        "alibaba-update-whoops-is-this-stock-really-a-value-trap",
+        "didi-means-war-a-financial-cold-war-with-china"
+      ]
+    },
+    {
       "source": "org:Apple",
       "target": "org:Congress",
       "weight": 3,
@@ -1638,6 +1473,26 @@
       ]
     },
     {
+      "source": "org:Bureau of Labor Statistics",
+      "target": "org:Congress",
+      "weight": 3,
+      "articles": [
+        "a-long-overdue-reckoning-for-the-bureau-of-labor-statistics",
+        "what-is-transitory-inflation-2-the-politics",
+        "would-you-buy-a-used-car-from-this-economist-is-inflation-real"
+      ]
+    },
+    {
+      "source": "org:Bureau of Labor Statistics",
+      "target": "person:Larry Summers",
+      "weight": 3,
+      "articles": [
+        "a-deflation-alert-hidden-in-the-latest-consumer-price-indicators",
+        "shortages-gluts-deflation-the-bottlenecks-in-the-economy-are-breaking",
+        "what-is-transitory-inflation-2-the-politics"
+      ]
+    },
+    {
       "source": "org:Congress",
       "target": "org:Huawei",
       "weight": 3,
@@ -1645,16 +1500,6 @@
         "5g-risk-huawei-is-small-potatoes-compared-to-tsmc-who",
         "a-huawei-recovery-plan-step-1-playing-peekaboo-pcaob-compliance",
         "is-the-uk-ban-on-huawei-the-endgame-for-free-trade"
-      ]
-    },
-    {
-      "source": "org:Congress",
-      "target": "org:the Bureau of Labor Statistics",
-      "weight": 3,
-      "articles": [
-        "a-long-overdue-reckoning-for-the-bureau-of-labor-statistics",
-        "what-is-transitory-inflation-2-the-politics",
-        "would-you-buy-a-used-car-from-this-economist-is-inflation-real"
       ]
     },
     {
@@ -1677,8 +1522,8 @@
       ]
     },
     {
-      "source": "org:EU",
-      "target": "person:COVID",
+      "source": "org:European Central Bank",
+      "target": "org:InterDigital Communications",
       "weight": 3,
       "articles": [
         "how-covid-19-will-change-finance-fear-federalism-and-fixed-income",
@@ -1696,7 +1541,7 @@
       ]
     },
     {
-      "source": "org:Fed",
+      "source": "org:Federal Reserve",
       "target": "org:IDCC",
       "weight": 3,
       "articles": [
@@ -1706,7 +1551,7 @@
       ]
     },
     {
-      "source": "org:Fed",
+      "source": "org:Federal Reserve",
       "target": "org:InterDigital Communications",
       "weight": 3,
       "articles": [
@@ -1716,32 +1561,41 @@
       ]
     },
     {
-      "source": "org:Fed",
-      "target": "org:NASDAQ",
+      "source": "org:Federal Reserve",
+      "target": "org:Photo Illustration",
       "weight": 3,
       "articles": [
-        "does-inflation-still-exist-does-anyone-really-know",
-        "how-covid-19-will-change-finance-ford-the-fed-and-the-bond-market",
-        "how-covid-19-will-change-finance-whatever-it-takes-vs-full-faith-and-credit"
-      ]
-    },
-    {
-      "source": "org:Fed",
-      "target": "person:Warren Buffett",
-      "weight": 3,
-      "articles": [
-        "commodity-price-increases-do-not-create-inflation",
-        "the-inflation-bump-is-not-real-it-is-a-statistical-artifact"
+        "the-american-election-calendar-drives-foreign-stock-markets-too",
+        "the-federal-reserve-has-an-egg-problem-and-a-chicken-and-egg-problem"
       ]
     },
     {
       "source": "org:Federal Reserve",
-      "target": "org:The Federal Reserve",
+      "target": "org:Senate",
       "weight": 3,
       "articles": [
-        "tapering-talking-tightening-the-federal-reserves-masterful-messaging",
-        "the-new-inflation-scare-is-the-economy-really-in-danger",
-        "what-is-the-bond-market-telling-us-now-maybe-nothing-at-all"
+        "the-inflation-figures-are-grossly-inflated-heres-how",
+        "the-un-wisdom-of-crowds-prediction-markets-failed-their-midterm-exams",
+        "what-is-transitory-inflation-2-the-politics"
+      ]
+    },
+    {
+      "source": "org:Federal Reserve",
+      "target": "person:Elon Musk",
+      "weight": 3,
+      "articles": [
+        "inflation-the-media-screams-but-the-market-is-unfazed",
+        "will-tesla-break-the-sp-500part-2-the-mechanics-of-market-turmoil"
+      ]
+    },
+    {
+      "source": "org:Federal Reserve",
+      "target": "person:Putin",
+      "weight": 3,
+      "articles": [
+        "shortages-gluts-deflation-the-bottlenecks-in-the-economy-are-breaking",
+        "the-market-fears-the-fed-more-than-hamas",
+        "the-markets-big-fear-is-not-geopolitics-it-is-the-federal-reserve"
       ]
     },
     {
@@ -1754,13 +1608,22 @@
       ]
     },
     {
-      "source": "org:IPO",
+      "source": "org:Huawei",
       "target": "person:Xi Jinping",
       "weight": 3,
       "articles": [
-        "ants-botched-ipo-part-3-the-regulators-performed-a-radical-value-ectomy",
-        "beijings-jack-ma-kabuki-play-continues-is-alibaba-a-value-play",
-        "why-china-stepped-on-the-ant-group-part-1-a-bubble-looming"
+        "carthage-must-be-destroyed-or-will-covid-19-kill-huawei",
+        "how-does-huawei-acquire-customers-it-buys-them-with-cheap-credit",
+        "the-hong-kong-crackdown-is-a-financial-disaster-for-china-is-it-time-to-fire-the"
+      ]
+    },
+    {
+      "source": "org:IDCC",
+      "target": "person:Alexander Hamilton",
+      "weight": 3,
+      "articles": [
+        "europes-hamiltonian-moment-what-is-it-really",
+        "gradually-then-suddenly-clarity-comes-to-the-eu"
       ]
     },
     {
@@ -1773,13 +1636,21 @@
       ]
     },
     {
-      "source": "org:NASDAQ",
-      "target": "org:the Federal Reserve",
+      "source": "org:InterDigital Communications",
+      "target": "person:Alexander Hamilton",
       "weight": 3,
       "articles": [
-        "a-check-on-market-sentiment-has-the-pandemic-changed-the-signal",
-        "does-inflation-still-exist-does-anyone-really-know",
-        "how-covid-19-will-change-finance-ford-the-fed-and-the-bond-market"
+        "europes-hamiltonian-moment-what-is-it-really",
+        "gradually-then-suddenly-clarity-comes-to-the-eu"
+      ]
+    },
+    {
+      "source": "org:NASDAQ",
+      "target": "person:Alexander Hamilton",
+      "weight": 3,
+      "articles": [
+        "europes-hamiltonian-moment-what-is-it-really",
+        "gradually-then-suddenly-clarity-comes-to-the-eu"
       ]
     },
     {
@@ -1793,15 +1664,6 @@
     },
     {
       "source": "org:Photo Illustration",
-      "target": "org:the Federal Reserve",
-      "weight": 3,
-      "articles": [
-        "the-american-election-calendar-drives-foreign-stock-markets-too",
-        "the-federal-reserve-has-an-egg-problem-and-a-chicken-and-egg-problem"
-      ]
-    },
-    {
-      "source": "org:Photo Illustration",
       "target": "person:Twitter @GeoCalhoun520",
       "weight": 3,
       "articles": [
@@ -1811,62 +1673,12 @@
     },
     {
       "source": "org:S&P",
-      "target": "org:the Federal Reserve",
+      "target": "person:Elon Musk",
       "weight": 3,
       "articles": [
-        "problems-with-the-inflation-figures-the-cpi-has-a-kink-in-it",
-        "the-fed-doesnt-just-print-money-it-also-prints-alpha",
-        "the-hierarchy-of-financial-superpowers-whos-really-on-top"
-      ]
-    },
-    {
-      "source": "org:Senate",
-      "target": "org:the Federal Reserve",
-      "weight": 3,
-      "articles": [
-        "the-inflation-figures-are-grossly-inflated-heres-how",
-        "the-un-wisdom-of-crowds-prediction-markets-failed-their-midterm-exams",
-        "what-is-transitory-inflation-2-the-politics"
-      ]
-    },
-    {
-      "source": "org:The Federal Reserve",
-      "target": "org:Treasurys",
-      "weight": 3,
-      "articles": [
-        "tapering-talking-tightening-the-federal-reserves-masterful-messaging",
-        "the-market-fears-the-fed-more-than-hamas",
-        "what-is-the-bond-market-telling-us-now-maybe-nothing-at-all"
-      ]
-    },
-    {
-      "source": "org:The Federal Reserve",
-      "target": "person:Covid",
-      "weight": 3,
-      "articles": [
-        "media-laziness-in-evaluating-economic-data-inflation-gas-prices-china-russia",
-        "what-is-structural-inflation-pt-1-a-compelling-case-study",
-        "what-is-transitory-inflation-1-the-facts"
-      ]
-    },
-    {
-      "source": "org:The Federal Reserve",
-      "target": "person:Larry Summers",
-      "weight": 3,
-      "articles": [
-        "a-deflation-alert-hidden-in-the-latest-consumer-price-indicators",
-        "inflation-is-over-what-comes-next",
-        "what-is-really-driving-inflation-today"
-      ]
-    },
-    {
-      "source": "org:Treasury",
-      "target": "person:Jerome Powell",
-      "weight": 3,
-      "articles": [
-        "the-feds-rate-cut-a-soft-landing-or-fake-news",
-        "the-markets-big-fear-is-not-geopolitics-it-is-the-federal-reserve",
-        "update-on-interest-rates-is-the-federal-reserve-shooting-blanks"
+        "will-tesla-break-the-sp-500-index-part-1",
+        "will-tesla-break-the-sp-500-pt-4-managing-insane-trading-volume",
+        "will-tesla-break-the-sp-500part-2-the-mechanics-of-market-turmoil"
       ]
     },
     {
@@ -1880,56 +1692,17 @@
     },
     {
       "source": "org:Treasury",
-      "target": "person:Twitter @GeoCalhoun520",
+      "target": "person:Putin",
       "weight": 3,
       "articles": [
-        "the-media-is-trying-to-rebrand-the-recovery-as-inflation-pressure",
-        "what-are-the-true-fundamentals-behind-the-treasury-bond-rout",
-        "what-is-the-bond-market-telling-us-now-maybe-nothing-at-all"
-      ]
-    },
-    {
-      "source": "org:Treasurys",
-      "target": "person:Twitter @GeoCalhoun520",
-      "weight": 3,
-      "articles": [
-        "media-negativity-is-the-bond-rout-real-should-we-panic-over-inflation",
-        "what-are-the-true-fundamentals-behind-the-treasury-bond-rout",
-        "what-is-the-bond-market-telling-us-now-maybe-nothing-at-all"
-      ]
-    },
-    {
-      "source": "org:the Federal Reserve",
-      "target": "person:COVID",
-      "weight": 3,
-      "articles": [
-        "how-covid-19-will-change-finance-ford-the-fed-and-the-bond-market",
-        "the-missing-factor-in-explanations-of-chinas-economic-distress-covid-part-1-the-",
-        "the-missing-factor-in-explanations-of-chinas-economic-distress-covid-part-2-esti"
-      ]
-    },
-    {
-      "source": "org:the Federal Reserve",
-      "target": "person:Twitter @GeoCalhoun520",
-      "weight": 3,
-      "articles": [
-        "get-ready-for-more-inflation-panic-porn-the-may-cpi-release",
-        "there-is-no-inflation-the-june-cpi-headline-head-fake"
-      ]
-    },
-    {
-      "source": "person:COVID",
-      "target": "person:Photo",
-      "weight": 3,
-      "articles": [
-        "chinas-covid-catastrophe-contextual-evidence-part-1-demography-economics",
-        "how-covid-19-will-change-finance-fear-federalism-and-fixed-income",
-        "the-impact-of-chinas-zero-covid-exit-is-china-really-vaccinated"
+        "shortages-gluts-deflation-the-bottlenecks-in-the-economy-are-breaking",
+        "the-market-fears-the-fed-more-than-hamas",
+        "the-markets-big-fear-is-not-geopolitics-it-is-the-federal-reserve"
       ]
     },
     {
       "source": "person:Core",
-      "target": "person:Powell",
+      "target": "person:Jerome Powell",
       "weight": 3,
       "articles": [
         "a-deflation-alert-hidden-in-the-latest-consumer-price-indicators",
@@ -1943,16 +1716,6 @@
       "articles": [
         "get-ready-for-more-inflation-panic-porn-the-may-cpi-release",
         "there-is-no-inflation-the-june-cpi-headline-head-fake"
-      ]
-    },
-    {
-      "source": "person:Covid",
-      "target": "person:Jack Ma",
-      "weight": 3,
-      "articles": [
-        "alibaba-update-its-down-75-is-it-still-a-value-play",
-        "alibaba-update-whoops-is-this-stock-really-a-value-trap",
-        "the-latest-jack-ma-sighting-is-it-for-real"
       ]
     },
     {
@@ -1974,26 +1737,7 @@
       ]
     },
     {
-      "source": "person:Covid",
-      "target": "person:Xi Jinping",
-      "weight": 3,
-      "articles": [
-        "chinas-covid-exit-wave-2-is-it-over",
-        "media-laziness-in-evaluating-economic-data-inflation-gas-prices-china-russia",
-        "will-electoral-chaos-wreck-the-market"
-      ]
-    },
-    {
-      "source": "person:Photo",
-      "target": "person:Powell",
-      "weight": 3,
-      "articles": [
-        "jackson-hole-the-federal-reserve-does-shark-week-for-the-markets",
-        "why-the-federal-reserve-gets-inflation-wrong-and-why-monetary-policy-is-always-l"
-      ]
-    },
-    {
-      "source": "person:Powell",
+      "source": "person:Jerome Powell",
       "target": "person:Warren Buffett",
       "weight": 3,
       "articles": [
@@ -2021,15 +1765,50 @@
     },
     {
       "source": "org:Amazon",
-      "target": "person:Ma",
+      "target": "person:Xi Jinping",
       "weight": 2,
       "articles": [
         "alibaba-update-its-down-75-is-it-still-a-value-play",
-        "the-sad-end-of-jack-ma-inc"
+        "ants-botched-ipo-part-3-the-regulators-performed-a-radical-value-ectomy"
       ]
     },
     {
       "source": "org:Ant",
+      "target": "person:Elon Musk",
+      "weight": 2,
+      "articles": [
+        "the-sad-end-of-jack-ma-inc",
+        "why-china-stepped-on-the-ant-group-part-1-a-bubble-looming"
+      ]
+    },
+    {
+      "source": "org:Ant",
+      "target": "person:Warren Buffett",
+      "weight": 2,
+      "articles": [
+        "alibaba-update-whoops-is-this-stock-really-a-value-trap",
+        "why-china-stepped-on-the-ant-group-part-1-a-bubble-looming"
+      ]
+    },
+    {
+      "source": "org:Ant Group",
+      "target": "person:Elon Musk",
+      "weight": 2,
+      "articles": [
+        "the-sad-end-of-jack-ma-inc",
+        "why-china-stepped-on-the-ant-group-part-1-a-bubble-looming"
+      ]
+    },
+    {
+      "source": "org:Ant Group",
+      "target": "person:Putin",
+      "weight": 2,
+      "articles": [
+        "what-really-happened-to-jack-ma"
+      ]
+    },
+    {
+      "source": "org:Ant Group",
       "target": "person:Warren Buffett",
       "weight": 2,
       "articles": [
@@ -2056,6 +1835,15 @@
     },
     {
       "source": "org:Apple",
+      "target": "org:New York Stock Exchange",
+      "weight": 2,
+      "articles": [
+        "5g-risk-huawei-is-small-potatoes-compared-to-tsmc-who",
+        "will-tesla-break-the-sp-500-pt-4-managing-insane-trading-volume"
+      ]
+    },
+    {
+      "source": "org:Apple",
       "target": "org:Photo Illustration",
       "weight": 2,
       "articles": [
@@ -2074,36 +1862,37 @@
     },
     {
       "source": "org:Apple",
-      "target": "org:the New York Stock Exchange",
+      "target": "person:Elon Musk",
       "weight": 2,
       "articles": [
-        "5g-risk-huawei-is-small-potatoes-compared-to-tsmc-who",
+        "the-sad-end-of-jack-ma-inc",
         "will-tesla-break-the-sp-500-pt-4-managing-insane-trading-volume"
       ]
     },
     {
-      "source": "org:BLS",
-      "target": "org:Congress",
+      "source": "org:Bureau of Labor Statistics",
+      "target": "org:Senate",
       "weight": 2,
       "articles": [
-        "a-long-overdue-reckoning-for-the-bureau-of-labor-statistics",
+        "the-inflation-figures-are-grossly-inflated-heres-how",
+        "what-is-transitory-inflation-2-the-politics"
+      ]
+    },
+    {
+      "source": "org:Bureau of Labor Statistics",
+      "target": "person:Covid",
+      "weight": 2,
+      "articles": [
+        "shortages-gluts-deflation-the-bottlenecks-in-the-economy-are-breaking",
         "would-you-buy-a-used-car-from-this-economist-is-inflation-real"
       ]
     },
     {
-      "source": "org:BLS",
-      "target": "person:Powell",
+      "source": "org:Bureau of Labor Statistics",
+      "target": "person:Elon Musk",
       "weight": 2,
       "articles": [
-        "dissecting-the-consumer-price-index-pt-1-inflation-is-over"
-      ]
-    },
-    {
-      "source": "org:BLS",
-      "target": "person:Twitter @GeoCalhoun520",
-      "weight": 2,
-      "articles": [
-        "there-is-no-inflation-the-june-cpi-headline-head-fake"
+        "inflation-the-media-screams-but-the-market-is-unfazed"
       ]
     },
     {
@@ -2135,6 +1924,15 @@
     },
     {
       "source": "org:Congress",
+      "target": "person:Alexander Hamilton",
+      "weight": 2,
+      "articles": [
+        "germanys-pearl-harbor-moment-the-wars-weightiest-consequence",
+        "tariffs-first-consider-the-certainties"
+      ]
+    },
+    {
+      "source": "org:Congress",
       "target": "person:Photo",
       "weight": 2,
       "articles": [
@@ -2143,11 +1941,56 @@
       ]
     },
     {
+      "source": "org:Congress",
+      "target": "person:Putin",
+      "weight": 2,
+      "articles": [
+        "germanys-pearl-harbor-moment-the-wars-weightiest-consequence",
+        "the-markets-big-fear-is-not-geopolitics-it-is-the-federal-reserve"
+      ]
+    },
+    {
       "source": "org:EU",
       "target": "person:Larry Summers",
       "weight": 2,
       "articles": [
         "the-inflation-scare-doesnt-match-reality"
+      ]
+    },
+    {
+      "source": "org:EU",
+      "target": "person:Putin",
+      "weight": 2,
+      "articles": [
+        "germanys-pearl-harbor-moment-the-wars-weightiest-consequence",
+        "the-inflation-narrative-falters-instead-we-have-gluts-now-and-soon-deflation"
+      ]
+    },
+    {
+      "source": "org:European Central Bank",
+      "target": "org:IDCC",
+      "weight": 2,
+      "articles": [
+        "how-covid-19-will-change-finance-fear-federalism-and-fixed-income",
+        "how-covid-19-will-change-finance-whatever-it-takes-vs-full-faith-and-credit"
+      ]
+    },
+    {
+      "source": "org:European Central Bank",
+      "target": "org:NASDAQ",
+      "weight": 2,
+      "articles": [
+        "how-covid-19-will-change-finance-fear-federalism-and-fixed-income",
+        "how-covid-19-will-change-finance-whatever-it-takes-vs-full-faith-and-credit"
+      ]
+    },
+    {
+      "source": "org:Exxon",
+      "target": "org:Federal Reserve",
+      "weight": 2,
+      "articles": [
+        "what-are-the-true-fundamentals-behind-the-treasury-bond-rout",
+        "what-is-really-driving-inflation-today"
       ]
     },
     {
@@ -2176,74 +2019,57 @@
       ]
     },
     {
-      "source": "org:Fed",
-      "target": "org:Photo Illustration",
+      "source": "org:Federal Reserve",
+      "target": "org:Finance",
       "weight": 2,
       "articles": [
-        "the-federal-reserve-has-an-egg-problem-and-a-chicken-and-egg-problem"
+        "a-check-on-market-sentiment-has-the-pandemic-changed-the-signal",
+        "jackson-hole-the-federal-reserve-does-shark-week-for-the-markets"
       ]
     },
     {
-      "source": "org:Fed",
-      "target": "org:S&P",
+      "source": "org:Federal Reserve",
+      "target": "org:New York Stock Exchange",
       "weight": 2,
       "articles": [
-        "the-false-promises-of-economic-forecasting-newly-exposed-by-the-tariff-whiplash",
-        "the-fed-doesnt-just-print-money-it-also-prints-alpha"
-      ]
-    },
-    {
-      "source": "org:Fed",
-      "target": "person:COVID",
-      "weight": 2,
-      "articles": [
-        "how-covid-19-will-change-finance-ford-the-fed-and-the-bond-market",
-        "how-covid-19-will-change-finance-whatever-it-takes-vs-full-faith-and-credit"
-      ]
-    },
-    {
-      "source": "org:Fed",
-      "target": "person:Twitter @GeoCalhoun520",
-      "weight": 2,
-      "articles": [
-        "get-ready-for-more-inflation-panic-porn-the-may-cpi-release",
+        "more-problems-with-inflation-coping-with-volatility",
         "what-is-the-bond-market-telling-us-now-maybe-nothing-at-all"
       ]
     },
     {
       "source": "org:Federal Reserve",
-      "target": "org:Treasurys",
+      "target": "org:Omicron",
       "weight": 2,
       "articles": [
-        "tapering-talking-tightening-the-federal-reserves-masterful-messaging",
-        "what-is-the-bond-market-telling-us-now-maybe-nothing-at-all"
+        "the-missing-factor-in-explanations-of-chinas-economic-distress-covid-part-1-the-",
+        "the-missing-factor-in-explanations-of-chinas-economic-distress-covid-part-2-esti"
       ]
     },
     {
       "source": "org:Federal Reserve",
-      "target": "org:the Bureau of Labor Statistics",
+      "target": "org:Photo",
       "weight": 2,
       "articles": [
-        "decoding-the-inflation-signals-how-to-read-and-correct-the-latest-cpi-figure",
-        "the-media-is-trying-to-rebrand-the-recovery-as-inflation-pressure"
+        "the-market-fears-the-fed-more-than-hamas",
+        "update-on-interest-rates-is-the-federal-reserve-shooting-blanks"
       ]
     },
     {
       "source": "org:Federal Reserve",
-      "target": "person:Jerome Powell",
+      "target": "org:Tesla",
       "weight": 2,
       "articles": [
-        "jackson-hole-the-federal-reserve-does-shark-week-for-the-markets",
-        "tapering-talking-tightening-the-federal-reserves-masterful-messaging"
+        "problems-with-the-inflation-figures-the-cpi-has-a-kink-in-it",
+        "will-tesla-break-the-sp-500part-2-the-mechanics-of-market-turmoil"
       ]
     },
     {
       "source": "org:Federal Reserve",
-      "target": "person:Twitter @GeoCalhoun520",
+      "target": "person:Xi Jinping",
       "weight": 2,
       "articles": [
-        "the-media-is-trying-to-rebrand-the-recovery-as-inflation-pressure",
-        "what-is-the-bond-market-telling-us-now-maybe-nothing-at-all"
+        "media-laziness-in-evaluating-economic-data-inflation-gas-prices-china-russia",
+        "shortages-gluts-deflation-the-bottlenecks-in-the-economy-are-breaking"
       ]
     },
     {
@@ -2252,15 +2078,6 @@
       "weight": 2,
       "articles": [
         "the-inflation-scare-doesnt-match-reality"
-      ]
-    },
-    {
-      "source": "org:Finance",
-      "target": "org:the Federal Reserve",
-      "weight": 2,
-      "articles": [
-        "a-check-on-market-sentiment-has-the-pandemic-changed-the-signal",
-        "jackson-hole-the-federal-reserve-does-shark-week-for-the-markets"
       ]
     },
     {
@@ -2290,29 +2107,11 @@
       ]
     },
     {
-      "source": "org:Huawei",
-      "target": "person:Xi Jinping",
-      "weight": 2,
-      "articles": [
-        "how-does-huawei-acquire-customers-it-buys-them-with-cheap-credit",
-        "the-hong-kong-crackdown-is-a-financial-disaster-for-china-is-it-time-to-fire-the"
-      ]
-    },
-    {
       "source": "org:IDCC",
       "target": "org:Treasury",
       "weight": 2,
       "articles": [
         "europes-hamiltonian-moment-what-is-it-really"
-      ]
-    },
-    {
-      "source": "org:IDCC",
-      "target": "org:the Federal Reserve",
-      "weight": 2,
-      "articles": [
-        "does-inflation-still-exist-does-anyone-really-know",
-        "how-covid-19-will-change-finance-ford-the-fed-and-the-bond-market"
       ]
     },
     {
@@ -2322,6 +2121,15 @@
       "articles": [
         "a-check-on-market-sentiment-has-the-pandemic-changed-the-signal",
         "why-do-chinese-companies-list-their-shares-in-new-york"
+      ]
+    },
+    {
+      "source": "org:IPO",
+      "target": "person:Elon Musk",
+      "weight": 2,
+      "articles": [
+        "the-sad-end-of-jack-ma-inc",
+        "why-china-stepped-on-the-ant-group-part-1-a-bubble-looming"
       ]
     },
     {
@@ -2360,15 +2168,6 @@
       ]
     },
     {
-      "source": "org:InterDigital Communications",
-      "target": "org:the Federal Reserve",
-      "weight": 2,
-      "articles": [
-        "does-inflation-still-exist-does-anyone-really-know",
-        "how-covid-19-will-change-finance-ford-the-fed-and-the-bond-market"
-      ]
-    },
-    {
       "source": "org:NASDAQ",
       "target": "org:Treasury",
       "weight": 2,
@@ -2377,30 +2176,11 @@
       ]
     },
     {
-      "source": "org:NASDAQ",
+      "source": "org:New York Stock Exchange",
       "target": "person:Covid",
       "weight": 2,
       "articles": [
-        "a-check-on-market-sentiment-has-the-pandemic-changed-the-signal",
-        "carthage-must-be-destroyed-or-will-covid-19-kill-huawei"
-      ]
-    },
-    {
-      "source": "org:Omicron",
-      "target": "org:the Federal Reserve",
-      "weight": 2,
-      "articles": [
-        "the-missing-factor-in-explanations-of-chinas-economic-distress-covid-part-1-the-",
-        "the-missing-factor-in-explanations-of-chinas-economic-distress-covid-part-2-esti"
-      ]
-    },
-    {
-      "source": "org:Omicron",
-      "target": "person:COVID",
-      "weight": 2,
-      "articles": [
-        "the-missing-factor-in-explanations-of-chinas-economic-distress-covid-part-1-the-",
-        "the-missing-factor-in-explanations-of-chinas-economic-distress-covid-part-2-esti"
+        "the-recession-meme-is-intense-but-can-the-market-see-around-the-corner"
       ]
     },
     {
@@ -2413,12 +2193,66 @@
       ]
     },
     {
+      "source": "org:Omicron",
+      "target": "person:Xi Jinping",
+      "weight": 2,
+      "articles": [
+        "chinas-covid-catastrophe-5-the-unvaxxed-elderly-are-a-deadly-accelerant",
+        "chinas-covid-exit-wave-2-is-it-over"
+      ]
+    },
+    {
       "source": "org:PCE",
       "target": "org:Treasury",
       "weight": 2,
       "articles": [
         "decoding-the-inflation-signals-how-to-read-and-correct-the-latest-cpi-figure",
         "the-tariff-scorecard-did-we-miss-the-apocalypse-or-was-it-just-postponed"
+      ]
+    },
+    {
+      "source": "org:Photo",
+      "target": "org:Treasury",
+      "weight": 2,
+      "articles": [
+        "the-market-fears-the-fed-more-than-hamas",
+        "update-on-interest-rates-is-the-federal-reserve-shooting-blanks"
+      ]
+    },
+    {
+      "source": "org:Photo",
+      "target": "org:site'sTerms of Service",
+      "weight": 2,
+      "articles": [
+        "chinas-economic-problem-isnt-just-japanification-it-may-be-worse",
+        "update-on-interest-rates-is-the-federal-reserve-shooting-blanks"
+      ]
+    },
+    {
+      "source": "org:Photo",
+      "target": "person:Jerome Powell",
+      "weight": 2,
+      "articles": [
+        "update-on-interest-rates-is-the-federal-reserve-shooting-blanks",
+        "will-electoral-chaos-wreck-the-market"
+      ]
+    },
+    {
+      "source": "org:Photo",
+      "target": "person:Putin",
+      "weight": 2,
+      "articles": [
+        "the-inflation-narrative-falters-instead-we-have-gluts-now-and-soon-deflation",
+        "the-market-fears-the-fed-more-than-hamas"
+      ]
+    },
+    {
+      "source": "org:Photo",
+      "target": "person:Xi Jinping",
+      "weight": 2,
+      "articles": [
+        "beijing-embraces-moral-hazard-the-huarong-bailout-was-the-right-move",
+        "will-electoral-chaos-wreck-the-market"
       ]
     },
     {
@@ -2430,21 +2264,21 @@
       ]
     },
     {
+      "source": "org:Photo Illustration",
+      "target": "person:Elon Musk",
+      "weight": 2,
+      "articles": [
+        "gamestop-tesla-do-asset-bubbles-exist-can-they-be-managed",
+        "gamestop-the-screenplay-5-hollywood-projects-3-competing-morality-tales"
+      ]
+    },
+    {
       "source": "org:S&P",
       "target": "person:Twitter @GeoCalhoun520",
       "weight": 2,
       "articles": [
         "will-tesla-break-the-sp-500-index-part-1",
         "will-tesla-break-the-sp500-pt-3-did-the-way-it-was-added-help-create-a-bubble"
-      ]
-    },
-    {
-      "source": "org:Senate",
-      "target": "org:the Bureau of Labor Statistics",
-      "weight": 2,
-      "articles": [
-        "the-inflation-figures-are-grossly-inflated-heres-how",
-        "what-is-transitory-inflation-2-the-politics"
       ]
     },
     {
@@ -2465,82 +2299,73 @@
       ]
     },
     {
-      "source": "org:The Federal Reserve",
-      "target": "person:Core",
+      "source": "org:Treasury",
+      "target": "org:site'sTerms of Service",
       "weight": 2,
       "articles": [
-        "a-deflation-alert-hidden-in-the-latest-consumer-price-indicators",
-        "get-ready-for-more-inflation-panic-porn-the-may-cpi-release"
+        "the-feds-rate-cut-a-soft-landing-or-fake-news",
+        "update-on-interest-rates-is-the-federal-reserve-shooting-blanks"
       ]
     },
     {
-      "source": "org:The Federal Reserve",
-      "target": "person:Twitter @GeoCalhoun520",
+      "source": "org:Treasury",
+      "target": "person:Elon Musk",
       "weight": 2,
       "articles": [
-        "get-ready-for-more-inflation-panic-porn-the-may-cpi-release",
-        "what-is-the-bond-market-telling-us-now-maybe-nothing-at-all"
+        "inflation-the-media-screams-but-the-market-is-unfazed"
       ]
     },
     {
-      "source": "org:Treasurys",
+      "source": "org:Treasury",
+      "target": "person:Xi Jinping",
+      "weight": 2,
+      "articles": [
+        "media-laziness-in-evaluating-economic-data-inflation-gas-prices-china-russia",
+        "shortages-gluts-deflation-the-bottlenecks-in-the-economy-are-breaking"
+      ]
+    },
+    {
+      "source": "org:site'sTerms of Service",
       "target": "person:Jerome Powell",
       "weight": 2,
       "articles": [
-        "tapering-talking-tightening-the-federal-reserves-masterful-messaging",
-        "the-markets-big-fear-is-not-geopolitics-it-is-the-federal-reserve"
+        "the-feds-rate-cut-a-soft-landing-or-fake-news",
+        "update-on-interest-rates-is-the-federal-reserve-shooting-blanks"
       ]
     },
     {
-      "source": "org:the Bureau of Labor Statistics",
-      "target": "person:Covid",
+      "source": "person:Ant",
+      "target": "person:Elon Musk",
       "weight": 2,
       "articles": [
-        "shortages-gluts-deflation-the-bottlenecks-in-the-economy-are-breaking",
-        "would-you-buy-a-used-car-from-this-economist-is-inflation-real"
-      ]
-    },
-    {
-      "source": "org:the Bureau of Labor Statistics",
-      "target": "person:Larry Summers",
-      "weight": 2,
-      "articles": [
-        "shortages-gluts-deflation-the-bottlenecks-in-the-economy-are-breaking",
-        "what-is-transitory-inflation-2-the-politics"
-      ]
-    },
-    {
-      "source": "org:the Federal Reserve",
-      "target": "person:Warren Buffett",
-      "weight": 2,
-      "articles": [
-        "the-inflation-bump-is-not-real-it-is-a-statistical-artifact"
-      ]
-    },
-    {
-      "source": "org:the New York Stock Exchange",
-      "target": "person:Covid",
-      "weight": 2,
-      "articles": [
-        "the-recession-meme-is-intense-but-can-the-market-see-around-the-corner"
+        "the-sad-end-of-jack-ma-inc",
+        "why-china-stepped-on-the-ant-group-part-1-a-bubble-looming"
       ]
     },
     {
       "source": "person:Covid",
-      "target": "person:Ma",
+      "target": "person:Putin",
       "weight": 2,
       "articles": [
-        "alibaba-update-its-down-75-is-it-still-a-value-play",
-        "the-latest-jack-ma-sighting-is-it-for-real"
+        "germanys-pearl-harbor-moment-the-wars-weightiest-consequence",
+        "shortages-gluts-deflation-the-bottlenecks-in-the-economy-are-breaking"
       ]
     },
     {
-      "source": "person:Covid",
-      "target": "person:Powell",
+      "source": "person:Elon Musk",
+      "target": "person:Jack Ma",
       "weight": 2,
       "articles": [
-        "jackson-hole-the-federal-reserve-does-shark-week-for-the-markets",
-        "what-is-transitory-inflation-1-the-facts"
+        "the-sad-end-of-jack-ma-inc",
+        "why-china-stepped-on-the-ant-group-part-1-a-bubble-looming"
+      ]
+    },
+    {
+      "source": "person:Elon Musk",
+      "target": "person:Jerome Powell",
+      "weight": 2,
+      "articles": [
+        "inflation-the-media-screams-but-the-market-is-unfazed"
       ]
     },
     {
@@ -2550,6 +2375,14 @@
       "articles": [
         "alibaba-is-a-spring-loaded-value-play-ready-to-explode",
         "ants-botched-ipo-part-3-the-regulators-performed-a-radical-value-ectomy"
+      ]
+    },
+    {
+      "source": "person:Jack Ma",
+      "target": "person:Putin",
+      "weight": 2,
+      "articles": [
+        "what-really-happened-to-jack-ma"
       ]
     },
     {
@@ -2581,94 +2414,80 @@
   ],
   "top_pairs": [
     {
-      "a": "Fed",
-      "b": "the Federal Reserve",
-      "a_type": "org",
-      "b_type": "org",
-      "weight": 42
-    },
-    {
-      "a": "Fed",
-      "b": "Powell",
+      "a": "Federal Reserve",
+      "b": "Jerome Powell",
       "a_type": "org",
       "b_type": "person",
-      "weight": 19
+      "weight": 26
     },
     {
-      "a": "Fed",
-      "b": "The Federal Reserve",
-      "a_type": "org",
-      "b_type": "org",
-      "weight": 18
-    },
-    {
-      "a": "PCE",
-      "b": "the Federal Reserve",
-      "a_type": "org",
-      "b_type": "org",
-      "weight": 18
-    },
-    {
-      "a": "Fed",
+      "a": "Federal Reserve",
       "b": "Treasury",
       "a_type": "org",
       "b_type": "org",
-      "weight": 17
+      "weight": 21
     },
     {
-      "a": "Fed",
+      "a": "Bureau of Labor Statistics",
+      "b": "Federal Reserve",
+      "a_type": "org",
+      "b_type": "org",
+      "weight": 20
+    },
+    {
+      "a": "Federal Reserve",
       "b": "PCE",
       "a_type": "org",
       "b_type": "org",
-      "weight": 16
+      "weight": 20
     },
     {
-      "a": "the Federal Reserve",
-      "b": "Powell",
-      "a_type": "org",
-      "b_type": "person",
-      "weight": 16
-    },
-    {
-      "a": "Fed",
-      "b": "Jerome Powell",
+      "a": "Ant Group",
+      "b": "Jack Ma",
       "a_type": "org",
       "b_type": "person",
       "weight": 15
     },
     {
-      "a": "the Federal Reserve",
-      "b": "Jerome Powell",
+      "a": "Ant",
+      "b": "Jack Ma",
       "a_type": "org",
       "b_type": "person",
-      "weight": 15
+      "weight": 13
     },
     {
-      "a": "The Federal Reserve",
-      "b": "the Federal Reserve",
+      "a": "Bureau of Labor Statistics",
+      "b": "PCE",
+      "a_type": "org",
+      "b_type": "org",
+      "weight": 13
+    },
+    {
+      "a": "Federal Reserve",
+      "b": "Covid",
+      "a_type": "org",
+      "b_type": "person",
+      "weight": 13
+    },
+    {
+      "a": "Ant",
+      "b": "Ant Group",
       "a_type": "org",
       "b_type": "org",
       "weight": 12
     },
     {
-      "a": "Jack Ma",
-      "b": "Ma",
-      "a_type": "person",
-      "b_type": "person",
-      "weight": 12
-    },
-    {
-      "a": "Fed",
+      "a": "Federal Reserve",
       "b": "Larry Summers",
       "a_type": "org",
       "b_type": "person",
       "weight": 11
     },
     {
-      "a": "the Bureau of Labor Statistics",
-      "b": "the Federal Reserve",
+      "a": "IPO",
+      "b": "Jack Ma",
       "a_type": "org",
-      "b_type": "org",
+      "b_type": "person",
       "weight": 11
     },
     {
@@ -2679,11 +2498,25 @@
       "weight": 10
     },
     {
-      "a": "Ant",
-      "b": "Jack Ma",
+      "a": "Bureau of Labor Statistics",
+      "b": "Core",
       "a_type": "org",
       "b_type": "person",
       "weight": 10
+    },
+    {
+      "a": "Federal Reserve",
+      "b": "Core",
+      "a_type": "org",
+      "b_type": "person",
+      "weight": 10
+    },
+    {
+      "a": "Ant Group",
+      "b": "IPO",
+      "a_type": "org",
+      "b_type": "org",
+      "weight": 9
     }
   ]
 }
