@@ -82,15 +82,69 @@ negation flip — so it surfaces *trends*, not ground-truth sentiment. The artif
 (names/years/scores only), so it's committable like `entity_graph.json`. Same byline/photo-credit
 exclusion. No conductor/network. (Roadmap #17.)
 
+`embedding_compare.py` — the **embedding-model comparison harness** behind decision **D2** ("evaluate
+alternatives before swapping the pinned `sbert-mpnet-v2`"). Run via `make embedding-compare`;
+owner-gated on conductor reachability. Following `rag_eval`/`voice_eval`, the one networked seam —
+`embed(model_id, texts)` — is injected, so the ranking + comparison math is pure and TDD'd offline.
+It ranks the corpus per query with each candidate model and reports two things: **retrieval quality**
+(precision@k / recall@k / MRR against the committed, text-free gold set `eval/embedding_queries.json`)
+and **baseline agreement** (top-k overlap + Kendall-tau of each candidate's rankings vs. the pinned
+model — the label-free "is it safe to swap?" number). Writes `data/analysis/embedding_compare.json`
+(owner-run, not committed). The gold set's hand-authored `relevant_slugs` are guarded offline by
+`make embedding-queries-check` (`python -m analysis.embedding_compare --check`): it validates every
+slug against the committed `data/manifest.json` — no conductor, no embedding — so a typo'd / renamed
+slug fails loudly instead of silently scoring 0 in a live pass. A dashboard viz is still deferred.
+(Roadmap #27.)
+
+`calhoun_isms.py` — also outside the default chain; run via `make calhoun-isms`. A pure/offline
+**derived** artifact: reads `themes.json`'s per-article theme assignments plus the corpus bodies,
+scores every sentence for "quotability" with transparent heuristics (length band + aphoristic
+markers like *always/never/no one*, minus attribution/newsy-digit penalties), and emits
+`calhoun_isms.json` — the strongest aphorisms grouped by theme plus an overall board. Because the
+artifact embeds short **body excerpts**, it is **git-ignored** (regenerate on demand), the same
+posture as `reading_room.json`. Surfaced in the dashboard's **Calhoun-isms** tab (roadmap #16),
+injected via `build_dashboard`'s `/*__CALHOUN_ISMS_DATA__*/` placeholder with an empty-board stub
+in CI / fresh clones (prompting `make calhoun-isms`); each quote deep-links into the Raw Corpus tab
+via the shared `deepLinkToCorpus()` helper. No conductor/network. (Roadmap #16.)
+
+`intellectual_arc.py` — also outside the default chain; run via `make intellectual-arc`. A
+pure/offline **derived** artifact: bins `themes.json`'s clustered articles by calendar year and
+emits `intellectual_arc.json` — each year's theme composition (per-cluster share + a dominant
+theme), the consecutive year-over-year `shifts` (rising / fading / emergent / vanished + any
+change of lead theme), an `overall` summary (most-grown / most-declined theme across the span,
+first→last dominant), and a **deterministic** prose `narrative` assembled from those numbers
+(no LLM). Thin in-progress years are flagged `partial` so they can't anchor the conclusion. The
+artifact is text-free (theme labels/counts/shares only), so it's committable like
+`entity_graph.json`. No conductor/network. Surfaced in the dashboard's **Intellectual Arc** tab
+— the narrative + headline stats, a per-year stacked theme-composition bar chart (segment colors
+reuse the shared `clusterColor()` palette, so a theme reads the same as on the Theme Map /
+Timeline; click a legend theme to trace its band across every year), and year-over-year shift
+cards — injected via `build_dashboard`'s `/*__INTELLECTUAL_ARC_DATA__*/` placeholder (empty-arc
+stub in CI / fresh clones, prompting `make intellectual-arc`). (Roadmap #13.)
+
 `contradictions.py` — also outside the default chain; run via `make contradictions`. A
 pure/offline **derived** artifact: reads `entities.json`'s frequent people/orgs plus the corpus
-bodies and emits `contradictions.json`, the subjects whose stance *reversed sign* between Dad's
-earlier and later writing ("where did he change his mind?"). Each sentence naming a subject is
-scored by a small transparent polarity lexicon (positive − negative words on word boundaries);
-a subject is flagged when the mean stance of its earlier vs. later mentions have opposite signs
-and the gap clears `--min-delta`. It's a coarse candidate finder (no negation/sarcasm modeling)
-for a human to read, not a verdict — byline/photo boilerplate excluded by default (`--no-exclude`
-to keep it). No conductor/network. (Roadmap #15.)
+bodies, scores Dad's stance toward each subject sentence-by-sentence via a small transparent
+polarity lexicon, and emits `contradictions.json` — subjects whose mean stance **reversed sign**
+between his earlier vs. later writing, each with a representative early/late quote and a
+`warmed`/`cooled` direction, sorted by swing. Because the artifact embeds **body excerpts**, it is
+**git-ignored** (regenerate on demand), the same posture as `calhoun_isms.json` / `reading_room.json`.
+Surfaced in the dashboard's **Second Thoughts** tab (roadmap #15): warmed/cooled cards pairing his
+earliest vs. latest take, each quote deep-linking into the Raw Corpus via `deepLinkToCorpus()`,
+plus a direction filter — injected via `build_dashboard`'s `/*__CONTRADICTIONS_DATA__*/` placeholder
+with an empty-board stub in CI / fresh clones (prompting `make contradictions`). No conductor/network.
+(Roadmap #15.)
+
+`anthology.py` — a family keepsake, outside the default chain; run via `make anthology` (HTML +
+JSON) or `make anthology-pdf` (adds the PDF). Pure/offline: reads `themes.json` + `predictions.json`
+and assembles a "best of" — his vindicated **best calls** (most-committed first) and a **signature
+piece** per dominant theme — rendered as a print-ready Georgia-serif HTML document with `@media print`
+page breaks. `make anthology-pdf` turns that HTML into `anthology.pdf` via the `render_pdf(html, pdf)`
+helper, whose default seam is headless Chromium (Playwright, already a dev dep); the browser call is
+isolated behind that injectable seam so all orchestration stays offline-unit-tested (the same pattern
+as `rag_eval`/`voice_eval`/`embedding_compare`), and it degrades to a clear `SKIP PDF` (leaving the
+interim print-ready HTML) when no browser is present. The rendered `anthology.html`/`anthology.pdf`
+are **git-ignored** build outputs (regenerate on demand). No conductor/network. (Roadmap #24.)
 
 ## 3. The conductor (LLM abstraction)
 

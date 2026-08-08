@@ -4,7 +4,7 @@ PYTHON := .venv/bin/python
 # ruff findings (broadening the scope is a follow-up roadmap item, #1-3/cleanup).
 LINT_PATHS := tests
 
-.PHONY: scrape manifest-check coverage-audit analyze training dashboard all serve share search on-this-day send-on-this-day adjudicate backfill-verdicts entity-graph calhoun-isms contradictions rag-eval voice-eval voice-trials clean test lint fmt lint-json hooks verify verify-responsive
+.PHONY: scrape manifest-check manifest-dedup coverage-audit analyze training dashboard all serve share search on-this-day send-on-this-day adjudicate backfill-verdicts entity-graph calhoun-isms contradictions rag-eval voice-eval voice-trials embedding-compare embedding-queries-check clean test lint fmt lint-json hooks verify verify-responsive
 
 scrape:
 	$(PYTHON) -m scraper $(ARGS)
@@ -14,6 +14,13 @@ scrape:
 # ARGS=--strict to exit non-zero on issues (for CI), or ARGS=--json for machine output.
 manifest-check:
 	$(PYTHON) -m scraper.manifest_check $(ARGS)
+
+# Collapse duplicate-slug entries in data/manifest.json (the de-dup fix manifest_check
+# only reports; roadmap #8 follow-up). Report-only by default (exit 0, changes nothing);
+# ARGS=--apply writes <manifest>.dedup.json, ARGS="--apply --in-place" rewrites it,
+# ARGS="--apply --backfill-hashes" also fills missing content_hash from raw bodies.
+manifest-dedup:
+	$(PYTHON) -m scraper.manifest_dedup $(ARGS)
 
 # Audit corpus coverage against the author's full Forbes footprint (roadmap #9): report
 # articles we know exist (via Wayback CDX) but haven't scraped, plus the missing date ranges.
@@ -72,6 +79,18 @@ send-on-this-day:
 year-in-review:
 	$(PYTHON) -m analysis.year_in_review $(ARGS)
 
+# Printable "best of" anthology keepsake (roadmap #24). Deterministic + offline (no conductor,
+# no network): builds from data/analysis/{themes,predictions}.json and writes the print-ready
+# data/analysis/anthology.html (+ anthology.json). ARGS e.g. --dry-run, --calls-limit 10.
+anthology:
+	$(PYTHON) -m analysis.anthology $(ARGS)
+
+# As `anthology`, but also renders data/analysis/anthology.pdf from that HTML via headless
+# Chromium (Playwright). Needs a browser, so it's a deliberate/local target (not automation):
+# if Chromium is unavailable it prints SKIP PDF and still leaves the print-ready HTML.
+anthology-pdf:
+	$(PYTHON) -m analysis.anthology --pdf $(ARGS)
+
 # Interactive: walk pending predictions, confirm/override the advisory LLM verdict.
 # Human verdicts win and are written back after each ruling (resumable). ARGS e.g. --limit 20.
 adjudicate:
@@ -113,12 +132,33 @@ entity-stance:
 contradictions:
 	$(PYTHON) -m analysis.contradictions $(ARGS)
 
+# Calhoun-isms (roadmap #16): the most quotable/aphoristic sentences per theme, derived from
+# data/analysis/themes.json + the corpus (run `make analyze` first). Pure/offline — no conductor,
+# no network. Writes the git-ignored data/analysis/calhoun_isms.json (embeds body excerpts);
+# surfaced in the dashboard's Calhoun-isms tab. ARGS e.g. --dry-run, --top 10, --min-score 2.
+calhoun-isms:
+	$(PYTHON) -m analysis.calhoun_isms $(ARGS)
+
 # RAG faithfulness eval baseline for Ask Dad (plan 0007). Owner-gated: the generation +
 # judge passes make conductor calls (judge defaults to paid T3), so it refuses to run if
 # the conductor is down. Writes data/analysis/rag_eval.json. ARGS e.g. --limit 5 or
 # --judge-tier 2. Run deliberately (NOT from automation).
 rag-eval:
 	$(PYTHON) -m analysis.rag_eval $(ARGS)
+
+# Embedding-model comparison before ever swapping the pinned sbert-mpnet-v2 (decision D2,
+# roadmap #27). Owner-gated: a live pass embeds the corpus with each candidate model via the
+# conductor, so it refuses to run if the conductor is down. Reads eval/embedding_queries.json,
+# writes data/analysis/embedding_compare.json. ARGS e.g. --models nomic-embed-text bge-small
+# --limit 40. Run deliberately (NOT from automation).
+embedding-compare:
+	$(PYTHON) -m analysis.embedding_compare $(ARGS)
+
+# Offline validity check of the gold query set (eval/embedding_queries.json): every
+# relevant_slug must resolve to a corpus article in data/manifest.json. No conductor /
+# no embedding — safe to run anywhere (CI, fresh clone). Exit 1 on any problem.
+embedding-queries-check:
+	$(PYTHON) -m analysis.embedding_compare --check
 
 # Voice-fidelity blind-A/B eval for the Geo-LLM fine-tune (plan 0008 step 26d). Owner-gated:
 # the judge pass makes conductor calls (defaults to paid T3), so it refuses to run if the

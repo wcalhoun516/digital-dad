@@ -1,0 +1,102 @@
+{
+  "description": "Gold query set for the embedding-model comparison harness (roadmap #27, analysis/embedding_compare.py). Each entry pairs a natural-language query with the slug(s) of the corpus article(s) that most directly answer it, so a candidate embedder can be scored on precision@k / recall@k / MRR against the pinned sbert-mpnet-v2 (decision D2). This file is text-free (queries + public article slugs only), so it is committed like eval/questions.json. Validate it offline with `make embedding-queries-check` (every relevant_slug must resolve to a slug in data/manifest.json). Expand it (more queries, more relevant_slugs per query) to tighten the comparison.",
+  "queries": [
+    {
+      "query": "Is Europe finally moving toward a shared fiscal union, a Hamiltonian moment?",
+      "relevant_slugs": [
+        "europes-hamiltonian-moment-what-is-it-really",
+        "the-european-unions-next-step-a-hamiltonian-commonwealth"
+      ]
+    },
+    {
+      "query": "What is Warren Buffett's bet on the Japanese trading houses, and does value investing still work?",
+      "relevant_slugs": ["buffett-takes-on-japan-but-does-value-still-exist"]
+    },
+    {
+      "query": "Why did China block Jack Ma's Ant Group IPO?",
+      "relevant_slugs": [
+        "why-china-stopped-the-ant-groups-ipo-part-2-ants-dangerous-business-model",
+        "why-china-stepped-on-the-ant-group-part-1-a-bubble-looming",
+        "what-really-happened-to-jack-ma"
+      ]
+    },
+    {
+      "query": "What drove the GameStop short squeeze and the gamma swarm?",
+      "relevant_slugs": [
+        "gamestop-the-second-surge-anatomy-of-a-gamma-swarm",
+        "gamestop-were-the-short-sellers-routed-does-it-matter-beware-the-gamma"
+      ]
+    },
+    {
+      "query": "Is the recent inflation spike real or just a statistical artifact in the CPI?",
+      "relevant_slugs": [
+        "the-inflation-bump-is-not-real-it-is-a-statistical-artifact",
+        "the-inflation-scare-doesnt-match-reality",
+        "there-is-no-inflation-the-june-cpi-headline-head-fake"
+      ]
+    },
+    {
+      "query": "What is the CHIPS Act and is it really necessary for U.S. semiconductor competitiveness?",
+      "relevant_slugs": [
+        "semiconductors-the-chips-act-what-it-is-part-1",
+        "semiconductors-the-chips-act-is-it-really-necessary-part-3",
+        "the-chips-act-good-questions-bad-questions-bad-bets-part-2"
+      ]
+    },
+    {
+      "query": "Does raising the Fed funds rate actually tame inflation, and what is the collateral damage?",
+      "relevant_slugs": [
+        "does-raising-the-fed-funds-rate-tame-inflation-is-there-collateral-damage",
+        "the-feds-two-pronged-monetary-blitzkrieg-pt-1-surveying-the-damage",
+        "collateral-damage-from-fed-policy-part-2-a-broken-housing-market"
+      ]
+    },
+    {
+      "query": "Will Trump's tariffs cause a recession?",
+      "relevant_slugs": [
+        "tariff-uncertainties-pt-5-the-big-one-will-it-cause-a-recession",
+        "tariffs-first-consider-the-certainties",
+        "the-tariff-scorecard-did-we-miss-the-apocalypse-or-was-it-just-postponed"
+      ]
+    },
+    {
+      "query": "Is cryptocurrency mostly a fantasy, and how should we think about its ethics?",
+      "relevant_slugs": [
+        "the-biggest-crypto-fantasy-of-all",
+        "the-ethics-of-crypto-sorting-out-good-intentions-and-bad-actors"
+      ]
+    },
+    {
+      "query": "Did Beijing manipulate or underreport China's COVID death data?",
+      "relevant_slugs": [
+        "beijing-is-intentionally-underreporting-chinas-covid-death-rate-part-1",
+        "chinas-manipulation-of-covid-data-the-two-smoking-guns",
+        "part-3-anomalies-in-the-chinese-covid-data-evidence-of-manipulation"
+      ]
+    },
+    {
+      "query": "Is Alibaba a value play or a value trap after Beijing's crackdown?",
+      "relevant_slugs": [
+        "beijings-jack-ma-kabuki-play-continues-is-alibaba-a-value-play",
+        "alibaba-is-a-spring-loaded-value-play-ready-to-explode",
+        "alibaba-update-whoops-is-this-stock-really-a-value-trap"
+      ]
+    },
+    {
+      "query": "Did adding Tesla to the S&P 500 create a bubble?",
+      "relevant_slugs": [
+        "will-tesla-break-the-sp500-pt-3-did-the-way-it-was-added-help-create-a-bubble",
+        "will-tesla-break-the-sp-500-index-part-1",
+        "will-tesla-break-the-sp-500part-2-the-mechanics-of-market-turmoil"
+      ]
+    },
+    {
+      "query": "Is China's economy heading into a Japan-style stagnation?",
+      "relevant_slugs": [
+        "chinas-economic-problem-isnt-just-japanification-it-may-be-worse",
+        "chinas-economic-crisis-is-tracking-japans-downturn-in-the-1990s",
+        "is-chinas-economy-entering-historical-garbage-time-part-1"
+      ]
+    }
+  ]
+}

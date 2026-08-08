@@ -51,15 +51,40 @@ What it checks:
 
 ### Why duplicate slugs happen
 
-`scraper/__main__.py` de-duplicates manifest entries **by `url`**, not by `slug`
-(`existing_idx = next(i for i, a in enumerate(...) if a["url"] == url)`). When the same article
-is rediscovered under a *different* URL (e.g. an `http://` vs `https://` form, or a Wayback
-variant), it slugifies to the same filename — so the raw file is overwritten, but a **second
-manifest entry is appended**. The current corpus carries 23 such duplicate-slug entries (~12%).
+The scraper used to de-duplicate manifest entries **by `url`**, not by `slug`. When the same
+article was rediscovered under a *different* URL (e.g. an `http://` vs `https://` form, or a
+Wayback variant), it slugified to the same filename — so the raw file was overwritten, but a
+**second manifest entry was appended**. That produced the 23 duplicate-slug entries (~12%) in
+the current corpus.
 
-This checker only *reports* the drift; it does not mutate the manifest. De-duplicating the
-manifest (and switching the scraper's dedup key to `slug`, or normalizing URLs before the
-existence check) is a separate, owner-reviewed change.
+**Root cause fixed** (`scraper/__main__.py`): the scrape loop now calls `upsert_article()`,
+which matches an existing entry on **`slug`**, so a re-scrape under a URL variant replaces the
+entry in place instead of appending a duplicate. New scrapes no longer accrete dup slugs; the
+`make manifest-dedup` tool below repairs the *existing* manifest.
+
+## Manifest de-dup / repair (`make manifest-dedup`)
+
+`manifest-check` only *reports* drift. `scraper/manifest_dedup.py` (roadmap #8 follow-up) is
+the fix: it collapses duplicate-slug entries down to one canonical entry and can backfill a
+missing `content_hash` from the raw body on disk.
+
+```bash
+make manifest-dedup                                   # report only (exit 0, changes nothing)
+make manifest-dedup ARGS=--apply                      # write data/manifest.dedup.json (a separate file)
+make manifest-dedup ARGS="--apply --backfill-hashes"  # also fill missing content_hash from raw bodies
+make manifest-dedup ARGS="--apply --in-place"         # overwrite data/manifest.json (owner-reviewed)
+```
+
+**Canonical-entry pick** (`dedup_articles`, pure/offline). Within a same-slug group the kept
+entry is chosen deterministically: prefer one that (1) has a `content_hash` (real scraped
+content over a bare stub), then (2) a URL with no query string, then (3) `https` over `http`,
+then (4) a shorter URL, then (5) first-seen order. Kept entries keep their original position;
+empty-slug entries pass through untouched.
+
+Report-only by default — it **never rewrites the committed `data/manifest.json`** unless the
+owner passes `--apply --in-place`; `--apply` alone writes a separate `.dedup.json` for review.
+On the current corpus it collapses **199 → 176 entries** and `--backfill-hashes` fills the
+remaining missing hashes to **0**.
 
 ## Coverage audit (`make coverage-audit`)
 
