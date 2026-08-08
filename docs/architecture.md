@@ -80,12 +80,14 @@ pixel-sized chart tabs. (Roadmap #14.)
 `entity_stance.py` — also outside the default chain; run via `make entity-stance`. A pure/offline
 **derived** artifact: joins `entities.json`'s `per_article` lists to the corpus bodies and emits
 `entity_stance.json`, a per-entity **yearly stance trajectory** (mean tone of the sentences that
-name an entity, per year) plus warming/cooling trend boards, for a future dashboard "stance over
-time" viz. Because nltk/VADER is absent here, tone is a **transparent heuristic** — a small
-curated polarity lexicon scored per sentence with a light negation flip — so it surfaces *trends*,
-not ground-truth sentiment. The artifact is text-free (names/years/scores only), so it's
-committable like `entity_graph.json`. Same byline/photo-credit exclusion. No conductor/network.
-(Roadmap #17.)
+name an entity, per year) plus warming/cooling trend boards. The dashboard **Stance** tab
+(`renderStance` in `template.html`, injected via `/*__ENTITY_STANCE_DATA__*/`) draws these as a
+D3 multi-line chart with the trend boards alongside; CI / fresh clones inline an empty-graph stub
+and the tab shows a `make entity-stance` prompt. Because nltk/VADER is absent here, tone is a
+**transparent heuristic** — a small curated polarity lexicon scored per sentence with a light
+negation flip — so it surfaces *trends*, not ground-truth sentiment. The artifact is text-free
+(names/years/scores only), so it's committable like `entity_graph.json`. Same byline/photo-credit
+exclusion. No conductor/network. (Roadmap #17.)
 
 `embedding_compare.py` — the **embedding-model comparison harness** behind decision **D2** ("evaluate
 alternatives before swapping the pinned `sbert-mpnet-v2`"). Run via `make embedding-compare`;
