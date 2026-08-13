@@ -48,6 +48,20 @@ Format:
 
 <!-- entries below -->
 
+### 2026-08-13 — none — skipped
+- PR: skipped (backlog full)
+- Source: none
+- Summary: **Stood down per §2** — **10** open `daily/*` PRs (≥5 threshold), so no new work started
+  and §3+ not reached. Only **#64** (08-05 byline-normalization, scraper) is substantive; the other
+  **nine are `[skipped]` markers**: **#71** (08-12), **#70** (08-11), **#69** (08-10), **#68** (08-09),
+  **#67** (08-08), **#66** (08-07), **#65** (08-06), **#59** (07-23), **#58** (07-22). The count rose
+  9 → 10 since 08-12 (the 08-12 run added marker #71). The self-inflating pattern is now acute: **9 of
+  10 open PRs are pure skip noise**, and each daily stand-down mechanically adds one more. Note #63/#53
+  have since cleared (merged/closed), so #64 is the lone remaining substantive PR. **Owner action to
+  unblock (increasingly urgent):** the agent cannot close/merge PRs (§11), so a human must (1) merge or
+  close **#64**, and (2) **close the nine skip markers #71/#70/#69/#68/#67/#66/#65/#59/#58**. Until the
+  open count drops below 5, every daily run will keep standing down and adding another marker.
+
 ### 2026-08-04 — analysis — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/63
 - Source: roadmap:#14
