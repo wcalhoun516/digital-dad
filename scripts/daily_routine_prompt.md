@@ -37,17 +37,51 @@ Read these, in this order, to load context:
 Also skim `docs/architecture.md` and `docs/decisions.md` if your task touches an area you're
 unsure about. Do not start editing until you've read items 1–4.
 
+## §1.5 — Is `main` green? (a red `main` outranks everything below)
+
+```
+gh run list --branch main --limit 1 --json conclusion,displayTitle
+```
+
+If the latest `main` run is **`failure`**, that is **today's work** — stop here and fix it.
+Do not open new feature work on top of a broken trunk, and do not skip the day: a red `main`
+poisons the merge ref of *every* open PR, so all of them look broken and none can land.
+
+Confirm locally with `make verify`, find the commit that broke it
+(`git log --oneline` + `git show`), and fix the **cause**. This has bitten the project three
+times, always the same way: a stale `daily/*` branch merged `main` in, resolved an add/add
+conflict by taking one side, and dropped a feature that had landed meanwhile (`aada6a2`;
+then again on 2026-07-17, undetected for four weeks — see PR #73 and §3).
+
+Ship it the normal way — skip to §6 and open a `daily/YYYY-MM-DD-fix-red-main` draft PR
+(category `infra`). You still **never push to `main` yourself** (§11); the trunk fix goes
+through review like any other change. **Restoring what was dropped is the fix; deleting or
+weakening the failing tests is not.**
+
+`main`'s CI has run on every push since the workflow landed, so a red trunk is always
+visible here. Nobody was looking. Now you are.
+
 ## §2 — Backlog check (don't pile up unreviewed work)
 
 Count your own open draft PRs:
 ```
 gh pr list --state open --search "head:daily/" --json number,title,headRefName
 ```
-If **5 or more** are open, **stand down**: do not start new work. Open a single draft PR
-titled `daily/YYYY-MM-DD [skipped] backlog full` from a fresh branch with a one-line body
-explaining the backlog is full (≥5 open `daily/*` PRs), append a `[skipped]` Run-history
-entry to `docs/daily-log.md` (§10), commit/push that doc change, and **exit clean**. Do not
-proceed to §3+.
+If **8 or more** are open, **stand down**: do not start new work. Append a `[skipped]`
+Run-history entry to `docs/daily-log.md` (§10) noting the count, commit it on a fresh
+`daily/YYYY-MM-DD-skipped` branch, push that branch, and **exit clean** — do **not** open a
+PR for it. Do not proceed to §3+. (Those skip branches carry a one-line doc change each and
+are safe for a human to delete in bulk.)
+
+> **Never open a PR to announce a skip.** A skip PR is itself a `daily/*` PR, so it counts
+> toward the very threshold that produced it — a ratchet that, once tripped, can never
+> untrip. That happened: the agent stood down every night from 2026-07-22 to 2026-08-13 and
+> shipped nothing but ten empty `[skipped]` PRs, which were the entire reason the next night
+> also skipped. The daily log is the record of a skip; a PR is not.
+
+Note the asymmetry with §1.5: a **red `main`** is never a reason to skip. A full backlog
+means there is too much unreviewed work, so stand down; a red trunk means the work already
+merged is broken, so fix it.
 
 ## §3 — Resume check (finish what's in flight before starting new)
 
@@ -56,13 +90,21 @@ from §8).
 - If any has `**Status:** in-progress` **and** `**Last update:**` is **< 3 days** old:
   **resume that PR** — check out its branch, then **bring it current with `main` before doing
   anything else.** A resumed branch can be days old, and merging it as-is can silently revert
-  files that landed on `main` in the meantime (this has regressed the launchd trampoline twice).
+  files that landed on `main` in the meantime (this has regressed the launchd trampoline twice,
+  and on 2026-07-17 it dropped four whole dashboard tabs — Network, Intellectual Arc,
+  Calhoun-isms, Second Thoughts — leaving `main` red for four weeks; see PR #73).
   Rebase, don't merge:
   ```
   git fetch origin && git rebase origin/main
   ```
   On conflict, keep `origin/main`'s version for any file **outside today's task scope** — only
-  retain your branch's version of files you intentionally changed for this task. Then
+  retain your branch's version of files you intentionally changed for this task. **Never
+  resolve an add/add conflict by taking one side wholesale** — if both sides added something
+  (a tab, a dict entry, a set member), the answer is almost always the **union** of the two.
+  Then **run `make verify` before pushing** — a rebase that silently drops someone else's
+  feature shows up here as *their* tests failing, and that is the only signal you will get.
+  If `make verify` fails on files you did not touch today, you dropped something: redo the
+  resolution, do not "fix" their test. Then
   `git push --force-with-lease` (allowed on your own `daily/*` branch — see §11). Now re-read
   its `## Where I left off` and continue its plan from §7. Prefer the most recently updated one.
   Do **not** start new work today.
