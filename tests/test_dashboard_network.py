@@ -80,4 +80,10 @@ def test_network_redraws_on_resize():
     html = TEMPLATE.read_text()
     # The force graph measures its container at render time, so — like themes/timeline — it must
     # re-fit on viewport change. It's stateless (no in-flight user input) so a redraw is safe.
-    assert "new Set(['themes', 'timeline', 'network'])" in html
+    # Assert *membership*, not the exact set literal: other stateless chart tabs join this set
+    # over time, and pinning the literal made this test and the Stance one mutually exclusive —
+    # a merge dropped the 'network' entry to satisfy 'stance', silently losing this redraw.
+    set_line = next(
+        line for line in html.splitlines() if "RESIZE_REDRAW_TABS" in line and "=" in line
+    )
+    assert "'network'" in set_line

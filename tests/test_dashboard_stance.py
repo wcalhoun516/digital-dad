@@ -72,7 +72,12 @@ def test_stance_has_empty_stub_prompt():
 
 def test_stance_is_resize_redraw_tab():
     html = TEMPLATE.read_text()
-    assert "RESIZE_REDRAW_TABS = new Set(['themes', 'timeline', 'stance'])" in html
+    # Membership, not the exact set literal — see the matching note in
+    # ``test_dashboard_network.py``: pinning the literal made the two tests mutually exclusive.
+    set_line = next(
+        line for line in html.splitlines() if "RESIZE_REDRAW_TABS" in line and "=" in line
+    )
+    assert "'stance'" in set_line
 
 
 def test_desktop_nav_wraps_so_added_tab_cannot_overflow():
