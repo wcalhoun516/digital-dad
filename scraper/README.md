@@ -18,7 +18,16 @@ fields pulled from the article page by the pure, offline-testable `extract_metad
 | **published_date** | `<meta property="article:published_time">` → `<time datetime>` → the `/YYYY/MM/DD/` URL path. |
 | **updated_date** | `<meta property="article:modified_time">` → `<meta property="og:updated_time">` → `""` (empty when the page advertises no revision). |
 | **section** | `<meta property="article:section">` → the last link in a `[class*="breadcrumb"]` nav → `""`. |
-| **byline** / **byline_variants** | `<meta name="author">`, `<meta property="article:author">` (URL-valued ones skipped), and `[rel="author"]`/`[class*="author"]` elements — deduped in first-seen order; `byline` is the first variant. |
+| **byline_variants** | `<meta name="author">`, `<meta property="article:author">` (URL-valued ones skipped), and `[rel="author"]`/`[class*="author"]` elements — deduped in first-seen order; kept **raw** for provenance. |
+| **bylines_normalized** | `byline_variants` run through `normalize_byline()` (below), empties dropped and deduped in first-seen order — the distinct clean authors behind the raw variants. |
+| **byline** | the first entry of `bylines_normalized` (the primary clean author), or `""` when none. |
+
+**Byline normalization** — `normalize_byline(name)` (pure, offline) canonicalizes one raw
+byline string: it strips a leading `By`/`By:` prefix and a trailing Forbes role suffix
+(`Contributor`/`Senior Contributor`, whether comma-separated as `George Calhoun, Contributor`
+or glued on by author-class text as `George CalhounContributor`), then collapses whitespace.
+It is conservative — a clean name, or a non-`Contributor` role (`Jane Doe, Staff Writer`),
+passes through unchanged. This is the deferred "byline-normalization pass" of roadmap #10.
 
 The helpers are pure (they take an already-parsed BeautifulSoup tree), so they're covered
 by offline fixtures in `tests/test_forbes_metadata.py`. Existing raw JSON only back-fills

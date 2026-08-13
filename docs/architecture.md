@@ -23,6 +23,12 @@ so a single source going down doesn't break ingestion.
   title/date/body from the latest snapshot. Rate-limited (5s for web.archive.org).
 - `utils.py` — `RateLimiter` (per-domain delays), exponential-backoff retry, `slugify`,
   `is_article_url` (filters to `/sites/georgecalhoun/`, excludes `/amp/` + pagination).
+- `forbes_requests.py` — Tier-2 requests+BS4 extraction. `extract_metadata()` adds richer
+  per-article fields (roadmap #10: canonical URL, published/updated dates, section, bylines).
+  `normalize_byline()` cleans a raw byline (drops a leading `By`/`By:` and a trailing
+  `Contributor`/`Senior Contributor` role, comma- or glued-form); `byline` is the first
+  distinct normalized author, with `byline_variants` kept raw for provenance and
+  `bylines_normalized` the deduped clean list. See `scraper/README.md`.
 
 **Manifest schema** (`data/manifest.json`): `{last_updated, total_articles, articles:[{slug,
 title, date, url, tags, word_count, file, content_hash}]}`. `content_hash` is the MD5 of the
