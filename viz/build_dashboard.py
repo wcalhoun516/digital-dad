@@ -19,6 +19,10 @@ PLACEHOLDERS = {
     "/*__PREDICTIONS_DATA__*/": DATA_DIR / "analysis" / "predictions.json",
     "/*__GEO_LLM_DATA__*/": DATA_DIR / "analysis" / "geo_llm.json",
     "/*__READING_ROOM_DATA__*/": DATA_DIR / "analysis" / "reading_room.json",
+    "/*__ENTITY_GRAPH_DATA__*/": DATA_DIR / "analysis" / "entity_graph.json",
+    "/*__INTELLECTUAL_ARC_DATA__*/": DATA_DIR / "analysis" / "intellectual_arc.json",
+    "/*__CALHOUN_ISMS_DATA__*/": DATA_DIR / "analysis" / "calhoun_isms.json",
+    "/*__CONTRADICTIONS_DATA__*/": DATA_DIR / "analysis" / "contradictions.json",
     "/*__ENTITY_STANCE_DATA__*/": DATA_DIR / "analysis" / "entity_stance.json",
 }
 
@@ -31,6 +35,22 @@ _EMPTY_DEFAULTS = {
     # Reading Room embeds full bodies, so it is git-ignored; CI / fresh clones inline an
     # empty room and the tab shows a "run make reading-room" prompt instead of article text.
     "/*__READING_ROOM_DATA__*/": '{"entries":[],"count":0,"themes":[]}',
+    # Entity co-occurrence graph (#14). Committed + text-free, but CI / fresh clones that
+    # haven't run `make entity-graph` inline an empty graph and the tab shows a build prompt.
+    "/*__ENTITY_GRAPH_DATA__*/": '{"meta":{},"nodes":[],"edges":[],"top_pairs":[]}',
+    # Intellectual arc (#13). Committed + text-free (theme labels/shares + a deterministic
+    # narrative), but CI / fresh clones that haven't run `make intellectual-arc` inline an
+    # empty arc and the tab shows a build prompt.
+    "/*__INTELLECTUAL_ARC_DATA__*/": (
+        '{"generated":null,"overall":null,"by_year":[],"shifts":[],"narrative":""}'
+    ),
+    # Calhoun-isms (#16). Git-ignored (the artifact embeds body excerpts), so CI / fresh clones
+    # that haven't run `make calhoun-isms` inline an empty board and the tab shows a build prompt.
+    "/*__CALHOUN_ISMS_DATA__*/": '{"meta":{},"themes":[],"overall_top":[]}',
+    # Contradictions / mind-changes (#15). Git-ignored (the artifact embeds body excerpts), so
+    # CI / fresh clones that haven't run `make contradictions` inline an empty board and the tab
+    # shows a build prompt.
+    "/*__CONTRADICTIONS_DATA__*/": '{"meta":{},"contradictions":[]}',
     # entity_stance.json is text-free (names/years/scores) but may not exist before the first
     # `make entity-stance` — inline an empty graph so the tab shows a build prompt, not a blank.
     "/*__ENTITY_STANCE_DATA__*/": '{"meta":{},"entities":[],"warming":[],"cooling":[]}',

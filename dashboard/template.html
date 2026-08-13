@@ -656,6 +656,8 @@ footer {
   <button data-tab="askdad">Ask Dad</button>
   <button data-tab="trackrecord">Track Record</button>
   <button data-tab="reading-room">Reading Room</button>
+  <button data-tab="calhoun-isms">Calhoun-isms</button>
+  <button data-tab="contradictions">Second Thoughts</button>
   <button data-tab="stance">Stance</button>
   <button data-tab="geollm">Geo-LLM</button>
 </nav>
@@ -919,6 +921,20 @@ footer {
   </div>
 </div>
 
+<!-- Tab 12: Calhoun-isms -->
+<div class="tab-content" id="tab-calhoun-isms">
+  <h2>Calhoun-isms</h2>
+  <p class="section-desc">His sharpest, most quotable lines — the aphorisms that land — pulled from the archive and grouped by theme. Click any line to find its column in the Raw Corpus.</p>
+  <div id="calhoun-isms-body"></div>
+</div>
+
+<!-- Tab 13: Second Thoughts (contradiction / mind-change finder) -->
+<div class="tab-content" id="tab-contradictions">
+  <h2>Second Thoughts</h2>
+  <p class="section-desc">Subjects Dad's stance <em>reversed</em> on over the years — where he warmed to, or cooled on, a person or institution. Each shows his earliest vs. latest take; click a quote to find its column.</p>
+  <div id="contradictions-body"></div>
+</div>
+
 <div class="tab-content" id="tab-stance">
   <h2>Stance Over Time</h2>
   <p class="section-desc">How his tone toward the people and institutions he wrote about warmed or cooled over the years. Tone is a transparent word-polarity proxy over the sentences that name each subject &mdash; a directional read, not a verdict.</p>
@@ -931,7 +947,6 @@ footer {
       <div id="stance-boards" style="flex:1;min-width:220px"></div>
     </div>
   </div>
-</div>
 
 <footer>
   Digital Dad &middot; A project about preserving intellectual legacy &middot; Built with D3.js, Python, and the local-llm-conductor
@@ -951,6 +966,10 @@ const EMBEDDINGS_DATA = /*__EMBEDDINGS_DATA__*/;
 const PREDICTIONS_DATA = /*__PREDICTIONS_DATA__*/;
 const GEO_LLM_DATA = /*__GEO_LLM_DATA__*/;
 const READING_ROOM_DATA = /*__READING_ROOM_DATA__*/;
+const ENTITY_GRAPH_DATA = /*__ENTITY_GRAPH_DATA__*/;
+const INTELLECTUAL_ARC_DATA = /*__INTELLECTUAL_ARC_DATA__*/;
+const CALHOUN_ISMS_DATA = /*__CALHOUN_ISMS_DATA__*/;
+const CONTRADICTIONS_DATA = /*__CONTRADICTIONS_DATA__*/;
 const ENTITY_STANCE_DATA = /*__ENTITY_STANCE_DATA__*/;
 </script>
 
@@ -2613,6 +2632,228 @@ function renderStance() {
      ${boardRows(data.cooling, '&darr;', '#c96a8a')}`;
 }
 
+// ===== CALHOUN-ISMS (roadmap #16) — most quotable/aphoristic sentences from CALHOUN_ISMS_DATA =====
+// Reads the git-ignored calhoun_isms.json (built by `make calhoun-isms`); the artifact embeds
+// short body excerpts, so in CI / fresh clones CALHOUN_ISMS_DATA is the empty stub and the tab
+// shows a build prompt. Each quote deep-links to its column via the shared deepLinkToCorpus().
+function renderCalhounIsms() {
+  const esc = s => (s || '').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  const data = CALHOUN_ISMS_DATA || {};
+  const themes = data.themes || [];
+  const overall = data.overall_top || [];
+  const body = document.getElementById('calhoun-isms-body');
+  if (!themes.length && !overall.length) {
+    body.innerHTML = '<p class="section-desc">No Calhoun-isms loaded. Run <code>make calhoun-isms</code> then <code>make dashboard</code> to surface his most quotable lines.</p>';
+    return;
+  }
+
+  const card = ism =>
+    `<blockquote class="ci-quote" data-slug="${esc(ism.slug)}" data-title="${esc(ism.title)}"
+        title="Find this column in the Raw Corpus"
+        style="margin:0;padding:14px 16px;border-left:3px solid var(--accent);background:var(--bg-card);cursor:pointer;border-radius:0 4px 4px 0">
+       <div style="font-size:1.05em;line-height:1.5;color:var(--text)">&ldquo;${esc(ism.text)}&rdquo;</div>
+       <div style="font-family:var(--mono);font-size:0.72em;color:var(--text-muted);margin-top:8px">${esc(ism.title)} &middot; ${esc(ism.date)}${ism.theme ? ' &middot; ' + esc(ism.theme) : ''}</div>
+     </blockquote>`;
+
+  const parts = [];
+  if (overall.length) {
+    parts.push(
+      `<section style="margin-bottom:34px">
+         <h3 style="font-size:1.15em;margin:0 0 14px;color:var(--accent)">Most quotable overall</h3>
+         <div style="display:grid;gap:12px">${overall.map(card).join('')}</div>
+       </section>`
+    );
+  }
+
+  const filterOpts = ['<option value="">All themes</option>']
+    .concat(themes.map(t => `<option value="${esc(t.theme)}">${esc(t.theme)}</option>`))
+    .join('');
+  parts.push(
+    `<div style="margin-bottom:16px">
+       <select id="ci-theme-filter" style="background:var(--bg-card);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:0.8em;padding:8px 10px;border-radius:0;cursor:pointer">${filterOpts}</select>
+     </div>`
+  );
+
+  parts.push(themes.map(t =>
+    `<section class="ci-theme" data-theme="${esc(t.theme)}" style="margin-bottom:30px">
+       <h3 style="font-size:1.05em;margin:0 0 12px;color:var(--text);border-bottom:1px solid var(--border);padding-bottom:6px">${esc(t.theme)}
+         <span style="font-family:var(--mono);font-size:0.7em;color:var(--text-muted);font-weight:normal">${(t.isms || []).length} of ${t.candidate_count}</span>
+       </h3>
+       <div style="display:grid;gap:12px">${(t.isms || []).map(card).join('')}</div>
+     </section>`
+  ).join(''));
+
+  body.innerHTML = parts.join('');
+
+  const filter = document.getElementById('ci-theme-filter');
+  if (filter) filter.addEventListener('change', () => {
+    const want = filter.value;
+    body.querySelectorAll('.ci-theme').forEach(el => {
+      el.style.display = (!want || el.dataset.theme === want) ? '' : 'none';
+    });
+  });
+
+  body.querySelectorAll('.ci-quote').forEach(el => {
+    el.addEventListener('click', () => deepLinkToCorpus(el.dataset.slug, el.dataset.title));
+  });
+}
+
+// ===== SECOND THOUGHTS (roadmap #15) — contradiction / mind-change finder from CONTRADICTIONS_DATA =====
+// Reads the git-ignored contradictions.json (built by `make contradictions`): subjects whose mean
+// stance reversed sign between Dad's earlier and later writing. The artifact embeds body excerpts,
+// so in CI / fresh clones CONTRADICTIONS_DATA is the empty stub and the tab shows a build prompt.
+// Each card pairs the earliest vs. latest take; both quotes deep-link via shared deepLinkToCorpus().
+function renderContradictions() {
+  const esc = s => (s || '').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  const data = CONTRADICTIONS_DATA || {};
+  const rows = data.contradictions || [];
+  const body = document.getElementById('contradictions-body');
+  if (!rows.length) {
+    body.innerHTML = '<p class="section-desc">No mind-changes loaded. Run <code>make contradictions</code> then <code>make dashboard</code> to surface where Dad revised a view over the years.</p>';
+    return;
+  }
+
+  const year = q => (q && q.date ? String(q.date).slice(0, 4) : '');
+  const quote = (q, label) =>
+    `<blockquote class="ct-quote" data-slug="${esc(q.slug)}" data-title="${esc(q.title)}"
+        title="Find this column in the Raw Corpus"
+        style="margin:0;padding:12px 14px;border-left:3px solid var(--border);background:var(--bg-card);cursor:pointer;border-radius:0 4px 4px 0;flex:1;min-width:0">
+       <div style="font-family:var(--mono);font-size:0.68em;letter-spacing:0.05em;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px">${label}${year(q) ? ' &middot; ' + year(q) : ''}</div>
+       <div style="line-height:1.5;color:var(--text)">&ldquo;${esc(q.sentence)}&rdquo;</div>
+       <div style="font-family:var(--mono);font-size:0.7em;color:var(--text-muted);margin-top:8px">${esc(q.title)}${q.date ? ' &middot; ' + esc(q.date) : ''}</div>
+     </blockquote>`;
+
+  const card = c => {
+    const warmed = c.direction === 'warmed';
+    const badgeColor = warmed ? '#3da35d' : '#4d9de0';
+    const swing = Math.abs(Number(c.delta) || 0).toFixed(2);
+    return `<article class="ct-card" data-direction="${esc(c.direction)}" style="margin-bottom:26px;padding-bottom:22px;border-bottom:1px solid var(--border)">
+       <header style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+         <span style="font-size:1.15em;font-weight:600;color:var(--text)">${esc(c.entity)}</span>
+         <span style="font-family:var(--mono);font-size:0.7em;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:${badgeColor};border:1px solid ${badgeColor};padding:2px 8px;border-radius:3px">${warmed ? 'Warmed' : 'Cooled'}</span>
+         <span style="font-family:var(--mono);font-size:0.72em;color:var(--text-muted)">swing ${swing} &middot; ${Number(c.n_observations) || 0} mentions</span>
+       </header>
+       <div class="ct-quotes" style="display:flex;gap:12px;flex-wrap:wrap">
+         ${quote(c.early_quote || {}, 'Earlier')}
+         ${quote(c.late_quote || {}, 'Later')}
+       </div>
+     </article>`;
+  };
+
+  const filterOpts = ['<option value="">All changes</option>',
+    '<option value="warmed">Warmed to</option>',
+    '<option value="cooled">Cooled on</option>'].join('');
+  const parts = [
+    `<div style="margin-bottom:16px">
+       <select id="ct-direction-filter" style="background:var(--bg-card);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:0.8em;padding:8px 10px;border-radius:0;cursor:pointer">${filterOpts}</select>
+     </div>`,
+    rows.map(card).join(''),
+  ];
+  body.innerHTML = parts.join('');
+
+  const filter = document.getElementById('ct-direction-filter');
+  if (filter) filter.addEventListener('change', () => {
+    const want = filter.value;
+    body.querySelectorAll('.ct-card').forEach(el => {
+      el.style.display = (!want || el.dataset.direction === want) ? '' : 'none';
+    });
+  });
+
+  body.querySelectorAll('.ct-quote').forEach(el => {
+    el.addEventListener('click', () => deepLinkToCorpus(el.dataset.slug, el.dataset.title));
+  });
+}
+
+// ===== NETWORK (roadmap #14) — entity co-occurrence force graph from ENTITY_GRAPH_DATA =====
+// Reads the committed, text-free entity_graph.json (nodes = people/orgs, edges = shared-article
+// counts). In CI / fresh clones ENTITY_GRAPH_DATA is the empty stub, so the tab prompts a build.
+const NETWORK_TYPE_COLOR = { person: '#e8a33d', org: '#4d9de0' };
+function renderNetwork() {
+  const legend = document.getElementById('network-legend');
+  const pairsEl = document.getElementById('network-top-pairs');
+  const svg = d3.select('#network-svg');
+  svg.selectAll('*').remove();  // idempotent: never stack a second graph on redraw
+  legend.innerHTML = '';
+  pairsEl.innerHTML = '';
+
+  const data = ENTITY_GRAPH_DATA || {};
+  const rawNodes = data.nodes || [];
+  const rawEdges = data.edges || [];
+  if (!rawNodes.length || typeof d3 === 'undefined') {
+    pairsEl.innerHTML = '<p class="section-desc">No graph loaded. Run <code>make entity-graph</code> then <code>make dashboard</code> to populate the network.</p>';
+    return;
+  }
+
+  const legendItems = [['org', 'Organization'], ['person', 'Person']];
+  legendItems.forEach(([type, label]) => {
+    const item = document.createElement('div');
+    item.className = 'item';
+    item.innerHTML = `<span class="swatch" style="background:${NETWORK_TYPE_COLOR[type]}"></span>${label}`;
+    legend.appendChild(item);
+  });
+
+  const width = svg.node().parentElement.clientWidth;
+  const height = Math.max(500, width * 0.7);
+  svg.attr('width', width).attr('height', height).attr('viewBox', `0 0 ${width} ${height}`);
+
+  // Only draw edges whose endpoints are both present (the builder can emit an edge to a
+  // node trimmed by top_n); keep a copy so the sim's mutation of source/target is contained.
+  const ids = new Set(rawNodes.map(n => n.id));
+  const maxArt = d3.max(rawNodes, d => d.article_count) || 1;
+  const nodes = rawNodes.map(d => ({ ...d, r: Math.max(5, Math.sqrt(d.article_count / maxArt) * 26) }));
+  const maxW = d3.max(rawEdges, d => d.weight) || 1;
+  const links = rawEdges
+    .filter(e => ids.has(e.source) && ids.has(e.target))
+    .map(e => ({ source: e.source, target: e.target, weight: e.weight }));
+
+  const sim = d3.forceSimulation(nodes)
+    .force('link', d3.forceLink(links).id(d => d.id).distance(d => 60 + 40 * (1 - d.weight / maxW)).strength(d => Math.min(1, d.weight / maxW + 0.1)))
+    .force('charge', d3.forceManyBody().strength(-120))
+    .force('center', d3.forceCenter(width / 2, height / 2))
+    .force('collide', d3.forceCollide(d => d.r + 3));
+
+  const link = svg.append('g').attr('stroke', '#5a5550')
+    .selectAll('line').data(links).join('line')
+    .attr('stroke-opacity', d => 0.15 + 0.55 * (d.weight / maxW))
+    .attr('stroke-width', d => Math.max(1, Math.sqrt(d.weight)));
+
+  const node = svg.append('g')
+    .selectAll('circle').data(nodes).join('circle')
+    .attr('r', d => d.r)
+    .attr('fill', d => NETWORK_TYPE_COLOR[d.type] || '#888')
+    .attr('fill-opacity', 0.8)
+    .attr('stroke', '#1a1a1a').attr('stroke-width', 1)
+    .attr('cursor', 'grab')
+    .on('mouseover', (evt, d) => {
+      d3.select(evt.target).attr('fill-opacity', 1);
+      showTooltip(evt, `<div class="title">${d.name}</div><div class="cluster">${d.type} · ${d.article_count} articles · ${d.degree} connections</div>`);
+    })
+    .on('mousemove', (evt) => { tooltip.style.left = (evt.pageX + 15) + 'px'; tooltip.style.top = (evt.pageY - 10) + 'px'; })
+    .on('mouseout', (evt) => { d3.select(evt.target).attr('fill-opacity', 0.8); hideTooltip(); })
+    .call(d3.drag()
+      .on('start', (evt, d) => { if (!evt.active) sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
+      .on('drag', (evt, d) => { d.fx = evt.x; d.fy = evt.y; })
+      .on('end', (evt, d) => { if (!evt.active) sim.alphaTarget(0); d.fx = null; d.fy = null; }));
+
+  const label = svg.append('g')
+    .selectAll('text').data(nodes.filter(d => d.r >= 9)).join('text')
+    .text(d => d.name).attr('font-size', '10px').attr('fill', '#c8c3bd')
+    .attr('font-family', 'var(--mono)').attr('pointer-events', 'none').attr('dx', d => d.r + 3).attr('dy', 3);
+
+  sim.on('tick', () => {
+    link.attr('x1', d => d.source.x).attr('y1', d => d.source.y).attr('x2', d => d.target.x).attr('y2', d => d.target.y);
+    node.attr('cx', d => d.x = Math.max(d.r, Math.min(width - d.r, d.x))).attr('cy', d => d.y = Math.max(d.r, Math.min(height - d.r, d.y)));
+    label.attr('x', d => d.x).attr('y', d => d.y);
+  });
+
+  (data.top_pairs || []).slice(0, 12).forEach(p => {
+    const row = document.createElement('div');
+    row.style.cssText = 'font-family:var(--mono);font-size:0.8em;padding:4px 0;border-bottom:1px solid var(--border)';
+    row.innerHTML = `<span style="color:var(--text)">${p.a} · ${p.b}</span> <span style="color:var(--text-muted);float:right">${p.weight}</span>`;
+    pairsEl.appendChild(row);
+  });
+}
+
 // ===== INTELLECTUAL ARC (roadmap #13) — year-over-year theme evolution from INTELLECTUAL_ARC_DATA =====
 // Reads the committed, text-free intellectual_arc.json (per-year theme shares + a deterministic
 // narrative). In CI / fresh clones it's the empty stub, so the tab prompts a build. Theme colors
@@ -2723,6 +2964,8 @@ function renderTab(name) {
   rendered[name] = true;
   switch(name) {
     case 'reading-room': renderReadingRoom(); break;
+    case 'calhoun-isms': renderCalhounIsms(); break;
+    case 'contradictions': renderContradictions(); break;
     case 'stance': renderStance(); break;
     case 'themes': renderThemeMap(); break;
     case 'timeline': renderTimeline(); break;
@@ -2758,7 +3001,7 @@ window.addEventListener('DOMContentLoaded', () => {
 // dimensions. Re-render the active chart tab so it re-measures and refits — debounced
 // so a drag-resize fires once. Restricted to the stateless chart tabs: re-rendering an
 // interactive tab (Ask Dad chat, Corpus filters) would wipe the user's in-flight state.
-const RESIZE_REDRAW_TABS = new Set(['themes', 'timeline', 'stance']);
+const RESIZE_REDRAW_TABS = new Set(['themes', 'timeline', 'network', 'stance']);
 let _resizeTimer = null;
 window.addEventListener('resize', () => {
   clearTimeout(_resizeTimer);
