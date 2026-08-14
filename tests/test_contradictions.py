@@ -325,6 +325,22 @@ def test_find_contradictions_merged_row_uses_every_variants_observations():
     assert merged["n_observations"] > fed_only["n_observations"]
 
 
+def test_find_contradictions_row_records_the_spellings_it_folded():
+    ents = _entities(orgs=[("Fed", 4), ("Federal Reserve", 4)])
+    row = c.find_contradictions(_fed_flip_articles(), ents, min_observations=4,
+                                min_mentions=3, min_delta=1.0)["contradictions"][0]
+    assert row["surfaces"] == ["Fed", "Federal Reserve"]
+
+
+def test_find_contradictions_row_surfaces_omit_the_canonical_echo():
+    # A subject with a single spelling that already is its canonical name adds no noise.
+    ents = _entities(orgs=[("Fed", 4)])
+    row = c.find_contradictions(_fed_flip_articles(), ents, min_observations=4,
+                                min_mentions=3, min_delta=1.0)["contradictions"][0]
+    assert row["entity"] == "Federal Reserve"
+    assert row["surfaces"] == ["Fed"]
+
+
 def test_find_contradictions_no_aliases_keeps_variants_separate():
     ents = _entities(orgs=[("Fed", 4), ("Federal Reserve", 4)])
     result = c.find_contradictions(_fed_flip_articles(), ents, min_observations=4,

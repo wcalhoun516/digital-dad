@@ -293,7 +293,14 @@ def find_contradictions(
         )
         if reversal is None:
             continue
-        contradictions.append({"entity": group["name"], "type": group["type"], **reversal})
+        contradictions.append({
+            "entity": group["name"],
+            "type": group["type"],
+            # The raw spellings folded into this row — so a reader can tell why a "Covid" card
+            # quotes a sentence that says "COVID".
+            "surfaces": list(group["surfaces"]),
+            **reversal,
+        })
 
     contradictions.sort(key=lambda r: (-abs(r["delta"]), r["entity"]))
 
