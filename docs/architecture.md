@@ -146,7 +146,12 @@ Surfaced in the dashboard's **Second Thoughts** tab (roadmap #15): warmed/cooled
 earliest vs. latest take, each quote deep-linking into the Raw Corpus via `deepLinkToCorpus()`,
 plus a direction filter — injected via `build_dashboard`'s `/*__CONTRADICTIONS_DATA__*/` placeholder
 with an empty-board stub in CI / fresh clones (prompting `make contradictions`). No conductor/network.
-(Roadmap #15.)
+Like `entity_graph`/`entity_stance`, subjects are **canonicalized** through `entity_aliases.py`
+(`--no-aliases` opts out), so one mind-change is a single row rather than one per spelling. Because
+mention-matching is case-*sensitive* here (a proper-noun guard: "Jack" the person vs. "jack up"),
+evidence is gathered under **every** raw spelling in a group and then de-duplicated on
+`(slug, sentence)` — which also keeps the corpus's 23 duplicate slugs (see `scraper/README.md`) from
+counting the same sentence twice. (Roadmap #15 × #14.)
 
 `anthology.py` — a family keepsake, outside the default chain; run via `make anthology` (HTML +
 JSON) or `make anthology-pdf` (adds the PDF). Pure/offline: reads `themes.json` + `predictions.json`

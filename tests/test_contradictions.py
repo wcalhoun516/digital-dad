@@ -275,6 +275,14 @@ def test_group_observations_counts_a_two_variant_sentence_once():
     assert len(obs) == 1
 
 
+def test_group_observations_counts_a_duplicated_article_once():
+    # data/manifest.json carries 23 duplicate slugs (see scraper/README.md), so load_articles()
+    # hands the same article back twice and its evidence would otherwise count double.
+    article = {"slug": "a", "date": "2020-01-01", "title": "A",
+               "body": "The Fed is reckless and dangerous."}
+    assert len(c._group_observations([article, dict(article)], ["Fed"])) == 1
+
+
 def test_group_observations_is_case_sensitive_per_surface():
     # Searching with both raw spellings is what recovers the "Covid" sentence.
     articles = [{"slug": "a", "date": "2020-01-01", "title": "A",

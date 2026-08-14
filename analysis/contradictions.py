@@ -15,6 +15,12 @@ stance of the earlier half of its mentions and the later half have **opposite si
 gap clears a threshold. This is intentionally simple — it does not model negation ("not
 strong") or sarcasm, so the output is a set of *candidates* for a human to read, not a verdict.
 The artifact carries public slugs, dates, and short excerpts of already-published article text.
+
+Subjects are **canonicalized** through `entity_aliases.py` (as in `entity_graph`/`entity_stance`),
+so `Fed` / `the Federal Reserve` are one mind-change rather than three near-duplicate rows; pass
+``aliases=False`` to keep raw spellings apart. Because :func:`mentions` is case-*sensitive*,
+evidence is gathered under **every** raw spelling in a group and then de-duplicated on
+``(slug, sentence)`` — see :func:`_group_observations`.
 """
 
 import argparse
