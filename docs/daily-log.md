@@ -48,6 +48,50 @@ Format:
 
 <!-- entries below -->
 
+### 2026-08-14 — analysis — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/76
+- Source: roadmap:#15 (×#14 alias seam)
+- Summary: Roadmap **#15 × #14** — the **thrice-deferred alias-merge for `contradictions.py`**, the
+  last entity-consuming builder still grouping by raw surface form (`entity_graph`/`entity_stance`
+  got the seam in #63). Deferred by PR #52 (07-16), #60 (08-01) and #63 (08-04, "Deferred: aliasing
+  `contradictions`") because it was blocked on `analysis/entity_aliases.py` — which merged in #63, so
+  it was unblocked today. New `entity_groups()` folds targets onto canonical names (replacing
+  `_target_entities`), new `_group_observations()` gathers evidence under **every** raw spelling in a
+  group and de-dups on `(slug, sentence)`; `aliases=True` default + `--no-aliases` off-switch +
+  `meta.params.aliases`, mirroring `entity_stance`. **§8.5 deepen:** each row now carries a
+  `surfaces` provenance list and the Second Thoughts card shows an "also “COVID”" chip (only when a
+  variant actually differs from the canonical name). **Two real bugs surfaced by the smoke run:**
+  (1) `mentions()` is case-*sensitive* by design, but `_target_entities` de-duped candidates
+  case-*insensitively* and kept only the first spelling — its comment claimed the variants "yield
+  identical observations", which is false, so every sentence using the other spelling was silently
+  dropped (**Covid: 43 → 52 mentions**); (2) `load_articles()` returns **199 articles under 176
+  distinct slugs** (the 23 duplicate slugs `manifest_check` reported in PR #18), so every sentence in
+  a duplicated article counted as evidence **twice** — the new de-dup makes this builder immune
+  (**Tesla 23 → 20**, i.e. three were double-counted). Net on the real corpus: **2 flagged
+  mind-changes → 4** (adds GME + S&P), since the double-counting had been skewing the early/late
+  split. Both fixes are independent of aliasing (`--no-aliases` yields the same 4 rows, just 71
+  scanned instead of 64). **TDD'd:** +19 tests (`test_contradictions.py` 25→42 covering grouping,
+  surface-union, the duplicate-article guard and the alias off-switch; +2 dashboard guards).
+  **Offline / unattended-safe:** stdlib only, no conductor/network/LLM, no re-scrape; regenerated
+  `contradictions.json` embeds excerpts and stays git-ignored — no data artifact committed.
+  **Verification:** `make verify` green — **838 passed** (vs **819** on `origin/main`, +19), ruff
+  clean, dashboard builds; headless-Chromium pass on Second Thoughts → 4 cards, 1 "also" chip, 0px
+  overflow at 1280/375, clean console. **Backlog:** **0** open `daily/*` PRs at start (the 07-22→08-13
+  skip-ratchet was fixed by the owner's #74) and `main` green — so §1.5/§2/§3 all no-ops.
+  **Cold-path pick:** hot path holds only plan 0008 (owner-interactive compute/paid/sibling-repo); no
+  user pins; and the 28-item roadmap is now **drained** of unattended-safe unstarted items — infra
+  #1–7, scraper #8–10, analysis #12–17, dashboard #18–21, family #22–24, training #25/#27 and docs #28
+  all shipped, leaving only the owner-gated #11 and #26. With no category holding a genuinely-unstarted
+  item, I took the **most-deferred** one instead of following strict rotation (analysis was
+  2nd-most-recent), and recorded that deviation here deliberately. **Deferred:** the **root**
+  duplicate-slug bug in `load_articles()` still inflates every other corpus-walking builder; and
+  `S&P`/`S&P 500` want an `ALIASES` entry, which I avoided because that map is shared with
+  `entity_graph`/`entity_stance` and would move their **committed** artifacts. **NB for the owner:**
+  `docs/corpus-ingest-spec` (Corpus II spec + 1401-line plan, committed locally 08-13) is **unpushed
+  and unmerged**, and its plan is not in `docs/plans/ready/` — so §4 did not see it. Push/merge it and
+  drop the plan into `plans/ready/` to make it tomorrow's hot path; that is almost certainly higher
+  value than anything left on the current roadmap.
+
 ### 2026-08-05 — scraper — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/64
 - Source: roadmap:#10
