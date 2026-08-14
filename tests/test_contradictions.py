@@ -152,9 +152,10 @@ def test_find_contradictions_detects_a_flip():
     ents = _entities(orgs=[("Fed", 4)])
     result = c.find_contradictions(articles, ents, min_observations=4,
                                    min_mentions=3, min_delta=1.0)
+    # "Fed" is reported under its canonical name (see entity_aliases.ALIASES).
     names = [r["entity"] for r in result["contradictions"]]
-    assert "Fed" in names
-    fed = next(r for r in result["contradictions"] if r["entity"] == "Fed")
+    assert "Federal Reserve" in names
+    fed = next(r for r in result["contradictions"] if r["entity"] == "Federal Reserve")
     assert fed["type"] == "organization"
     assert fed["direction"] == "cooled"
 
@@ -211,6 +212,129 @@ def test_find_contradictions_dedupes_case_insensitive_aliases():
                                    min_mentions=3, min_delta=1.0)
     covid_rows = [r for r in result["contradictions"] if r["entity"].lower() == "covid"]
     assert len(covid_rows) == 1
+
+
+# --- entity_groups (alias-merge) --------------------------------------------
+
+def test_entity_groups_folds_surface_variants_onto_one_canonical_subject():
+    ents = _entities(orgs=[("Fed", 10), ("the Federal Reserve", 8)])
+    groups = c.entity_groups(ents, min_mentions=3, exclude=frozenset())
+    assert len(groups) == 1
+    assert groups[0]["name"] == "Federal Reserve"
+    assert groups[0]["surfaces"] == ["Fed", "the Federal Reserve"]
+
+
+def test_entity_groups_keeps_unrelated_subjects_apart():
+    ents = _entities(orgs=[("Fed", 10), ("ECB", 8)])
+    groups = c.entity_groups(ents, min_mentions=3, exclude=frozenset())
+    assert [g["name"] for g in groups] == ["Federal Reserve", "European Central Bank"]
+
+
+def test_entity_groups_without_aliases_keeps_raw_variants_separate():
+    ents = _entities(orgs=[("Fed", 10), ("the Federal Reserve", 8)])
+    groups = c.entity_groups(ents, min_mentions=3, exclude=frozenset(), aliases=False)
+    assert [g["name"] for g in groups] == ["Fed", "the Federal Reserve"]
+
+
+def test_entity_groups_collapses_case_only_variants_even_without_aliases():
+    # The pre-alias behaviour: "COVID"/"Covid" were one subject. Still true with aliases off.
+    ents = _entities(people=[("COVID", 5), ("Covid", 4)])
+    groups = c.entity_groups(ents, min_mentions=3, exclude=frozenset(), aliases=False)
+    assert len(groups) == 1
+    assert groups[0]["surfaces"] == ["COVID", "Covid"]
+
+
+def test_entity_groups_respects_mention_floor_and_exclude():
+    ents = _entities(people=[("George Calhoun", 50), ("Jack Ma", 2)], orgs=[("ECB", 9)])
+    groups = c.entity_groups(ents, min_mentions=3, exclude=c._DEFAULT_EXCLUDE)
+    assert [g["name"] for g in groups] == ["European Central Bank"]
+
+
+def test_entity_groups_takes_type_from_first_seen_surface():
+    ents = _entities(people=[("Powell", 6)], orgs=[("Jerome Powell", 4)])
+    groups = c.entity_groups(ents, min_mentions=3, exclude=frozenset())
+    assert len(groups) == 1
+    assert groups[0]["name"] == "Jerome Powell"
+    assert groups[0]["type"] == "person"
+
+
+# --- _group_observations (union + dedup across surface forms) ---------------
+
+def test_group_observations_unions_every_surface_form():
+    articles = [{"slug": "a", "date": "2020-01-01", "title": "A",
+                 "body": "The Fed is reckless and dangerous. "
+                         "The Federal Reserve is a real disaster."}]
+    obs = c._group_observations(articles, ["Fed", "Federal Reserve"])
+    assert len(obs) == 2
+
+
+def test_group_observations_counts_a_two_variant_sentence_once():
+    articles = [{"slug": "a", "date": "2020-01-01", "title": "A",
+                 "body": "The Fed, the Federal Reserve, is a reckless disaster."}]
+    obs = c._group_observations(articles, ["Fed", "Federal Reserve"])
+    assert len(obs) == 1
+
+
+def test_group_observations_is_case_sensitive_per_surface():
+    # Searching with both raw spellings is what recovers the "Covid" sentence.
+    articles = [{"slug": "a", "date": "2020-01-01", "title": "A",
+                 "body": "COVID is a disaster for everyone. "
+                         "Covid is a catastrophe for everyone."}]
+    assert len(c._group_observations(articles, ["COVID"])) == 1
+    assert len(c._group_observations(articles, ["COVID", "Covid"])) == 2
+
+
+# --- find_contradictions alias-merge ----------------------------------------
+
+def _fed_flip_articles():
+    return [
+        {"slug": "a", "date": "2019-01-01", "title": "A",
+         "body": "The Fed is wise and effective. The Federal Reserve is credible."},
+        {"slug": "b", "date": "2019-05-01", "title": "B",
+         "body": "The Fed remains strong and admirable in its judgment."},
+        {"slug": "c", "date": "2021-01-01", "title": "C",
+         "body": "The Fed is reckless and dangerous now. "
+                 "The Federal Reserve is an incompetent failure."},
+        {"slug": "d", "date": "2021-05-01", "title": "D",
+         "body": "The Fed made a catastrophic mistake, a real disaster."},
+    ]
+
+
+def test_find_contradictions_merges_variants_into_one_canonical_row():
+    ents = _entities(orgs=[("Fed", 4), ("Federal Reserve", 4)])
+    result = c.find_contradictions(_fed_flip_articles(), ents, min_observations=4,
+                                   min_mentions=3, min_delta=1.0)
+    assert [r["entity"] for r in result["contradictions"]] == ["Federal Reserve"]
+
+
+def test_find_contradictions_merged_row_uses_every_variants_observations():
+    ents = _entities(orgs=[("Fed", 4), ("Federal Reserve", 4)])
+    merged = c.find_contradictions(_fed_flip_articles(), ents, min_observations=4,
+                                   min_mentions=3, min_delta=1.0)["contradictions"][0]
+    fed_only = c.find_contradictions(_fed_flip_articles(), _entities(orgs=[("Fed", 4)]),
+                                     min_observations=4, min_mentions=3,
+                                     min_delta=1.0)["contradictions"][0]
+    assert merged["n_observations"] > fed_only["n_observations"]
+
+
+def test_find_contradictions_no_aliases_keeps_variants_separate():
+    ents = _entities(orgs=[("Fed", 4), ("Federal Reserve", 4)])
+    result = c.find_contradictions(_fed_flip_articles(), ents, min_observations=4,
+                                   min_mentions=3, min_delta=1.0, aliases=False)
+    assert [r["entity"] for r in result["contradictions"]] == ["Fed"]
+
+
+def test_find_contradictions_scans_canonical_subjects_not_raw_surfaces():
+    ents = _entities(orgs=[("Fed", 4), ("Federal Reserve", 4)])
+    result = c.find_contradictions(_fed_flip_articles(), ents, min_observations=4,
+                                   min_mentions=3, min_delta=1.0)
+    assert result["meta"]["candidates_scanned"] == 1
+
+
+def test_find_contradictions_records_aliases_param():
+    ents = _entities(orgs=[("Fed", 4)])
+    result = c.find_contradictions(_fed_flip_articles(), ents, min_mentions=3)
+    assert result["meta"]["params"]["aliases"] is True
 
 
 # --- run --------------------------------------------------------------------
