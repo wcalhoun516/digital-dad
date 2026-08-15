@@ -92,6 +92,35 @@ def audit_manifest(manifest: dict, raw_files_on_disk: set[str]) -> dict:
     }
 
 
+def _entry_quality(entry: dict) -> tuple[int, int]:
+    """Rank a manifest entry so the richest spelling of a duplicated article wins.
+
+    A ``content_hash`` outranks the URL scheme because 168 entries predate that field,
+    and losing it would discard real data to keep a cosmetically nicer URL.
+    """
+    has_hash = 1 if (entry.get("content_hash") or "") else 0
+    is_https = 1 if (entry.get("url") or "").startswith("https://") else 0
+    return (has_hash, is_https)
+
+
+def dedupe_articles(articles: list[dict]) -> tuple[list[dict], list[dict]]:
+    """Collapse manifest entries that share a ``slug`` down to the best one each.
+
+    Returns ``(kept, dropped)``. ``kept`` preserves the order in which each slug first
+    appeared, so a repaired manifest stays diff-friendly against the original.
+    """
+    groups: dict[str, list[dict]] = {}
+    for entry in articles:
+        groups.setdefault(entry.get("slug", ""), []).append(entry)
+
+    kept, dropped = [], []
+    for group in groups.values():
+        best = max(group, key=_entry_quality)
+        kept.append(best)
+        dropped.extend(e for e in group if e is not best)
+    return kept, dropped
+
+
 def format_report(report: dict) -> str:
     """Render an audit report as a human-readable, multi-line summary."""
     lines = [
