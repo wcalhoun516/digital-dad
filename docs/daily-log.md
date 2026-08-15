@@ -48,6 +48,55 @@ Format:
 
 <!-- entries below -->
 
+### 2026-08-15 — scraper — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/77
+- Source: roadmap:#8 (follow-up) — the root cause PR #76 deferred yesterday
+- Summary: **The analysis pipeline was reading 199 articles for 176 real ones.**
+  `data/manifest.json` carries 23 duplicate-slug entries — all `http://`/`https://` twins naming
+  the **same raw file** — and both corpus walkers read that file once per entry, so **10.2% of the
+  body text every builder analyzed was duplicated** (368,778 → 331,050 words). This is the repo's
+  longest-standing known defect: **PR #18** (06-13) *found* it and closed it as "a separate
+  owner-reviewed follow-up"; **PR #38** (07-01) corroborated it from outside; **PR #76** (08-14)
+  proved it *corrupts output* (3 of Tesla's 23 observations were the same sentences counted twice),
+  fixed one builder locally, and deferred the root: "the **root** duplicate-slug bug in
+  `load_articles()` still inflates every other corpus-walking builder." New shared
+  `analysis.utils.dedupe_manifest_entries()` (one entry per raw `file`, first-seen order) wired into
+  `load_articles()` → **every** analysis builder is immune, with no per-builder de-dup.
+  **§8.5 deepen:** found the *same defect* a second time in `training/prepare.py`, which walks the
+  manifest directly — its train/held-out split was already safe (keyed by slug), but
+  `finetune.jsonl`/`instruct.jsonl` are written **per manifest entry**, so 23 articles appeared
+  **twice** in the fine-tune corpus, silently over-weighting them in any plan-0008 QLoRA run.
+  **Mistake worth recording:** I first built a `dedupe_articles()` + `--fix` into `manifest_check.py`
+  before discovering `scraper/manifest_dedup.py` (merged 08-13) already does all of it, better
+  (query-string handling, `--backfill-hashes`, owner-gated `--in-place`) — I **reverted** that commit
+  rather than ship a duplicate abstraction, and left the revert in the history deliberately. The
+  lesson: `make <target>` and `.PHONY` are a faster inventory of existing tooling than `ls`.
+  That tool stays owner-gated (report-only), which is *why* the readers needed their own defence.
+  **TDD'd:** +14 tests (`test_analysis_utils.py` 8→19 covering the pure helper, the loader, date
+  sort and absent files; `test_prepare.py` 12→15 driving the real `run()` over a tmp corpus), both
+  proved **red-green** (fix reverted → 1 and 3 failures; restored → green). **Offline /
+  unattended-safe:** stdlib only, no conductor/network/LLM, no re-scrape, **no data artifact
+  committed**. **Verification:** `make verify` green — **833 passed** (vs **819** on `origin/main`,
+  +14), ruff clean, dashboard builds; `make contradictions` on **`main`'s own builder** (no #76
+  changes) now finds **4** flips of 71 scanned (was 2), with **Tesla at 20** — the exact number #76
+  reached via its own builder-local de-dup, i.e. the root fix subsumes it. **Stale artifacts, by
+  design:** `themes.json`/`linguistics.json`/`entities.json` each still hold **199** `per_article`
+  records; I did not regenerate them (large committed-data diff + `entity_graph`/`entity_stance`/
+  `intellectual_arc` would cascade). They self-heal — the corpus fingerprint moves
+  `5930793…` → `a5cc3a1…`, and `5930793…` is exactly the value recorded for the last `themes` run,
+  so fingerprint-skip re-runs every module on the next weekly `make analyze`. **Backlog:** 1 open
+  `daily/*` PR (#76) at start — well under 8; §3 didn't resume it (`ready-for-review`, not
+  `in-progress`); `main` green. **Cold-path pick:** hot path holds only plan 0008
+  (owner-interactive); no user pins; the roadmap is drained of unattended-safe unstarted items, so —
+  as on 08-14 — I took the **most-deferred** item instead of strict rotation, and it happens to sit
+  in **scraper**, the least-frequently-worked viable category in the last 7 runs (analysis ×3,
+  dashboard ×2, scraper ×1, training ×1). **Deferred:** `make manifest-dedup ARGS="--apply
+  --in-place --backfill-hashes"` to make the manifest itself *honest* (199 → 176, missing hashes →
+  0) — owner-gated and no longer load-bearing for correctness. **NB for the owner (second ask):**
+  `docs/corpus-ingest-spec` is **still unpushed/unmerged** and its 1401-line plan is not in
+  `docs/plans/ready/`, so §4 cannot see it; that is almost certainly higher value than anything
+  left on the current roadmap.
+
 ### 2026-08-05 — scraper — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/64
 - Source: roadmap:#10
