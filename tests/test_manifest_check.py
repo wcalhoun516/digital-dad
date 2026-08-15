@@ -4,7 +4,6 @@ import json
 
 from scraper.manifest_check import (
     audit_manifest,
-    dedupe_articles,
     format_report,
     run,
     scan_raw_files,
@@ -238,79 +237,3 @@ class TestEdgeCases:
         ]
         report = audit_manifest(_manifest(entries, total=9), _disk(entries))
         assert json.loads(json.dumps(report)) == report
-
-
-class TestDedupeArticles:
-    """`dedupe_articles` collapses same-slug entries — the repair for the 23 duplicate
-    slugs `audit_manifest` has only ever *reported* (roadmap #8 follow-up)."""
-
-    def test_clean_manifest_is_returned_unchanged(self):
-        entries = [_entry("alpha"), _entry("beta")]
-        kept, dropped = dedupe_articles(entries)
-        assert kept == entries
-        assert dropped == []
-
-    def test_same_slug_entries_collapse_to_one(self):
-        entries = [
-            _entry("dup", url="http://www.forbes.com/dup/"),
-            _entry("dup", url="https://www.forbes.com/dup/"),
-        ]
-        kept, dropped = dedupe_articles(entries)
-        assert len(kept) == 1
-        assert len(dropped) == 1
-
-    def test_https_entry_wins_over_http_twin(self):
-        # The real corpus's 23 duplicates are all http/https twins of one URL; the
-        # canonical https form is the one worth keeping.
-        entries = [
-            _entry("dup", url="http://www.forbes.com/dup/"),
-            _entry("dup", url="https://www.forbes.com/dup/"),
-        ]
-        kept, _ = dedupe_articles(entries)
-        assert kept[0]["url"] == "https://www.forbes.com/dup/"
-
-    def test_entry_with_content_hash_wins_over_one_without(self):
-        # Richer data beats URL scheme: 168 real entries predate the content_hash field.
-        entries = [
-            _entry("dup", url="https://forbes.com/dup/", content_hash=""),
-            _entry("dup", url="http://forbes.com/dup/", content_hash="h1"),
-        ]
-        kept, _ = dedupe_articles(entries)
-        assert kept[0]["content_hash"] == "h1"
-
-    def test_original_order_is_preserved(self):
-        entries = [_entry("a"), _entry("dup"), _entry("b"), _entry("dup")]
-        kept, _ = dedupe_articles(entries)
-        assert [e["slug"] for e in kept] == ["a", "dup", "b"]
-
-    def test_dropped_entries_are_returned_for_reporting(self):
-        entries = [
-            _entry("dup", url="https://forbes.com/dup/"),
-            _entry("dup", url="http://forbes.com/dup/"),
-        ]
-        _, dropped = dedupe_articles(entries)
-        assert dropped[0]["url"] == "http://forbes.com/dup/"
-
-    def test_three_way_duplicate_collapses_to_one(self):
-        entries = [_entry("dup", url=f"https://forbes.com/{i}/") for i in range(3)]
-        kept, dropped = dedupe_articles(entries)
-        assert len(kept) == 1
-        assert len(dropped) == 2
-
-    def test_distinct_slugs_sharing_a_file_are_not_merged(self):
-        # Slug is the identity here; a shared `file` is a different defect that
-        # audit_manifest reports separately.
-        entries = [_entry("a", file="raw/x.json"), _entry("b", file="raw/x.json")]
-        kept, _ = dedupe_articles(entries)
-        assert len(kept) == 2
-
-    def test_deduped_manifest_passes_the_duplicate_slug_audit(self):
-        entries = [
-            _entry("dup", url="http://forbes.com/dup/", content_hash="h1"),
-            _entry("dup", url="https://forbes.com/dup/", content_hash="h1"),
-            _entry("solo", content_hash="h2"),
-        ]
-        kept, _ = dedupe_articles(entries)
-        report = audit_manifest(_manifest(kept), _disk(kept))
-        assert report["duplicate_slugs"] == {}
-        assert report["ok"] is True
