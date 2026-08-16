@@ -48,10 +48,56 @@ Format:
 
 <!-- entries below -->
 
-### 2026-08-16 — infra — in-progress
-- PR: (pending)
+### 2026-08-16 — infra — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/78
 - Source: roadmap:#1-3 cleanup — the explicitly-deferred "broaden the lint scope" follow-up
-- Summary: Widening the `make lint` / pre-commit gate from `tests/` to the whole source tree.
+- Summary: **`make lint` had only ever checked `tests/`, so every line of production code in
+  this repo was unlinted.** The deferral was recorded in three places — `LINT_PATHS := tests`
+  with *"broadening the scope is a follow-up roadmap item, #1-3/cleanup"*, the pre-commit
+  `files: ^tests/` with *"Widen `files:` once those are clean"*, and PR #45 (07-08), which
+  ruff-fixed `scraper/forbes_requests.py` and noted the file "was never gated." Turning the
+  gate on over the tree surfaced **98 findings, 24 of them real**: **9 `F401` dead imports**
+  (`math`, `re`, `sys`, `json`, `asyncio`, `Path`, `Iterable`, `EMBED_MODEL`), **10 `I001`**
+  unsorted import blocks, **2 `F541`** no-op f-strings, **1 `F841`** (`ts_idx` in `wayback.py`,
+  computed from the CDX header and never read), **1 `E741`** (`for i, l in enumerate(labels)`),
+  **1 `E731`** (an assigned lambda). All 24 fixed; each `F401` was checked for being a
+  load-bearing re-export first (`EMBED_MODEL` was the only cross-module candidate — defined and
+  used solely in `semantic_search.py`). **The `E501` judgment call:** the other 74 findings are
+  long lines and most are **embedded LLM prompt string literals** (`psychoprofile` ×18,
+  `predictions` ×15, `on_this_day` ×11) — re-wrapping one *edits the prompt the model actually
+  sees*, i.e. a behavior change wearing a formatting costume, so it does **not** belong in the
+  change that turns linting on. `E501` is therefore ignored **per-package** in `pyproject.toml`,
+  never globally, and **`tests/` is deliberately absent from `per-file-ignores`** (it has been
+  E501-clean since the gate existed): **no rule gets weaker anywhere — this is a strict
+  widening.** **TDD'd:** +48 tests (`tests/test_lint_scope.py`) pinning the *scope* so it can't
+  silently narrow again — `LINT_PATHS` covers every source package on disk, the pre-commit
+  `files:` regex stays in lockstep with it, the gate is green, and `tests/` never acquires a
+  per-file ignore. **§8.5 deepen:** a parametrized guard that **all 43 shipped modules still
+  import** — the safety net for exactly this cleanup, since ruff's `F401` cannot tell a genuinely
+  unused import from a re-export another module reaches through, and deleting the wrong one is
+  invisible until something imports it. **Four red-green proofs, each reverted:** (1) restoring
+  `LINT_PATHS := tests` → *"does not cover: ['analysis', 'scraper', 'viz', 'training', 'tools',
+  'bin']"*; (2) an `import os` added to `analysis/themes.py` — a file invisible to the linter
+  yesterday — now turns `make lint` red; (3) a 126-char line appended to a test file is still
+  caught (`E501 Line too long (126 > 100)`), proving `tests/` kept the rule; (4) a typo'd symbol
+  in `on_this_day.py`'s import fails **both** the ruff gate and the import guard independently.
+  **Offline / unattended-safe:** lint config + dead-code removal only; no conductor/network/LLM,
+  no re-scrape, **no data artifact committed**. `bin/**` is untouched per §11 — it is *covered*
+  by the gate but needed no edits (its only findings were `E501`). **Verification:** `make verify`
+  green — **867 passed** (vs **819** on `origin/main`, +48), ruff clean over
+  `analysis scraper viz training tools bin tests`, dashboard builds; `pre-commit run --all-files`
+  → both hooks Passed. **Backlog:** 2 open `daily/*` PRs at start (#76, #77) — well under 8; §3
+  didn't resume (both `ready-for-review`, not `in-progress`); `main` green (#75). **Cold-path
+  pick:** hot path holds only plan 0008 (owner-interactive); no user pins; **infra** is absent
+  from the last 7 runs (scraper ×2, analysis ×2, dashboard ×2, training ×1) and this was its one
+  genuinely-unstarted, fully-offline item — named as deferred in the Makefile itself. **Deferred:**
+  the 74 `E501`s as their own reviewed pass (start with the six non-prompt files —
+  `viz/build_dashboard.py` ×3, `scraper/__main__.py` ×3, `training/prepare.py` ×3); and note
+  `make fmt` now inherits the wider `LINT_PATHS`, so the first run of it will produce a large
+  diff (it stays on-demand and non-blocking, unchanged policy from PR #44). **NB for the owner
+  (third ask):** `docs/corpus-ingest-spec` is *still* an unpushed local branch and its plan is
+  not in `docs/plans/ready/`, so §4 cannot see it — it is almost certainly higher value than
+  anything left on the current roadmap.
 
 ### 2026-08-05 — scraper — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/64
