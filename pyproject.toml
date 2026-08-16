@@ -33,7 +33,7 @@ all = [
 ]
 
 [tool.setuptools.packages.find]
-include = ["scraper*", "analysis*", "viz*", "training*"]
+include = ["scraper*", "analysis*", "viz*", "training*", "ingest*"]
 
 [tool.ruff]
 target-version = "py312"
