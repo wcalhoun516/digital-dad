@@ -48,6 +48,11 @@ Format:
 
 <!-- entries below -->
 
+### 2026-08-16 — infra — in-progress
+- PR: (pending)
+- Source: roadmap:#1-3 cleanup — the explicitly-deferred "broaden the lint scope" follow-up
+- Summary: Widening the `make lint` / pre-commit gate from `tests/` to the whole source tree.
+
 ### 2026-08-05 — scraper — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/64
 - Source: roadmap:#10
