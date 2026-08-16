@@ -85,3 +85,18 @@ def test_render_shows_build_prompt_when_empty():
         "function ", 1
     )[0]
     assert "make contradictions" in render
+
+
+# --- folded-spelling provenance (roadmap #15 × #14 alias-merge) ------------------
+
+
+def test_card_renders_the_folded_spellings():
+    """A merged row shows which raw spellings it absorbed, so a "Covid" card quoting a
+    sentence that says "COVID" reads as deliberate rather than as a bug."""
+    html = TEMPLATE.read_text()
+    assert "ct-surfaces" in html
+
+
+def test_folded_spellings_only_shown_when_they_differ_from_the_canonical_name():
+    html = TEMPLATE.read_text()
+    assert "surfacesNote" in html
