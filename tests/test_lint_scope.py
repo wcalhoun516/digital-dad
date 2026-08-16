@@ -5,10 +5,14 @@ These tests pin the widened scope: the gate must cover each source package, the 
 hook must mirror `make lint`, and `tests/` must not lose any rule in the process.
 """
 
+import importlib
+import pkgutil
 import re
 import subprocess
 import sys
 from pathlib import Path
+
+import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 MAKEFILE = ROOT / "Makefile"
@@ -61,6 +65,24 @@ def test_precommit_hook_mirrors_make_lint():
     pattern = re.compile(_precommit_ruff_files_pattern())
     for pkg in _lint_paths():
         assert pattern.match(f"{pkg}/example.py"), f"pre-commit hook skips {pkg}/"
+
+
+def _importable_modules():
+    # bin/ is scripts, not a package (no __init__.py), and importing them runs side effects.
+    for pkg in ("analysis", "scraper", "viz", "training", "tools"):
+        for mod in pkgutil.iter_modules([str(ROOT / pkg)]):
+            yield f"{pkg}.{mod.name}"
+
+
+@pytest.mark.parametrize("module", sorted(_importable_modules()))
+def test_every_source_module_imports(module):
+    """The safety net for lint-driven dead-import removal.
+
+    Ruff's F401 cannot tell a genuinely unused import from a load-bearing re-export that
+    another module reaches through. Deleting the wrong one is invisible until something
+    imports it at runtime — so import every module we ship and let that fail loudly here.
+    """
+    importlib.import_module(module)
 
 
 def test_tests_dir_keeps_every_rule():
