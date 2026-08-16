@@ -67,7 +67,7 @@ def run(articles: list[dict] | None = None, min_k: int = 4, max_k: int = 10) -> 
     # Extract top keywords per cluster
     clusters = []
     for cluster_id in range(best_k):
-        cluster_indices = [i for i, l in enumerate(labels) if l == cluster_id]
+        cluster_indices = [i for i, label in enumerate(labels) if label == cluster_id]
         if not cluster_indices:
             continue
 

@@ -41,7 +41,6 @@ def discover_urls_from_wayback() -> list[str]:
     # First row is the header
     header = rows[0]
     orig_idx = header.index("original")
-    ts_idx = header.index("timestamp")
 
     urls: set[str] = set()
     for row in rows[1:]:

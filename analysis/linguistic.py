@@ -164,7 +164,8 @@ def run(articles: list[dict] | None = None) -> dict:
 
     # Aggregate metrics
     if per_article:
-        avg = lambda key: round(sum(a[key] for a in per_article) / len(per_article), 2)
+        def avg(key):
+            return round(sum(a[key] for a in per_article) / len(per_article), 2)
 
         # Sentiment by year
         by_year: dict = defaultdict(list)
