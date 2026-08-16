@@ -34,6 +34,11 @@ coverage-audit:
 ingest:
 	$(PYTHON) -m ingest $(ARGS)
 
+# Review the staged queue and accept items into the corpus. This is the ONLY step that
+# writes to the manifest. ARGS=--report for a read-only summary.
+ingest-review:
+	$(PYTHON) -m ingest.review $(ARGS)
+
 analyze:
 	$(PYTHON) -m analysis $(ARGS)
 
