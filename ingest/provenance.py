@@ -51,3 +51,35 @@ def default_provenance(**overrides) -> dict:
             )
         prov[key] = value
     return prov
+
+
+def migrate_articles(articles: list[dict]) -> tuple[list[dict], int]:
+    """Add a ``provenance`` block to scraped Forbes articles that lack one.
+
+    Pure and offline: takes and returns article dicts, never touches disk. Idempotent —
+    entries that already carry ``provenance`` pass through untouched. Returns
+    ``(articles, migrated_count)``.
+    """
+    migrated = 0
+    out: list[dict] = []
+    for entry in articles:
+        if not entry.get("provenance"):
+            entry = {
+                **entry,
+                "provenance": default_provenance(
+                    source_id=entry.get("slug", ""),
+                    modality="article",
+                    authorship="george",
+                    privacy="public",
+                    license="forbes",
+                    acquisition={
+                        "method": "scrape",
+                        "ref": entry.get("url", ""),
+                        "at": entry.get("date", ""),
+                    },
+                    date_confidence="exact",
+                ),
+            }
+            migrated += 1
+        out.append(entry)
+    return out, migrated

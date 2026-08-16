@@ -295,9 +295,24 @@ Expected: PASS (13 tests)
 
 - [ ] **Step 5: Backfill content hashes on the real manifest**
 
-Only 31 of 199 entries carry a `content_hash`; dedup in Task 4 depends on it.
+> **DEVIATION (2026-08-16): steps 5–6 are deferred; this task lands code-only.**
+> Three facts discovered at execution time, none true when the plan was written:
+> 1. The manifest is now **203 entries with 23 duplicate-slug groups** — the corruption
+>    PR #77 addresses. It fixes this at the *read* layer, so the file stays duplicated.
+> 2. `data/manifest.json` carries **uncommitted local changes**: 4 genuinely new articles
+>    from a scrape at 2026-08-16T07:55Z. Rewriting the file would drag another process's
+>    output into this code PR.
+> 3. The flag is `--backfill-hashes`, not `--backfill`, and `--apply` also **collapses the
+>    23 duplicate groups** — a substantive corpus change well outside this task's scope.
+>
+> `migrate_articles` is idempotent, so the one-time data migration costs nothing to defer.
+> Apply it after #77 lands and the new articles are committed, then commit that diff alone.
 
-Run: `.venv/bin/python -m scraper.manifest_dedup --apply --in-place --backfill`
+Original steps, to run later:
+
+Only 31 of 199 entries carried a `content_hash`; dedup in Task 4 depends on it.
+
+Run: `.venv/bin/python -m scraper.manifest_dedup --apply --in-place --backfill-hashes`
 
 Then verify:
 
