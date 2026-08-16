@@ -1,9 +1,8 @@
 """Theme analysis — TF-IDF clustering + keyword extraction + topic-over-time."""
 
-import re
 from collections import defaultdict
 
-from .utils import load_articles, clean_text, log, save_analysis
+from .utils import clean_text, load_articles, log, save_analysis
 
 
 def run(articles: list[dict] | None = None, min_k: int = 4, max_k: int = 10) -> dict:

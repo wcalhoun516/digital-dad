@@ -9,7 +9,7 @@ Install: pip install spacy && python -m spacy download en_core_web_sm
 import re
 from collections import defaultdict
 
-from .utils import load_articles, clean_text, save_analysis
+from .utils import clean_text, load_articles, save_analysis
 
 
 def _normalize_entity(text: str) -> str:
@@ -36,7 +36,7 @@ def run(articles: list[dict] | None = None) -> dict:
     if not articles:
         raise ValueError("No articles to analyze. Run `make scrape` first.")
 
-    print(f"Loading spaCy model...")
+    print("Loading spaCy model...")
     try:
         nlp = spacy.load("en_core_web_sm")
     except OSError:

@@ -18,7 +18,7 @@ import hashlib
 import json
 import sys
 
-from .utils import load_articles, log, DATA_DIR
+from .utils import DATA_DIR, load_articles, log
 
 RUNS_LOG = DATA_DIR / "analysis" / "runs.jsonl"
 ALL_MODULES = ["linguistic", "themes", "entities", "psychoprofile", "semantic_search", "predictions"]
