@@ -15,6 +15,12 @@ stance of the earlier half of its mentions and the later half have **opposite si
 gap clears a threshold. This is intentionally simple — it does not model negation ("not
 strong") or sarcasm, so the output is a set of *candidates* for a human to read, not a verdict.
 The artifact carries public slugs, dates, and short excerpts of already-published article text.
+
+Subjects are **canonicalized** through `entity_aliases.py` (as in `entity_graph`/`entity_stance`),
+so `Fed` / `the Federal Reserve` are one mind-change rather than three near-duplicate rows; pass
+``aliases=False`` to keep raw spellings apart. Because :func:`mentions` is case-*sensitive*,
+evidence is gathered under **every** raw spelling in a group and then de-duplicated on
+``(slug, sentence)`` — see :func:`_group_observations`.
 """
 
 import argparse
@@ -22,6 +28,7 @@ import re
 from statistics import mean
 
 from .calhoun_isms import split_sentences
+from .entity_aliases import canonicalize
 from .utils import ANALYSIS_DIR, clean_text, load_articles, save_analysis
 
 # Transparent polarity lexicon. Tuned for Dad's markets/policy commentary voice: words that
@@ -140,15 +147,23 @@ def _quote(observation: dict) -> dict:
     }
 
 
-def _target_entities(
+def entity_groups(
     entities_data: dict,
     *,
     min_mentions: int,
     exclude: frozenset[str],
-) -> list[tuple[str, str]]:
-    """(name, type) targets from entities.json, above the mention floor and not excluded."""
-    targets: list[tuple[str, str]] = []
-    seen: set[str] = set()
+    aliases: bool = True,
+) -> list[dict]:
+    """Subject groups from entities.json, above the mention floor and not excluded.
+
+    Each group is ``{"name", "type", "surfaces"}``: the canonical display name, the type of the
+    first surface form seen, and **every** raw spelling that folds onto it. Grouping is by the
+    casefolded canonical name, so ``COVID``/``Covid`` are one subject even with ``aliases``
+    off, while ``Fed``/``the Federal Reserve`` merge only when it is on. ``exclude`` is matched
+    against the *raw* name — boilerplate like "Getty Images" is never aliased.
+    """
+    canon = canonicalize if aliases else (lambda s: s)
+    groups: dict[str, dict] = {}
     for key, etype in (("top_people", "person"), ("top_organizations", "organization")):
         for ent in entities_data.get(key, []):
             name = ent.get("name", "") if isinstance(ent, dict) else str(ent)
@@ -157,13 +172,15 @@ def _target_entities(
                 continue
             if count < min_mentions:
                 continue
-            # Collapse case-only aliases ("COVID"/"Covid") — they yield identical observations.
-            key_cf = name.casefold()
-            if key_cf in seen:
+            display = canon(name)
+            if not display:
                 continue
-            seen.add(key_cf)
-            targets.append((name, etype))
-    return targets
+            slot = groups.setdefault(
+                display.casefold(), {"name": display, "type": etype, "surfaces": []}
+            )
+            if name not in slot["surfaces"]:
+                slot["surfaces"].append(name)
+    return list(groups.values())
 
 
 def _stance_observations(
@@ -203,6 +220,36 @@ def _stance_observations(
     return observations
 
 
+def _group_observations(
+    articles: list[dict],
+    surfaces: list[str],
+    *,
+    min_sentence_words: int = 5,
+    max_sentence_words: int = 45,
+) -> list[dict]:
+    """Stance observations for one subject, searched under **every** raw surface form.
+
+    Because :func:`mentions` is case-sensitive, a subject's spellings each find different
+    sentences ("COVID" never matches "Covid"), so the union is what gives the subject its full
+    evidence. A sentence naming two variants ("The Fed, the Federal Reserve, …") is counted
+    once — observations are de-duplicated on ``(slug, sentence)``.
+    """
+    observations: list[dict] = []
+    seen: set[tuple[str, str]] = set()
+    for surface in surfaces:
+        for obs in _stance_observations(
+            articles, surface,
+            min_sentence_words=min_sentence_words,
+            max_sentence_words=max_sentence_words,
+        ):
+            key = (obs["slug"], obs["sentence"])
+            if key in seen:
+                continue
+            seen.add(key)
+            observations.append(obs)
+    return observations
+
+
 def find_contradictions(
     articles: list[dict],
     entities_data: dict,
@@ -213,6 +260,7 @@ def find_contradictions(
     min_sentence_words: int = 5,
     max_sentence_words: int = 45,
     exclude: frozenset[str] | None = None,
+    aliases: bool = True,
 ) -> dict:
     """Build the mind-change board (pure; no I/O).
 
@@ -220,16 +268,23 @@ def find_contradictions(
     min_mentions``, minus the boilerplate ``exclude`` set), collect its stance observations
     across the corpus and test for a sign-reversal (:func:`detect_reversal`). Flagged subjects
     are returned sorted by the magnitude of the swing (largest first). Fully deterministic.
+
+    When ``aliases`` is set (default), surface-form variants are folded onto one canonical
+    subject (``Fed`` / ``the Federal Reserve`` → ``Federal Reserve``) via
+    :func:`~analysis.entity_aliases.canonicalize`, so a single mind-change is reported once
+    rather than split across several near-duplicate rows.
     """
     exclude = _DEFAULT_EXCLUDE if exclude is None else exclude
-    targets = _target_entities(entities_data, min_mentions=min_mentions, exclude=exclude)
+    groups = entity_groups(
+        entities_data, min_mentions=min_mentions, exclude=exclude, aliases=aliases
+    )
 
     contradictions: list[dict] = []
     scanned = 0
-    for name, etype in targets:
+    for group in groups:
         scanned += 1
-        observations = _stance_observations(
-            articles, name,
+        observations = _group_observations(
+            articles, group["surfaces"],
             min_sentence_words=min_sentence_words,
             max_sentence_words=max_sentence_words,
         )
@@ -238,7 +293,14 @@ def find_contradictions(
         )
         if reversal is None:
             continue
-        contradictions.append({"entity": name, "type": etype, **reversal})
+        contradictions.append({
+            "entity": group["name"],
+            "type": group["type"],
+            # The raw spellings folded into this row — so a reader can tell why a "Covid" card
+            # quotes a sentence that says "COVID".
+            "surfaces": list(group["surfaces"]),
+            **reversal,
+        })
 
     contradictions.sort(key=lambda r: (-abs(r["delta"]), r["entity"]))
 
@@ -252,6 +314,7 @@ def find_contradictions(
                 "min_delta": min_delta,
                 "min_sentence_words": min_sentence_words,
                 "max_sentence_words": max_sentence_words,
+                "aliases": aliases,
             },
         },
         "contradictions": contradictions,
@@ -288,6 +351,7 @@ def run(
     min_sentence_words: int = 5,
     max_sentence_words: int = 45,
     exclude: frozenset[str] | None = None,
+    aliases: bool = True,
     write: bool = True,
 ) -> dict:
     """Build the mind-change board and (unless ``write=False``) write `contradictions.json`.
@@ -309,6 +373,7 @@ def run(
         min_sentence_words=min_sentence_words,
         max_sentence_words=max_sentence_words,
         exclude=exclude,
+        aliases=aliases,
     )
 
     if write:
@@ -344,6 +409,9 @@ def main(argv: list[str] | None = None) -> int:
                              "run-ons (default 45).")
     parser.add_argument("--no-exclude", action="store_true",
                         help="Keep author/photo boilerplate subjects (off by default).")
+    parser.add_argument("--no-aliases", action="store_true",
+                        help="Disable surface-form canonicalization (keep raw variant names, "
+                             "e.g. 'Fed' and 'the Federal Reserve' as separate subjects).")
     parser.add_argument("--dry-run", action="store_true",
                         help="Print the summary without writing contradictions.json.")
     args = parser.parse_args(argv)
@@ -354,6 +422,7 @@ def main(argv: list[str] | None = None) -> int:
         min_delta=args.min_delta,
         max_sentence_words=args.max_sentence_words,
         exclude=frozenset() if args.no_exclude else None,
+        aliases=not args.no_aliases,
         write=not args.dry_run,
     )
     print(render_markdown(result))
