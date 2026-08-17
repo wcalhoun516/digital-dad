@@ -118,6 +118,39 @@ def test_injected_manifest_is_deduped(tmp_path, monkeypatch):
     assert len(inlined["articles"]) == 2
 
 
+def test_a_manifest_that_is_not_an_object_still_builds(tmp_path, monkeypatch):
+    """A hand-edited/truncated manifest must not take the whole dashboard build down."""
+    template = tmp_path / "template.html"
+    template.write_text(f"const MANIFEST_DATA = {MANIFEST_PLACEHOLDER};")
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text("null")
+    output = tmp_path / "index.html"
+
+    monkeypatch.setattr(build_dashboard, "TEMPLATE_PATH", template)
+    monkeypatch.setattr(build_dashboard, "OUTPUT_PATH", output)
+    monkeypatch.setattr(
+        build_dashboard, "PLACEHOLDERS", {MANIFEST_PLACEHOLDER: manifest}
+    )
+    build_dashboard.build()
+
+    assert output.read_text() == "const MANIFEST_DATA = null;"
+
+
+# --- regression guards -----------------------------------------------------------
+# A past merge silently dropped the calhoun-isms const + placeholder and shipped a
+# broken tab to `main`. These pin the manifest wiring against that class of drop.
+
+
+def test_manifest_placeholder_is_registered_to_the_manifest():
+    assert build_dashboard.PLACEHOLDERS[MANIFEST_PLACEHOLDER].name == "manifest.json"
+
+
+def test_template_still_binds_the_manifest_placeholder():
+    html = (ROOT / "dashboard" / "template.html").read_text()
+
+    assert f"const MANIFEST_DATA = {MANIFEST_PLACEHOLDER};" in html
+
+
 def test_the_real_committed_manifest_inlines_without_duplicate_slugs():
     manifest = json.loads((ROOT / "data" / "manifest.json").read_text())
 

@@ -203,6 +203,14 @@ build step, no backend. The only runtime calls are browser → conductor (for As
 search embeddings). Nine tabs: Theme Map, Timeline, Psychoprofile, Linguistic DNA, Influence
 Map, Raw Corpus, Semantic Search, **Ask Dad**, **Track Record**.
 
+One placeholder is **transformed** rather than injected verbatim: `__MANIFEST_DATA__` runs
+through `dedupe_manifest_payload()`, which applies the shared
+`analysis.utils.dedupe_manifest_entries()` and re-derives `total_articles`. The manifest
+legitimately records http/https URL twins of one article (23 in the current corpus, all
+naming the same raw file); `load_articles()` collapses them for the analysis pipeline, and
+the dashboard needs the same corpus view or it reports an inflated article count and draws a
+duplicate Raw Corpus row per twin.
+
 ### Email (`analysis/on_this_day.py` + `bin/create_gmail_draft.py`)
 
 On This Day writes an HTML email to disk; `create_gmail_draft.py` reads the latest one and
