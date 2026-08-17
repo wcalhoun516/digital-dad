@@ -95,6 +95,17 @@ owner passes `--apply --in-place`; `--apply` alone writes a separate `.dedup.jso
 On the current corpus it collapses **199 → 176 entries** and `--backfill-hashes` fills the
 remaining missing hashes to **0**.
 
+### Consumers are duplicate-immune regardless
+
+Because that repair is owner-gated, the manifest on disk *still* has the 23 duplicates — so the
+readers defend themselves. `analysis.utils.dedupe_manifest_entries()` keeps one entry per raw
+`file`, and both corpus walkers use it: `analysis.utils.load_articles()` (every analysis
+builder) and `training/prepare.py` (the fine-tune dataset). Until this landed, the analysis
+pipeline read 199 articles for 176 real ones — **10.2% of the body text it analyzed was
+duplicated** — and `finetune.jsonl`/`instruct.jsonl` contained 23 articles twice, silently
+over-weighting them in any QLoRA run. Running `--apply --in-place` remains worthwhile (it makes
+the manifest *honest*), but it is no longer load-bearing for correctness.
+
 ## Coverage audit (`make coverage-audit`)
 
 Where `manifest-check` looks *inward* (manifest vs the files on disk), `coverage-audit`

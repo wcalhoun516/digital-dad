@@ -25,6 +25,8 @@ import json
 import re
 from pathlib import Path
 
+from analysis.utils import dedupe_manifest_entries
+
 ROOT_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT_DIR / "data"
 RAW_DIR = DATA_DIR / "raw"
@@ -151,7 +153,7 @@ def run():
         return
 
     manifest = json.loads(MANIFEST_PATH.read_text())
-    articles = manifest.get("articles", [])
+    articles = dedupe_manifest_entries(manifest.get("articles", []))
 
     if not articles:
         print("No articles in manifest.")
@@ -218,8 +220,6 @@ def run():
             record = build_instruct_record(title, body)
             f.write(json.dumps(record, ensure_ascii=False) + "\n")
             instruct_count += 1
-            # Keyed by slug so duplicate manifest entries (same article re-scraped via
-            # different discovery tiers) collapse to one record in the train/heldout split.
             quality_records[entry.get("slug", "")] = record
     print(f"  JSONL (instruct): {instruct_path}  ({instruct_count} articles, {excluded_count} excluded by quality filter)")
 

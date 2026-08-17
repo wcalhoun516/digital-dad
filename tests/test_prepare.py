@@ -5,6 +5,9 @@ conductor): instruction-record shaping, the #25-eval-overlap mapping, and the
 deterministic train/held-out partition.
 """
 
+import json
+
+from training import prepare
 from training.prepare import (
     build_instruct_record,
     eval_grounded_slugs,
@@ -94,3 +97,54 @@ class TestSplitArticles:
         train, heldout = split_articles([a["slug"] for a in articles], excluded=excluded)
         assert "inflation-still-exist" not in heldout
         assert "inflation-still-exist" not in train
+
+
+class TestRunDeduplicatesTheCorpus:
+    """`run()` walks the manifest directly, so it inherits the duplicate-slug defect:
+    23 articles appear twice in data/manifest.json, and each was written to
+    finetune.jsonl/instruct.jsonl twice — silently over-weighting them in the QLoRA run.
+    """
+
+    def _corpus(self, tmp_path, monkeypatch):
+        raw = tmp_path / "raw"
+        raw.mkdir()
+        body = "Sentence about the economy. " * 200  # clears the 400-word quality bar
+        for name in ("dup", "solo"):
+            (raw / f"{name}.json").write_text(
+                json.dumps({"title": f"Title {name}", "body": body, "date": "2021-01-01"})
+            )
+        entries = [
+            {"slug": "dup", "url": "http://f.com/dup/", "file": "raw/dup.json",
+             "title": "Title dup", "date": "2021-01-01", "word_count": 1000},
+            {"slug": "dup", "url": "https://f.com/dup/", "file": "raw/dup.json",
+             "title": "Title dup", "date": "2021-01-01", "word_count": 1000},
+            {"slug": "solo", "url": "https://f.com/solo/", "file": "raw/solo.json",
+             "title": "Title solo", "date": "2021-01-02", "word_count": 1000},
+        ]
+        (tmp_path / "manifest.json").write_text(
+            json.dumps({"total_articles": len(entries), "articles": entries})
+        )
+        monkeypatch.setattr(prepare, "DATA_DIR", tmp_path)
+        monkeypatch.setattr(prepare, "MANIFEST_PATH", tmp_path / "manifest.json")
+        monkeypatch.setattr(prepare, "TRAINING_DIR", tmp_path / "training")
+        monkeypatch.setattr(prepare, "LINGUISTICS_PATH", tmp_path / "absent.json")
+        monkeypatch.setattr(prepare, "EVAL_QUESTIONS_PATH", tmp_path / "absent.json")
+        return tmp_path / "training"
+
+    def test_finetune_jsonl_has_one_line_per_article(self, tmp_path, monkeypatch, capsys):
+        out = self._corpus(tmp_path, monkeypatch)
+        prepare.run()
+        lines = (out / "finetune.jsonl").read_text().strip().splitlines()
+        assert len(lines) == 2
+
+    def test_instruct_jsonl_has_one_line_per_article(self, tmp_path, monkeypatch, capsys):
+        out = self._corpus(tmp_path, monkeypatch)
+        prepare.run()
+        lines = (out / "instruct.jsonl").read_text().strip().splitlines()
+        assert len(lines) == 2
+
+    def test_the_duplicated_article_body_appears_once(self, tmp_path, monkeypatch, capsys):
+        out = self._corpus(tmp_path, monkeypatch)
+        prepare.run()
+        records = [json.loads(x) for x in (out / "finetune.jsonl").read_text().splitlines()]
+        assert sum(1 for r in records if "Sentence about the economy" in r["text"]) == 2

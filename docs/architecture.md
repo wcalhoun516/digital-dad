@@ -60,6 +60,13 @@ ran against; on the next run a module is **skipped if the fingerprint is unchang
 `utils.py` — shared `load_manifest()`, `load_articles()`, `clean_text()` (strips Forbes
 boilerplate), `chunk_text()` (sentence-aware), `save_analysis()`.
 
+`load_articles()` yields **one article per raw `file`** via `dedupe_manifest_entries()`. The
+committed manifest still carries 23 duplicate-slug entries (199 entries → 176 distinct files;
+see [`../scraper/README.md`](../scraper/README.md)), and without this every corpus-walking
+builder re-read those 23 bodies and counted their sentences twice — 10.2% of the analyzed text
+was duplicated. Builders therefore need no de-dup of their own. `training/prepare.py` walks
+the manifest directly and applies the same helper for the same reason.
+
 > Adding a module? See the runbook: [`runbooks/adding-an-analysis-module.md`](runbooks/adding-an-analysis-module.md).
 
 `on_this_day.py` — not part of the default analyze chain; run via `make on-this-day`. Pulls
