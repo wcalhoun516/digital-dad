@@ -48,6 +48,54 @@ Format:
 
 <!-- entries below -->
 
+### 2026-08-18 — family — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/81
+- Source: roadmap:#21 (defect in the shipped Reading Room) — duplicate-slug fallout #77/#80 didn't reach
+- Summary: **The Reading Room's "Newer ←" button re-opened the article you were already on.**
+  `build_reading_room()` emits one entry per input record and chains them with
+  `prev_slug`/`next_slug`; the manifest's 23 `http`/`https` twins reach it through `themes.json`,
+  so the same article sat **twice in a row** in the reading order and its neighbour link pointed at
+  **its own slug**. The dashboard resolves those links through `bySlug[slug]` — a map that *cannot*
+  hold a slug twice — so the click re-opened the current article. Measured on the real corpus,
+  regenerating **both sides from the same `themes.json`** (not trusting the stale file on disk):
+  index rows **197 → 175**, duplicate rows **22 → 0**, self-referential links **44 → 0**, and the
+  "Newer" walk **7 → 175 of 175** articles. **No article lost or gained** — only duplicate rows
+  removed. This is the **fifth** reader carrying this defect; PR #80 audited for a fifth and
+  concluded there wasn't one, because it checked direct *manifest* readers and `reading_room.py` is
+  a **second-order** reader (it loads `themes.json`'s `.articles`, a derived artifact, and never
+  touches the manifest). **TDD'd:** +7 tests, six red first for the right reason; the
+  first-seen-wins tie-break was **proved non-vacuous** by implementing last-wins and watching it
+  fail. **§8.5 deepen:** (1) probed every other second-order reader empirically — ran each builder
+  on the real input vs a deduped copy and diffed: `anthology.corpus_span`/`signature_pieces`,
+  `year_in_review.articles_for_year`/`top_themes` and `intellectual_arc.arc_by_year` are **all
+  affected** (the 2022 digest counts **34** columns for **28**). But those are *count skew from a
+  stale derived input*, not broken structures, so the fix is regenerating `themes.json`, **not**
+  deduping at each reader — deduping there would hide the staleness. I **verified** the self-heal
+  rather than inheriting the claim: `load_articles()` now returns **176**, and the corpus fingerprint
+  is `a5cc3a1be358` vs the `593079338772` recorded by themes/linguistic/entities/predictions/
+  semantic_search/psychoprofile, so all six **re-run** on the next `make analyze`. The Reading Room
+  needed the builder fix anyway: a slug-keyed chain is a *structural* invariant, not a count.
+  (2) Found a second, unrelated defect while confirming that regeneration path: **`make reading-room`
+  did not exist.** It is documented in the README (3× with ARGS examples), in the module docstring,
+  in `.gitignore`, and — worst — in the **dashboard's own empty state**, which tells the family
+  "Run `make reading-room` then `make dashboard`". Doing that printed `No rule to make target`.
+  `make voice-style` was missing the same way (README + `voice_eval`'s docstring; the capability
+  existed as `--style-only`). Added both, and guarded the class with a test that pins every `make`
+  target documented **in a code context** to a real rule — two prose false positives ("columnists
+  make predictions") drove the extractor to read only fenced blocks / backticks / `<code>`.
+  `make voice-style` reproduces D15's published numbers exactly (fine-tune TTR 0.352 vs real 0.704).
+  **Offline / unattended-safe:** stdlib only, no conductor/network/LLM, no re-scrape, **no data
+  artifact committed** (`reading_room.json` is git-ignored; I deleted the `voice_style.*` files my
+  own verification run produced). **Verification:** `make verify` green — **891 passed** vs **852**
+  on `origin/main`, ruff clean, dashboard builds. **Backlog:** 2 open `daily/*` PRs (#78, #80) at
+  start — well under 8; §3 didn't resume either (both `ready-for-review`); `main` green.
+  **Hot path:** plan **0008 is finished** — 26a–26f all shipped and D15 records the 26f verdict —
+  but it still sits in `plans/ready/`, so §4 has picked it up and discarded it every run since
+  06-24. I left the file where it is rather than move it in an unrelated PR; **the owner should move
+  `docs/plans/ready/0008-geo-llm-finetune.md` to `docs/plans/done/`** to free the hot path.
+  **NB (fourth ask):** the corpus-ingest work (PR **#79**) still has no plan in `docs/plans/ready/`,
+  so §4 still can't see it; it remains higher value than anything left on the roadmap.
+
 ### 2026-08-15 — scraper — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/77
 - Source: roadmap:#8 (follow-up) — the root cause PR #76 deferred yesterday
