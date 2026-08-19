@@ -15,7 +15,7 @@ import json
 import time
 from datetime import datetime, timezone
 
-from .utils import load_articles, clean_text, save_analysis, ANALYSIS_DIR, DATA_DIR
+from .utils import load_articles, clean_text, log, save_analysis, ANALYSIS_DIR, DATA_DIR
 
 CONDUCTOR_URL = "http://127.0.0.1:8080/v1"
 RUNS_LOG = DATA_DIR / "analysis" / "runs.jsonl"
@@ -193,18 +193,21 @@ def run(
         raise ValueError("No articles to analyze. Run `make scrape` first.")
 
     cost = estimate_cost(articles)
-    print(f"Psychoprofile analysis: {len(articles)} articles in {cost['num_batches']} batches")
+    log.info(
+        "Psychoprofile analysis: %d articles in %d batches",
+        len(articles), cost["num_batches"],
+    )
 
     if router == "conductor_local":
-        print("Routing: conductor Tier 2 (local LLM) — cost: ~$0.00")
+        log.info("Routing: conductor Tier 2 (local LLM) — cost: ~$0.00")
     else:
-        print(
-            f"Routing: conductor Tier 3 (remote) — est. ~${cost['est_cost_usd']:.2f} "
-            f"(depends on T3 chain pick)"
+        log.info(
+            "Routing: conductor Tier 3 (remote) — est. ~$%.2f (depends on T3 chain pick)",
+            cost["est_cost_usd"],
         )
 
     if dry_run:
-        print("Dry run — no API calls made.")
+        log.info("Dry run — no API calls made.")
         return {"dry_run": True, **cost}
 
     tier = 2 if router == "conductor_local" else 3
@@ -226,7 +229,7 @@ def run(
 
     # Map phase
     for i, batch in enumerate(batches, 1):
-        print(f"  Map phase: batch {i}/{len(batches)} ({len(batch)} articles)...", flush=True)
+        log.debug("  Map phase: batch %d/%d (%d articles)...", i, len(batches), len(batch))
         formatted = _format_batch(batch)
         prompt = MAP_PROMPT.format(articles=formatted)
 
@@ -236,8 +239,10 @@ def run(
 
         batch_cost = (in_tok * 3 + out_tok * 15) / 1_000_000
         running_cost = (total_input_tokens * 3 + total_output_tokens * 15) / 1_000_000
-        print(f"    tokens: {in_tok:,} in / {out_tok:,} out"
-              f"  batch: ${batch_cost:.4f}  running: ${running_cost:.4f}", flush=True)
+        log.debug(
+            "    tokens: %s in / %s out  batch: $%.4f  running: $%.4f",
+            f"{in_tok:,}", f"{out_tok:,}", batch_cost, running_cost,
+        )
 
         try:
             start = response_text.index("[")
@@ -246,12 +251,15 @@ def run(
             all_analyses.extend(batch_analyses)
         except (ValueError, json.JSONDecodeError):
             all_analyses.append({"raw": response_text, "batch": i})
-            print(f"    Warning: batch {i} response not valid JSON, stored as raw text", flush=True)
+            log.warning("    batch %d response not valid JSON, stored as raw text", i)
 
-    print(f"\n  Map phase complete: {total_input_tokens:,} in / {total_output_tokens:,} out tokens", flush=True)
+    log.info(
+        "  Map phase complete: %s in / %s out tokens",
+        f"{total_input_tokens:,}", f"{total_output_tokens:,}",
+    )
 
     # Reduce phase
-    print("  Reduce phase: synthesizing profile...", flush=True)
+    log.info("  Reduce phase: synthesizing profile...")
     dates = [a.get("date", "") for a in articles if a.get("date")]
     date_range = f"{min(dates)[:10]} to {max(dates)[:10]}" if dates else "unknown"
 
@@ -271,8 +279,11 @@ def run(
     total_cost = (total_input_tokens * 3 + total_output_tokens * 15) / 1_000_000
     run_duration = round(time.time() - run_start, 1)
 
-    print(f"  Reduce phase: {in_tok:,} in / {out_tok:,} out", flush=True)
-    print(f"\n  === TOTAL: ${total_cost:.4f} ({total_input_tokens:,} in / {total_output_tokens:,} out) in {run_duration}s ===\n", flush=True)
+    log.debug("  Reduce phase: %s in / %s out", f"{in_tok:,}", f"{out_tok:,}")
+    log.info(
+        "  === TOTAL: $%.4f (%s in / %s out) in %ss ===",
+        total_cost, f"{total_input_tokens:,}", f"{total_output_tokens:,}", run_duration,
+    )
 
     # Extract dimension scores
     dimensions = {}
@@ -314,7 +325,7 @@ def run(
 
     # Save JSON
     path = save_analysis("psychoprofile.json", result)
-    print(f"Psychoprofile JSON saved to {path}")
+    log.info("Psychoprofile JSON saved to %s", path)
 
     # Save readable markdown
     md_path = ANALYSIS_DIR / "psychoprofile.md"
@@ -328,6 +339,6 @@ def run(
             bar = "█" * score + "░" * (10 - score)
             md_content += f"- **{dim.replace('_', ' ').title()}**: {bar} {score}/10\n"
     md_path.write_text(md_content)
-    print(f"Psychoprofile narrative saved to {md_path}")
+    log.info("Psychoprofile narrative saved to %s", md_path)
 
     return result
