@@ -48,6 +48,57 @@ Format:
 
 <!-- entries below -->
 
+### 2026-08-20 — docs — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/83
+- Source: roadmap:#28 follow-up (docs — least-recently-worked category, last touched 2026-06-25)
+- Summary: **`docs/architecture.md` had stopped being true, and nothing could tell.** `docs/INDEX.md`
+  sends every session to it as *"the repo map — read this before touching any module"*, but **11 of
+  the 27 modules in `analysis/` had no entry** (`adjudicate` `conductor` `delivery` `geo_baseline`
+  `geo_llm_status` `rag_eval` `reading_room` `verdict_backfill` `voice_eval` `voice_trials`
+  `year_in_review`) — a **41% miss rate**. Every one shipped through this agent, and **every one has
+  a test file**: the test gate caught them because a test gate *exists*; the doc gate was convention.
+  So this PR does both halves — the guard, then the entries. **The guard's strictness is the design
+  decision:** it requires the module's own filename in a code span (`` `foo.py` ``/`` `analysis/foo.py` ``),
+  not any mention of its stem. A looser stem rule scored 20/27 "documented" and was **vacuous** —
+  `reading_room` matched only `` `reading_room.json` `` (an artifact reference, not a description of
+  the builder), and `rag_eval`/`voice_eval` matched single passing mentions inside sentences about a
+  *different* module. **TDD'd:** +47 tests, **red first on all 11** for the right reason, and the
+  helper has 12 unit tests of its own (accepts bare/package-qualified/embedded filenames; rejects
+  artifact-only mentions, unbackticked prose, and a suffix collision — `graph.py` must not match
+  `` `entity_graph.py` ``). **Proved non-vacuous** by reverting: dropped the `year_in_review.py`
+  anchor → 1 failure; deleted the `reading-room:` target → 2 failures; restored → 47 pass.
+  **§8.5 deepen found a real user-facing bug.** The second guard checks the reverse direction — every
+  `` `make <target>` `` written in a code span must exist in the `Makefile` — and caught **two
+  targets that were documented but never existed**. (1) **`make reading-room` did not exist**, yet
+  it is what `dashboard/template.html` tells *the family* to run when the Reading Room tab is empty
+  ("Run `make reading-room` then `make dashboard`"), and README documents it three times with
+  `ARGS`. Clicking the tab and following its own instructions gave `No rule to make target`. (2)
+  `make voice-style` likewise absent; README promises it as the *"offline + free, safe to run
+  unattended"* path. Verified in source that `--style-only` **returns before the `require_conductor`
+  gate** (`voice_eval.py:495` vs `:498`), so the claim is accurate and only the target was missing —
+  added it as its own target so staying free isn't a flag you have to remember. Both new targets
+  **run for real**, not just parse: `make reading-room ARGS="--dry-run"` → *"197 readable articles
+  across 9 themes"*; `make voice-style` → wrote the style report. Also **corrected the dashboard tab
+  list, "Nine tabs" → sixteen** (the doc had missed Network, Stance, Intellectual Arc, Calhoun-isms,
+  Second Thoughts, Reading Room and Geo-LLM), and taught the convention in
+  `runbooks/adding-an-analysis-module.md` + its checklist, so the next module complies by
+  construction rather than by remembering. **Every claim written into the doc was checked against
+  source, not inferred** — the conductor gate in all four owner-gated CLIs, `--style-only`,
+  `--report`, `--year`'s "latest *complete* year" default, `eval/questions.json`, and the fact that
+  `geo_llm_status` is called **directly by `viz/build_dashboard.py:69`** rather than from a `make`
+  target. **Verification:** `make verify` **exit 0** — ruff clean, **899 passed**, dashboard builds;
+  a clean worktree off `origin/main` collects **852** (851 passed + 1 environment-skip that passes
+  in-repo), so **+47 is exactly the tests added** — `test_docs_coverage.py` collects 47. **No data artifact
+  committed** — `make voice-style` wrote an ungitignored `voice_style.json`/`.md`; both deleted, tree
+  left with only the three untracked paths that predated the run. **Backlog:** 4 open `daily/*` PRs
+  (#78, #80, #81, #82) at start, under 8; §3 resumed nothing (all four `ready-for-review`); `main`
+  green. **Cold-path pick:** `plans/ready/` is **empty** (0008 was retired on 08-19), no user pins,
+  and **docs** is absent from the entire last-7 rotation. **NB (sixth ask):** the corpus-ingest work
+  (PR **#79**) still has no plan in `docs/plans/ready/`; the directory is empty, so a plan dropped
+  there is tomorrow's hot path uncontested. **Noticed, not fixed (out of scope):** `reading_room.py`
+  reports **197** articles where the deduped corpus has **176** — it walks the manifest directly
+  rather than through `dedupe_manifest_entries()`, the same defect class as #77/#80.
+
 ### 2026-08-15 — scraper — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/77
 - Source: roadmap:#8 (follow-up) — the root cause PR #76 deferred yesterday
