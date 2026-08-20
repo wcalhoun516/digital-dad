@@ -4,7 +4,7 @@ PYTHON := .venv/bin/python
 # ruff findings (broadening the scope is a follow-up roadmap item, #1-3/cleanup).
 LINT_PATHS := tests
 
-.PHONY: scrape manifest-check manifest-dedup coverage-audit analyze training dashboard all serve share search on-this-day send-on-this-day adjudicate backfill-verdicts entity-graph calhoun-isms contradictions rag-eval voice-eval voice-trials embedding-compare embedding-queries-check clean test lint fmt lint-json hooks verify verify-responsive
+.PHONY: scrape manifest-check manifest-dedup coverage-audit analyze training dashboard all serve share search on-this-day send-on-this-day adjudicate backfill-verdicts entity-graph calhoun-isms reading-room contradictions rag-eval voice-eval voice-style voice-trials embedding-compare embedding-queries-check clean test lint fmt lint-json hooks verify verify-responsive
 
 scrape:
 	$(PYTHON) -m scraper $(ARGS)
@@ -139,6 +139,13 @@ contradictions:
 calhoun-isms:
 	$(PYTHON) -m analysis.calhoun_isms $(ARGS)
 
+# Reading Room (roadmap #21): the paginated full-article reader behind the dashboard tab,
+# joining data/analysis/themes.json + the manifest to the raw bodies. Pure/offline — no
+# conductor, no network. Writes the git-ignored data/analysis/reading_room.json (embeds full
+# article text). ARGS e.g. --dry-run, --limit 20.
+reading-room:
+	$(PYTHON) -m analysis.reading_room $(ARGS)
+
 # RAG faithfulness eval baseline for Ask Dad (plan 0007). Owner-gated: the generation +
 # judge passes make conductor calls (judge defaults to paid T3), so it refuses to run if
 # the conductor is down. Writes data/analysis/rag_eval.json. ARGS e.g. --limit 5 or
@@ -167,6 +174,13 @@ embedding-queries-check:
 # automation).
 voice-eval:
 	$(PYTHON) -m analysis.voice_eval $(ARGS)
+
+# The deterministic half of the above: style metrics vs his distinctive words, no judge.
+# `--style-only` returns before the conductor gate, so this is offline, free and safe to run
+# unattended — the flag lives in the target so staying free isn't a thing to remember.
+# Writes data/analysis/voice_style.json.
+voice-style:
+	$(PYTHON) -m analysis.voice_eval --style-only $(ARGS)
 
 # Build the eval/voice_trials.json skeleton for 26d from 26a's held-out split (plan 0008).
 # Pure/offline (no conductor, no paid calls): fills each held-out prompt + a `real` excerpt,
