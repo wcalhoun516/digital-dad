@@ -171,6 +171,88 @@ as `rag_eval`/`voice_eval`/`embedding_compare`), and it degrades to a clear `SKI
 interim print-ready HTML) when no browser is present. The rendered `anthology.html`/`anthology.pdf`
 are **git-ignored** build outputs (regenerate on demand). No conductor/network. (Roadmap #24.)
 
+### Track Record: from advisory guess to family ruling
+
+`predictions.py` deliberately leaves every prediction's `status` at `pending` — an LLM's
+recollection is not a ruling on how Dad's bets turned out. Two modules layer verdicts on top of
+it, and both write back into `predictions.json`.
+
+`verdict_backfill.py` — **owner-gated and paid**; run via `make backfill-verdicts`. For each
+prediction it gathers external evidence (a web search) and asks a T3 model to rule *with the
+sources it relied on*, landing `evidence_*` fields (verdict, rationale, normalized source list)
+so the family can see the receipts. Because it spends real money it preflights the conductor and
+refuses to start when it's down. (Plan 0004 step 1, roadmap #11.)
+
+`adjudicate.py` — the **human-override layer**; run via `make adjudicate` for a resumable
+review loop over the unadjudicated predictions, writing `human_verdict` plus a free-text note.
+Effective-verdict precedence is `human_verdict` > `evidence_verdict` > `llm_verdict` > `status`
+> `pending`: an evidence-grounded ruling outranks an ungrounded one, and **a family ruling
+always wins**. `--report` additionally emits the confidence **calibration** view — hit-rate
+bucketed by his hedging language, plus "most right / most wrong" conviction boards (roadmap
+#12). Its stdout *is* the product here (an interactive review loop), so this module keeps its
+`print`s by design. Pure/offline.
+
+### Family keepsakes
+
+`reading_room.py` — the builder behind the dashboard's **Reading Room** tab (roadmap #21).
+Joins `themes.json` (per-article theme label) and the manifest (ordering, word counts) to the
+full bodies in `data/raw/*.json`, emitting `reading_room.json`: every column with its
+paragraphs, reading time, theme tag, prev/next links and a "read on Forbes" deep link. Because
+it embeds **full article text** it is **git-ignored** — regenerate on demand. Note there is **no
+`make` target**; run `python -m analysis.reading_room`. Deterministic and offline.
+
+`year_in_review.py` — the annual counterpart to On This Day (roadmap #23); run via
+`make year-in-review` (`ARGS="--year 2024"`; defaults to the last complete year). Reads
+`themes.json`, `predictions.json` and the corpus and renders one keepsake email to
+`data/cron/emails/` in the same Georgia-serif voice as the weekly note: how much he wrote, the
+themes that dominated, and his most notable calls. **No conductor, network, or LLM** — safe
+unattended. Delivery stays human-in-the-loop through the same Gmail-MCP draft path.
+
+`delivery.py` — the reusable, side-effect-free half of On This Day delivery (plan 0003 /
+decision **D9**): parses the git-ignored recipient list and assembles a dry-run summary that
+**sends nothing**. `bin/create_gmail_draft.py` is built on it, and `make send-on-this-day` is
+the owner's approval gate. Actual draft creation happens through the Gmail MCP in a Claude
+session, never from here — so no mail credentials are ever stored.
+
+### Evaluation harnesses & the Geo-LLM ladder
+
+These establish whether Ask Dad is *trustworthy* and whether a fine-tune would beat it
+(roadmap #25/#26, plans 0007/0008). All follow the same shape: the one networked seam is
+**injected**, so the scoring math is pure and TDD'd offline, and the live CLI is owner-gated on
+conductor reachability.
+
+`rag_eval.py` — **RAG faithfulness** baseline; `make rag-eval`. Mirrors production exactly
+(`semantic_search.search()` → answer only from retrieved snippets, cite by `title (year)`,
+abstain with "I haven't written about that specifically"), then judges each answer for
+citation accuracy, hallucination and correct abstention over the committed
+`eval/questions.json`. Writes `data/analysis/rag_eval.json` — the bar any fine-tune must beat.
+
+`voice_eval.py` — **voice fidelity**; `make voice-eval`. Blind A/B/C ranking: candidate
+passages (`real` excerpt / `rag` answer / `finetuned` answer) are anonymized to labels with a
+seeded, reproducible shuffle, ranked by a judge model on how much they read like Calhoun, then
+un-blinded into win-rates, average ranks and a `finetuned_over_rag` head-to-head. Also computes
+offline **style metrics** against his distinctive words (`--style-only` needs no judge).
+
+`voice_trials.py` — deterministic input builder for the above; `make voice-trials`. Turns 26a's
+held-out split (`data/training/heldout.jsonl`) into a real `eval/voice_trials.json` skeleton —
+each trial's prompt plus a length-balanced genuine excerpt, with `rag`/`finetuned` left as
+paste-here placeholders. **Leakage-free by construction** (prompts come from the held-out
+split). The output embeds real bodies, so it is git-ignored; the hand-authored
+`eval/voice_trials.example.json` template is committed.
+
+`geo_baseline.py` — freezes the pre-fine-tune numbers (plan 0008 step 26b). Reads the already
+written `rag_eval.json` and curates it into `geo_llm_baseline.json` plus a short markdown note,
+with a `voice` slot left pending for 26d. Makes **no** conductor calls of its own; if
+`rag_eval.json` is absent it tells the owner to run `make rag-eval` and exits without writing.
+Module CLI only (`python -m analysis.geo_baseline`).
+
+`geo_llm_status.py` — assembles `data/analysis/geo_llm.json`, the snapshot behind the
+dashboard's **Geo-LLM** tab: dataset stats, a sample training pair, the RAG/voice summaries,
+the 26a–26f pipeline checklist, and any fine-tune registration marker. Called **directly by
+`viz/build_dashboard.py`** during the dashboard build rather than from a `make` target, and
+every field degrades to a safe default when its source file is missing — so the build never
+breaks mid-experiment.
+
 ## 3. The conductor (LLM abstraction)
 
 All model calls go to a **local OpenAI-compatible server** at `http://127.0.0.1:8080/v1`
@@ -188,6 +270,14 @@ Code uses the `openai` Python SDK (or `fetch` from the browser) pointed at that 
 
 No API keys in this repo; T3's `OPENROUTER_API_KEY` lives in the conductor's own `.env`.
 
+**Preflight** (`analysis/conductor.py`, roadmap #6) — the single home for "is it up, and what
+do I say if it isn't", replacing three byte-for-byte copies of `_conductor_up()`. `conductor_up()`
+GETs `/models` (cheap — no model load) and treats any connection error or non-200 as down;
+`require_conductor()` is what the owner-gated CLIs (`rag_eval`, `voice_eval`, `verdict_backfill`,
+`embedding_compare`) call to abort with **exit 2** and one clear message before spending a paid
+T3 request. The network call sits behind an injectable `opener`, so callers test the gating
+offline. `make conductor-check` runs it standalone.
+
 > Full reference (exact signatures, return shapes, error/retry behavior, health check):
 > [`conductor-contract.md`](conductor-contract.md).
 
@@ -200,8 +290,14 @@ No API keys in this repo; T3's `OPENROUTER_API_KEY` lives in the conductor's own
 entities, embeddings, predictions) and writes `dashboard/index.html`. Missing inputs degrade
 to empty stubs. The dashboard is **fully client-side** — vanilla JS + D3 v7 from CDN, no
 build step, no backend. The only runtime calls are browser → conductor (for Ask Dad +
-search embeddings). Nine tabs: Theme Map, Timeline, Psychoprofile, Linguistic DNA, Influence
-Map, Raw Corpus, Semantic Search, **Ask Dad**, **Track Record**.
+search embeddings). **Sixteen tabs:** Theme Map, Timeline, Psychoprofile, Linguistic DNA,
+Influence Map, Raw Corpus, Semantic Search, **Ask Dad**, **Track Record**, Network,
+Stance, Intellectual Arc, Calhoun-isms, Second Thoughts, Reading Room, Geo-LLM. The nav
+`flex-wrap`s so added tabs can't overflow the row.
+
+Tabs whose artifact is git-ignored for licensing (Reading Room, Calhoun-isms, Second Thoughts)
+inline an **empty stub** on CI and fresh clones, and render a prompt naming the command that
+builds them.
 
 ### Email (`analysis/on_this_day.py` + `bin/create_gmail_draft.py`)
 
