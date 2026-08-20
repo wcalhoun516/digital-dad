@@ -87,7 +87,8 @@ Format:
   `--report`, `--year`'s "latest *complete* year" default, `eval/questions.json`, and the fact that
   `geo_llm_status` is called **directly by `viz/build_dashboard.py:69`** rather than from a `make`
   target. **Verification:** `make verify` **exit 0** — ruff clean, **899 passed**, dashboard builds;
-  `origin/main` baseline is **852**, and +47 is exactly the tests added. **No data artifact
+  a clean worktree off `origin/main` collects **852** (851 passed + 1 environment-skip that passes
+  in-repo), so **+47 is exactly the tests added** — `test_docs_coverage.py` collects 47. **No data artifact
   committed** — `make voice-style` wrote an ungitignored `voice_style.json`/`.md`; both deleted, tree
   left with only the three untracked paths that predated the run. **Backlog:** 4 open `daily/*` PRs
   (#78, #80, #81, #82) at start, under 8; §3 resumed nothing (all four `ready-for-review`); `main`
