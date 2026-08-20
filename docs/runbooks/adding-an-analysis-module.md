@@ -164,6 +164,26 @@ ruff findings), so keep new test files clean.
 
 ---
 
+## Document it (enforced)
+
+Add an entry for your module to [`../architecture.md`](../architecture.md) §2 — what it reads,
+what it writes, whether it's in the default `make analyze` chain, and whether the artifact is
+committed or git-ignored. This is **not optional**:
+`tests/test_docs_coverage.py` fails when a file in `analysis/` has no entry, because
+`docs/INDEX.md` promises architecture.md is "the repo map ... read this before touching any
+module" and eleven modules had quietly landed without one.
+
+The guard looks for the **filename in a code span** — `` `<name>.py` `` or
+`` `analysis/<name>.py` ``. Naming only the artifact it writes (`` `<name>.json` ``) does not
+count: that's a mention, not a description, and it would let an undescribed module pass.
+
+The same test checks the reverse direction for commands: any `` `make <target>` `` written in
+a code span in the README, these docs, or `dashboard/template.html` must exist in the
+`Makefile`. So if you add a target, reference it; if you reference one, add it — including in
+`.PHONY`.
+
+---
+
 ## Checklist
 
 - [ ] `analysis/<name>.py` exposes `run(articles)`, uses `load_articles` / `clean_text` /
@@ -174,3 +194,5 @@ ruff findings), so keep new test files clean.
       default, guarded import, no unguarded paid call in unattended paths.
 - [ ] (If dashboard) placeholder in `PLACEHOLDERS` + `_EMPTY_DEFAULTS` + `template.html`.
 - [ ] `tests/test_<name>.py` covers the logic offline; `make verify` green.
+- [ ] Entry in [`../architecture.md`](../architecture.md) §2 naming `` `<name>.py` `` — enforced
+      by `tests/test_docs_coverage.py`.
