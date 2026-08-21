@@ -16,12 +16,15 @@ import numpy as np
 from analysis.embedding_compare import (
     aggregate,
     compare_models,
+    gold_set_power,
     kendall_tau,
     load_corpus_slugs,
     load_queries,
     main,
     mrr,
     overlap_at_k,
+    paired_comparison,
+    per_query_metrics,
     precision_at_k,
     rank_slugs,
     recall_at_k,
@@ -429,3 +432,318 @@ class TestCommittedGoldSet:
         corpus_slugs = load_corpus_slugs()  # data/manifest.json
         assert queries, "expected a non-empty committed gold query set"
         assert validate_queries(queries, corpus_slugs) == []
+
+
+# --------------------------------------------------------------------------- #
+# Per-query detail (#27) — a reviewer must be able to see *which* queries moved
+# --------------------------------------------------------------------------- #
+
+class TestPerQueryMetrics:
+    def test_one_record_per_query_in_input_order(self):
+        rankings = [["a", "b"], ["b", "a"], ["a", "b"]]
+        relevants = [{"a"}, {"a"}, {"b"}]
+        rows = per_query_metrics(rankings, relevants)
+        assert len(rows) == 3
+
+    def test_reports_reciprocal_rank_and_rank_of_first_hit(self):
+        rankings = [["x", "y", "target"]]
+        rows = per_query_metrics(rankings, [{"target"}])
+        assert rows[0]["first_relevant_rank"] == 3
+        assert rows[0]["reciprocal_rank"] == round(1 / 3, 4)
+
+    def test_miss_reports_no_rank_and_zero_rr(self):
+        rows = per_query_metrics([["x", "y"]], [{"absent"}])
+        assert rows[0]["first_relevant_rank"] is None
+        assert rows[0]["reciprocal_rank"] == 0.0
+
+    def test_unlabelled_query_is_marked_unscored(self):
+        rows = per_query_metrics([["x"]], [set()])
+        assert rows[0]["scored"] is False
+        assert rows[0]["n_relevant"] == 0
+
+    def test_labelled_query_is_marked_scored(self):
+        rows = per_query_metrics([["x"]], [{"x"}])
+        assert rows[0]["scored"] is True
+        assert rows[0]["n_relevant"] == 1
+
+    def test_carries_query_text_when_given(self):
+        rows = per_query_metrics([["x"]], [{"x"}], queries=[{"query": "the Fed"}])
+        assert rows[0]["query"] == "the Fed"
+
+    def test_query_text_absent_when_not_given(self):
+        rows = per_query_metrics([["x"]], [{"x"}])
+        assert rows[0]["query"] == ""
+
+
+# --------------------------------------------------------------------------- #
+# Paired comparison vs the baseline (#27) — is the MRR gap distinguishable
+# from one query moving one rank slot?
+# --------------------------------------------------------------------------- #
+
+class TestPairedComparison:
+    def test_counts_wins_losses_and_ties(self):
+        out = paired_comparison([1.0, 0.5, 0.25], [0.5, 0.5, 1.0])
+        assert (out["wins"], out["losses"], out["ties"]) == (1, 1, 1)
+
+    def test_identical_rankings_are_all_ties(self):
+        out = paired_comparison([1.0, 0.5], [1.0, 0.5])
+        assert out["ties"] == 2
+        assert out["wins"] == 0 and out["losses"] == 0
+
+    def test_mean_delta_is_candidate_minus_baseline(self):
+        out = paired_comparison([1.0, 1.0], [0.5, 0.0])
+        assert out["mean_delta"] == 0.75
+
+    def test_sign_test_p_is_the_exact_two_sided_binomial(self):
+        # 5 wins, 0 losses -> 2 * (1/2**5)
+        out = paired_comparison([1.0] * 5, [0.5] * 5)
+        assert out["sign_test_p"] == round(2 / 32, 4)
+
+    def test_sign_test_p_counts_only_non_tied_queries(self):
+        # 5 wins, 0 losses, plus 3 ties -> the ties must not change p.
+        out = paired_comparison([1.0] * 5 + [0.5] * 3, [0.5] * 5 + [0.5] * 3)
+        assert out["sign_test_p"] == round(2 / 32, 4)
+
+    def test_evenly_split_result_is_not_significant(self):
+        out = paired_comparison([1.0, 0.5], [0.5, 1.0])
+        assert out["sign_test_p"] == 1.0
+
+    def test_reports_the_best_p_the_gold_set_could_ever_reach(self):
+        # With 5 queries even a clean sweep only reaches 2/2**5 = 0.0625,
+        # so *no* outcome on a 5-query gold set is significant at alpha=0.05.
+        out = paired_comparison([1.0, 0.5, 0.5, 0.5, 0.5], [0.5] * 5)
+        assert out["min_achievable_p"] == round(2 / 32, 4)
+
+    def test_min_achievable_p_shrinks_as_the_gold_set_grows(self):
+        out = paired_comparison([1.0] * 13, [0.5] * 13)
+        assert out["min_achievable_p"] < 0.05
+
+    def test_empty_input_is_inert(self):
+        out = paired_comparison([], [])
+        assert out["n"] == 0
+        assert out["sign_test_p"] == 1.0
+        assert out["mean_delta"] == 0.0
+
+
+# --------------------------------------------------------------------------- #
+# Margin-aware verdict (#27) — aggregate() must not crown a winner on noise
+# --------------------------------------------------------------------------- #
+
+class TestVerdict:
+    def _rec(self, model, mrr_value, *, baseline=False, paired=None):
+        return {
+            "model": model,
+            "is_baseline": baseline,
+            "retrieval": {"mrr": mrr_value, "n_scored": 5},
+            "agreement": None,
+            "paired": paired,
+        }
+
+    # Built with the real paired_comparison() so these fixtures can't drift from
+    # the shape compare_models() actually emits.
+    _NARROW = paired_comparison(
+        [1.0, 1.0, 0.5, 0.5, 0.25], [0.5, 0.5, 1.0, 0.5, 0.25]
+    )  # 5 queries: 2 wins, 1 loss, 2 ties — the July run's shape
+    _SWEEP = paired_comparison(
+        [1.0] * 12 + [0.25], [0.5] * 12 + [1.0]
+    )  # 13 queries: 12 wins, 1 loss
+    _REVERSE_SWEEP = paired_comparison(
+        [1.0] + [0.25] * 12, [0.5] + [1.0] * 12
+    )  # 13 queries: 1 win, 12 losses
+
+    def test_narrow_win_over_baseline_is_inconclusive(self):
+        # cand leads on raw MRR, but the paired sign test can't distinguish it.
+        records = [
+            self._rec("base", 0.5286, baseline=True),
+            self._rec("cand", 0.5556, paired=self._NARROW),
+        ]
+        summary = aggregate(records, baseline="base")
+        assert summary["best_mrr_model"] == "cand"
+        assert summary["verdict"] == "inconclusive"
+
+    def test_clear_win_over_baseline_is_reported_as_better(self):
+        records = [
+            self._rec("base", 0.30, baseline=True),
+            self._rec("cand", 0.90, paired=self._SWEEP),
+        ]
+        summary = aggregate(records, baseline="base")
+        assert summary["verdict"] == "candidate_better"
+
+    def test_baseline_winning_on_mrr_keeps_the_pin(self):
+        records = [
+            self._rec("base", 0.90, baseline=True),
+            self._rec("cand", 0.30, paired=self._REVERSE_SWEEP),
+        ]
+        summary = aggregate(records, baseline="base")
+        assert summary["verdict"] == "baseline_retained"
+
+    def test_verdict_carries_a_human_reason(self):
+        records = [
+            self._rec("base", 0.5286, baseline=True),
+            self._rec("cand", 0.5556, paired=self._NARROW),
+        ]
+        summary = aggregate(records, baseline="base")
+        assert isinstance(summary["verdict_reason"], str)
+        assert summary["verdict_reason"]
+
+    def test_a_gold_set_too_small_to_decide_says_so(self):
+        # 5 queries bottom out at p=0.0625, so the blame is the labels, not the model.
+        records = [
+            self._rec("base", 0.5286, baseline=True),
+            self._rec("cand", 0.5556, paired=self._NARROW),
+        ]
+        summary = aggregate(records, baseline="base")
+        assert "too small" in summary["verdict_reason"]
+
+    def test_a_significant_p_with_a_negative_delta_is_not_a_win(self):
+        # Guards the direction of the test: p alone must never crown a candidate.
+        # cand edges ahead on mean MRR but lost 12 of 13 individual queries.
+        records = [
+            self._rec("base", 0.50, baseline=True),
+            self._rec("cand", 0.5001, paired=self._REVERSE_SWEEP),
+        ]
+        summary = aggregate(records, baseline="base")
+        assert summary["verdict"] == "inconclusive"
+
+
+class TestCompareModelsAttachesEvidence:
+    def _fake_embed(self):
+        vectors = {
+            "base": {"a": [1.0, 0.0], "b": [0.0, 1.0], "q": [1.0, 0.0]},
+            "cand": {"a": [0.0, 1.0], "b": [1.0, 0.0], "q": [1.0, 0.0]},
+        }
+
+        def embed(model_id, texts):
+            table = vectors[model_id]
+            return [table[t] for t in texts]
+
+        return embed
+
+    def _corpus(self):
+        return [{"slug": "a", "text": "a"}, {"slug": "b", "text": "b"}]
+
+    def _queries(self):
+        return [{"query": "q", "relevant_slugs": ["a"]}]
+
+    def test_every_record_carries_per_query_detail(self):
+        records = compare_models(
+            ["base", "cand"], self._corpus(), self._queries(),
+            self._fake_embed(), baseline="base",
+        )
+        assert all(len(r["per_query"]) == 1 for r in records)
+
+    def test_baseline_record_has_no_paired_comparison(self):
+        records = compare_models(
+            ["base", "cand"], self._corpus(), self._queries(),
+            self._fake_embed(), baseline="base",
+        )
+        assert records[0]["paired"] is None
+
+    def test_candidate_record_is_paired_against_the_baseline(self):
+        records = compare_models(
+            ["base", "cand"], self._corpus(), self._queries(),
+            self._fake_embed(), baseline="base",
+        )
+        # base ranks the relevant slug first, cand ranks it last -> one loss.
+        assert records[1]["paired"]["losses"] == 1
+
+
+class TestReportCarriesTheVerdict:
+    def _records(self):
+        return [
+            {
+                "model": "base", "is_baseline": True,
+                "retrieval": {"mrr": 0.30, "n_scored": 13},
+                "agreement": None, "per_query": [], "paired": None,
+            },
+            {
+                "model": "cand", "is_baseline": False,
+                "retrieval": {"mrr": 0.90, "n_scored": 13},
+                "agreement": None, "per_query": [],
+                "paired": paired_comparison([1.0] * 12 + [0.25], [0.5] * 12 + [1.0]),
+            },
+        ]
+
+    def test_written_summary_includes_the_verdict(self, tmp_path):
+        out = tmp_path / "r.json"
+        write_report(self._records(), out, baseline="base")
+        payload = json.loads(out.read_text())
+        assert payload["summary"]["verdict"] == "candidate_better"
+
+    def test_per_query_detail_survives_the_json_roundtrip(self, tmp_path):
+        out = tmp_path / "r.json"
+        records = self._records()
+        records[0]["per_query"] = [
+            {"query": "the Fed", "n_relevant": 1, "scored": True,
+             "first_relevant_rank": 2, "reciprocal_rank": 0.5}
+        ]
+        write_report(records, out, baseline="base")
+        payload = json.loads(out.read_text())
+        assert payload["records"][0]["per_query"][0]["first_relevant_rank"] == 2
+
+    def test_a_stricter_alpha_can_withhold_the_verdict(self, tmp_path):
+        # p = 0.0034 for this 12-1 split: significant at 0.05, not at 0.001.
+        out = tmp_path / "r.json"
+        write_report(self._records(), out, baseline="base", alpha=0.001)
+        payload = json.loads(out.read_text())
+        assert payload["summary"]["verdict"] == "inconclusive"
+
+
+# --------------------------------------------------------------------------- #
+# Gold-set power (#27) — can this many labels decide anything at all?
+# --------------------------------------------------------------------------- #
+
+class TestGoldSetPower:
+    def test_five_queries_cannot_decide_at_the_default_alpha(self):
+        # A clean 5-0 sweep still only reaches 2/2**5 = 0.0625.
+        power = gold_set_power(5)
+        assert power["min_achievable_p"] == 0.0625
+        assert power["can_decide"] is False
+
+    def test_six_queries_can_decide(self):
+        power = gold_set_power(6)
+        assert power["can_decide"] is True
+
+    def test_reports_how_many_queries_are_needed(self):
+        assert gold_set_power(5)["min_queries_to_decide"] == 6
+
+    def test_a_stricter_alpha_demands_more_queries(self):
+        # 2/2**10 = 0.00195 > 0.001; 2/2**11 = 0.00098 <= 0.001.
+        assert gold_set_power(5, alpha=0.001)["min_queries_to_decide"] == 11
+
+    def test_an_empty_gold_set_cannot_decide(self):
+        assert gold_set_power(0)["can_decide"] is False
+
+    def test_agrees_with_the_paired_comparison_floor(self):
+        # The two must not drift: same quantity, two call sites.
+        paired = paired_comparison([1.0] * 7, [0.5] * 7)
+        assert gold_set_power(7)["min_achievable_p"] == paired["min_achievable_p"]
+
+    def test_the_committed_gold_set_is_large_enough_to_decide(self):
+        # Regression guard: shrinking eval/embedding_queries.json below the
+        # decidability floor would make every live comparison unfalsifiable.
+        queries = load_queries()
+        assert gold_set_power(len(queries))["can_decide"] is True
+
+
+class TestCheckReportsPower:
+    def _write(self, tmp_path, n):
+        q = tmp_path / "queries.json"
+        q.write_text(json.dumps({"queries": [
+            {"query": f"q{i}", "relevant_slugs": ["a"]} for i in range(n)
+        ]}))
+        m = tmp_path / "manifest.json"
+        m.write_text(json.dumps({"articles": [{"slug": "a"}]}))
+        return q, m
+
+    def test_check_warns_when_the_gold_set_cannot_decide(self, tmp_path, capsys):
+        q, m = self._write(tmp_path, 3)
+        rc = main(["--check", "--queries", str(q), "--manifest", str(m)])
+        out = capsys.readouterr().out
+        assert rc == 0  # the labels are valid; the set is just too small
+        assert "too small" in out
+
+    def test_check_confirms_a_decidable_gold_set(self, tmp_path, capsys):
+        q, m = self._write(tmp_path, 8)
+        main(["--check", "--queries", str(q), "--manifest", str(m)])
+        assert "enough to decide" in capsys.readouterr().out
