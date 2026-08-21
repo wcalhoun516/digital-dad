@@ -113,8 +113,18 @@ model — the label-free "is it safe to swap?" number). Writes `data/analysis/em
 (owner-run, not committed). The gold set's hand-authored `relevant_slugs` are guarded offline by
 `make embedding-queries-check` (`python -m analysis.embedding_compare --check`): it validates every
 slug against the committed `data/manifest.json` — no conductor, no embedding — so a typo'd / renamed
-slug fails loudly instead of silently scoring 0 in a live pass. A dashboard viz is still deferred.
-(Roadmap #27.)
+slug fails loudly instead of silently scoring 0 in a live pass.
+
+Because MRR moves in coarse steps on a small gold set, the summary does **not** treat the raw
+`best_mrr_model` argmax as a result. Each record also carries `per_query` (the rank of the first
+relevant hit per query, so a reviewer can see *which* queries moved) and, for every non-baseline
+model, `paired` — wins/losses/ties against the baseline **on the same queries**, an exact two-sided
+sign-test `p`, and `min_achievable_p`, the p a clean sweep of this many labelled queries could ever
+reach. `aggregate()` turns those into a `verdict` (`candidate_better` / `baseline_retained` /
+`inconclusive`, threshold `--alpha`, default 0.05) plus a plain-English `verdict_reason`. A
+candidate must beat the baseline on **both** direction and significance; when the gold set is too
+small for any outcome to clear alpha, the verdict says so rather than blaming the model. A
+dashboard viz is still deferred. (Roadmap #27.)
 
 `calhoun_isms.py` — also outside the default chain; run via `make calhoun-isms`. A pure/offline
 **derived** artifact: reads `themes.json`'s per-article theme assignments plus the corpus bodies,

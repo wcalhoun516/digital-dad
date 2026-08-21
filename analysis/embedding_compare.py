@@ -20,8 +20,15 @@ are pure functions. The CLI (``python -m analysis.embedding_compare`` /
 ``make embedding-compare``) wires the seam to the live conductor and is gated on
 its reachability because a live pass loads/embeds with each candidate model.
 
-The dashboard viz and a curated gold query set are deferred to future slices;
-this ships the offline harness + a starter query template.
+A headline MRR is not on its own a result. On a small gold set MRR moves in
+coarse steps — one query slipping from rank 2 to rank 3 shifts a 13-query MRR by
+~0.013 — so a bare argmax over MRR can crown a "winner" that is one rank slot of
+noise. The harness therefore reports the evidence alongside the number:
+``per_query`` detail, a ``paired`` sign test against the baseline on the same
+queries, and a ``verdict`` that withholds a winner it cannot distinguish from
+chance (see ``aggregate``).
+
+The dashboard viz is deferred to a future slice.
 """
 
 import argparse
@@ -187,8 +194,6 @@ def per_query_metrics(
 def _sign_test_p(wins: int, losses: int) -> float:
     """Two-sided exact binomial (sign) test p-value; ties are excluded upstream."""
     n = wins + losses
-    if n == 0:
-        return 1.0
     k = min(wins, losses)
     tail = sum(math.comb(n, i) for i in range(k + 1))
     return min(1.0, 2 * tail / (2**n))
@@ -398,10 +403,10 @@ def _verdict(
             "significant. Add gold queries before trusting any winner."
         )
     return "inconclusive", (
-        f"{best_model!r} leads on MRR by {delta:+.4f}, but won only "
-        f"{paired['wins']} of {paired['n']} labelled queries (lost "
-        f"{paired['losses']}, tied {paired['ties']}); sign-test p={p} > alpha={alpha}. "
-        "Keep the pinned model."
+        f"{best_model!r} has the best MRR, but its paired mean-RR delta vs the "
+        f"baseline is {delta:+.4f} and it won only {paired['wins']} of "
+        f"{paired['n']} labelled queries (lost {paired['losses']}, tied "
+        f"{paired['ties']}); sign-test p={p} > alpha={alpha}. Keep the pinned model."
     )
 
 
