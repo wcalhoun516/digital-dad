@@ -48,6 +48,13 @@ Format:
 
 <!-- entries below -->
 
+### 2026-08-21 — training — in-progress
+- PR: (pending)
+- Source: roadmap:#27 (training — the only category absent from the last 7 runs)
+- Summary: in progress — the embedding-comparison harness crowns a `best_mrr_model` by bare
+  argmax over MRR, with no per-query detail and no notion of margin, so it can declare a winner
+  on a difference of one query moving one rank slot.
+
 ### 2026-08-15 — scraper — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/77
 - Source: roadmap:#8 (follow-up) — the root cause PR #76 deferred yesterday
