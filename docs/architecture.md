@@ -113,7 +113,11 @@ model — the label-free "is it safe to swap?" number). Writes `data/analysis/em
 (owner-run, not committed). The gold set's hand-authored `relevant_slugs` are guarded offline by
 `make embedding-queries-check` (`python -m analysis.embedding_compare --check`): it validates every
 slug against the committed `data/manifest.json` — no conductor, no embedding — so a typo'd / renamed
-slug fails loudly instead of silently scoring 0 in a live pass.
+slug fails loudly instead of silently scoring 0 in a live pass. The same offline check also reports
+whether the gold set is big enough to *decide* anything (`gold_set_power`): the sign test's p is
+bounded below by the unanimous outcome, so a 5-query set bottoms out at 0.0625 and no comparison
+against it could ever clear alpha=0.05. It says so, and names the number of labelled queries needed,
+before you spend a live pass that embeds the whole corpus once per candidate model.
 
 Because MRR moves in coarse steps on a small gold set, the summary does **not** treat the raw
 `best_mrr_model` argmax as a result. Each record also carries `per_query` (the rank of the first

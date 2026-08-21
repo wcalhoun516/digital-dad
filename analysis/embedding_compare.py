@@ -58,6 +58,10 @@ CONDUCTOR_BASE_URL = "http://127.0.0.1:8080/v1"
 
 DEFAULT_KS = (1, 3, 5)
 
+# Significance level a candidate's paired sign test must clear before the harness
+# will call it better than the pinned baseline.
+DEFAULT_ALPHA = 0.05
+
 # mpnet's encoder context is short; the first ~2k words carry an article's gist
 # (mirrors analysis.semantic_search._MAX_WORDS_PER_ARTICLE).
 _MAX_WORDS_PER_ARTICLE = 2000
@@ -199,6 +203,33 @@ def _sign_test_p(wins: int, losses: int) -> float:
     return min(1.0, 2 * tail / (2**n))
 
 
+def _min_achievable_p(n: int) -> float:
+    """Smallest two-sided sign-test p reachable with *n* paired queries (a sweep)."""
+    return min(1.0, 2 / (2**n)) if n else 1.0
+
+
+def gold_set_power(n_queries: int, alpha: float = DEFAULT_ALPHA) -> dict:
+    """Can a gold set of this size ever produce a significant result?
+
+    The sign test's p-value is bounded below by the unanimous outcome, so a
+    small gold set is *unfalsifiable*: with 5 labelled queries even a clean
+    sweep only reaches 0.0625, so no live comparison against it could ever
+    clear alpha=0.05. Answering this offline — before a run that embeds the
+    whole corpus once per candidate model — is much cheaper than after.
+    """
+    floor = _min_achievable_p(n_queries)
+    needed = 0
+    while _min_achievable_p(needed) > alpha:
+        needed += 1
+    return {
+        "n": n_queries,
+        "alpha": alpha,
+        "min_achievable_p": round(floor, 4),
+        "can_decide": floor <= alpha,
+        "min_queries_to_decide": needed,
+    }
+
+
 def paired_comparison(
     candidate_rr: list[float], baseline_rr: list[float]
 ) -> dict:
@@ -226,7 +257,7 @@ def paired_comparison(
         "ties": ties,
         "mean_delta": round(sum(c - b for c, b in pairs) / n, 4) if n else 0.0,
         "sign_test_p": round(_sign_test_p(wins, losses), 4),
-        "min_achievable_p": round(min(1.0, 2 / (2**n)), 4) if n else 1.0,
+        "min_achievable_p": round(_min_achievable_p(n), 4),
     }
 
 
@@ -363,9 +394,6 @@ def compare_models(
             }
         )
     return records
-
-
-DEFAULT_ALPHA = 0.05
 
 
 def _verdict(
@@ -652,6 +680,19 @@ def main(argv: list[str] | None = None) -> int:
             f"Gold query set OK: {len(queries)} queries; every relevant_slug resolves "
             f"to one of {len(corpus_slugs)} corpus articles."
         )
+        power = gold_set_power(len(queries), alpha=args.alpha)
+        if power["can_decide"]:
+            print(
+                f"Large enough to decide: a clean sweep of {power['n']} queries reaches "
+                f"p={power['min_achievable_p']}, at or below alpha={power['alpha']}."
+            )
+        else:
+            print(
+                f"WARNING — gold set too small to decide: {power['n']} queries bottom "
+                f"out at p={power['min_achievable_p']}, above alpha={power['alpha']}, so "
+                f"no comparison against it can ever be significant. Need at least "
+                f"{power['min_queries_to_decide']} labelled queries."
+            )
         return 0
 
     model_ids = list(args.models or [])

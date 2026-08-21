@@ -16,6 +16,7 @@ import numpy as np
 from analysis.embedding_compare import (
     aggregate,
     compare_models,
+    gold_set_power,
     kendall_tau,
     load_corpus_slugs,
     load_queries,
@@ -686,3 +687,63 @@ class TestReportCarriesTheVerdict:
         write_report(self._records(), out, baseline="base", alpha=0.001)
         payload = json.loads(out.read_text())
         assert payload["summary"]["verdict"] == "inconclusive"
+
+
+# --------------------------------------------------------------------------- #
+# Gold-set power (#27) — can this many labels decide anything at all?
+# --------------------------------------------------------------------------- #
+
+class TestGoldSetPower:
+    def test_five_queries_cannot_decide_at_the_default_alpha(self):
+        # A clean 5-0 sweep still only reaches 2/2**5 = 0.0625.
+        power = gold_set_power(5)
+        assert power["min_achievable_p"] == 0.0625
+        assert power["can_decide"] is False
+
+    def test_six_queries_can_decide(self):
+        power = gold_set_power(6)
+        assert power["can_decide"] is True
+
+    def test_reports_how_many_queries_are_needed(self):
+        assert gold_set_power(5)["min_queries_to_decide"] == 6
+
+    def test_a_stricter_alpha_demands_more_queries(self):
+        # 2/2**10 = 0.00195 > 0.001; 2/2**11 = 0.00098 <= 0.001.
+        assert gold_set_power(5, alpha=0.001)["min_queries_to_decide"] == 11
+
+    def test_an_empty_gold_set_cannot_decide(self):
+        assert gold_set_power(0)["can_decide"] is False
+
+    def test_agrees_with_the_paired_comparison_floor(self):
+        # The two must not drift: same quantity, two call sites.
+        paired = paired_comparison([1.0] * 7, [0.5] * 7)
+        assert gold_set_power(7)["min_achievable_p"] == paired["min_achievable_p"]
+
+    def test_the_committed_gold_set_is_large_enough_to_decide(self):
+        # Regression guard: shrinking eval/embedding_queries.json below the
+        # decidability floor would make every live comparison unfalsifiable.
+        queries = load_queries()
+        assert gold_set_power(len(queries))["can_decide"] is True
+
+
+class TestCheckReportsPower:
+    def _write(self, tmp_path, n):
+        q = tmp_path / "queries.json"
+        q.write_text(json.dumps({"queries": [
+            {"query": f"q{i}", "relevant_slugs": ["a"]} for i in range(n)
+        ]}))
+        m = tmp_path / "manifest.json"
+        m.write_text(json.dumps({"articles": [{"slug": "a"}]}))
+        return q, m
+
+    def test_check_warns_when_the_gold_set_cannot_decide(self, tmp_path, capsys):
+        q, m = self._write(tmp_path, 3)
+        rc = main(["--check", "--queries", str(q), "--manifest", str(m)])
+        out = capsys.readouterr().out
+        assert rc == 0  # the labels are valid; the set is just too small
+        assert "too small" in out
+
+    def test_check_confirms_a_decidable_gold_set(self, tmp_path, capsys):
+        q, m = self._write(tmp_path, 8)
+        main(["--check", "--queries", str(q), "--manifest", str(m)])
+        assert "enough to decide" in capsys.readouterr().out
