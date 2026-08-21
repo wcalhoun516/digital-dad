@@ -48,12 +48,33 @@ Format:
 
 <!-- entries below -->
 
-### 2026-08-21 — training — in-progress
-- PR: (pending)
+### 2026-08-21 — training — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/84
 - Source: roadmap:#27 (training — the only category absent from the last 7 runs)
-- Summary: in progress — the embedding-comparison harness crowns a `best_mrr_model` by bare
-  argmax over MRR, with no per-query detail and no notion of margin, so it can declare a winner
-  on a difference of one query moving one rank slot.
+- Summary: **The module whose entire job is to stop us changing the pinned embedder on vibes was
+  itself declaring winners on noise.** `analysis/embedding_compare.py` crowned `best_mrr_model` by
+  a bare argmax over MRR — no margin, no per-query detail, no significance. On a 13-query gold set
+  MRR moves in coarse steps: one query slipping rank 2→3 shifts it by `(1/2−1/3)/13 ≈ 0.013`, and
+  the last real run (`data/analysis/embedding_compare.json`, 2026-07-18) separated the two models
+  by **0.027** — roughly two rank slots — and printed a winner. Decision **D2** pins the embedder
+  because cosine similarity is only meaningful inside one vector space, so a bogus winner here
+  would invalidate Semantic Search, Ask Dad retrieval and On This Day at once. Added
+  `per_query_metrics()` (per-query reciprocal rank + exact `first_relevant_rank`, so a reviewer can
+  see *which* query moved), `paired_comparison()` (wins/losses/ties + mean delta + an **exact
+  two-sided binomial sign test**, pairing only queries both models scored), and a `_verdict()` that
+  requires **both** `mean_delta > 0` **and** `p <= alpha` before naming a winner — otherwise
+  `inconclusive`, with a plain-English reason. Leading on MRR is no longer sufficient.
+  **§8.5 deepen:** the sharper finding is that the July run **could not have produced a significant
+  result under any outcome** — five paired queries bottom out at `p = 0.0625`, so even a unanimous
+  5–0 sweep misses `alpha = 0.05`. New `gold_set_power()` computes that floor and the number of
+  labelled queries needed to clear it, wired into the *offline* `make embedding-queries-check` — so
+  "your gold set is too small to decide anything" arrives **before** a live pass embeds the whole
+  corpus once per candidate model, not after. +37 tests (852 → 889); `test_embedding_compare.py`
+  54 → 91. Non-vacuousness proven by three reverts (3/1/0 failures) — the third revert exposed the
+  `n == 0` guard in `_sign_test_p` as dead code (`min(1.0, 2*1/1)` already yields 1.0); deleted
+  rather than kept and covered. All math stays pure behind the injected `embed(model_id, texts)`
+  seam, mirroring `rag_eval`/`voice_eval`; no model was downloaded and no live pass was run.
+  Deferred for the owner: the #27 dashboard viz (the report now carries everything it would need).
 
 ### 2026-08-15 — scraper — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/77
