@@ -21,9 +21,49 @@ might think also where most during both between own those should since while ano
 """.split())
 
 
+# Words whose trailing period is part of the word, not a sentence boundary. Curated and
+# corpus-specific, in the same spirit as the lexicons in contradictions.py / entity_aliases.py.
+ABBREVIATIONS = frozenset("""
+mr mrs ms dr prof rev sen rep gov gen adm col lt sgt st jr sr
+inc corp co ltd llc llp plc bros
+jan feb mar apr jun jul aug sep sept oct nov dec
+vs etc eg ie approx est fig no vol pp cf al dept univ
+""".split())
+
+_BOUNDARY = re.compile(r'(?<=[.!?])\s+(?=[A-Z])')
+# The dotted token immediately before a candidate boundary, e.g. "Ms." or "U.S."
+_TRAILING_TOKEN = re.compile(r'([A-Za-z][A-Za-z.]*)\.$')
+
+
+def _is_abbreviation(token: str) -> bool:
+    """True when a period-terminated token is an abbreviation rather than a full stop."""
+    bare = token.rstrip('.')
+    if not bare:
+        return False
+    if len(bare) == 1:
+        return True  # a middle initial: "George W. Bush"
+    if '.' in bare:
+        # A dotted acronym ("U.S.", "J.P.") — every piece is a single letter.
+        return all(len(part) == 1 for part in bare.split('.') if part)
+    return bare.lower() in ABBREVIATIONS
+
+
 def _split_sentences(text: str) -> list[str]:
-    """Split text into sentences."""
-    sentences = re.split(r'(?<=[.!?])\s+(?=[A-Z])', text)
+    """Split text into sentences, treating abbreviations as part of their sentence.
+
+    The naive ``(?<=[.!?])\\s+(?=[A-Z])`` rule cut "Ms. Lagarde" and "Federal Reserve Inc.
+    Mark" in two. The orphaned halves ("Ms.", "Prof.") then fell under the length floor and
+    were dropped outright, losing text and inflating ``sentence_count``.
+    """
+    sentences: list[str] = []
+    start = 0
+    for match in _BOUNDARY.finditer(text):
+        token = _TRAILING_TOKEN.search(text[:match.start()])
+        if token and _is_abbreviation(token.group(1)):
+            continue
+        sentences.append(text[start:match.start()])
+        start = match.end()
+    sentences.append(text[start:])
     return [s.strip() for s in sentences if len(s.strip()) > 10]
 
 
@@ -67,16 +107,38 @@ def _gunning_fog(sentences: list[str], words: list[str]) -> float:
     return round(0.4 * (len(words) / len(sentences) + 100 * complex_words / len(words)), 1)
 
 
+_BIN_WIDTH = 5
+# Bins stop widening here; the final bucket is open-ended so nothing is ever uncounted.
+_MAX_BIN_START = 100
+
+
 def sentence_length_histogram(lengths: list[int]) -> list[dict]:
-    """Bin sentence lengths into 5-word buckets."""
+    """Bin sentence lengths into 5-word buckets, with an open-ended final bucket.
+
+    Every sentence lands in exactly one bin, so the counts sum to ``len(lengths)``. The
+    previous binning capped at 100 words and used half-open bins throughout, which left
+    every sentence at or beyond the last edge counted nowhere — on the real corpus that
+    silently discarded the 54 longest sentences (up to 286 words).
+
+    The last entry carries ``bin_end: None`` to mark it as "this length and above".
+    """
     if not lengths:
         return []
-    max_len = min(max(lengths), 100)
-    bins = list(range(0, max_len + 5, 5))
-    histogram = []
-    for i in range(len(bins) - 1):
-        count = sum(1 for s in lengths if bins[i] <= s < bins[i + 1])
-        histogram.append({"bin_start": bins[i], "bin_end": bins[i + 1], "count": count})
+
+    last_start = min(max(lengths), _MAX_BIN_START) // _BIN_WIDTH * _BIN_WIDTH
+    histogram = [
+        {
+            "bin_start": start,
+            "bin_end": start + _BIN_WIDTH,
+            "count": sum(1 for n in lengths if start <= n < start + _BIN_WIDTH),
+        }
+        for start in range(0, last_start, _BIN_WIDTH)
+    ]
+    histogram.append({
+        "bin_start": last_start,
+        "bin_end": None,
+        "count": sum(1 for n in lengths if n >= last_start),
+    })
     return histogram
 
 
@@ -207,16 +269,7 @@ def run(articles: list[dict] | None = None) -> dict:
     else:
         aggregate = {}
 
-    # Sentence length histogram (bins of 5)
-    if all_sentence_lengths:
-        max_len = min(max(all_sentence_lengths), 100)
-        bins = list(range(0, max_len + 5, 5))
-        histogram = []
-        for i in range(len(bins) - 1):
-            count = sum(1 for s in all_sentence_lengths if bins[i] <= s < bins[i + 1])
-            histogram.append({"bin_start": bins[i], "bin_end": bins[i + 1], "count": count})
-    else:
-        histogram = []
+    histogram = sentence_length_histogram(all_sentence_lengths)
 
     distinctive = find_distinctive_words(articles)
 
