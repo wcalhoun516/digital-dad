@@ -1429,9 +1429,16 @@ function renderLinguistic() {
       .attr('fill', '#c9a84c')
       .attr('fill-opacity', 0.7);
 
+    // The final bucket is open-ended (bin_end === null), so label its tick "100+" rather
+    // than "100" — otherwise the chart reads as if nothing runs longer than 100 words.
+    const openBin = hist.find(d => d.bin_end === null);
+    const ticks = hist.filter((_, i) => i % 2 === 0).map(d => d.bin_start);
+    if (openBin && !ticks.includes(openBin.bin_start)) ticks.push(openBin.bin_start);
+
     svg.append('g')
       .attr('transform', `translate(0,${h - margin.bottom})`)
-      .call(d3.axisBottom(x).tickValues(hist.filter((_, i) => i % 2 === 0).map(d => d.bin_start)))
+      .call(d3.axisBottom(x).tickValues(ticks)
+        .tickFormat(v => (openBin && v === openBin.bin_start) ? `${v}+` : v))
       .selectAll('text').attr('fill', '#8a8580').style('font-size', '10px');
 
     svg.append('g')
