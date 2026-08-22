@@ -67,6 +67,19 @@ def _gunning_fog(sentences: list[str], words: list[str]) -> float:
     return round(0.4 * (len(words) / len(sentences) + 100 * complex_words / len(words)), 1)
 
 
+def sentence_length_histogram(lengths: list[int]) -> list[dict]:
+    """Bin sentence lengths into 5-word buckets."""
+    if not lengths:
+        return []
+    max_len = min(max(lengths), 100)
+    bins = list(range(0, max_len + 5, 5))
+    histogram = []
+    for i in range(len(bins) - 1):
+        count = sum(1 for s in lengths if bins[i] <= s < bins[i + 1])
+        histogram.append({"bin_start": bins[i], "bin_end": bins[i + 1], "count": count})
+    return histogram
+
+
 def _vader_sentiment(text: str) -> dict:
     """Compute VADER sentiment scores. Returns empty dict if nltk unavailable."""
     try:
