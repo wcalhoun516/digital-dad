@@ -57,6 +57,26 @@ ran against; on the next run a module is **skipped if the fingerprint is unchang
 | `semantic_search.py` | `embeddings.npy`, `embeddings_meta.json`, `embeddings.json` | sbert-mpnet-v2 (384-dim) embedding index; cached + corpus-hash busted; flattened export with snippets for the dashboard. |
 | `predictions.py` | `predictions.json` | Two-pass: extract falsifiable claims per article, then optional batched LLM verdict (pending/vindicated/wrong/mixed/unfalsifiable). Saves incrementally every 10 articles; resumable. |
 
+**Sentence splitting (`linguistic.py`).** Everything the Linguistic Fingerprint reports —
+`sentence_count`, average sentence length, Flesch-Kincaid, Gunning Fog and the histogram —
+rests on `_split_sentences()`, so its two silent data losses biased all of them:
+
+- A period before a capital is **not** always a boundary. `Ms. Lagarde`, `Prof. Calhoun`,
+  `Federal Reserve Inc. Mark` and `Mont St. Michel` were each cut in two (122 bad splits on
+  the corpus). `ABBREVIATIONS` — a curated, editable lexicon in the same spirit as
+  `entity_aliases.py` — plus rules for single initials (`George W. Bush`) and dotted acronyms
+  (`U.S.`, `J.P.`) now hold those sentences together.
+- The old ≤10-character floor then **deleted** the orphaned halves (`Ms.`, `Prof.`) along with
+  81 genuine one-word sentences (`Why?`, `Perhaps.`, `Wrong.`, `Trust me.`). The floor is now
+  "contains a letter", so a stray numeral is still rejected but a retort is not. The splitter
+  retains **331,049 of the corpus's 331,050 words**.
+
+`sentence_length_histogram()` is a **complete partition** — its counts sum to the sentence
+total. Bins are 5 words wide up to 100; the final bucket is open-ended and carries
+`bin_end: null`, which the dashboard renders as a `100+` tick. Previously bins stopped at 100
+and were half-open throughout, so the 53 longest sentences (up to 286 words) were counted in
+no bin at all.
+
 `utils.py` — shared `load_manifest()`, `load_articles()`, `clean_text()` (strips Forbes
 boilerplate), `chunk_text()` (sentence-aware), `save_analysis()`.
 
