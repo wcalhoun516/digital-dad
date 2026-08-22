@@ -12,6 +12,8 @@ corpus before the fix):
   Gunning Fog.
 """
 
+import pathlib
+
 import pytest
 
 from analysis.linguistic import (
@@ -88,6 +90,25 @@ class TestSplitSentencesAbbreviations:
         assert sentences[0].startswith("Ms. Lagarde")
 
 
+class TestShortSentencesAreKept:
+    """A 10-character floor deleted 81 of Dr. Calhoun's shortest rhetorical sentences."""
+
+    @pytest.mark.parametrize("punchline", ["Why?", "Perhaps.", "Wrong.", "Wow.", "Trust me."])
+    def test_a_short_rhetorical_sentence_survives(self, punchline):
+        text = f"The committee had every reason to hold rates steady. {punchline}"
+        assert punchline in _split_sentences(text)
+
+    def test_a_fragment_with_no_letters_is_still_dropped(self):
+        """A stray numeral is not a sentence, however short the floor gets."""
+        assert _split_sentences("42. Growth resumed the following year.") == [
+            "Growth resumed the following year."
+        ]
+
+    def test_short_sentences_count_toward_the_metrics(self):
+        body = "The committee had every reason to hold rates steady. Wrong."
+        assert analyze_article({"slug": "s", "body": body})["sentence_count"] == 2
+
+
 class TestAnalyzeArticleConsistency:
     def test_sentence_count_matches_the_split(self):
         body = "Ms. Lagarde spoke at length about policy. The market repriced immediately."
@@ -97,3 +118,21 @@ class TestAnalyzeArticleConsistency:
 
     def test_empty_body_yields_no_metrics(self):
         assert analyze_article({"slug": "s", "body": ""}) == {}
+
+
+class TestHistogramRendersTheOpenBucket:
+    """The chart must not label the open-ended overflow bucket as a plain "100".
+
+    Structural check against ``dashboard/template.html`` (the dashboard has no build step,
+    so this mirrors the ``tests/test_dashboard_*.py`` idiom).
+    """
+
+    TEMPLATE = (
+        pathlib.Path(__file__).resolve().parent.parent / "dashboard" / "template.html"
+    ).read_text()
+
+    def test_template_marks_the_open_bin(self):
+        assert "bin_end === null" in self.TEMPLATE
+
+    def test_template_suffixes_the_open_bin_tick(self):
+        assert "`${v}+`" in self.TEMPLATE

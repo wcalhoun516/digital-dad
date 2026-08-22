@@ -64,7 +64,10 @@ def _split_sentences(text: str) -> list[str]:
         sentences.append(text[start:match.start()])
         start = match.end()
     sentences.append(text[start:])
-    return [s.strip() for s in sentences if len(s.strip()) > 10]
+    # Keep anything with a letter in it. A 10-character floor used to delete 81 of his
+    # shortest sentences outright — "Why?", "Perhaps.", "Wrong.", "Trust me." — which are
+    # some of the most characteristic things in the corpus.
+    return [s for s in (s.strip() for s in sentences) if any(c.isalpha() for c in s)]
 
 
 def _syllable_count(word: str) -> int:
