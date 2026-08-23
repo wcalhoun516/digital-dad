@@ -9,6 +9,7 @@ from scraper.coverage_audit import (
     parse_article_url,
     run,
 )
+from scraper.utils import is_article_url, normalize_url
 
 AUTHOR = "https://www.forbes.com/sites/georgecalhoun"
 
@@ -206,6 +207,50 @@ class TestRun:
         assert rc == 0
         assert data["discovered_count"] == 2
         assert data["missing_count"] == 1
+
+
+class TestDiscoveryGateBlindSpot:
+    """The audit can only report what discovery hands it.
+
+    Every discovery tier filters candidate URLs through ``is_article_url`` before the audit
+    ever sees them, so a URL the gate wrongly rejects goes missing from *both* sides of the
+    comparison — and the audit then certifies the archive as complete. That made the gate's
+    ``/amp`` substring bug self-concealing: the safety net had the same hole as the thing it
+    was checking.
+    """
+
+    @staticmethod
+    def _discovered(candidates):
+        """Mirror what every discovery tier does: gate, then normalize."""
+        return [normalize_url(u) for u in candidates if is_article_url(u)]
+
+    def test_amp_prefixed_article_reaches_the_audit(self):
+        candidates = [_url("2021-09-30", "ampere-computing-and-the-arm-server-market")]
+        assert self._discovered(candidates) == candidates
+
+    def test_missing_amp_prefixed_article_is_reported_not_hidden(self, tmp_path):
+        """An empty manifest vs a discovered amp-slug article must read as a gap."""
+        report = audit_coverage(
+            [],
+            self._discovered([_url("2021-09-30", "ampere-computing-and-the-arm-server-market")]),
+        )
+        assert report["discovered_count"] == 1
+        assert report["missing_count"] == 1
+        assert report["ok"] is False
+        assert report["missing_urls"][0]["slug"].startswith("ampere-")
+
+    def test_amp_duplicate_pages_stay_out_of_the_discovered_set(self):
+        """The real /amp/ duplicate must still be filtered, in any casing."""
+        canonical = _url("2021-09-30", "the-semiconductor-scoreboard")
+        candidates = [canonical, canonical + "amp/", canonical + "AMP/"]
+        assert self._discovered(candidates) == [canonical]
+
+    def test_host_case_variants_do_not_inflate_the_discovered_count(self):
+        """Two spellings of one host are one article, not two."""
+        canonical = _url("2021-09-30", "the-semiconductor-scoreboard")
+        shouty = canonical.replace("www.forbes.com", "WWW.Forbes.COM")
+        report = audit_coverage([], self._discovered([canonical, shouty]))
+        assert report["discovered_count"] == 1
 
 
 class TestMonthRanges:
