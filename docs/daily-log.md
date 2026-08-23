@@ -48,6 +48,11 @@ Format:
 
 <!-- entries below -->
 
+### 2026-08-23 — scraper — in-progress
+- PR: (opening)
+- Source: roadmap:scraper (the only category absent from the last 7 runs)
+- Summary: in progress — the discovery URL gate in `scraper/utils.py`.
+
 ### 2026-08-15 — scraper — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/77
 - Source: roadmap:#8 (follow-up) — the root cause PR #76 deferred yesterday
