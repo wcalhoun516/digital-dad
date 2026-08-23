@@ -48,10 +48,53 @@ Format:
 
 <!-- entries below -->
 
-### 2026-08-23 — scraper — in-progress
-- PR: (opening)
-- Source: roadmap:scraper (the only category absent from the last 7 runs)
-- Summary: in progress — the discovery URL gate in `scraper/utils.py`.
+### 2026-08-23 — scraper — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/86
+- Source: roadmap:scraper (the only category absent from the last 7 runs; #8–#10 all shipped, so
+  this is a defect in the shipped discovery gate)
+- Summary: **The front door of the archive was rejecting real articles, silently.**
+  `scraper/utils.py`'s `is_article_url()` gates *every* discovery tier (Playwright, sitemap,
+  Wayback CDX) before a URL is ever fetched, so a false reject there means an article never
+  enters the corpus — no error, no log line. It filtered `/amp/` duplicate pages with a
+  **substring** test, `"/amp" in path`, which also discards every article whose **slug begins
+  with "amp"**: `ampere-…`, `amplify-…`, `ample-…`, `amplified-…`, `amped-…`, `amputating-…`
+  were all **REJECTED**, while `amazon-…` and `why-ample-…` passed. That lands squarely on his
+  beat — he runs a multi-part *Semiconductor Scoreboard* series and **Ampere Computing** is a
+  server-silicon company; the corpus already uses `amplified` (11×), `amped` (5×), `amplifies`,
+  `ample`, `amplify`, `amplifying`, `amputated`. The mirror bug: the test was
+  **case-sensitive**, so a real `/AMP/` duplicate was *accepted* as a distinct article. Now
+  matched as a whole path **segment**, case-insensitively. Second defect: `normalize_url()`
+  preserved **host casing** — `HTTPS://WWW.Forbes.com/…` normalized to
+  `https://WWW.Forbes.com/…`, a different string from the canonical one, which is exactly the
+  mechanism that mints URL-variant twins in the manifest. Scheme and host are case-insensitive
+  (RFC 3986 §3.1/§3.2.2) and are now lowercased; the **path keeps its case**, since that is what
+  identifies the article. **§8.5 deepen — the sharpest find:** `make coverage-audit`, the tool
+  whose whole job is reporting what the archive is missing, **cannot catch this class of bug**.
+  Its "discovered" set comes from `discover_urls_from_wayback()`, which filters through the same
+  `is_article_url()` — so a wrongly-rejected URL is absent from *both* sides of the comparison
+  and the audit reports **100% coverage** while the article is genuinely gone. The safety net
+  had the same hole as the thing it was checking; PR #38's live "100% coverage today" result was
+  measured through it. Pinned with 4 interaction tests in `test_coverage_audit.py` and
+  documented as a new **"The discovery gate"** section in `scraper/README.md`. **TDD'd:** +22
+  tests (`test_scraper_utils.py` 14→32, `test_coverage_audit.py` 31→35); **852 → 874**.
+  Non-vacuousness proven by revert: restoring the substring test fails **12** tests (9 gate + 3
+  audit-interaction); restored → 67 green across both files; the RED commit stands in history at
+  **11 failing**. **No data churn:** `normalize_url` rewrites **0 of the 199** committed manifest
+  URLs and is idempotent over all of them; the 2 genuine `/amp/` rows are still correctly
+  rejected. **Measured non-finding (deliberately not changed):** `known_urls()` compares raw URL
+  strings while `upsert_article()` matches on slug — two notions of identity in one loop — but
+  against the real manifest that costs **0 redundant re-fetches** (all 174 canonical article keys
+  already resolve to a clean `https://www` entry), so I left it alone rather than churn the
+  scrape loop for no payoff. **Offline / unattended-safe:** stdlib string/URL ops only, no
+  conductor/network/LLM, **no re-scrape and no data artifact committed** — the gate fix changes
+  what *future* discovery accepts. **Verification:** `make verify` green — **874 passed** (vs 852
+  on `origin/main`, +22), ruff clean, dashboard builds. **Backlog:** 7 open `daily/*` PRs at start
+  (#78/#80/#81/#82/#83/#84/#85) — under 8, but one short of the stand-down threshold, so the
+  owner should merge or close some soon; §3 didn't resume (all 7 are `ready-for-review`, none
+  `in-progress`); `main` green. **Deferred:** canonicalizing scheme/`www.` in `normalize_url`
+  (would make `known_urls()` variant-proof, but rewrites manifest URLs — owner-gated, and
+  `manifest_dedup` already repairs the existing twins); and `is_article_url` is still
+  case-sensitive on the **author path** itself (`/sites/GeorgeCalhoun/` would be rejected).
 
 ### 2026-08-15 — scraper — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/77
