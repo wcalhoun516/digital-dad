@@ -48,6 +48,30 @@ Format:
 
 <!-- entries below -->
 
+### 2026-08-25 — none — skipped
+- PR: skipped (branch `daily/2026-08-25-skipped` pushed, no PR — §2 forbids announcing a skip with a PR)
+- Source: none — §2 stand-down
+- Summary: **8 open `daily/*` PRs at start, which is exactly the §2 stand-down threshold, so no new
+  work today.** Open, oldest first: **#78** (08-16, lint scope) · **#80** (08-17, dashboard manifest
+  dedupe) · **#81** (08-18, Reading Room Newer button) · **#82** (08-19, analysis logging) · **#83**
+  (08-20, architecture-doc drift guard) · **#84** (08-21, embedding-compare significance) · **#85**
+  (08-22, linguistic sentence stats) · **#86** (08-23, scraper `/amp` discovery gate). The 08-23 run
+  called this exactly — it recorded 7 open and warned the owner was "one short of the stand-down
+  threshold"; #86 made 8. **This is a review backlog, not a build problem: `main` is green
+  (latest run `success`, PR #77 merge) and all 8 PRs are CI-green (`checks=SUCCESS`).** §3 had
+  nothing to resume regardless — every one of the 8 is `**Status:** ready-for-review`, none
+  `in-progress` — so the queue is waiting purely on the owner. **Two things worth acting on:**
+  (1) **#78 is already `CONFLICTING`/`DIRTY`** — it was cut off `main` on 08-16, before #77 merged
+  on 08-17, so it is the one branch that no longer fast-forwards; the other 7 are `MERGEABLE`/`CLEAN`
+  *today*, but each merge moves `main` and can dirty the ones behind it. (2) **Merge oldest-first
+  and re-read §3 before resolving anything** — all 8 branches append to this same
+  `docs/daily-log.md` anchor and several touch overlapping test files, which is precisely the
+  add/add pattern that dropped four dashboard tabs on 2026-07-17 (PR #73) and left `main` red for
+  four weeks. **Take the union, never one side wholesale, and run `make verify` after each merge.**
+  A visible symptom of the pile-up: `main`'s copy of this log jumps 08-15 → 08-25, because the
+  08-16 through 08-23 entries are all sitting on the unmerged branches above. **No code changed
+  today** — this entry is the entire diff.
+
 ### 2026-08-15 — scraper — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/77
 - Source: roadmap:#8 (follow-up) — the root cause PR #76 deferred yesterday
