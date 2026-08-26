@@ -48,6 +48,42 @@ Format:
 
 <!-- entries below -->
 
+### 2026-08-26 — none — skipped
+- PR: skipped (branch `daily/2026-08-26-skipped` pushed, no PR — §2 forbids announcing a skip with a PR)
+- Source: none — §2 stand-down
+- Summary: **Second consecutive stand-down: still exactly 8 open `daily/*` PRs, unchanged from
+  yesterday** (#78 · #80 · #81 · #82 · #83 · #84 · #85 · #86), and nothing has merged since **PR #77 on
+  08-17** — nine days. `main` is green (§1.5 clear, latest run `success`) and **all 8 PRs are
+  CI-green**, so this remains purely a review backlog. §3 had nothing to resume — all 8 are
+  `ready-for-review`, none `in-progress`. **Also worth knowing: there was no 08-24 run at all** — no
+  `daily/2026-08-24-*` branch exists on the remote and no log entry was written, so that night's run
+  either never fired or died before §2. Worth a glance at the launchd job if it recurs.
+  **Rather than restate yesterday's warning, I spent the run computing the actual merge plan**, by
+  test-merging all 8 branches locally (`git merge-tree --write-tree` — no refs touched, nothing
+  pushed). Three findings the owner can act on directly:
+  **(1) #78 is the only `CONFLICTING` PR, and its conflict is *only* `docs/daily-log.md`.** Its code —
+  the repo-wide ruff sweep — merges clean. It looks worse in the GitHub UI than it is.
+  **(2) Merge #78 LAST, not first.** This inverts the "merge oldest-first" advice in yesterday's entry,
+  and the simulation is unambiguous. #78 rewrites
+  `analysis/{entities,predictions,psychoprofile,semantic_search}.py` — the *exact* four files #82
+  (analysis logging) rewrites. Merge #78 first and #82 arrives conflicted in all four; merge #78 last
+  and **#82 goes in clean** while #78 absorbs the collision at the end, where it is trivially
+  re-derivable (`make lint` / `ruff check --fix` regenerates the formatting — no human judgment needed).
+  Verified order: **#80 → #81 → #82 → #83 → #84 → #85 → #86 → #78**, in which every branch except #83
+  and #78 is code-clean.
+  **(3) #81 and #83 collide in the `Makefile` — and this is the one place where §3's "take the union"
+  rule is *wrong*.** Both independently add the **same two targets**, `reading-room:` and
+  `voice-style:`, with different comment wording (#81 while fixing the Reading Room, #83 while closing
+  doc-drift gaps). A literal union defines each target **twice**, which makes GNU make emit
+  *"overriding recipe for target"* and will likely trip #81's own new `tests/test_makefile_targets.py`.
+  **Correct resolution: keep exactly one copy of each recipe (either wording is fine) plus #83's longer
+  `.PHONY` line** — #83's is the only one of the two that actually registers the new targets.
+  All 8 branches additionally conflict on the `docs/daily-log.md` anchor; *that* one is a plain union
+  of entries in date order, and is why `main`'s copy of this log still jumps 08-15 → 08-26.
+  **Housekeeping:** 18 stale `daily/*-skipped*` branches remain on the remote (06-29 → 08-13, plus
+  08-25 and today's). They carry one doc line each and are safe to bulk-delete; §11 forbids me from
+  deleting branches. **No code changed today** — this entry is the entire diff.
+
 ### 2026-08-15 — scraper — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/77
 - Source: roadmap:#8 (follow-up) — the root cause PR #76 deferred yesterday
