@@ -48,6 +48,43 @@ Format:
 
 <!-- entries below -->
 
+### 2026-08-27 — none — skipped
+- PR: skipped (branch `daily/2026-08-27-skipped` pushed, no PR — §2 forbids announcing a skip with a PR)
+- Source: none — §2 stand-down
+- Summary: **Third consecutive stand-down.** Still exactly **8** open `daily/*` PRs (#78 · #80 · #81 ·
+  #82 · #83 · #84 · #85 · #86), unchanged for three days, and nothing has merged since **PR #77 on
+  08-17 — ten days**. `main` is green (§1.5 clear) and its HEAD is **still `b3274f0`**, byte-identical
+  to yesterday, so **yesterday's test-merged merge plan is still valid verbatim** — I did not re-derive
+  it. §3 had nothing to resume (all 8 are `ready-for-review`, none `in-progress`).
+  **The one new finding, and it may be the whole reason nothing has merged: all 8 PRs are DRAFTS.**
+  GitHub disables the merge button on a draft PR, and `gh pr merge` refuses one outright — so the
+  backlog cannot be cleared by clicking Merge, no matter how green it is. This is not a bug in the
+  PRs; it is §9 working as written ("leave the PR a draft unless the owner has said otherwise —
+  'ready-for-review' is communicated via the **Status** key, not by un-drafting"). But the consequence
+  was never stated anywhere the owner would see it: **every merge needs `gh pr ready <n>` first.**
+  Three days of "all 8 are CI-green and mergeable" entries were, in a literal sense, wrong — they were
+  *not* mergeable in one click. Verified state today, all 8: `isDraft: true`, checks `SUCCESS`,
+  `mergeStateStatus: CLEAN` (except #78, `DIRTY` — its known `docs/daily-log.md`-only conflict).
+  **Copy-paste to drain the backlog** (verified order from yesterday's `git merge-tree` simulation;
+  #78 last so #82 lands clean):
+  ```
+  for n in 80 81 82 83 84 85 86 78; do gh pr ready $n; done
+  # then merge in that order, resolving as noted below
+  ```
+  Two resolutions the merger will hit: **#81 + #83 both add the same two Makefile targets**
+  (`reading-room:`, `voice-style:`) — keep **one** copy of each recipe plus **#83's** longer `.PHONY`
+  line; a literal union double-defines them and trips #81's `tests/test_makefile_targets.py`. And
+  **every** branch conflicts on the `docs/daily-log.md` anchor — that one *is* a plain union in date
+  order (which is why `main`'s log still jumps 08-15 → 08-27; the 08-26 entry lives only on its own
+  skip branch).
+  **What's actually queued:** ~**2,400 added / ~140 deleted lines across 8 PRs**, none large — #84
+  (+573) is the biggest, #86 (+216) the smallest; median ~**280 lines**. Reviewed cheapest-first that
+  is #86 → #80 → #81 → #85 → #82 → #83 → #84, though merging still wants yesterday's order.
+  **Housekeeping (unchanged):** 18 stale `daily/*skip*` branches on the remote (06-29 → 08-13 plus
+  08-25/08-26 and today's) — one doc line each, safe to bulk-delete; §11 forbids me from deleting
+  branches. The 08-24 no-run noted yesterday looks like a one-off — 08-25, 08-26 and today all fired.
+  **No code changed today** — this entry is the entire diff.
+
 ### 2026-08-15 — scraper — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/77
 - Source: roadmap:#8 (follow-up) — the root cause PR #76 deferred yesterday
