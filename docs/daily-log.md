@@ -48,6 +48,41 @@ Format:
 
 <!-- entries below -->
 
+### 2026-09-05 — ingest — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/87
+- Source: roadmap:#32
+- Summary: **The backlog broke.** Between 08-27 and today the owner merged **six** PRs (#77–#81
+  plus his own `feat/corpus-ingest-thin-slice` **#79**), so the three-day stand-down is over: **5**
+  open `daily/*` PRs (#82–#86), well under the §2 threshold, `main` green, and §3 had nothing to
+  resume (all five are `ready-for-review`, none `in-progress`). The un-drafting note from 08-27
+  appears to have been acted on — that is what unblocked the queue.
+  **#79 also created a brand-new roadmap category, `ingest` (Corpus II)**, which no daily run has
+  ever worked, making it unambiguously the least-recently-worked category — no need for the
+  "most-deferred item" tie-break the last four cold-path runs had to fall back on. #29–31 are done,
+  so the first unstarted item is **#32 (P2·S·ingest) — the `.eml`/`.mbox` handler**, which the
+  design spec puts in the **core stdlib-only** tier and names as the canonical case of the
+  load-bearing "one source yields many documents" rule.
+  New `ingest/handlers/mail.py`: one document per message, `Subject`→title, `Date`→exact ISO date,
+  `modality: email`, `authorship: mixed` once a thread has more than one sender, `text/plain`
+  preferred over HTML, and a pure `strip_quoted_reply()`. **That stripper is the point of the
+  slice** — without it a 12-reply thread hands the same sentence to themes/embeddings/entity-graph
+  twelve times, the exact duplicate-counting defect PR #77 spent a day removing from the *manifest*
+  side. It truncates at an `On … wrote:` attribution, an `-----Original Message-----` block or a
+  `--` signature, then drops `>` lines. **§8.5 deepen:** the one genuine bug found after the first
+  green — **Gmail hard-wraps long attributions**, so `wrote:` lands a line or two below the `On`,
+  and a single-line regex left a dangling `Will Calhoun <will@example.com>` in the body; the
+  matcher now joins up to two continuation lines (proved red→green). Plus guard tests for RFC-2047
+  encoded subjects, quoted-printable/base64/iso-8859-1 decoding, the private-by-default provenance
+  block (email is the most sensitive modality in the corpus), and the **queue integration seam** —
+  an `.eml` in `data/inbox/` now counts as `staged`, not `skipped`.
+  **TDD'd:** +37 tests (`tests/test_ingest_mail.py`), the first 25 proved red (all
+  `UnsupportedFormat`) before any handler existed. **Offline / unattended-safe:** stdlib `email` +
+  `mailbox` only — no conductor, network, LLM, or new dependency; every fixture is synthetic, so
+  **no real family mail enters git** (the spec's testing rule). No data artifact committed.
+  **Verification:** `make verify` green — **1029 passed** (vs **992** on `origin/main`, +37), ruff
+  clean, dashboard builds. **Deferred:** `.docx` (#33) is the next isolated handler PR; the one-time
+  provenance data migration flagged in #29 is still pending and still owner-gated.
+
 ### 2026-08-18 — family — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/81
 - Source: roadmap:#21 (defect in the shipped Reading Room) — duplicate-slug fallout #77/#80 didn't reach

@@ -44,9 +44,17 @@ data/inbox/ → make ingest → data/ingest/queue/ → make ingest-review → ma
 ```
 
 Handlers are pure `(Path) -> ExtractResult` functions registered by extension in
-`ingest/handlers/`, so adding a format is an isolated change. Core handlers (`.txt`, `.md`,
-and later `.eml`/`.mbox`) are stdlib-only; heavier formats live behind an opt-in `ingest`
-extra and degrade with a clear message rather than crashing.
+`ingest/handlers/`, so adding a format is an isolated change. Core handlers are stdlib-only;
+heavier formats live behind an opt-in `ingest` extra and degrade with a clear message rather
+than crashing.
+
+- `handlers/plaintext.py` — `.txt` / `.md`; a Markdown `# H1` becomes the title.
+- `handlers/mail.py` — `.eml` / `.mbox` via stdlib `email` + `mailbox`. One document per
+  message; `Subject` → title, `Date` → an exact date, `modality: email`, and `authorship:
+  mixed` once a thread has more than one sender. Bodies prefer the `text/plain` part and pass
+  through `strip_quoted_reply()`, which truncates at an `On … wrote:` attribution (Gmail
+  hard-wraps these across lines), an `-----Original Message-----` block or a `--` signature,
+  then drops `>` quoted lines — without it a thread counts the same sentence once per reply.
 
 **Extraction never modifies the corpus** — only `ingest-review` does, and only on a human
 decision. Rejects move aside with a reason instead of being deleted.
