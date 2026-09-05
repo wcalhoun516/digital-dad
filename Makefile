@@ -150,6 +150,14 @@ contradictions:
 calhoun-isms:
 	$(PYTHON) -m analysis.calhoun_isms $(ARGS)
 
+# Reading Room (roadmap #21): the family's full-article reader, joining data/analysis/themes.json
+# with the corpus bodies (run `make analyze` first). Pure/offline — no conductor, no network.
+# Writes the git-ignored data/analysis/reading_room.json (embeds full bodies), surfaced in the
+# dashboard's Reading Room tab — which is why the tab's empty state asks for this target.
+# ARGS e.g. --dry-run or --limit 20.
+reading-room:
+	$(PYTHON) -m analysis.reading_room $(ARGS)
+
 # RAG faithfulness eval baseline for Ask Dad (plan 0007). Owner-gated: the generation +
 # judge passes make conductor calls (judge defaults to paid T3), so it refuses to run if
 # the conductor is down. Writes data/analysis/rag_eval.json. ARGS e.g. --limit 5 or
@@ -178,6 +186,14 @@ embedding-queries-check:
 # automation).
 voice-eval:
 	$(PYTHON) -m analysis.voice_eval $(ARGS)
+
+# The deterministic half of the 26d voice eval, on its own: type-token ratio, sentence length
+# and the Calhoun-"fingerprint" hit rate per source, with a delta vs `real`. Judge-independent —
+# no conductor, no paid calls — so it gives a voice signal before any fine-tune exists and is
+# safe to run unattended. Writes data/analysis/voice_style.json. ARGS e.g. --trials <path> or
+# --fingerprint-words 40 (voice_eval takes no --limit).
+voice-style:
+	$(PYTHON) -m analysis.voice_eval --style-only $(ARGS)
 
 # Build the eval/voice_trials.json skeleton for 26d from 26a's held-out split (plan 0008).
 # Pure/offline (no conductor, no paid calls): fills each held-out prompt + a `real` excerpt,
