@@ -1,10 +1,9 @@
 """Linguistic fingerprint analysis — pure Python computation, no API costs."""
 
-import math
 import re
 from collections import Counter, defaultdict
 
-from .utils import load_articles, clean_text, log, save_analysis
+from .utils import clean_text, load_articles, log, save_analysis
 
 # Common English words for TF-IDF comparison (top ~200)
 COMMON_ENGLISH = set("""
@@ -165,7 +164,8 @@ def run(articles: list[dict] | None = None) -> dict:
 
     # Aggregate metrics
     if per_article:
-        avg = lambda key: round(sum(a[key] for a in per_article) / len(per_article), 2)
+        def avg(key):
+            return round(sum(a[key] for a in per_article) / len(per_article), 2)
 
         # Sentiment by year
         by_year: dict = defaultdict(list)

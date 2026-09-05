@@ -13,7 +13,6 @@ Fits the existing fingerprint-skip pattern used by all analysis modules.
 """
 
 import json
-import sys
 import time
 from datetime import datetime, timezone
 

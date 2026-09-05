@@ -1,10 +1,11 @@
 PYTHON := .venv/bin/python
 
-# Lint/format are scoped to tests/ for now: the existing modules carry pre-existing
-# ruff findings (broadening the scope is a follow-up roadmap item, #1-3/cleanup).
-LINT_PATHS := tests
+# Every top-level directory holding Python we ship. Keep this in lockstep with the
+# pre-commit `files:` regex and with tests/test_lint_scope.py, which fails if a source
+# package drops out of the gate. E501 is off for the source packages only (see pyproject).
+LINT_PATHS := analysis scraper viz training tools bin tests
 
-.PHONY: scrape manifest-check manifest-dedup coverage-audit analyze training dashboard all serve share search on-this-day send-on-this-day adjudicate backfill-verdicts entity-graph calhoun-isms contradictions rag-eval voice-eval voice-trials embedding-compare embedding-queries-check clean test lint fmt lint-json hooks verify verify-responsive
+.PHONY: scrape manifest-check manifest-dedup coverage-audit ingest ingest-review analyze training dashboard all serve share search on-this-day send-on-this-day adjudicate backfill-verdicts entity-graph calhoun-isms contradictions rag-eval voice-eval voice-trials embedding-compare embedding-queries-check clean test lint fmt lint-json hooks verify verify-responsive
 
 scrape:
 	$(PYTHON) -m scraper $(ARGS)
@@ -28,6 +29,16 @@ manifest-dedup:
 # machine output, ARGS="--urls-file urls.txt" to audit against an offline URL list (no network).
 coverage-audit:
 	$(PYTHON) -m scraper.coverage_audit $(ARGS)
+
+# Corpus II: extract everything in data/inbox/ into the review queue. Offline, and it
+# never touches the corpus — `make ingest-review` is the only thing that does.
+ingest:
+	$(PYTHON) -m ingest $(ARGS)
+
+# Review the staged queue and accept items into the corpus. This is the ONLY step that
+# writes to the manifest. ARGS=--report for a read-only summary.
+ingest-review:
+	$(PYTHON) -m ingest.review $(ARGS)
 
 analyze:
 	$(PYTHON) -m analysis $(ARGS)
@@ -139,6 +150,14 @@ contradictions:
 calhoun-isms:
 	$(PYTHON) -m analysis.calhoun_isms $(ARGS)
 
+# Reading Room (roadmap #21): the family's full-article reader, joining data/analysis/themes.json
+# with the corpus bodies (run `make analyze` first). Pure/offline — no conductor, no network.
+# Writes the git-ignored data/analysis/reading_room.json (embeds full bodies), surfaced in the
+# dashboard's Reading Room tab — which is why the tab's empty state asks for this target.
+# ARGS e.g. --dry-run or --limit 20.
+reading-room:
+	$(PYTHON) -m analysis.reading_room $(ARGS)
+
 # RAG faithfulness eval baseline for Ask Dad (plan 0007). Owner-gated: the generation +
 # judge passes make conductor calls (judge defaults to paid T3), so it refuses to run if
 # the conductor is down. Writes data/analysis/rag_eval.json. ARGS e.g. --limit 5 or
@@ -167,6 +186,14 @@ embedding-queries-check:
 # automation).
 voice-eval:
 	$(PYTHON) -m analysis.voice_eval $(ARGS)
+
+# The deterministic half of the 26d voice eval, on its own: type-token ratio, sentence length
+# and the Calhoun-"fingerprint" hit rate per source, with a delta vs `real`. Judge-independent —
+# no conductor, no paid calls — so it gives a voice signal before any fine-tune exists and is
+# safe to run unattended. Writes data/analysis/voice_style.json. ARGS e.g. --trials <path> or
+# --fingerprint-words 40 (voice_eval takes no --limit).
+voice-style:
+	$(PYTHON) -m analysis.voice_eval --style-only $(ARGS)
 
 # Build the eval/voice_trials.json skeleton for 26d from 26a's held-out split (plan 0008).
 # Pure/offline (no conductor, no paid calls): fills each held-out prompt + a `real` excerpt,
