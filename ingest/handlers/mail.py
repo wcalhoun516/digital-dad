@@ -17,6 +17,7 @@ from pathlib import Path
 from ingest.extract import ExtractResult, empty_meta, register
 
 _QUOTED_LINE = re.compile(r"^\s*>")
+_ATTRIBUTION_OPENER = re.compile(r"^\s*On\b")
 _ATTRIBUTION = re.compile(r"^\s*On\b.*\bwrote:\s*$")
 _ORIGINAL_MESSAGE = re.compile(r"^\s*-+\s*Original Message\s*-+\s*$", re.IGNORECASE)
 _SIGNATURE = re.compile(r"^--\s*$")
@@ -29,14 +30,31 @@ def strip_quoted_reply(text: str) -> str:
     Truncates at an attribution line (``On … wrote:``, ``-----Original Message-----``) or a
     ``--`` signature marker, then drops any remaining ``>`` quoted lines.
     """
+    lines = text.splitlines()
     kept: list[str] = []
-    for line in text.splitlines():
-        if _ATTRIBUTION.match(line) or _ORIGINAL_MESSAGE.match(line) or _SIGNATURE.match(line):
+    for index, line in enumerate(lines):
+        if _is_attribution(lines, index) or _ORIGINAL_MESSAGE.match(line) or _SIGNATURE.match(line):
             break
         if _QUOTED_LINE.match(line):
             continue
         kept.append(line)
     return _BLANK_RUN.sub("\n\n", "\n".join(kept)).strip()
+
+
+def _is_attribution(lines: list[str], index: int) -> bool:
+    """Whether ``lines[index]`` opens an ``On … wrote:`` attribution.
+
+    Gmail hard-wraps long attributions, so ``wrote:`` can land up to two lines below the
+    ``On``; matching only single lines leaves a dangling recipient address in the body.
+    """
+    if not _ATTRIBUTION_OPENER.match(lines[index]):
+        return False
+    joined = lines[index]
+    for line in lines[index + 1 : index + 3]:
+        if _ATTRIBUTION.match(joined):
+            return True
+        joined = f"{joined} {line.strip()}"
+    return bool(_ATTRIBUTION.match(joined))
 
 
 def _body_text(message) -> str | None:

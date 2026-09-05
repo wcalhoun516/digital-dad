@@ -4,6 +4,8 @@ Every fixture is synthetic — no real family mail ever enters git.
 """
 
 from ingest.extract import extract, handler_for
+from ingest.provenance import AUTHORSHIPS, LICENSES, MODALITIES, PRIVACIES
+from ingest.queue import scan_inbox, stage_file
 
 
 def write_eml(path, body, subject="A note on the Fed", sender="george@example.com", date=None):
@@ -169,6 +171,45 @@ class TestQuotedReplyStripping:
         assert "The point stands." in text
         assert "Stevens Institute" not in text
 
+    def test_wrapped_gmail_attribution_is_removed(self, tmp_path):
+        path = write_eml(
+            tmp_path / "reply.eml",
+            "Short answer: no.\n"
+            "\n"
+            "On Tue, Mar 3, 2020 at 9:15 AM Will Calhoun <will@example.com>\n"
+            "wrote:\n"
+            "Did the Fed have a choice?\n",
+        )
+        text = extract(path).documents[0]["text"]
+        assert "Short answer: no." in text
+        assert "will@example.com" not in text
+        assert "Did the Fed have a choice?" not in text
+
+    def test_outlook_original_message_block_is_removed(self, tmp_path):
+        path = write_eml(
+            tmp_path / "reply.eml",
+            "My view, for what it's worth.\n"
+            "\n"
+            "-----Original Message-----\n"
+            "From: Will <will@example.com>\n"
+            "Sent: Tuesday, March 3, 2020 9:15 AM\n"
+            "Subject: The Fed\n"
+            "\n"
+            "What did you make of it?\n",
+        )
+        text = extract(path).documents[0]["text"]
+        assert "My view, for what it's worth." in text
+        assert "What did you make of it?" not in text
+
+    def test_a_bare_On_line_that_is_not_an_attribution_survives(self, tmp_path):
+        path = write_eml(
+            tmp_path / "note.eml",
+            "On the question of tariffs, he was early.\nAnd he stayed early.\n",
+        )
+        text = extract(path).documents[0]["text"]
+        assert "On the question of tariffs" in text
+        assert "And he stayed early." in text
+
     def test_a_reply_with_nothing_but_quotes_is_treated_as_empty(self, tmp_path):
         path = write_eml(tmp_path / "reply.eml", "> only quoted material\n> nothing of his\n")
         result = extract(path)
@@ -286,3 +327,115 @@ class TestMbox:
         assert result.documents == []
         assert result.confidence == 0.0
         assert result.warnings
+
+
+class TestHeaderAndTransferDecoding:
+    def test_rfc2047_encoded_subject_is_decoded(self, tmp_path):
+        path = tmp_path / "note.eml"
+        path.write_text(
+            "From: george@example.com\n"
+            "Subject: =?utf-8?q?Se=C3=B1or_Draghi=27s_bazooka?=\n"
+            "\n"
+            "body\n"
+        )
+        assert extract(path).meta["title"] == "Señor Draghi's bazooka"
+
+    def test_quoted_printable_body_is_decoded(self, tmp_path):
+        path = tmp_path / "note.eml"
+        path.write_text(
+            "From: george@example.com\n"
+            "Subject: QP\n"
+            "Content-Type: text/plain; charset=utf-8\n"
+            "Content-Transfer-Encoding: quoted-printable\n"
+            "\n"
+            "The ECB=E2=80=99s bazooka\n"
+        )
+        assert "ECB’s bazooka" in extract(path).documents[0]["text"]
+
+    def test_base64_body_is_decoded(self, tmp_path):
+        path = tmp_path / "note.eml"
+        path.write_text(
+            "From: george@example.com\n"
+            "Subject: B64\n"
+            "Content-Type: text/plain; charset=utf-8\n"
+            "Content-Transfer-Encoding: base64\n"
+            "\n"
+            "VGhlIEZlZCBibGlua2VkLg==\n"
+        )
+        assert "The Fed blinked." in extract(path).documents[0]["text"]
+
+
+class TestProvenanceMeta:
+    def test_email_is_private_and_personally_licensed(self, tmp_path):
+        path = write_eml(tmp_path / "note.eml", "body")
+        meta = extract(path).meta
+        assert meta["privacy"] == "private"
+        assert meta["license"] == "personal"
+
+    def test_every_meta_field_is_in_the_provenance_vocabulary(self, tmp_path):
+        path = tmp_path / "thread.mbox"
+        path.write_text(
+            "From george@example.com Tue Mar 03 09:15:00 2020\n"
+            "From: george@example.com\n"
+            "Subject: First\n"
+            "\n"
+            "His message.\n"
+            "\n"
+            "From will@example.com Wed Mar 04 09:15:00 2020\n"
+            "From: will@example.com\n"
+            "Subject: Re: First\n"
+            "\n"
+            "My reply.\n"
+        )
+        meta = extract(path).meta
+        assert meta["modality"] in MODALITIES
+        assert meta["authorship"] in AUTHORSHIPS
+        assert meta["privacy"] in PRIVACIES
+        assert meta["license"] in LICENSES
+
+
+class TestQueueIntegration:
+    def test_an_eml_in_the_inbox_is_staged_not_skipped(self, tmp_path):
+        inbox = tmp_path / "inbox"
+        inbox.mkdir()
+        write_eml(inbox / "note.eml", "The Fed blinked.\n")
+        counts = scan_inbox(inbox, tmp_path / "queue")
+        assert counts == {"staged": 1, "skipped": 0, "duplicates": 0}
+
+    def test_a_staged_mbox_keeps_one_queue_document_per_message(self, tmp_path):
+        inbox = tmp_path / "inbox"
+        inbox.mkdir()
+        (inbox / "thread.mbox").write_text(
+            "From george@example.com Tue Mar 03 09:15:00 2020\n"
+            "From: george@example.com\n"
+            "Subject: First\n"
+            "\n"
+            "The first message.\n"
+            "\n"
+            "From george@example.com Wed Mar 04 09:15:00 2020\n"
+            "From: george@example.com\n"
+            "Subject: Second\n"
+            "\n"
+            "The second message.\n"
+        )
+        item = stage_file(inbox / "thread.mbox", tmp_path / "queue")
+        assert len(item["documents"]) == 2
+        assert item["meta"]["modality"] == "email"
+        assert item["status"] == "pending"
+
+
+class TestDegradedFiles:
+    def test_a_zero_byte_eml_warns_instead_of_raising(self, tmp_path):
+        path = tmp_path / "empty.eml"
+        path.write_bytes(b"")
+        result = extract(path)
+        assert result.documents == []
+        assert result.confidence == 0.0
+        assert result.warnings
+
+    def test_headers_with_no_body_warn_instead_of_raising(self, tmp_path):
+        path = tmp_path / "headers-only.eml"
+        path.write_text("From: george@example.com\nSubject: Nothing\n")
+        result = extract(path)
+        assert result.documents == []
+        assert result.confidence == 0.0
