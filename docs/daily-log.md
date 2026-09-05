@@ -79,8 +79,11 @@ Format:
   `UnsupportedFormat`) before any handler existed. **Offline / unattended-safe:** stdlib `email` +
   `mailbox` only — no conductor, network, LLM, or new dependency; every fixture is synthetic, so
   **no real family mail enters git** (the spec's testing rule). No data artifact committed.
-  **Verification:** `make verify` green — **1029 passed** (vs **992** on `origin/main`, +37), ruff
-  clean, dashboard builds. **Deferred:** `.docx` (#33) is the next isolated handler PR; the one-time
+  **Verification:** `make verify` green — **1029 passed**, ruff clean, dashboard builds. Baseline
+  measured, not assumed: a clean `origin/main` worktree collects **992** (991 passed + 1
+  environment-skip), so the delta is exactly the **+37** added here. The wrapped-attribution fix
+  was proved **red→green** (reverted to the single-line regex → that one test fails; restored → 37
+  pass). **Deferred:** `.docx` (#33) is the next isolated handler PR; the one-time
   provenance data migration flagged in #29 is still pending and still owner-gated.
 
 ### 2026-08-18 — family — ready-for-review
