@@ -1,10 +1,8 @@
 """Tier 1: Playwright-based scraper for Forbes author page (infinite scroll)."""
 
-import json
-import asyncio
 from pathlib import Path
 
-from .utils import log, rate_limiter, is_article_url, normalize_url, AUTHOR_URL
+from .utils import AUTHOR_URL, is_article_url, log, normalize_url, rate_limiter
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 BROWSER_STATE_DIR = DATA_DIR / ".browser-state"

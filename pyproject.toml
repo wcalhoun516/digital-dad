@@ -42,6 +42,19 @@ line-length = 100
 [tool.ruff.lint]
 select = ["E", "F", "I"]
 
+[tool.ruff.lint.per-file-ignores]
+# The source packages carry ~74 pre-existing long lines, and most of them are embedded LLM
+# prompt string literals (psychoprofile, predictions, on_this_day). Re-wrapping a prompt
+# literal edits the prompt the model actually sees, so that is a deliberate behavior change
+# and belongs in its own reviewed pass — not in the change that turned linting on.
+# tests/ is deliberately absent: it has been E501-clean since the gate existed and stays gated.
+"analysis/*.py" = ["E501"]
+"bin/*.py" = ["E501"]
+"scraper/*.py" = ["E501"]
+"tools/*.py" = ["E501"]
+"training/*.py" = ["E501"]
+"viz/*.py" = ["E501"]
+
 [build-system]
 requires = ["setuptools>=75.0"]
 build-backend = "setuptools.build_meta"

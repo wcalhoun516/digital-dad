@@ -17,15 +17,16 @@ import json
 import sys
 import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
-from pathlib import Path
-from urllib.request import urlopen, Request
+from urllib.request import Request, urlopen
 
 import numpy as np
 
-from .utils import load_articles, clean_text, DATA_DIR
 from .semantic_search import (
-    build_embeddings, _embed_one, EMBED_MODEL, CONDUCTOR_BASE_URL,
+    CONDUCTOR_BASE_URL,
+    _embed_one,
+    build_embeddings,
 )
+from .utils import DATA_DIR, clean_text, load_articles
 
 EMAIL_DIR = DATA_DIR / "cron" / "emails"
 

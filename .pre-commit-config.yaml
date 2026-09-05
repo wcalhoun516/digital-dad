@@ -7,19 +7,18 @@
 repos:
   - repo: local
     hooks:
-      # ruff lint. Scoped to tests/ to mirror `make lint` (`LINT_PATHS := tests`): the
-      # existing modules still carry pre-existing ruff findings, so broadening this scope is
-      # deferred to roadmap #1-3 cleanup. Widen `files:` once those are clean.
+      # ruff lint. Mirrors `make lint` (`LINT_PATHS`) — keep the two in lockstep;
+      # tests/test_lint_scope.py fails if they drift or if a source package drops out.
       #
       # This is `ruff check`, matching what `make verify` enforces. `ruff format` is left as
-      # an on-demand `make fmt` (not a blocking hook) because the committed tests are not yet
+      # an on-demand `make fmt` (not a blocking hook) because the committed files are not yet
       # format-clean and a repo-wide format sweep is out of scope for this change.
       - id: ruff-check
-        name: ruff check (tests/)
+        name: ruff check
         entry: .venv/bin/ruff check --force-exclude
         language: system
         types: [python]
-        files: ^tests/
+        files: ^(analysis|scraper|viz|training|tools|bin|tests)/
 
       # JSON validity for the committed analysis artifacts. `\.json$` excludes runs.jsonl
       # (JSONL, not JSON); gitignored artifacts (embeddings*, geo_llm_registration) never

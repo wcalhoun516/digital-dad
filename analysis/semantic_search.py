@@ -19,11 +19,10 @@ import argparse
 import hashlib
 import json
 import sys
-from typing import Iterable
 
 import numpy as np
 
-from .utils import load_articles, clean_text, DATA_DIR
+from .utils import DATA_DIR, clean_text, load_articles
 
 # Pinned embedder. The conductor will route directly here when this id is
 # passed in the request body, bypassing its smart-routing classifier. The
