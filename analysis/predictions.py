@@ -13,11 +13,10 @@ Fits the existing fingerprint-skip pattern used by all analysis modules.
 """
 
 import json
-import sys
 import time
 from datetime import datetime, timezone
 
-from .utils import load_articles, clean_text, save_analysis, DATA_DIR
+from .utils import DATA_DIR, clean_text, load_articles, save_analysis
 
 CONDUCTOR_URL = "http://127.0.0.1:8080/v1"
 

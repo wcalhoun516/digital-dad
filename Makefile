@@ -1,10 +1,11 @@
 PYTHON := .venv/bin/python
 
-# Lint/format are scoped to tests/ for now: the existing modules carry pre-existing
-# ruff findings (broadening the scope is a follow-up roadmap item, #1-3/cleanup).
-LINT_PATHS := tests
+# Every top-level directory holding Python we ship. Keep this in lockstep with the
+# pre-commit `files:` regex and with tests/test_lint_scope.py, which fails if a source
+# package drops out of the gate. E501 is off for the source packages only (see pyproject).
+LINT_PATHS := analysis scraper viz training tools bin tests
 
-.PHONY: scrape manifest-check manifest-dedup coverage-audit analyze training dashboard all serve share search on-this-day send-on-this-day adjudicate backfill-verdicts entity-graph calhoun-isms contradictions rag-eval voice-eval voice-trials embedding-compare embedding-queries-check clean test lint fmt lint-json hooks verify verify-responsive
+.PHONY: scrape manifest-check manifest-dedup coverage-audit ingest ingest-review analyze training dashboard all serve share search on-this-day send-on-this-day adjudicate backfill-verdicts entity-graph calhoun-isms contradictions rag-eval voice-eval voice-trials embedding-compare embedding-queries-check clean test lint fmt lint-json hooks verify verify-responsive
 
 scrape:
 	$(PYTHON) -m scraper $(ARGS)
@@ -28,6 +29,16 @@ manifest-dedup:
 # machine output, ARGS="--urls-file urls.txt" to audit against an offline URL list (no network).
 coverage-audit:
 	$(PYTHON) -m scraper.coverage_audit $(ARGS)
+
+# Corpus II: extract everything in data/inbox/ into the review queue. Offline, and it
+# never touches the corpus — `make ingest-review` is the only thing that does.
+ingest:
+	$(PYTHON) -m ingest $(ARGS)
+
+# Review the staged queue and accept items into the corpus. This is the ONLY step that
+# writes to the manifest. ARGS=--report for a read-only summary.
+ingest-review:
+	$(PYTHON) -m ingest.review $(ARGS)
 
 analyze:
 	$(PYTHON) -m analysis $(ARGS)

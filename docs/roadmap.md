@@ -7,7 +7,7 @@ comment or edit it yourself.
 Legend: **P1** = do soon / high leverage · **P2** = valuable · **P3** = nice-to-have.
 Size: **S** ≤ ~½ day · **M** ~1–2 days · **L** multi-day.
 Categories (the agent rotates least-recently-worked first):
-`infra · scraper · analysis · dashboard · training · family · docs`.
+`infra · scraper · analysis · ingest · dashboard · training · family · docs`.
 
 > Mark an item `(in progress: daily/<date>-<slug>)` or `(done <date>)` inline as it moves.
 
@@ -67,6 +67,32 @@ the analytical-depth and ops items.
    ranges / slugs so we know what the archive is still missing.
 10. **P3 · M · scraper** — richer metadata per article: canonical URL, original-vs-updated
     date, section, byline variants.
+
+## ingest
+
+**Corpus II** — a reviewed, offline second front door for material beyond Forbes: books,
+course materials, letters, email, messages, talks. Design:
+[`superpowers/specs/2026-08-13-corpus-ingest-design.md`](superpowers/specs/2026-08-13-corpus-ingest-design.md).
+
+Every item is offline, pure, and unattended-safe. A handler is a pure
+`(Path) -> ExtractResult` registered by extension, so each new format is an isolated PR.
+
+29. **P1 · S · ingest** — `provenance` schema + pure migration of the manifest;
+    backfill `content_hash`. *(done 2026-08-16; the one-time data migration is still
+    pending — see the deviation note in the plan)*
+30. **P1 · S · ingest** — ingest skeleton: inbox, queue, `make ingest`, handler registry,
+    `.txt`/`.md` handler. *(done 2026-08-16)*
+31. **P1 · S · ingest** — review CLI, interactive + `--report`. *(done 2026-08-16)*
+32. **P2 · S · ingest** — `.eml`/`.mbox` handler (stdlib `email`/`mailbox`; thread split,
+    quoted-reply stripping, one document per message).
+33. **P2 · S · ingest** — `.docx` handler (first user of the new opt-in `ingest` extra).
+34. **P2 · M · ingest** — `.pdf` handler + no-text-layer detection (warn and defer to OCR).
+35. **P2 · M · ingest** — `.epub` handler + chapter segmentation. Unlocks the books.
+36. **P2 · M · ingest** — image OCR handler with a confidence score.
+37. **P3 · L · ingest** — audio/video transcription (local Whisper) + timestamped segments.
+38. **P2 · S · analysis** — modality-aware analysis defaults (`authorship: george`) and a
+    modality breakdown in the dashboard. Also lands the T3 private-document guard in
+    `analysis/conductor.py` and writes `data/raw/<id>.json` for ingested items.
 
 ## analysis
 
