@@ -9,7 +9,7 @@ Install: pip install spacy && python -m spacy download en_core_web_sm
 import re
 from collections import defaultdict
 
-from .utils import load_articles, clean_text, log, save_analysis
+from .utils import clean_text, load_articles, log, save_analysis
 
 
 def _normalize_entity(text: str) -> str:

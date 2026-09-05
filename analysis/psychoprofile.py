@@ -15,7 +15,7 @@ import json
 import time
 from datetime import datetime, timezone
 
-from .utils import load_articles, clean_text, log, save_analysis, ANALYSIS_DIR, DATA_DIR
+from .utils import ANALYSIS_DIR, DATA_DIR, clean_text, load_articles, log, save_analysis
 
 CONDUCTOR_URL = "http://127.0.0.1:8080/v1"
 RUNS_LOG = DATA_DIR / "analysis" / "runs.jsonl"
