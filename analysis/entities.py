@@ -9,7 +9,7 @@ Install: pip install spacy && python -m spacy download en_core_web_sm
 import re
 from collections import defaultdict
 
-from .utils import clean_text, load_articles, save_analysis
+from .utils import clean_text, load_articles, log, save_analysis
 
 
 def _normalize_entity(text: str) -> str:
@@ -36,7 +36,7 @@ def run(articles: list[dict] | None = None) -> dict:
     if not articles:
         raise ValueError("No articles to analyze. Run `make scrape` first.")
 
-    print("Loading spaCy model...")
+    log.info("Loading spaCy model...")
     try:
         nlp = spacy.load("en_core_web_sm")
     except OSError:
@@ -44,7 +44,7 @@ def run(articles: list[dict] | None = None) -> dict:
             "spaCy model not found. Run: python -m spacy download en_core_web_sm"
         )
 
-    print(f"Extracting entities from {len(articles)} articles...")
+    log.info("Extracting entities from %d articles...", len(articles))
 
     # Global counts: name → {count, article_slugs}
     org_counts: dict = defaultdict(lambda: {"count": 0, "slugs": set()})
@@ -54,7 +54,7 @@ def run(articles: list[dict] | None = None) -> dict:
 
     for i, article in enumerate(articles, 1):
         if i % 20 == 0:
-            print(f"  {i}/{len(articles)}...", flush=True)
+            log.debug("  %d/%d...", i, len(articles))
 
         text = clean_text(article.get("body", ""))
         # Cap at ~50k chars for speed (covers ~8k words, well above typical article length)
@@ -126,6 +126,6 @@ def run(articles: list[dict] | None = None) -> dict:
     }
 
     path = save_analysis("entities.json", result)
-    print(f"Entity analysis saved to {path}")
-    print(f"  Top orgs: {len(top_orgs)}  Top people: {len(top_people)}")
+    log.info("Entity analysis saved to %s", path)
+    log.info("  Top orgs: %d  Top people: %d", len(top_orgs), len(top_people))
     return result

@@ -16,7 +16,7 @@ import json
 import time
 from datetime import datetime, timezone
 
-from .utils import DATA_DIR, clean_text, load_articles, save_analysis
+from .utils import DATA_DIR, clean_text, load_articles, log, save_analysis
 
 CONDUCTOR_URL = "http://127.0.0.1:8080/v1"
 
@@ -96,7 +96,7 @@ def _call(client, prompt: str, max_tokens: int = 4096, tier: int = 2) -> str:
             return response.choices[0].message.content or ""
         except Exception as exc:
             if attempt < 2:
-                print(f"    Retry {attempt + 1}/3 after error: {exc}", flush=True)
+                log.warning("    Retry %d/3 after error: %s", attempt + 1, exc)
                 time.sleep(5 * (attempt + 1))
             else:
                 raise
@@ -153,7 +153,7 @@ def _run_verdicts(client, predictions: list[dict], tier: int = 2) -> list[dict]:
         batch = predictions[start:start + batch_size]
         batch_num = start // batch_size + 1
         total_batches = (len(predictions) + batch_size - 1) // batch_size
-        print(f"  Verdict batch {batch_num}/{total_batches}...", flush=True)
+        log.debug("  Verdict batch %d/%d...", batch_num, total_batches)
 
         claims_text = json.dumps(
             [{"claim": p["claim"],
@@ -178,7 +178,7 @@ def _run_verdicts(client, predictions: list[dict], tier: int = 2) -> list[dict]:
             arr_end = text.rindex("]") + 1
             verdicts = json.loads(text[arr_start:arr_end])
         except (ValueError, json.JSONDecodeError):
-            print(f"    Warning: verdict batch {batch_num} response not valid JSON", flush=True)
+            log.warning("    verdict batch %d response not valid JSON", batch_num)
             continue
 
         # Match verdicts back to predictions by claim text
@@ -209,7 +209,7 @@ def _save_partial(predictions, articles, include_verdicts, duration):
         "predictions": predictions,
     }
     save_analysis("predictions.json", result)
-    print(f"    [checkpoint: {len(predictions)} predictions saved]", flush=True)
+    log.debug("    [checkpoint: %d predictions saved]", len(predictions))
 
 
 def run(
@@ -232,7 +232,7 @@ def run(
 
     tier = 2 if router == "conductor_local" else 3
     tier_label = "T2 local (free)" if tier == 2 else "T3 remote (OpenRouter — costs money)"
-    print(f"Prediction extraction: {len(articles)} articles via {tier_label}")
+    log.info("Prediction extraction: %d articles via %s", len(articles), tier_label)
 
     client = _get_client()
     run_start = time.time()
@@ -247,7 +247,10 @@ def run(
             all_predictions = prior.get("predictions", [])
             done_slugs = {p.get("article_slug") for p in all_predictions}
             if done_slugs:
-                print(f"  Resuming: {len(done_slugs)} articles already processed, {len(all_predictions)} predictions cached")
+                log.info(
+                    "  Resuming: %d articles already processed, %d predictions cached",
+                    len(done_slugs), len(all_predictions),
+                )
         except (json.JSONDecodeError, KeyError):
             pass
 
@@ -255,27 +258,28 @@ def run(
         slug = article.get("slug", "")
         if slug and slug in done_slugs:
             continue
-        print(
-            f"  [{i}/{len(articles)}] {article.get('title', 'Untitled')[:60]}...",
-            flush=True,
+        log.debug(
+            "  [%d/%d] %s...", i, len(articles), article.get("title", "Untitled")[:60]
         )
         try:
             preds = _extract_predictions(client, article, tier=tier)
         except Exception as exc:
-            print(f"    ✗ Failed: {exc}", flush=True)
+            log.warning("    ✗ Failed: %s", exc)
             continue
         if preds:
-            print(f"    → {len(preds)} prediction(s) found")
+            log.debug("    → %d prediction(s) found", len(preds))
         all_predictions.extend(preds)
 
         # Save incrementally every 10 articles so progress isn't lost
         if i % 10 == 0:
             _save_partial(all_predictions, articles, include_verdicts=False, duration=time.time() - run_start)
 
-    print(f"\nExtracted {len(all_predictions)} predictions from {len(articles)} articles")
+    log.info(
+        "Extracted %d predictions from %d articles", len(all_predictions), len(articles)
+    )
 
     if include_verdicts and all_predictions:
-        print("\nRunning LLM verdict pass (advisory only — clearly labeled)...")
+        log.info("Running LLM verdict pass (advisory only — clearly labeled)...")
         all_predictions = _run_verdicts(client, all_predictions, tier=tier)
 
     duration = round(time.time() - run_start, 1)
@@ -314,9 +318,9 @@ def run(
     }
 
     path = save_analysis("predictions.json", result)
-    print(f"\nPredictions saved to {path} ({duration}s)")
-    print(f"  {len(all_predictions)} predictions across {len(by_topic)} topics")
+    log.info("Predictions saved to %s (%ss)", path, duration)
+    log.info("  %d predictions across %d topics", len(all_predictions), len(by_topic))
     if llm_verdicts_summary:
-        print(f"  LLM verdicts: {llm_verdicts_summary}")
+        log.info("  LLM verdicts: %s", llm_verdicts_summary)
 
     return result

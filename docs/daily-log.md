@@ -48,53 +48,56 @@ Format:
 
 <!-- entries below -->
 
-### 2026-08-18 — family — ready-for-review
-- PR: https://github.com/wcalhoun516/digital-dad/pull/81
-- Source: roadmap:#21 (defect in the shipped Reading Room) — duplicate-slug fallout #77/#80 didn't reach
-- Summary: **The Reading Room's "Newer ←" button re-opened the article you were already on.**
-  `build_reading_room()` emits one entry per input record and chains them with
-  `prev_slug`/`next_slug`; the manifest's 23 `http`/`https` twins reach it through `themes.json`,
-  so the same article sat **twice in a row** in the reading order and its neighbour link pointed at
-  **its own slug**. The dashboard resolves those links through `bySlug[slug]` — a map that *cannot*
-  hold a slug twice — so the click re-opened the current article. Measured on the real corpus,
-  regenerating **both sides from the same `themes.json`** (not trusting the stale file on disk):
-  index rows **197 → 175**, duplicate rows **22 → 0**, self-referential links **44 → 0**, and the
-  "Newer" walk **7 → 175 of 175** articles. **No article lost or gained** — only duplicate rows
-  removed. This is the **fifth** reader carrying this defect; PR #80 audited for a fifth and
-  concluded there wasn't one, because it checked direct *manifest* readers and `reading_room.py` is
-  a **second-order** reader (it loads `themes.json`'s `.articles`, a derived artifact, and never
-  touches the manifest). **TDD'd:** +7 tests, six red first for the right reason; the
-  first-seen-wins tie-break was **proved non-vacuous** by implementing last-wins and watching it
-  fail. **§8.5 deepen:** (1) probed every other second-order reader empirically — ran each builder
-  on the real input vs a deduped copy and diffed: `anthology.corpus_span`/`signature_pieces`,
-  `year_in_review.articles_for_year`/`top_themes` and `intellectual_arc.arc_by_year` are **all
-  affected** (the 2022 digest counts **34** columns for **28**). But those are *count skew from a
-  stale derived input*, not broken structures, so the fix is regenerating `themes.json`, **not**
-  deduping at each reader — deduping there would hide the staleness. I **verified** the self-heal
-  rather than inheriting the claim: `load_articles()` now returns **176**, and the corpus fingerprint
-  is `a5cc3a1be358` vs the `593079338772` recorded by themes/linguistic/entities/predictions/
-  semantic_search/psychoprofile, so all six **re-run** on the next `make analyze`. The Reading Room
-  needed the builder fix anyway: a slug-keyed chain is a *structural* invariant, not a count.
-  (2) Found a second, unrelated defect while confirming that regeneration path: **`make reading-room`
-  did not exist.** It is documented in the README (3× with ARGS examples), in the module docstring,
-  in `.gitignore`, and — worst — in the **dashboard's own empty state**, which tells the family
-  "Run `make reading-room` then `make dashboard`". Doing that printed `No rule to make target`.
-  `make voice-style` was missing the same way (README + `voice_eval`'s docstring; the capability
-  existed as `--style-only`). Added both, and guarded the class with a test that pins every `make`
-  target documented **in a code context** to a real rule — two prose false positives ("columnists
-  make predictions") drove the extractor to read only fenced blocks / backticks / `<code>`.
-  `make voice-style` reproduces D15's published numbers exactly (fine-tune TTR 0.352 vs real 0.704).
-  **Offline / unattended-safe:** stdlib only, no conductor/network/LLM, no re-scrape, **no data
-  artifact committed** (`reading_room.json` is git-ignored; I deleted the `voice_style.*` files my
-  own verification run produced). **Verification:** `make verify` green — **891 passed** vs **852**
-  on `origin/main`, ruff clean, dashboard builds. **Backlog:** 2 open `daily/*` PRs (#78, #80) at
-  start — well under 8; §3 didn't resume either (both `ready-for-review`); `main` green.
-  **Hot path:** plan **0008 is finished** — 26a–26f all shipped and D15 records the 26f verdict —
-  but it still sits in `plans/ready/`, so §4 has picked it up and discarded it every run since
-  06-24. I left the file where it is rather than move it in an unrelated PR; **the owner should move
-  `docs/plans/ready/0008-geo-llm-finetune.md` to `docs/plans/done/`** to free the hot path.
-  **NB (fourth ask):** the corpus-ingest work (PR **#79**) still has no plan in `docs/plans/ready/`,
-  so §4 still can't see it; it remains higher value than anything left on the roadmap.
+### 2026-08-19 — infra — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/82
+- Source: roadmap:#7 (ops — structured logging across analysis modules)
+- Summary: **`python -m analysis --verbose` was very nearly a no-op.** The shared logger has
+  existed since the tests-infra work (`analysis.utils.setup_logging()` → `digital-dad.analysis`,
+  already covered by 6 tests) — but **only 2 of the 6 pipeline modules ever called it**. Entities,
+  psychoprofile, semantic_search and predictions wrote **41 diagnostics straight to stdout**, so the
+  flag controlled nothing and the weekly cron's log got timestamps/levels for two modules and raw
+  unattributed text for four. **Measured on the real corpus**, same command both sides
+  (`python -m analysis entities --force --verbose`, 176 articles, spaCy only, no conductor): before
+  = **297 bytes on stdout**, unlevelled, and `--verbose` changed *nothing* (the 8 progress lines
+  printed either way); after = **0 bytes on stdout**, 7 levelled lines at INFO, 15 with `--verbose`.
+  Level split: INFO for summaries, DEBUG for per-item progress (what `--verbose` now reveals),
+  WARNING for the four recoverable failures previously printed as `"... Warning: ..."` at the same
+  visual weight as progress. `%s` placeholders, not f-strings, so formatting is skipped when the
+  level is off. **`semantic_search._cli()` deliberately keeps its 3 `print`s** — that stdout is the
+  *product* (a user pipes those search results), not a diagnostic, and it's an explicit allow-list
+  entry rather than an exclusion that could quietly grow. **Checked, didn't assume:**
+  `bin/weekly_run.sh:55` is `"$@" 2>&1 | tee -a "$LOG_FILE"`, so moving these lines to stderr loses
+  nothing from the cron log. **TDD'd:** +19 tests (6 → 25), **15 red first** for the right reason,
+  in three layers — AST-structural over all six modules; behavioural (`psychoprofile.run(dry_run=True)`
+  runs offline, asserts records land on the logger *and* stdout is empty); and the payoff exercised
+  for real (drives the whole `build_embeddings` loop with a stubbed embedder, asserts per-batch lines
+  are absent at INFO and present at DEBUG). **Proved non-vacuous** by reverting that `log.debug` to
+  `log.info` and watching it fail. **Two bugs in my own tests** surfaced doing this and were fixed:
+  `tmp_path` literally contains "batch" (so a substring match matched the summary line), and the
+  second `build_embeddings` call was hitting the cache the first one wrote, so the DEBUG assertion
+  would have been checking an early return. A third weak test — `assert "log" in source` — passed
+  vacuously on `_log_run` and was replaced with a real `ast.ImportFrom` check.
+  **§8.5 deepen:** (1) the **runbook was teaching the pattern this PR removes** —
+  `docs/runbooks/adding-an-analysis-module.md` showed new modules a dispatch block built from
+  `print("=" * 50)` banners, a style `__main__.py` abandoned when it moved to `log.info("=== … ===")`.
+  Fixed the example and added the INFO/DEBUG/WARNING convention + the stdout carve-out, so the next
+  module follows it by construction. (2) **Retired plan 0008.** It finished at 26f (verdict is D15 in
+  `decisions.md`) but was never moved out of `plans/ready/`, so **§4 has picked it up and discarded
+  it every run since 06-24** — the hot path was permanently jammed. Moved to `plans/done/` with a
+  pointer to D15; **`plans/ready/` is now empty**, so the next run's §4 falls cleanly through to
+  pins/roadmap. **Scope discipline:** 98 `print`s remain across 18 other `analysis/` modules, left
+  alone on purpose — most are standalone/interactive CLIs where stdout *is* the product
+  (`adjudicate.py` is a review loop, `on_this_day.py` emits an email body), so they need per-module
+  judgment, not a sweep. **Method note:** `grep -c "print("` over-counts — it matches `fingerprint(`,
+  which made `__main__.py` look like it had 4 prints when it has 0; all counts here are AST-derived.
+  **Verification:** `make verify` **exit 0** — ruff clean, **871 passed**, dashboard builds; baseline
+  measured in a clean worktree off `origin/main` was **852**, so +19 is exactly the tests added.
+  **No data artifact committed** — the entities runs rewrote `entities.json` and appended to
+  `runs.jsonl`; both restored with `git checkout HEAD --`. **Backlog:** 3 open `daily/*` PRs (#78,
+  #80, #81) at start, well under 8; §3 resumed nothing (all three `ready-for-review`); `main` green.
+  **NB (fifth ask):** the corpus-ingest work (PR **#79**, still open) has no plan in
+  `docs/plans/ready/` — and now that the directory is *empty*, dropping one there would make it
+  tomorrow's hot path with nothing competing.
 
 ### 2026-08-15 — scraper — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/77
