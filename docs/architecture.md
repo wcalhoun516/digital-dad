@@ -34,6 +34,34 @@ so a single source going down doesn't break ingestion.
 title, date, url, tags, word_count, file, content_hash}]}`. `content_hash` is the MD5 of the
 body — the basis for change detection.
 
+## 1b. Ingest — Corpus II (`ingest/`)
+
+A second, human-reviewed path into the corpus for non-Forbes material (books, course
+materials, letters, email, talks):
+
+```
+data/inbox/ → make ingest → data/ingest/queue/ → make ingest-review → manifest
+```
+
+Handlers are pure `(Path) -> ExtractResult` functions registered by extension in
+`ingest/handlers/`, so adding a format is an isolated change. Core handlers (`.txt`, `.md`,
+and later `.eml`/`.mbox`) are stdlib-only; heavier formats live behind an opt-in `ingest`
+extra and degrade with a clear message rather than crashing.
+
+**Extraction never modifies the corpus** — only `ingest-review` does, and only on a human
+decision. Rejects move aside with a reason instead of being deleted.
+
+One *source* can yield many *documents* (a book → one per chapter; an mbox → one per
+message), all sharing a `source_id`, so every downstream analysis module keeps operating on
+documents unchanged.
+
+**Provenance block**, additive on each manifest entry: `{source_id, modality, authorship,
+privacy, license, acquisition:{method, ref, at}, date_confidence}`. Named `provenance`, not
+`source`, because `data/raw/*.json` already uses `source` for the acquisition channel
+(`wayback`/`playwright`). Ingested items default to `privacy: private`; `authorship` is the
+field Ask Dad must filter on, since only `george` is quotable as his thinking.
+`data/inbox/` and `data/ingest/` are gitignored — private material is never committed.
+
 ## 2. Analysis (`analysis/`)
 
 CLI: `python -m analysis [modules] [--dry-run] [--force] [--remote] [--verbose]`. Modules run in
