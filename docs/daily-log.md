@@ -48,56 +48,105 @@ Format:
 
 <!-- entries below -->
 
-### 2026-08-16 — infra — ready-for-review
-- PR: https://github.com/wcalhoun516/digital-dad/pull/78
-- Source: roadmap:#1-3 cleanup — the explicitly-deferred "broaden the lint scope" follow-up
-- Summary: **`make lint` had only ever checked `tests/`, so every line of production code in
-  this repo was unlinted.** The deferral was recorded in three places — `LINT_PATHS := tests`
-  with *"broadening the scope is a follow-up roadmap item, #1-3/cleanup"*, the pre-commit
-  `files: ^tests/` with *"Widen `files:` once those are clean"*, and PR #45 (07-08), which
-  ruff-fixed `scraper/forbes_requests.py` and noted the file "was never gated." Turning the
-  gate on over the tree surfaced **98 findings, 24 of them real**: **9 `F401` dead imports**
-  (`math`, `re`, `sys`, `json`, `asyncio`, `Path`, `Iterable`, `EMBED_MODEL`), **10 `I001`**
-  unsorted import blocks, **2 `F541`** no-op f-strings, **1 `F841`** (`ts_idx` in `wayback.py`,
-  computed from the CDX header and never read), **1 `E741`** (`for i, l in enumerate(labels)`),
-  **1 `E731`** (an assigned lambda). All 24 fixed; each `F401` was checked for being a
-  load-bearing re-export first (`EMBED_MODEL` was the only cross-module candidate — defined and
-  used solely in `semantic_search.py`). **The `E501` judgment call:** the other 74 findings are
-  long lines and most are **embedded LLM prompt string literals** (`psychoprofile` ×18,
-  `predictions` ×15, `on_this_day` ×11) — re-wrapping one *edits the prompt the model actually
-  sees*, i.e. a behavior change wearing a formatting costume, so it does **not** belong in the
-  change that turns linting on. `E501` is therefore ignored **per-package** in `pyproject.toml`,
-  never globally, and **`tests/` is deliberately absent from `per-file-ignores`** (it has been
-  E501-clean since the gate existed): **no rule gets weaker anywhere — this is a strict
-  widening.** **TDD'd:** +48 tests (`tests/test_lint_scope.py`) pinning the *scope* so it can't
-  silently narrow again — `LINT_PATHS` covers every source package on disk, the pre-commit
-  `files:` regex stays in lockstep with it, the gate is green, and `tests/` never acquires a
-  per-file ignore. **§8.5 deepen:** a parametrized guard that **all 43 shipped modules still
-  import** — the safety net for exactly this cleanup, since ruff's `F401` cannot tell a genuinely
-  unused import from a re-export another module reaches through, and deleting the wrong one is
-  invisible until something imports it. **Four red-green proofs, each reverted:** (1) restoring
-  `LINT_PATHS := tests` → *"does not cover: ['analysis', 'scraper', 'viz', 'training', 'tools',
-  'bin']"*; (2) an `import os` added to `analysis/themes.py` — a file invisible to the linter
-  yesterday — now turns `make lint` red; (3) a 126-char line appended to a test file is still
-  caught (`E501 Line too long (126 > 100)`), proving `tests/` kept the rule; (4) a typo'd symbol
-  in `on_this_day.py`'s import fails **both** the ruff gate and the import guard independently.
-  **Offline / unattended-safe:** lint config + dead-code removal only; no conductor/network/LLM,
-  no re-scrape, **no data artifact committed**. `bin/**` is untouched per §11 — it is *covered*
-  by the gate but needed no edits (its only findings were `E501`). **Verification:** `make verify`
-  green — **867 passed** (vs **819** on `origin/main`, +48), ruff clean over
-  `analysis scraper viz training tools bin tests`, dashboard builds; `pre-commit run --all-files`
-  → both hooks Passed. **Backlog:** 2 open `daily/*` PRs at start (#76, #77) — well under 8; §3
-  didn't resume (both `ready-for-review`, not `in-progress`); `main` green (#75). **Cold-path
-  pick:** hot path holds only plan 0008 (owner-interactive); no user pins; **infra** is absent
-  from the last 7 runs (scraper ×2, analysis ×2, dashboard ×2, training ×1) and this was its one
-  genuinely-unstarted, fully-offline item — named as deferred in the Makefile itself. **Deferred:**
-  the 74 `E501`s as their own reviewed pass (start with the six non-prompt files —
-  `viz/build_dashboard.py` ×3, `scraper/__main__.py` ×3, `training/prepare.py` ×3); and note
-  `make fmt` now inherits the wider `LINT_PATHS`, so the first run of it will produce a large
-  diff (it stays on-demand and non-blocking, unchanged policy from PR #44). **NB for the owner
-  (third ask):** `docs/corpus-ingest-spec` is *still* an unpushed local branch and its plan is
-  not in `docs/plans/ready/`, so §4 cannot see it — it is almost certainly higher value than
-  anything left on the current roadmap.
+### 2026-08-17 — dashboard — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/80
+- Source: roadmap:#8 (follow-up) — the **user-visible** surface of the duplicate-slug defect
+- Summary: **The dashboard told the family "199 articles analyzed" and drew 23 duplicate rows.**
+  PR #77 (08-15) fixed the duplicate-slug manifest defect for the *analysis pipeline* by wiring the
+  shared `analysis.utils.dedupe_manifest_entries()` into `load_articles()`. It never reached the
+  **dashboard**, because `viz/build_dashboard.py` reads `data/manifest.json` on a different path and
+  injects it **verbatim** into `__MANIFEST_DATA__`. So the page the family actually opens still
+  counted the http/https twins: the header read **199** for a **176**-article corpus, and the Raw
+  Corpus tab pushed one row per manifest entry → **23 duplicate rows**, each article listed twice.
+  This is the *fourth* reader found carrying this defect (#76 a builder, #77 `load_articles` +
+  `training/prepare.py`, now the dashboard). Fixed at the injection boundary with a new pure
+  `dedupe_manifest_payload()` that reuses the **shared** helper (no re-implementation) and re-derives
+  `total_articles` so the header count can't drift from the list again. **Before/after in a real
+  headless browser** (desktop 1280×900, the built artifact): header `199 articles analyzed` → `176`,
+  corpus rows `199` → `176`, duplicate rows `23` → `0`, duplicate titles `23` → `0`, **0 console
+  errors** both ways. **TDD'd:** +11 tests (`tests/test_dashboard_manifest.py`) — the pure transform
+  (twin collapse, `total_articles` agreement, first-seen wins, input not mutated, other keys
+  preserved, no-`articles` passthrough), the real `build()` end-to-end through a tmp template, and the
+  **committed** manifest. Proved **red-green**: the fix reverted to `origin/main`'s builder → **8
+  failed / 855 passed**; restored → **863 passed**. **§8.5 deepen:** (1) audited *every* remaining
+  direct manifest reader — `training/prepare.py` + `load_articles()` already deduped (#77);
+  `embedding_compare.load_corpus_slugs()` and `coverage_audit` build **sets**, so they're immune by
+  construction; `manifest_check.py` / `manifest_dedup.py` **must not** dedupe on read (they exist to
+  *report/fix* the duplicates). No fifth reader is affected. (2) TDD'd a real crash at the file
+  boundary — a hand-edited manifest that isn't a JSON object raised `TypeError` and took the whole
+  `make dashboard` down; now it degrades to `null` like the existing invalid-JSON path. (3) Added the
+  placeholder/binding **regression guards** for the class of merge-drop that once shipped a broken
+  calhoun-isms tab to `main`. **Verified, not assumed:** the committed `themes.json` /
+  `linguistics.json` / `entities.json` still hold **199** `per_article` records (23 dups each), so the
+  **Theme Map / Timeline** tabs still double-plot. I did **not** regenerate them (large committed-data
+  diff that cascades into `entity_graph`/`entity_stance`/`intellectual_arc`) — instead I *checked* the
+  self-heal claim inherited from #77 rather than trusting it: the corpus fingerprint is now
+  `a5cc3a1be358` while the last `themes`/`linguistic`/`entities` runs recorded `593079338772`, so
+  fingerprint-skip **re-runs all three** on the next `make analyze`. Deduping a *derived* artifact at
+  the dashboard boundary would paper over that; the manifest is different — it legitimately records
+  URL twins as provenance, so the corpus view belongs at the reader. **Offline / unattended-safe:**
+  stdlib only, no conductor/network/LLM, no re-scrape, **no data artifact committed** (the built
+  `index.html` is git-ignored). **Verification:** `make verify` green — **863 passed** vs **852
+  collected** on `origin/main` (measured in a throwaway worktree, not trusted from the log: 851 passed
+  + 1 skipped), ruff clean on `tests/`, dashboard builds. **Note:** `ruff check viz/` reports 3
+  **pre-existing** `E501`s in `_EMPTY_DEFAULTS` string literals — none mine, and `make lint` is
+  `tests/`-only on `main`; open PR **#78** is the change that decides their fate. **Backlog:** 1 open
+  `daily/*` PR (#78) at start — well under 8; §3 didn't resume it (`ready-for-review`, not
+  `in-progress`); `main` green. **Cold-path pick:** hot path holds only plan 0008 (owner-interactive);
+  no user pins; the roadmap's own categories are drained of unattended-safe unstarted items, so — as
+  on 08-14/08-15 — I took the **most-deferred defect** over strict rotation, and it lands in
+  **dashboard**. **NB for the owner (third ask):** the corpus-ingest work now has an open PR (**#79**,
+  `feat/corpus-ingest-thin-slice`) but its plan still isn't in `docs/plans/ready/`, so §4 still can't
+  see it; that remains higher value than anything left on the current roadmap.
+
+### 2026-08-15 — scraper — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/77
+- Source: roadmap:#8 (follow-up) — the root cause PR #76 deferred yesterday
+- Summary: **The analysis pipeline was reading 199 articles for 176 real ones.**
+  `data/manifest.json` carries 23 duplicate-slug entries — all `http://`/`https://` twins naming
+  the **same raw file** — and both corpus walkers read that file once per entry, so **10.2% of the
+  body text every builder analyzed was duplicated** (368,778 → 331,050 words). This is the repo's
+  longest-standing known defect: **PR #18** (06-13) *found* it and closed it as "a separate
+  owner-reviewed follow-up"; **PR #38** (07-01) corroborated it from outside; **PR #76** (08-14)
+  proved it *corrupts output* (3 of Tesla's 23 observations were the same sentences counted twice),
+  fixed one builder locally, and deferred the root: "the **root** duplicate-slug bug in
+  `load_articles()` still inflates every other corpus-walking builder." New shared
+  `analysis.utils.dedupe_manifest_entries()` (one entry per raw `file`, first-seen order) wired into
+  `load_articles()` → **every** analysis builder is immune, with no per-builder de-dup.
+  **§8.5 deepen:** found the *same defect* a second time in `training/prepare.py`, which walks the
+  manifest directly — its train/held-out split was already safe (keyed by slug), but
+  `finetune.jsonl`/`instruct.jsonl` are written **per manifest entry**, so 23 articles appeared
+  **twice** in the fine-tune corpus, silently over-weighting them in any plan-0008 QLoRA run.
+  **Mistake worth recording:** I first built a `dedupe_articles()` + `--fix` into `manifest_check.py`
+  before discovering `scraper/manifest_dedup.py` (merged 08-13) already does all of it, better
+  (query-string handling, `--backfill-hashes`, owner-gated `--in-place`) — I **reverted** that commit
+  rather than ship a duplicate abstraction, and left the revert in the history deliberately. The
+  lesson: `make <target>` and `.PHONY` are a faster inventory of existing tooling than `ls`.
+  That tool stays owner-gated (report-only), which is *why* the readers needed their own defence.
+  **TDD'd:** +14 tests (`test_analysis_utils.py` 8→19 covering the pure helper, the loader, date
+  sort and absent files; `test_prepare.py` 12→15 driving the real `run()` over a tmp corpus), both
+  proved **red-green** (fix reverted → 1 and 3 failures; restored → green). **Offline /
+  unattended-safe:** stdlib only, no conductor/network/LLM, no re-scrape, **no data artifact
+  committed**. **Verification:** `make verify` green — **833 passed** (vs **819** on `origin/main`,
+  +14), ruff clean, dashboard builds; `make contradictions` on **`main`'s own builder** (no #76
+  changes) now finds **4** flips of 71 scanned (was 2), with **Tesla at 20** — the exact number #76
+  reached via its own builder-local de-dup, i.e. the root fix subsumes it. **Stale artifacts, by
+  design:** `themes.json`/`linguistics.json`/`entities.json` each still hold **199** `per_article`
+  records; I did not regenerate them (large committed-data diff + `entity_graph`/`entity_stance`/
+  `intellectual_arc` would cascade). They self-heal — the corpus fingerprint moves
+  `5930793…` → `a5cc3a1…`, and `5930793…` is exactly the value recorded for the last `themes` run,
+  so fingerprint-skip re-runs every module on the next weekly `make analyze`. **Backlog:** 1 open
+  `daily/*` PR (#76) at start — well under 8; §3 didn't resume it (`ready-for-review`, not
+  `in-progress`); `main` green. **Cold-path pick:** hot path holds only plan 0008
+  (owner-interactive); no user pins; the roadmap is drained of unattended-safe unstarted items, so —
+  as on 08-14 — I took the **most-deferred** item instead of strict rotation, and it happens to sit
+  in **scraper**, the least-frequently-worked viable category in the last 7 runs (analysis ×3,
+  dashboard ×2, scraper ×1, training ×1). **Deferred:** `make manifest-dedup ARGS="--apply
+  --in-place --backfill-hashes"` to make the manifest itself *honest* (199 → 176, missing hashes →
+  0) — owner-gated and no longer load-bearing for correctness. **NB for the owner (second ask):**
+  `docs/corpus-ingest-spec` is **still unpushed/unmerged** and its 1401-line plan is not in
+  `docs/plans/ready/`, so §4 cannot see it; that is almost certainly higher value than anything
+  left on the current roadmap.
 
 ### 2026-08-05 — scraper — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/64
