@@ -15,7 +15,7 @@ import json
 import time
 from datetime import datetime, timezone
 
-from .utils import load_articles, clean_text, save_analysis, ANALYSIS_DIR, DATA_DIR
+from .utils import ANALYSIS_DIR, DATA_DIR, clean_text, load_articles, save_analysis
 
 CONDUCTOR_URL = "http://127.0.0.1:8080/v1"
 RUNS_LOG = DATA_DIR / "analysis" / "runs.jsonl"
@@ -318,7 +318,7 @@ def run(
 
     # Save readable markdown
     md_path = ANALYSIS_DIR / "psychoprofile.md"
-    md_content = f"# Psychoanalytic Author Profile: Dr. George Calhoun\n\n"
+    md_content = "# Psychoanalytic Author Profile: Dr. George Calhoun\n\n"
     md_content += f"*Based on analysis of {len(articles)} Forbes articles ({date_range})*\n\n"
     md_content += f"*Model: {model_used_str} via {router}*\n\n---\n\n"
     md_content += profile_text

@@ -1,12 +1,11 @@
 """Tier 3: Wayback Machine CDX API for discovering and fetching archived articles."""
 
-import json
 import re
 
 import requests
 from bs4 import BeautifulSoup
 
-from .utils import log, rate_limiter, retry, is_article_url, normalize_url
+from .utils import is_article_url, log, normalize_url, rate_limiter, retry
 
 CDX_API = "https://web.archive.org/cdx/search/cdx"
 WAYBACK_PREFIX = "https://web.archive.org/web"
@@ -42,7 +41,6 @@ def discover_urls_from_wayback() -> list[str]:
     # First row is the header
     header = rows[0]
     orig_idx = header.index("original")
-    ts_idx = header.index("timestamp")
 
     urls: set[str] = set()
     for row in rows[1:]:
