@@ -2723,6 +2723,15 @@ function renderContradictions() {
        <div style="font-family:var(--mono);font-size:0.7em;color:var(--text-muted);margin-top:8px">${esc(q.title)}${q.date ? ' &middot; ' + esc(q.date) : ''}</div>
      </blockquote>`;
 
+  // Variant spellings the builder folded into this subject ("Fed" / "the Federal Reserve"), minus
+  // any equal to the canonical name — otherwise a card would just echo its own title.
+  const surfacesNote = c => {
+    const others = (c.surfaces || []).filter(s => s && s !== c.entity);
+    if (!others.length) return '';
+    return `<span class="ct-surfaces" title="Variant spellings merged into this subject"
+         style="font-family:var(--mono);font-size:0.7em;color:var(--text-muted)">also &ldquo;${others.map(esc).join('&rdquo;, &ldquo;')}&rdquo;</span>`;
+  };
+
   const card = c => {
     const warmed = c.direction === 'warmed';
     const badgeColor = warmed ? '#3da35d' : '#4d9de0';
@@ -2731,6 +2740,7 @@ function renderContradictions() {
        <header style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:12px">
          <span style="font-size:1.15em;font-weight:600;color:var(--text)">${esc(c.entity)}</span>
          <span style="font-family:var(--mono);font-size:0.7em;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:${badgeColor};border:1px solid ${badgeColor};padding:2px 8px;border-radius:3px">${warmed ? 'Warmed' : 'Cooled'}</span>
+         ${surfacesNote(c)}
          <span style="font-family:var(--mono);font-size:0.72em;color:var(--text-muted)">swing ${swing} &middot; ${Number(c.n_observations) || 0} mentions</span>
        </header>
        <div class="ct-quotes" style="display:flex;gap:12px;flex-wrap:wrap">

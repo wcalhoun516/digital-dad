@@ -60,6 +60,13 @@ ran against; on the next run a module is **skipped if the fingerprint is unchang
 `utils.py` — shared `load_manifest()`, `load_articles()`, `clean_text()` (strips Forbes
 boilerplate), `chunk_text()` (sentence-aware), `save_analysis()`.
 
+`load_articles()` yields **one article per raw `file`** via `dedupe_manifest_entries()`. The
+committed manifest still carries 23 duplicate-slug entries (199 entries → 176 distinct files;
+see [`../scraper/README.md`](../scraper/README.md)), and without this every corpus-walking
+builder re-read those 23 bodies and counted their sentences twice — 10.2% of the analyzed text
+was duplicated. Builders therefore need no de-dup of their own. `training/prepare.py` walks
+the manifest directly and applies the same helper for the same reason.
+
 > Adding a module? See the runbook: [`runbooks/adding-an-analysis-module.md`](runbooks/adding-an-analysis-module.md).
 
 `on_this_day.py` — not part of the default analyze chain; run via `make on-this-day`. Pulls
@@ -146,7 +153,12 @@ Surfaced in the dashboard's **Second Thoughts** tab (roadmap #15): warmed/cooled
 earliest vs. latest take, each quote deep-linking into the Raw Corpus via `deepLinkToCorpus()`,
 plus a direction filter — injected via `build_dashboard`'s `/*__CONTRADICTIONS_DATA__*/` placeholder
 with an empty-board stub in CI / fresh clones (prompting `make contradictions`). No conductor/network.
-(Roadmap #15.)
+Like `entity_graph`/`entity_stance`, subjects are **canonicalized** through `entity_aliases.py`
+(`--no-aliases` opts out), so one mind-change is a single row rather than one per spelling. Because
+mention-matching is case-*sensitive* here (a proper-noun guard: "Jack" the person vs. "jack up"),
+evidence is gathered under **every** raw spelling in a group and then de-duplicated on
+`(slug, sentence)` — which also keeps the corpus's 23 duplicate slugs (see `scraper/README.md`) from
+counting the same sentence twice. (Roadmap #15 × #14.)
 
 `anthology.py` — a family keepsake, outside the default chain; run via `make anthology` (HTML +
 JSON) or `make anthology-pdf` (adds the PDF). Pure/offline: reads `themes.json` + `predictions.json`

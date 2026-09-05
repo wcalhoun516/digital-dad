@@ -41,11 +41,30 @@ def load_manifest() -> dict:
     return json.loads(MANIFEST_PATH.read_text())
 
 
+def dedupe_manifest_entries(entries: list[dict]) -> list[dict]:
+    """Keep one manifest entry per raw ``file``, in first-seen order.
+
+    The scraper historically upserted on URL, so an article rediscovered under a URL
+    variant appended a second entry naming the *same* raw file (23 such http/https twins
+    are still in the corpus). Entries with no ``file`` are passed through — they can't
+    name a document, and the caller skips them anyway.
+    """
+    seen: set[str] = set()
+    unique = []
+    for entry in entries:
+        path = entry.get("file") or ""
+        if path and path in seen:
+            continue
+        seen.add(path)
+        unique.append(entry)
+    return unique
+
+
 def load_articles() -> list[dict]:
-    """Load all raw article JSON files referenced in the manifest."""
+    """Load all raw article JSON files referenced in the manifest, one per file."""
     manifest = load_manifest()
     articles = []
-    for entry in manifest["articles"]:
+    for entry in dedupe_manifest_entries(manifest["articles"]):
         path = DATA_DIR / entry["file"]
         if path.exists():
             article = json.loads(path.read_text())
