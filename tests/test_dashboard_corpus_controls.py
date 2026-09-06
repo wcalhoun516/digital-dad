@@ -165,6 +165,40 @@ def test_words_sort_tolerates_a_missing_word_count(browser, tmp_path):
     assert _titles(page) == ["Alpha Signals", "Zebra Markets", "No Words"]
 
 
+def test_status_line_reports_the_unfiltered_total(corpus_page):
+    assert corpus_page.inner_text("#corpus-status").strip() == "4 articles"
+
+
+def test_status_line_reports_how_many_the_filter_kept(corpus_page):
+    corpus_page.select_option("#corpus-year-filter", "2024")
+    assert corpus_page.inner_text("#corpus-status").strip() == "Showing 2 of 4 articles"
+
+
+def test_filtering_to_nothing_explains_itself(corpus_page):
+    """A filter that matches nothing left a bare header row and no explanation.
+
+    The Track Record tab already says "No predictions match your filters"; the Raw
+    Corpus tab showed an empty table and no reason for it.
+    """
+    corpus_page.fill("#corpus-search", "zzzz-no-such-article")
+    assert corpus_page.eval_on_selector_all("#corpus-tbody tr", "els => els.length") == 0
+    assert "No articles match your filters" in corpus_page.inner_text("#corpus-status")
+
+
+def test_deep_link_reveals_a_row_hidden_by_an_active_filter(corpus_page):
+    """`deepLinkToCorpus` (Ask Dad / Calhoun-isms citations) clears the filters first.
+
+    It does that by dispatching `input`/`change` at the controls, so it depends on how
+    the corpus listeners are registered — a regression guard for that wiring.
+    """
+    corpus_page.select_option("#corpus-year-filter", "2024")  # hides "Mid Cycle" (2023)
+    corpus_page.evaluate("deepLinkToCorpus('mid', 'Mid Cycle')")
+    corpus_page.wait_for_selector("#corpus-tbody tr.corpus-row-target")
+    row = corpus_page.query_selector("#corpus-tbody tr.corpus-row-target")
+    assert row.get_attribute("data-slug") == "mid"
+    assert corpus_page.errors == []
+
+
 def test_no_page_errors_rendering_the_corpus_tab(corpus_page):
     corpus_page.click('.corpus-table th[data-sort="title"]')
     corpus_page.select_option("#corpus-year-filter", "2024")
