@@ -108,14 +108,10 @@ def test_sort_survives_a_year_filter(corpus_page):
 
 
 def test_sort_survives_a_search(corpus_page):
-    corpus_page.click('.corpus-table th[data-sort="word_count"]')
-    corpus_page.fill("#corpus-search", "a")  # matches every fixture title
-    assert _titles(corpus_page) == [
-        "Zebra Markets",
-        "Mid Cycle",
-        "Alpha Signals",
-        "Beta Curve",
-    ]
+    corpus_page.click('.corpus-table th[data-sort="title"]')
+    corpus_page.fill("#corpus-search", "e")  # drops "Alpha Signals" only
+    # Title-ascending, not the date-descending order (Zebra, Mid, Beta) the bug produced.
+    assert _titles(corpus_page) == ["Beta Curve", "Mid Cycle", "Zebra Markets"]
 
 
 def test_sort_survives_a_theme_filter_clearing(corpus_page):

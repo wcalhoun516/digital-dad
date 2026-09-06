@@ -266,10 +266,13 @@ h3 {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--accent);
-  cursor: pointer;
 }
 
-.corpus-table th:hover { color: var(--text); }
+/* Only the three sortable columns are clickable; Tags/Theme are not. */
+.corpus-table th[data-sort] { cursor: pointer; }
+.corpus-table th[data-sort]:hover { color: var(--text); }
+.corpus-table th[aria-sort="ascending"]::after { content: ' \25B2'; font-size: 0.8em; }
+.corpus-table th[aria-sort="descending"]::after { content: ' \25BC'; font-size: 0.8em; }
 
 .corpus-table td {
   padding: 10px 8px;
@@ -1648,6 +1651,38 @@ function renderCorpus() {
     });
   }
 
+  // The active sort has to survive every re-render, so filtering and sorting share one
+  // path: `getFiltered()` narrows, `sortRows()` orders, `renderCorpusView()` does both.
+  function sortRows(list) {
+    const { key, asc } = currentSort;
+    return [...list].sort((a, b) => {
+      const va = a[key];
+      const vb = b[key];
+      // A missing numeric field (word_count is optional) must stay in the numeric
+      // branch — coercing it to '' put a raw number on the string path.
+      if (typeof va === 'number' || typeof vb === 'number') {
+        const na = typeof va === 'number' ? va : 0;
+        const nb = typeof vb === 'number' ? vb : 0;
+        return asc ? na - nb : nb - na;
+      }
+      const sa = String(va || '');
+      const sb = String(vb || '');
+      return asc ? sa.localeCompare(sb) : sb.localeCompare(sa);
+    });
+  }
+
+  function markSortedHeader() {
+    document.querySelectorAll('.corpus-table th[data-sort]').forEach(th => {
+      const active = th.dataset.sort === currentSort.key;
+      th.setAttribute('aria-sort', active ? (currentSort.asc ? 'ascending' : 'descending') : 'none');
+    });
+  }
+
+  function renderCorpusView() {
+    render(sortRows(getFiltered()));
+    markSortedHeader();
+  }
+
   function render(list) {
     tbody.innerHTML = '';
     list.forEach(a => {
@@ -1664,28 +1699,19 @@ function renderCorpus() {
     });
   }
 
-  render(articles);
+  renderCorpusView();
 
   // Search + filters
-  ['input', 'change'].forEach(ev => {
-    document.getElementById('corpus-search').addEventListener(ev === 'input' ? 'input' : 'change', () => render(getFiltered()));
-  });
-  yearSel.addEventListener('change', () => render(getFiltered()));
-  themeSel.addEventListener('change', () => render(getFiltered()));
+  document.getElementById('corpus-search').addEventListener('input', renderCorpusView);
+  yearSel.addEventListener('change', renderCorpusView);
+  themeSel.addEventListener('change', renderCorpusView);
 
   // Sort
   document.querySelectorAll('.corpus-table th[data-sort]').forEach(th => {
     th.addEventListener('click', () => {
       const key = th.dataset.sort;
-      const asc = currentSort.key === key ? !currentSort.asc : true;
-      currentSort = { key, asc };
-      const sorted = [...getFiltered()].sort((a, b) => {
-        const va = a[key] || '';
-        const vb = b[key] || '';
-        if (typeof va === 'number') return asc ? va - vb : vb - va;
-        return asc ? va.localeCompare(vb) : vb.localeCompare(va);
-      });
-      render(sorted);
+      currentSort = { key, asc: currentSort.key === key ? !currentSort.asc : true };
+      renderCorpusView();
     });
   });
 }
