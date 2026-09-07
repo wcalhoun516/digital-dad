@@ -6,6 +6,28 @@ Three-tier discovery + extraction of Dr. George Calhoun's Forbes articles
 - `python -m scraper` — discover + extract; writes `data/raw/*.json` and updates
   `data/manifest.json`.
 
+## The discovery gate (`scraper/utils.py`)
+
+Every tier funnels candidate URLs through two shared helpers before anything is fetched, so
+these two functions decide what can *ever* enter the archive:
+
+| Helper | Job |
+|--------|-----|
+| `is_article_url(url)` | Accept only dated author articles; reject the listing page, pagination, other authors, and `/amp/` duplicate pages. |
+| `normalize_url(url)`  | Reduce a URL to one canonical spelling: drop query + fragment, lowercase scheme and host (case-insensitive per RFC 3986), enforce a trailing slash. The **path keeps its case** — that is what identifies the article. |
+
+**A false reject here is silent.** There is no error and no log line; the article simply never
+enters the corpus. Two traps worth remembering:
+
+- Match `/amp` as a whole **path segment**, never as a substring. `"/amp" in path` also
+  discards real articles whose slug merely *begins* with "amp" — `ampere-…`, `amplify-…`,
+  `ample-…`. That matters on this beat: he runs a multi-part *Semiconductor Scoreboard*
+  series, and Ampere Computing is a server-silicon company.
+- **`make coverage-audit` cannot catch this class of bug.** Its "discovered" set is produced
+  by the same gate, so a wrongly-rejected URL is absent from *both* sides of the comparison
+  and the audit reports 100% coverage. The gate's own tests (`tests/test_scraper_utils.py`)
+  are the real safety net; `tests/test_coverage_audit.py` pins the interaction.
+
 ## Per-article metadata (roadmap #10)
 
 `extract_article` (Tier 2, `scraper/forbes_requests.py`) records the core fields
@@ -65,6 +87,11 @@ article was rediscovered under a *different* URL (e.g. an `http://` vs `https://
 Wayback variant), it slugified to the same filename — so the raw file was overwritten, but a
 **second manifest entry was appended**. That produced the 23 duplicate-slug entries (~12%) in
 the current corpus.
+
+A second, subtler source of the same twin: `normalize_url` used to preserve host casing, so a
+sitemap or CDX row spelling the host `WWW.Forbes.com` produced a *different* string from the
+canonical one. It now lowercases scheme and host, so those variants collapse before they reach
+the manifest.
 
 **Root cause fixed** (`scraper/__main__.py`): the scrape loop now calls `upsert_article()`,
 which matches an existing entry on **`slug`**, so a re-scrape under a URL variant replaces the
