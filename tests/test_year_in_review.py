@@ -18,6 +18,7 @@ from analysis.year_in_review import (
     render_markdown,
     run,
     top_themes,
+    verdict_tally,
 )
 
 THEME_ARTICLES = [
@@ -207,6 +208,75 @@ class TestNotablePredictions:
         ]
         got = notable_predictions(hoggy, 2024, max_per_article=2)
         assert len(got) == 2
+
+
+class TestVerdictLabels:
+    def test_html_labels_each_call_with_its_verdict(self):
+        d = build_digest([], ADJUDICATED, 2024, predictions_n=6)
+        html = render_html(d)
+        assert "Vindicated" in html
+        assert "Wrong" in html
+
+    def test_html_does_not_present_a_wrong_call_as_merely_confident(self):
+        # The bug: a call judged wrong showed only its confidence label ("Certain").
+        d = build_digest([], [ADJUDICATED[0]], 2024)
+        html = render_html(d)
+        assert "Certain but wrong." in html
+        assert "Wrong" in html
+
+    def test_unjudged_calls_read_as_not_yet_judged_rather_than_pending(self):
+        d = build_digest([], [ADJUDICATED[2]], 2024)
+        html = render_html(d)
+        assert "Not yet judged" in html
+
+    def test_markdown_labels_each_call_with_its_verdict(self):
+        d = build_digest([], ADJUDICATED, 2024, predictions_n=6)
+        md = render_markdown(d)
+        assert "Vindicated" in md
+        assert "Wrong" in md
+
+
+class TestVerdictTally:
+    def test_counts_only_adjudicated_calls_for_the_year(self):
+        assert verdict_tally(ADJUDICATED, 2024) == {
+            "vindicated": 1, "mixed": 1, "wrong": 1, "total": 3
+        }
+
+    def test_ignores_other_years(self):
+        assert verdict_tally(ADJUDICATED, 2023) == {
+            "vindicated": 0, "mixed": 0, "wrong": 0, "total": 0
+        }
+
+    def test_counts_every_call_not_just_the_ones_shown(self):
+        # The scoreboard is the year's whole record; the digest only *shows* a handful.
+        many = [
+            dict(p, claim=f"c{i}", article_slug=f"s{i}", article_date="2024-01-01")
+            for i, p in enumerate([ADJUDICATED[0]] * 9)
+        ]
+        assert verdict_tally(many, 2024)["wrong"] == 9
+
+    def test_a_human_ruling_wins_in_the_tally_too(self):
+        overridden = [{"article_date": "2024-01-01", "llm_verdict": "wrong",
+                       "human_verdict": "vindicated"}]
+        assert verdict_tally(overridden, 2024)["vindicated"] == 1
+
+    def test_digest_carries_the_tally(self):
+        d = build_digest([], ADJUDICATED, 2024)
+        assert d["verdict_tally"]["total"] == 3
+
+    def test_html_states_the_years_record(self):
+        d = build_digest([], ADJUDICATED, 2024)
+        html = render_html(d)
+        assert "1 came good" in html
+
+    def test_markdown_states_the_years_record(self):
+        md = render_markdown(build_digest([], ADJUDICATED, 2024))
+        assert "1 came good" in md
+
+    def test_no_scoreboard_when_nothing_was_adjudicated(self):
+        unjudged = [{"claim": "x", "article_date": "2024-01-01", "article_slug": "u"}]
+        html = render_html(build_digest([], unjudged, 2024))
+        assert "came good" not in html
 
 
 class TestBuildDigest:

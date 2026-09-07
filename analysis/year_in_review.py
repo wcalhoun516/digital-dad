@@ -105,6 +105,25 @@ def notable_predictions(
     return out
 
 
+def verdict_tally(predictions: list[dict], year) -> dict:
+    """Tally how a year's *adjudicated* calls actually turned out.
+
+    Counts every prediction from ``year`` the archive has ruled on — not merely the handful
+    the digest shows — so the keepsake can state the year's real record. Unfalsifiable and
+    not-yet-judged claims are excluded: neither is a call that was won or lost.
+    """
+    y = str(year)
+    counts = {v: 0 for v in ADJUDICATED_VERDICTS}
+    for p in predictions:
+        if (p.get("article_date") or "")[:4] != y:
+            continue
+        verdict = effective_verdict(p)
+        if verdict in counts:
+            counts[verdict] += 1
+    counts["total"] = sum(counts.values())
+    return counts
+
+
 def build_digest(
     theme_articles: list[dict],
     predictions: list[dict],
@@ -121,6 +140,7 @@ def build_digest(
         "total_words": sum(a.get("word_count", 0) for a in year_articles),
         "top_themes": top_themes(year_articles, top_n=top_themes_n),
         "notable_predictions": notable_predictions(predictions, year, limit=predictions_n),
+        "verdict_tally": verdict_tally(predictions, year),
     }
 
 
@@ -158,16 +178,71 @@ _THEMES_SECTION = """\
 _PREDICTION_ITEM = """\
     <div style="margin-bottom: 16px;">
       <p style="font-size: 0.98em; margin: 0 0 4px;">&ldquo;{claim}&rdquo;</p>
-      <p style="font-size: 0.8em; color: #888; margin: 0;">{confidence} &middot; <a href="{url}" style="color: #c9a84c; text-decoration: none;">{title}</a></p>
+      <p style="font-size: 0.8em; color: #888; margin: 0;"><strong style="color: {verdict_color};">{verdict}</strong> &middot; {confidence} &middot; <a href="{url}" style="color: #c9a84c; text-decoration: none;">{title}</a></p>
     </div>"""
 
 _PREDICTIONS_SECTION = """\
   <h2 style="font-size: 1.2em; font-weight: 400; margin: 24px 0 8px;">Notable calls</h2>
-{items}"""
+{scoreboard}{items}"""
+
+_SCOREBOARD = """\
+  <p style="font-size: 0.9em; color: #666; margin: 0 0 12px; font-style: italic;">{sentence}</p>
+"""
+
+# How a verdict is named in the email. "pending" is spelled out — a family reader should not
+# have to guess that it means "we haven't ruled on this yet" rather than "he was wrong".
+_VERDICT_LABEL = {
+    "vindicated": "Vindicated",
+    "mixed": "Mixed",
+    "wrong": "Wrong",
+    "unfalsifiable": "Unfalsifiable",
+    "pending": "Not yet judged",
+}
+
+# Muted enough for a keepsake, dark enough to read on the white email background (the
+# dashboard's brighter palette is tuned for its dark theme).
+_VERDICT_COLOR = {
+    "vindicated": "#4a7c59",
+    "mixed": "#8a6d3b",
+    "wrong": "#a04a4a",
+}
+
+_TALLY_PHRASE = {
+    "vindicated": "{n} came good",
+    "mixed": "{n} landed partly",
+    "wrong": "{n} went the other way",
+}
+
+
+def _join_clauses(clauses: list[str]) -> str:
+    """Join phrases as prose: "a", "a and b", "a, b and c"."""
+    if len(clauses) <= 1:
+        return "".join(clauses)
+    return f"{', '.join(clauses[:-1])} and {clauses[-1]}"
+
+
+def scoreboard_sentence(tally: dict, year) -> str:
+    """One honest line about the year's adjudicated record, or "" if nothing was ruled on."""
+    total = tally.get("total", 0)
+    if not total:
+        return ""
+    clauses = [
+        _TALLY_PHRASE[v].format(n=tally[v]) for v in ADJUDICATED_VERDICTS if tally.get(v)
+    ]
+    noun = "call" if total == 1 else "calls"
+    return (
+        f"Of the {total} {noun} from {year} the archive has since ruled on, "
+        f"{_join_clauses(clauses)}."
+    )
 
 
 def _esc(value) -> str:
     return html.escape(str(value), quote=False)
+
+
+def _verdict_label(prediction: dict) -> str:
+    verdict = effective_verdict(prediction)
+    return _VERDICT_LABEL.get(verdict, verdict.title())
 
 
 def render_html(digest: dict) -> str:
@@ -194,13 +269,17 @@ def render_html(digest: dict) -> str:
         items = "\n".join(
             _PREDICTION_ITEM.format(
                 claim=_esc(p.get("claim", "")),
+                verdict=_esc(_verdict_label(p)),
+                verdict_color=_VERDICT_COLOR.get(effective_verdict(p), "#999"),
                 confidence=_esc((p.get("confidence_language") or "").title() or "Prediction"),
                 title=_esc(p.get("article_title", "")),
                 url=html.escape(p.get("article_url", "#"), quote=True),
             )
             for p in preds
         )
-        predictions_section = _PREDICTIONS_SECTION.format(items=items)
+        sentence = scoreboard_sentence(digest.get("verdict_tally") or {}, year)
+        scoreboard = _SCOREBOARD.format(sentence=_esc(sentence)) if sentence else ""
+        predictions_section = _PREDICTIONS_SECTION.format(scoreboard=scoreboard, items=items)
     else:
         predictions_section = ""
 
@@ -230,9 +309,15 @@ def render_markdown(digest: dict) -> str:
     preds = digest.get("notable_predictions") or []
     if preds:
         lines += ["", "## Notable calls"]
+        sentence = scoreboard_sentence(digest.get("verdict_tally") or {}, year)
+        if sentence:
+            lines += [sentence, ""]
         for p in preds:
             conf = (p.get("confidence_language") or "").title() or "Prediction"
-            lines.append(f"- [{conf}] {p.get('claim', '')} — {p.get('article_title', '')}")
+            lines.append(
+                f"- [{_verdict_label(p)} · {conf}] {p.get('claim', '')}"
+                f" — {p.get('article_title', '')}"
+            )
     return "\n".join(lines)
 
 
