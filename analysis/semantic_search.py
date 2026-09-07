@@ -18,11 +18,10 @@ CLI usage:
 import argparse
 import hashlib
 import json
-import sys
 
 import numpy as np
 
-from .utils import DATA_DIR, clean_text, load_articles
+from .utils import DATA_DIR, clean_text, load_articles, log
 
 # Pinned embedder. The conductor will route directly here when this id is
 # passed in the request body, bypassing its smart-routing classifier. The
@@ -128,10 +127,7 @@ def build_embeddings(
                 _write_dashboard_export(embeddings, meta["articles"], articles)
             return embeddings, meta["articles"]
 
-    print(
-        f"Embedding {len(articles)} articles via conductor → {EMBED_MODEL}...",
-        file=sys.stderr,
-    )
+    log.info("Embedding %d articles via conductor → %s...", len(articles), EMBED_MODEL)
 
     texts = [_truncate_for_embed(a.get("body", "")) for a in articles]
     meta_articles: list[dict] = [
@@ -148,10 +144,7 @@ def build_embeddings(
     for start in range(0, len(texts), batch_size):
         chunk = texts[start : start + batch_size]
         end = min(start + batch_size, len(texts))
-        print(
-            f"  batch {start // batch_size + 1}: articles {start + 1}-{end}",
-            file=sys.stderr,
-        )
+        log.debug("  batch %d: articles %d-%d", start // batch_size + 1, start + 1, end)
         vectors.extend(_embed_batch(chunk))
 
     embeddings = np.array(vectors, dtype=np.float32)
@@ -169,7 +162,7 @@ def build_embeddings(
         )
     )
     _write_dashboard_export(embeddings, meta_articles, articles)
-    print(f"Saved embeddings → {EMBEDDINGS_PATH}", file=sys.stderr)
+    log.info("Saved embeddings → %s", EMBEDDINGS_PATH)
 
     return embeddings, meta_articles
 
@@ -260,12 +253,12 @@ def search(
 def run(articles: list[dict] | None = None) -> None:
     """Build (or refresh) the corpus embedding index."""
     embeddings, meta = build_embeddings(articles)
-    print(
-        f"  Embedded {len(meta)} articles via {EMBED_MODEL} "
-        f"({embeddings.shape[1]}-d vectors)"
+    log.info(
+        "  Embedded %d articles via %s (%d-d vectors)",
+        len(meta), EMBED_MODEL, embeddings.shape[1],
     )
-    print(f"  Index → {EMBEDDINGS_PATH}")
-    print(f"  Dashboard export → {DASHBOARD_EXPORT_PATH}")
+    log.info("  Index → %s", EMBEDDINGS_PATH)
+    log.info("  Dashboard export → %s", DASHBOARD_EXPORT_PATH)
 
 
 # ---------------------------------------------------------------------------

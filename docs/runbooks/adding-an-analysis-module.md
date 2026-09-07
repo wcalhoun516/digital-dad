@@ -19,18 +19,21 @@ like this:
 ```python
 """<name>: one-line description of what this computes."""
 
-from .utils import load_articles, clean_text, save_analysis
+from .utils import load_articles, clean_text, log, save_analysis
 
 
 def run(articles: list[dict] | None = None) -> dict:
     if articles is None:
         articles = load_articles()
 
+    log.info("Analyzing %d articles...", len(articles))
+
     result = {
         # ... your computed analysis ...
     }
 
-    save_analysis("<name>.json", result)
+    path = save_analysis("<name>.json", result)
+    log.info("<name> saved to %s", path)
     return result
 ```
 
@@ -52,6 +55,20 @@ Conventions that matter:
   writes `.npy` + meta + a flattened dashboard export.)
 - **An article dict** has at least `slug`, `title`, `date`, `url`, `body`, `word_count`,
   `content_hash` (see the manifest schema in `architecture.md` §1).
+- **Log diagnostics; don't `print` them** (roadmap #7). Import the shared `log` from
+  `.utils` — it's the `digital-dad.analysis` logger, so `python -m analysis --verbose` and the
+  weekly cron's log file pick your module up for free, with timestamps and levels.
+  - **INFO** — what a normal run should say: counts, where the artifact landed, totals.
+  - **DEBUG** — per-article/per-batch progress. This is what `--verbose` exists to reveal, so
+    a default run stays readable.
+  - **WARNING** — a recoverable failure (a bad LLM response, a skipped article). Don't bury
+    these in an INFO line prefixed `"Warning:"`.
+  - Use `%s` placeholders rather than f-strings so the formatting cost is skipped when the
+    level is off.
+  - The one exception is **output a user asked for**: a standalone CLI printing search results
+    should still `print`, because that stdout is the product and gets piped.
+    `tests/test_analysis_logging.py` enforces this for the pipeline modules and carries an
+    allow-list for the CLI exceptions.
 - **If your module calls a model**, follow [`conductor-contract.md`](../conductor-contract.md):
   default to tier 2, guard the `openai` import, and never make an unguarded paid T3 call from
   code that could run unattended.
@@ -80,14 +97,11 @@ a module in:
 
    ```python
    if "<name>" in modules:
-       print("=" * 50)
-       print("<NAME> — short description")
-       print("=" * 50)
+       log.info("=== <NAME> — short description ===")
        if _should_run("<name>"):
            from .<name> import run as run_<name>
            run_<name>(articles)
            _log_run("<name>", fingerprint)
-       print()
    ```
 
    Import inside the block (lazy import) so an optional heavy dependency doesn't slow down or
@@ -164,13 +178,37 @@ ruff findings), so keep new test files clean.
 
 ---
 
+## Document it (enforced)
+
+Add an entry for your module to [`../architecture.md`](../architecture.md) §2 — what it reads,
+what it writes, whether it's in the default `make analyze` chain, and whether the artifact is
+committed or git-ignored. This is **not optional**:
+`tests/test_docs_coverage.py` fails when a file in `analysis/` has no entry, because
+`docs/INDEX.md` promises architecture.md is "the repo map ... read this before touching any
+module" and eleven modules had quietly landed without one.
+
+The guard looks for the **filename in a code span** — `` `<name>.py` `` or
+`` `analysis/<name>.py` ``. Naming only the artifact it writes (`` `<name>.json` ``) does not
+count: that's a mention, not a description, and it would let an undescribed module pass.
+
+The same test checks the reverse direction for commands: any `` `make <target>` `` written in
+a code span in the README, these docs, or `dashboard/template.html` must exist in the
+`Makefile`. So if you add a target, reference it; if you reference one, add it — including in
+`.PHONY`.
+
+---
+
 ## Checklist
 
 - [ ] `analysis/<name>.py` exposes `run(articles)`, uses `load_articles` / `clean_text` /
       `save_analysis`, writes `data/analysis/<name>.json`.
 - [ ] Added to `ALL_MODULES` + a dispatch block in `analysis/__main__.py` with
       `_should_run` / `_log_run`.
+- [ ] Diagnostics go through the shared `log` (INFO for summaries, DEBUG for per-item
+      progress), not `print`.
 - [ ] (If model calls) follows [`conductor-contract.md`](../conductor-contract.md): tier 2
       default, guarded import, no unguarded paid call in unattended paths.
 - [ ] (If dashboard) placeholder in `PLACEHOLDERS` + `_EMPTY_DEFAULTS` + `template.html`.
 - [ ] `tests/test_<name>.py` covers the logic offline; `make verify` green.
+- [ ] Entry in [`../architecture.md`](../architecture.md) §2 naming `` `<name>.py` `` — enforced
+      by `tests/test_docs_coverage.py`.
