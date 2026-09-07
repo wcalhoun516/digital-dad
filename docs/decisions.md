@@ -126,3 +126,21 @@ first: more examples-per-article (138 → 500+, a 26a change) plus more iters / 
 then re-run `make voice-eval`. The adapter, trials, and eval report live under
 `data/finetune_run/` and `data/analysis/voice_eval.*` (all gitignored). Mild overfitting
 appeared by iter ~100 (val loss bottomed there), consistent with the tiny training set.
+
+### D16 — The lint gate covers the whole tree; E501 is carved out of the source packages
+**Why:** `make lint` was scoped to `LINT_PATHS := tests` from the day it existed, so no
+production line was ever linted — the deferral was recorded in the Makefile, the pre-commit
+config, and roadmap #1–3, and PR #45 tripped over it from the far side (it ruff-fixed
+`scraper/forbes_requests.py` and noted the file "was never gated"). Widening the scope
+surfaced 98 findings, 24 of which were real: 9 dead imports, an unused local, two no-op
+f-strings, an assigned lambda, an ambiguous `l`, and 10 unsorted import blocks.
+**Implication:** all 24 are fixed and the gate now runs over `analysis scraper viz training
+tools bin tests`. The remaining 74 are **E501**, and they are ignored *per-package* rather
+than globally: most are embedded LLM prompt string literals (`psychoprofile` ×18,
+`predictions` ×15, `on_this_day` ×11), and re-wrapping a prompt literal changes the prompt the
+model actually sees — a behavior change masquerading as formatting, so it belongs in its own
+reviewed pass. `tests/` is deliberately absent from `per-file-ignores`: it has been
+E501-clean since the gate existed and stays fully gated, so this is a strict widening with no
+rule weakened anywhere. `tests/test_lint_scope.py` pins all of that — it fails if a package
+drops out of `LINT_PATHS`, if the pre-commit `files:` regex drifts out of lockstep with it,
+or if `tests/` ever acquires a per-file ignore.

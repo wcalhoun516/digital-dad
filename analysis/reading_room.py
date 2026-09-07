@@ -67,16 +67,26 @@ def build_reading_room(
     undated records (the Forbes author-listing page) and any article with no readable body
     are excluded (there is nothing to read). ``prev_slug``/``next_slug`` walk the final
     reading order. ``limit`` keeps the newest N.
+
+    Repeated slugs collapse to their first record in reading order. The corpus manifest
+    records ``http://``/``https://`` twins of the same article and they reach here through
+    ``themes.json``; because the reader resolves ``prev_slug``/``next_slug`` through a
+    slug-keyed map, a slug present twice would make a neighbour link resolve back to the
+    article the reader is already on.
     """
     dated = [a for a in articles if (a.get("date") or "")]
     ordered = sorted(dated, key=lambda a: (a.get("date", ""), a.get("slug", "")), reverse=True)
 
     entries: list[dict] = []
+    seen: set[str] = set()
     for a in ordered:
         slug = a.get("slug", "")
+        if slug in seen:
+            continue
         paras = paragraphs(load_body(slug))
         if not paras:
             continue
+        seen.add(slug)
         entries.append(
             {
                 "slug": slug,

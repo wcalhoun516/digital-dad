@@ -20,12 +20,20 @@ are pure functions. The CLI (``python -m analysis.embedding_compare`` /
 ``make embedding-compare``) wires the seam to the live conductor and is gated on
 its reachability because a live pass loads/embeds with each candidate model.
 
-The dashboard viz and a curated gold query set are deferred to future slices;
-this ships the offline harness + a starter query template.
+A headline MRR is not on its own a result. On a small gold set MRR moves in
+coarse steps — one query slipping from rank 2 to rank 3 shifts a 13-query MRR by
+~0.013 — so a bare argmax over MRR can crown a "winner" that is one rank slot of
+noise. The harness therefore reports the evidence alongside the number:
+``per_query`` detail, a ``paired`` sign test against the baseline on the same
+queries, and a ``verdict`` that withholds a winner it cannot distinguish from
+chance (see ``aggregate``).
+
+The dashboard viz is deferred to a future slice.
 """
 
 import argparse
 import json
+import math
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -49,6 +57,10 @@ BASELINE_MODEL = "sbert-mpnet-v2"
 CONDUCTOR_BASE_URL = "http://127.0.0.1:8080/v1"
 
 DEFAULT_KS = (1, 3, 5)
+
+# Significance level a candidate's paired sign test must clear before the harness
+# will call it better than the pinned baseline.
+DEFAULT_ALPHA = 0.05
 
 # mpnet's encoder context is short; the first ~2k words carry an article's gist
 # (mirrors analysis.semantic_search._MAX_WORDS_PER_ARTICLE).
@@ -146,6 +158,107 @@ def retrieval_metrics(
             out[f"recall_at_{k}"] = 0.0
     out["mrr"] = round(mrr(rankings, relevants), 4)
     return out
+
+
+def per_query_metrics(
+    rankings: list[list[str]],
+    relevants: list[set[str]],
+    queries: list[dict] | None = None,
+) -> list[dict]:
+    """Per-query retrieval detail, one row per query in input order.
+
+    The aggregate metrics alone can't show *where* two models differ: a whole
+    MRR gap is often one query moving a single rank slot. Each row carries the
+    rank of the first relevant hit (``None`` = missed entirely) so a reviewer
+    can see which queries moved, and ``scored`` marks whether the query has
+    labels at all (unlabelled queries are excluded from every mean).
+    """
+    rows: list[dict] = []
+    for i, (ranked, relevant) in enumerate(zip(rankings, relevants)):
+        first_rank = None
+        for position, slug in enumerate(ranked, 1):
+            if slug in relevant:
+                first_rank = position
+                break
+        query_text = ""
+        if queries is not None and i < len(queries):
+            query_text = queries[i].get("query", "") or ""
+        rows.append(
+            {
+                "query": query_text,
+                "n_relevant": len(relevant),
+                "scored": bool(relevant),
+                "first_relevant_rank": first_rank,
+                "reciprocal_rank": round(reciprocal_rank(ranked, relevant), 4),
+            }
+        )
+    return rows
+
+
+def _sign_test_p(wins: int, losses: int) -> float:
+    """Two-sided exact binomial (sign) test p-value; ties are excluded upstream."""
+    n = wins + losses
+    k = min(wins, losses)
+    tail = sum(math.comb(n, i) for i in range(k + 1))
+    return min(1.0, 2 * tail / (2**n))
+
+
+def _min_achievable_p(n: int) -> float:
+    """Smallest two-sided sign-test p reachable with *n* paired queries (a sweep)."""
+    return min(1.0, 2 / (2**n)) if n else 1.0
+
+
+def gold_set_power(n_queries: int, alpha: float = DEFAULT_ALPHA) -> dict:
+    """Can a gold set of this size ever produce a significant result?
+
+    The sign test's p-value is bounded below by the unanimous outcome, so a
+    small gold set is *unfalsifiable*: with 5 labelled queries even a clean
+    sweep only reaches 0.0625, so no live comparison against it could ever
+    clear alpha=0.05. Answering this offline — before a run that embeds the
+    whole corpus once per candidate model — is much cheaper than after.
+    """
+    floor = _min_achievable_p(n_queries)
+    needed = 0
+    while _min_achievable_p(needed) > alpha:
+        needed += 1
+    return {
+        "n": n_queries,
+        "alpha": alpha,
+        "min_achievable_p": round(floor, 4),
+        "can_decide": floor <= alpha,
+        "min_queries_to_decide": needed,
+    }
+
+
+def paired_comparison(
+    candidate_rr: list[float], baseline_rr: list[float]
+) -> dict:
+    """Compare a candidate's per-query reciprocal ranks against the baseline's.
+
+    The comparison is *paired* — both models answered the same queries, so the
+    question is how often the candidate beat the baseline on the same query,
+    not whether two independent means differ. ``sign_test_p`` is the exact
+    two-sided binomial probability of a win/loss split this lopsided by chance.
+
+    ``min_achievable_p`` is the p-value a **clean sweep** of this many queries
+    would produce. It answers a question the other numbers can't: whether the
+    gold set is large enough for *any* outcome to be conclusive. A 5-query set
+    bottoms out at 0.0625, so at alpha=0.05 no result on it is ever significant.
+    """
+    pairs = list(zip(candidate_rr, baseline_rr))
+    n = len(pairs)
+    wins = sum(1 for c, b in pairs if c > b)
+    losses = sum(1 for c, b in pairs if c < b)
+    ties = n - wins - losses
+    return {
+        "n": n,
+        "wins": wins,
+        "losses": losses,
+        "ties": ties,
+        "mean_delta": round(sum(c - b for c, b in pairs) / n, 4) if n else 0.0,
+        "sign_test_p": round(_sign_test_p(wins, losses), 4),
+        "min_achievable_p": round(_min_achievable_p(n), 4),
+    }
 
 
 # --------------------------------------------------------------------------- #
@@ -249,10 +362,25 @@ def compare_models(
         rankings_by_model[model_id] = rank_model(model_id, corpus, queries, embed)
 
     base_rankings = rankings_by_model.get(baseline)
+    base_per_query = (
+        None if base_rankings is None
+        else per_query_metrics(base_rankings, relevants, queries)
+    )
     records: list[dict] = []
     for model_id in model_ids:
         rankings = rankings_by_model[model_id]
         is_baseline = model_id == baseline
+        rows = per_query_metrics(rankings, relevants, queries)
+        paired = None
+        if not is_baseline and base_per_query is not None:
+            # Only labelled queries are pairable — an unlabelled one scores 0 for
+            # every model, so counting it would be a guaranteed tie that inflates
+            # `n` and makes `min_achievable_p` look better than the labels justify.
+            scored = [i for i, row in enumerate(rows) if row["scored"]]
+            paired = paired_comparison(
+                [rows[i]["reciprocal_rank"] for i in scored],
+                [base_per_query[i]["reciprocal_rank"] for i in scored],
+            )
         records.append(
             {
                 "model": model_id,
@@ -261,24 +389,81 @@ def compare_models(
                 "agreement": None
                 if is_baseline or base_rankings is None
                 else agreement(rankings, base_rankings, ks),
+                "per_query": rows,
+                "paired": paired,
             }
         )
     return records
 
 
-def aggregate(records: list[dict], baseline: str | None = None) -> dict:
-    """Headline summary: model count, baseline id, and the best model by MRR."""
+def _verdict(
+    records: list[dict], best_model: str | None, baseline: str | None, alpha: float
+) -> tuple[str, str]:
+    """Classify the leading model against the baseline, honouring the margin."""
+    if not records:
+        return "inconclusive", "no models were compared."
+    if best_model == baseline:
+        return "baseline_retained", (
+            f"the pinned baseline {baseline!r} still has the best MRR — nothing to swap."
+        )
+
+    record = next((r for r in records if r.get("model") == best_model), None)
+    paired = (record or {}).get("paired")
+    if not paired:
+        return "inconclusive", (
+            f"{best_model!r} leads on MRR but was never paired against the baseline, "
+            "so the margin is unmeasured."
+        )
+
+    p = paired.get("sign_test_p", 1.0)
+    delta = paired.get("mean_delta", 0.0)
+    floor = paired.get("min_achievable_p", 1.0)
+    if delta > 0 and p <= alpha:
+        return "candidate_better", (
+            f"{best_model!r} beat the baseline on {paired['wins']} of "
+            f"{paired['n']} labelled queries (lost {paired['losses']}, tied "
+            f"{paired['ties']}); sign-test p={p} <= alpha={alpha}."
+        )
+    if floor > alpha:
+        return "inconclusive", (
+            f"the gold set is too small to decide: {paired['n']} labelled queries "
+            f"bottom out at p={floor}, above alpha={alpha}, so no outcome could be "
+            "significant. Add gold queries before trusting any winner."
+        )
+    return "inconclusive", (
+        f"{best_model!r} has the best MRR, but its paired mean-RR delta vs the "
+        f"baseline is {delta:+.4f} and it won only {paired['wins']} of "
+        f"{paired['n']} labelled queries (lost {paired['losses']}, tied "
+        f"{paired['ties']}); sign-test p={p} > alpha={alpha}. Keep the pinned model."
+    )
+
+
+def aggregate(
+    records: list[dict],
+    baseline: str | None = None,
+    *,
+    alpha: float = DEFAULT_ALPHA,
+) -> dict:
+    """Headline summary: model count, baseline id, best model by MRR, and a verdict.
+
+    The raw ``best_mrr_model`` argmax is kept, but on its own it is a trap: with a
+    small gold set one query moving a single rank slot can flip it. ``verdict``
+    is the number that should actually gate a swap of the pinned model (D2).
+    """
     best_model = None
     best_mrr = -1.0
     for r in records:
         m = r.get("retrieval", {}).get("mrr", 0.0)
         if m > best_mrr:
             best_mrr, best_model = m, r.get("model")
+    verdict, reason = _verdict(records, best_model, baseline, alpha)
     return {
         "baseline": baseline,
         "n_models": len(records),
         "best_mrr_model": best_model,
         "best_mrr": round(best_mrr, 4) if records else 0.0,
+        "verdict": verdict,
+        "verdict_reason": reason,
     }
 
 
@@ -287,9 +472,10 @@ def write_report(
     path: Path = REPORT_PATH,
     *,
     baseline: str | None = None,
+    alpha: float = DEFAULT_ALPHA,
 ) -> dict:
     """Write ``{generated_at, summary, records}`` JSON; return the summary."""
-    summary = aggregate(records, baseline=baseline)
+    summary = aggregate(records, baseline=baseline, alpha=alpha)
     payload = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "summary": summary,
@@ -474,6 +660,9 @@ def main(argv: list[str] | None = None) -> int:
                         help="k values for precision/recall/overlap (default: 1 3 5)")
     parser.add_argument("--limit", type=int, default=None,
                         help="cap the corpus to N articles this run (faster smoke test)")
+    parser.add_argument("--alpha", type=float, default=DEFAULT_ALPHA,
+                        help="significance level the paired sign test must clear before a "
+                             f"candidate is called better (default: {DEFAULT_ALPHA})")
     args = parser.parse_args(argv)
 
     # Offline gold-set validation — runs before the model/conductor requirements so
@@ -491,6 +680,19 @@ def main(argv: list[str] | None = None) -> int:
             f"Gold query set OK: {len(queries)} queries; every relevant_slug resolves "
             f"to one of {len(corpus_slugs)} corpus articles."
         )
+        power = gold_set_power(len(queries), alpha=args.alpha)
+        if power["can_decide"]:
+            print(
+                f"Large enough to decide: a clean sweep of {power['n']} queries reaches "
+                f"p={power['min_achievable_p']}, at or below alpha={power['alpha']}."
+            )
+        else:
+            print(
+                f"WARNING — gold set too small to decide: {power['n']} queries bottom "
+                f"out at p={power['min_achievable_p']}, above alpha={power['alpha']}, so "
+                f"no comparison against it can ever be significant. Need at least "
+                f"{power['min_queries_to_decide']} labelled queries."
+            )
         return 0
 
     model_ids = list(args.models or [])
@@ -534,11 +736,14 @@ def main(argv: list[str] | None = None) -> int:
         ks=tuple(args.ks),
         log=lambda m: print(m, flush=True),
     )
-    summary = write_report(records, args.output, baseline=args.baseline)
+    summary = write_report(
+        records, args.output, baseline=args.baseline, alpha=args.alpha
+    )
     print(
         f"\nEmbedding comparison ({summary['n_models']} models, "
         f"{len(queries)} gold queries, {len(corpus)} articles): "
         f"best MRR = {summary['best_mrr_model']} ({summary['best_mrr']:.3f}).\n"
+        f"Verdict: {summary['verdict']} — {summary['verdict_reason']}\n"
         f"Report → {args.output}"
     )
     return 0
