@@ -48,43 +48,62 @@ Format:
 
 <!-- entries below -->
 
-### 2026-09-05 — ingest — ready-for-review
-- PR: https://github.com/wcalhoun516/digital-dad/pull/87
-- Source: roadmap:#32
-- Summary: **The backlog broke.** Between 08-27 and today the owner merged **six** PRs (#77–#81
-  plus his own `feat/corpus-ingest-thin-slice` **#79**), so the three-day stand-down is over: **5**
-  open `daily/*` PRs (#82–#86), well under the §2 threshold, `main` green, and §3 had nothing to
-  resume (all five are `ready-for-review`, none `in-progress`). The un-drafting note from 08-27
-  appears to have been acted on — that is what unblocked the queue.
-  **#79 also created a brand-new roadmap category, `ingest` (Corpus II)**, which no daily run has
-  ever worked, making it unambiguously the least-recently-worked category — no need for the
-  "most-deferred item" tie-break the last four cold-path runs had to fall back on. #29–31 are done,
-  so the first unstarted item is **#32 (P2·S·ingest) — the `.eml`/`.mbox` handler**, which the
-  design spec puts in the **core stdlib-only** tier and names as the canonical case of the
-  load-bearing "one source yields many documents" rule.
-  New `ingest/handlers/mail.py`: one document per message, `Subject`→title, `Date`→exact ISO date,
-  `modality: email`, `authorship: mixed` once a thread has more than one sender, `text/plain`
-  preferred over HTML, and a pure `strip_quoted_reply()`. **That stripper is the point of the
-  slice** — without it a 12-reply thread hands the same sentence to themes/embeddings/entity-graph
-  twelve times, the exact duplicate-counting defect PR #77 spent a day removing from the *manifest*
-  side. It truncates at an `On … wrote:` attribution, an `-----Original Message-----` block or a
-  `--` signature, then drops `>` lines. **§8.5 deepen:** the one genuine bug found after the first
-  green — **Gmail hard-wraps long attributions**, so `wrote:` lands a line or two below the `On`,
-  and a single-line regex left a dangling `Will Calhoun <will@example.com>` in the body; the
-  matcher now joins up to two continuation lines (proved red→green). Plus guard tests for RFC-2047
-  encoded subjects, quoted-printable/base64/iso-8859-1 decoding, the private-by-default provenance
-  block (email is the most sensitive modality in the corpus), and the **queue integration seam** —
-  an `.eml` in `data/inbox/` now counts as `staged`, not `skipped`.
-  **TDD'd:** +37 tests (`tests/test_ingest_mail.py`), the first 25 proved red (all
-  `UnsupportedFormat`) before any handler existed. **Offline / unattended-safe:** stdlib `email` +
-  `mailbox` only — no conductor, network, LLM, or new dependency; every fixture is synthetic, so
-  **no real family mail enters git** (the spec's testing rule). No data artifact committed.
-  **Verification:** `make verify` green — **1029 passed**, ruff clean, dashboard builds. Baseline
-  measured, not assumed: a clean `origin/main` worktree collects **992** (991 passed + 1
-  environment-skip), so the delta is exactly the **+37** added here. The wrapped-attribution fix
-  was proved **red→green** (reverted to the single-line regex → that one test fails; restored → 37
-  pass). **Deferred:** `.docx` (#33) is the next isolated handler PR; the one-time
-  provenance data migration flagged in #29 is still pending and still owner-gated.
+### 2026-09-06 — dashboard — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/88
+- Source: roadmap:dashboard (least-recently-worked category; items #18–#21 all shipped, so a defect in one)
+- Summary: **The Raw Corpus tab promises "Every article, searchable and sortable" — the two
+  halves didn't compose.** `renderCorpus()` held the chosen sort in a local `currentSort`, but
+  only the `th` click handler ever applied it; the search box and the year/theme selects each
+  re-rendered with `render(getFiltered())`, silently dropping the sort back to date-descending.
+  Measured live in headless Chromium on the real 180-article corpus: sort by Title → first row
+  *"'Hedge Funds' Got Clipped By Epic Fury"*; then pick a year → *"Is The U.S. 'Gas Tank' Running
+  On Empty?"*, i.e. date order again. **Nothing disclosed it** — the header carried no sort
+  indicator at all, so the table looked title-sorted while it was date-sorted. Every control now
+  routes through one `renderCorpusView()` (`getFiltered()` narrows → `sortRows()` orders), the
+  sorted column is marked `aria-sort` + an arrow, and `cursor:pointer` was narrowed to the three
+  genuinely sortable `th`s (it was on Tags/Theme too, advertising a click that did nothing).
+  **A latent crash found by the tests, not by reading:** the old comparator did `a[key] || ''`,
+  so a missing/zero `word_count` became `''` and the *descending* branch called
+  `vb.localeCompare(va)` on a **number** — `TypeError: vb.localeCompare is not a function`, which
+  kills the table. No article carries a zero `word_count` today (min 267), but the manifest schema
+  permits it and Corpus II ingest will produce it, so the comparator now keeps missing numerics on
+  the numeric path. **§8.5 deepen:** a filter matching nothing left a bare header row with *no
+  explanation* (the Track Record tab already says "No predictions match your filters"); a
+  `#corpus-status` line now reports `180 articles` / `Showing 27 of 180 articles` / an explicit
+  no-match message. Also added a regression guard for `deepLinkToCorpus` — the shipped Ask Dad
+  citation deep-link (#19) clears the corpus filters by dispatching `input`/`change` at the
+  controls, so it depends on exactly the listener wiring this PR rewrote; it passes before and
+  after, which is the point. **Testing approach worth keeping:** `tests/` had *ten* dashboard test
+  files and every one of them greps `template.html` for source strings — no test had ever executed
+  the dashboard's JS. This adds a second layer: the page is rendered from `template.html` with a
+  **synthetic** 4-article manifest (deliberate — no real article text in fixtures, and the titles
+  sort differently from the dates so a lost sort is visible) and driven in headless Chromium,
+  skipping cleanly when Chromium can't launch so CI stays green. **TDD'd:** +15 tests, proved
+  red→green against `origin/main`'s template — **11 of 15 fail** without the fix, 15/15 with it;
+  the 4 that pass either way are baseline guards. One test (`test_sort_survives_a_search`) was
+  **vacuous when first written** — word-count-ascending happened to equal date-descending on that
+  subset, so it would have passed with the bug; rewritten to a discriminating assertion and
+  re-proved red. **Offline / unattended-safe:** no conductor, network, LLM or new dependency
+  (Playwright was already a scraper dep); **no data artifact committed**. **Verification:**
+  `make verify` green — **1007 passed**, ruff clean, dashboard builds; `make verify-responsive`
+  **10/10** live checks pass (the CSS change didn't regress the phone reflow). Baseline measured,
+  not assumed: a clean `origin/main` worktree collects **992** (991 passed + 1 environment skip —
+  `pre-commit not installed`), so the delta is exactly the **+15** added here. **Backlog:** 6 open
+  `daily/*` PRs (#82–#87) at start — under 8; §3 resumed none (all `ready-for-review`, none
+  `in-progress`); `main` green. **Near-miss worth recording:** `git stash push <path>` with a
+  clean path stashes *nothing*, so the paired `git stash pop` reached for **stash@{0} — a
+  pre-existing stash from an earlier daily run** ("weekly-cron regenerated artifacts"). It aborted
+  because of the dirty `data/` files and the entry survived, but the lesson is: **never pair
+  stash/pop blind in this repo — there are 4 old stashes.** Use `git checkout <ref> -- <path>` for
+  red→green proofs. **Deferred:** (1) on phones the corpus `thead` is visually hidden by the card
+  reflow, so sorting is *unreachable* there — needs a mobile sort control, a design call, not a
+  bugfix; (2) `build_dashboard` injects raw JSON into a `<script>` block, so a future document
+  containing `</script>` would break the whole page — zero instances in the corpus today, but
+  Corpus II email/HTML ingest makes it reachable; (3) two manifest entries slugged
+  `george-calhoun` carry no date (the author index page, scraped by mistake) — a scraper concern.
+  **NB:** `docs/plans/ready/0008-geo-llm-finetune.md` is **finished** (26a–26f shipped, D15 records
+  the verdict) but still sits in `plans/ready/`, so §4 picks it up and discards it every run — the
+  **fifth** ask that the owner move it to `plans/done/` to free the hot path.
 
 ### 2026-08-18 — family — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/81
