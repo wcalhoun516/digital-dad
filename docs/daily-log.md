@@ -48,33 +48,46 @@ Format:
 
 <!-- entries below -->
 
-### 2026-08-21 — training — ready-for-review
-- PR: https://github.com/wcalhoun516/digital-dad/pull/84
-- Source: roadmap:#27 (training — the only category absent from the last 7 runs)
-- Summary: **The module whose entire job is to stop us changing the pinned embedder on vibes was
-  itself declaring winners on noise.** `analysis/embedding_compare.py` crowned `best_mrr_model` by
-  a bare argmax over MRR — no margin, no per-query detail, no significance. On a 13-query gold set
-  MRR moves in coarse steps: one query slipping rank 2→3 shifts it by `(1/2−1/3)/13 ≈ 0.013`, and
-  the last real run (`data/analysis/embedding_compare.json`, 2026-07-18) separated the two models
-  by **0.027** — roughly two rank slots — and printed a winner. Decision **D2** pins the embedder
-  because cosine similarity is only meaningful inside one vector space, so a bogus winner here
-  would invalidate Semantic Search, Ask Dad retrieval and On This Day at once. Added
-  `per_query_metrics()` (per-query reciprocal rank + exact `first_relevant_rank`, so a reviewer can
-  see *which* query moved), `paired_comparison()` (wins/losses/ties + mean delta + an **exact
-  two-sided binomial sign test**, pairing only queries both models scored), and a `_verdict()` that
-  requires **both** `mean_delta > 0` **and** `p <= alpha` before naming a winner — otherwise
-  `inconclusive`, with a plain-English reason. Leading on MRR is no longer sufficient.
-  **§8.5 deepen:** the sharper finding is that the July run **could not have produced a significant
-  result under any outcome** — five paired queries bottom out at `p = 0.0625`, so even a unanimous
-  5–0 sweep misses `alpha = 0.05`. New `gold_set_power()` computes that floor and the number of
-  labelled queries needed to clear it, wired into the *offline* `make embedding-queries-check` — so
-  "your gold set is too small to decide anything" arrives **before** a live pass embeds the whole
-  corpus once per candidate model, not after. +37 tests (852 → 889); `test_embedding_compare.py`
-  54 → 91. Non-vacuousness proven by three reverts (3/1/0 failures) — the third revert exposed the
-  `n == 0` guard in `_sign_test_p` as dead code (`min(1.0, 2*1/1)` already yields 1.0); deleted
-  rather than kept and covered. All math stays pure behind the injected `embed(model_id, texts)`
-  seam, mirroring `rag_eval`/`voice_eval`; no model was downloaded and no live pass was run.
-  Deferred for the owner: the #27 dashboard viz (the report now carries everything it would need).
+### 2026-08-22 — analysis — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/85
+- Source: roadmap:analysis (the category absent from the last 7 runs; its listed items #11–#17 are all shipped)
+- Summary: **The builder behind the dashboard's Linguistic Fingerprint was throwing away his
+  sentences, and it was the only analysis module with no test file at all.**
+  `analysis/linguistic.py` computes `sentence_count`, average sentence length, Flesch-Kincaid,
+  Gunning Fog and the sentence-length histogram — every one of them downstream of
+  `_split_sentences()`. Three defects, each measured on the real 176-article corpus:
+  (1) **the histogram silently dropped its own tail** — bins were capped at 100 words and
+  half-open (`[a, b)`) throughout, so every sentence at or beyond the last edge was counted in
+  **no bin**; the committed `linguistics.json` summed to 17,474 against a `sentence_count` of
+  17,528, losing precisely the **53 longest sentences (up to 286 words)** — the most distinctive
+  part of a *fingerprint*. The final bucket is now open-ended (`bin_end: null`) and the counts
+  form a complete partition. (2) **The splitter cut inside abbreviations** — `(?<=[.!?])\s+(?=[A-Z])`
+  fires on any period before a capital, so `Ms. Lagarde`, `Prof. Calhoun`,
+  `Federal Reserve Inc. Mark` and `Mont St. Michel` each became two "sentences" (**122 bad
+  splits**). Guarded with a curated `ABBREVIATIONS` lexicon (same posture as `entity_aliases.py`)
+  plus generic rules for single initials (`George W. Bush`) and dotted acronyms (`U.S.`, `J.P.`).
+  (3) **§8.5 deepen — the sharpest find:** the orphan halves (`Ms.`, `Prof.`) fell under the
+  `>10`-character floor and were **deleted outright** — and so were **81 genuine one-word
+  sentences**: `Why?` `Perhaps.` `Wrong.` `Wow.` `Trust me.` Those are among the most
+  characteristic things in the corpus, erased from an archive whose whole point is his voice.
+  The floor is now "contains a letter" (a stray numeral is still rejected). Net on the corpus:
+  **−132 spurious sentences, +206 words recovered**, mean sentence length 21.63 → 21.82, and the
+  splitter now retains **331,049 of the corpus's 331,050 words**. Also stopped the chart lying:
+  the overflow tick renders **`100+`**, not `100`. **TDD'd:** new `tests/test_linguistic.py`,
+  **+23 tests (852 → 875)** — the module had **zero** dedicated coverage before today.
+  Non-vacuousness proven by three reverts (**3 / 6 / 6** failures; restored → 21 green).
+  **Verification:** `make verify` green (875 passed, ruff clean, dashboard builds) + a
+  headless-Chromium pass on a locally-regenerated `linguistics.json`: 21 bars, x-axis tick
+  `100+`, open bucket `(100, 53)`, **0 console errors, 0px h-overflow**. **No data artifact
+  committed** — `linguistics.json` was regenerated only to drive the browser check and then
+  **restored**, following PR #77's precedent; the corpus fingerprint re-runs the module on the
+  next weekly `make analyze`. **Offline / unattended-safe:** stdlib only, no
+  conductor/network/LLM, no re-scrape. **Backlog:** 6 open `daily/*` PRs at start
+  (#78/#80/#81/#82/#83/#84) — under 8; §3 didn't resume (all `ready-for-review`, none
+  `in-progress`); `main` green. **Deferred:** the corpus-level aggregates are still *unweighted
+  means of per-article means*, so `avg_sentence_length` reports 21.92 where the corpus-weighted
+  value is 21.06, and `avg_type_token_ratio` averages a length-sensitive ratio across articles
+  spanning 266–3,296 words — defensible, but undocumented and worth a follow-up.
 
 ### 2026-08-15 — scraper — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/77
