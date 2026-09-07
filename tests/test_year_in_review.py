@@ -6,10 +6,16 @@ email. No conductor, network, or Gmail MCP is exercised here.
 """
 
 import datetime
+import json
+from collections import Counter
+from pathlib import Path
 
 import pytest
 
+from analysis.adjudicate import effective_verdict
 from analysis.year_in_review import (
+    _VERDICT_LABEL,
+    _VERDICT_RANK,
     articles_for_year,
     build_digest,
     default_year,
@@ -20,6 +26,9 @@ from analysis.year_in_review import (
     top_themes,
     verdict_tally,
 )
+
+ROOT = Path(__file__).resolve().parent.parent
+REAL_PREDICTIONS = ROOT / "data" / "analysis" / "predictions.json"
 
 THEME_ARTICLES = [
     {"slug": "a", "title": "Inflation Is Back", "date": "2024-02-01",
@@ -367,6 +376,76 @@ class TestRun:
             write=False,
         )
         assert result["year"] == default_year()
+
+
+class TestAgainstTheRealCorpus:
+    """Guards on the shipped predictions.json — this is where the bug was visible.
+
+    Before the fix the 2023 digest opened on two calls the archive had judged ``wrong`` and
+    the 2025 digest opened on one, each labelled only "Certain". Synthetic fixtures prove the
+    ordering rule; these prove it holds on the corpus the family actually receives.
+    """
+
+    def _predictions(self) -> list[dict]:
+        if not REAL_PREDICTIONS.exists():
+            pytest.skip("data/analysis/predictions.json not present")
+        return json.loads(REAL_PREDICTIONS.read_text())["predictions"]
+
+    def _years(self, preds: list[dict]) -> list[str]:
+        return sorted(
+            {
+                (p.get("article_date") or "")[:4]
+                for p in preds
+                if (p.get("article_date") or "")[:4].isdigit()
+            }
+        )
+
+    def test_every_years_calls_are_ordered_best_verdict_first(self):
+        preds = self._predictions()
+        years = self._years(preds)
+        assert years, "no dated predictions in the corpus"
+        for year in years:
+            ranks = [
+                _VERDICT_RANK.get(effective_verdict(p), len(_VERDICT_RANK))
+                for p in notable_predictions(preds, year)
+            ]
+            assert ranks == sorted(ranks), f"{year} digest is not ordered by verdict: {ranks}"
+
+    def test_no_year_leads_with_a_call_the_archive_judged_wrong(self):
+        preds = self._predictions()
+        for year in self._years(preds):
+            got = notable_predictions(preds, year)
+            if not got:
+                continue
+            tally = verdict_tally(preds, year)
+            if tally["vindicated"] or tally["mixed"]:
+                assert effective_verdict(got[0]) != "wrong", (
+                    f"{year} opens on a wrong call despite having better ones"
+                )
+
+    def test_the_scoreboard_matches_an_independent_count(self):
+        preds = self._predictions()
+        for year in self._years(preds):
+            tally = verdict_tally(preds, year)
+            counted = Counter(
+                effective_verdict(p)
+                for p in preds
+                if (p.get("article_date") or "")[:4] == year
+            )
+            assert tally["vindicated"] == counted["vindicated"]
+            assert tally["mixed"] == counted["mixed"]
+            assert tally["wrong"] == counted["wrong"]
+            assert tally["total"] == sum(
+                counted[v] for v in ("vindicated", "mixed", "wrong")
+            )
+
+    def test_the_rendered_email_names_a_verdict_for_every_call(self):
+        preds = self._predictions()
+        digest = build_digest([], preds, 2023)
+        html = render_html(digest)
+        assert html.count("&ldquo;") == len(digest["notable_predictions"])
+        for p in digest["notable_predictions"]:
+            assert _VERDICT_LABEL[effective_verdict(p)] in html
 
 
 if __name__ == "__main__":
