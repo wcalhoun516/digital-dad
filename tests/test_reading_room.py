@@ -143,6 +143,76 @@ def test_build_themes_are_present_sorted_by_frequency(articles):
     assert room["themes"] == ["Fed / Inflation / Rates", "Crypto / Bitcoin / Blockchain"]
 
 
+# --- duplicate slugs -------------------------------------------------------------
+# The corpus manifest records http:// + https:// twins of the same article, and those
+# duplicates reach here through themes.json. A reading *order* is keyed by slug (the
+# dashboard resolves prev/next through `bySlug[slug]`), so the same slug appearing twice
+# makes a neighbour link point at the article the reader is already on.
+
+
+@pytest.fixture
+def twinned(articles) -> list[dict]:
+    """The fixture corpus with `bitcoin-is-a-signal` duplicated, as the manifest twins it."""
+    twin = dict(next(a for a in articles if a["slug"] == "bitcoin-is-a-signal"))
+    twin["url"] = "http://www.forbes.com/b1/"
+    return [*articles, twin]
+
+
+def test_build_collapses_duplicate_slugs_to_one_entry(twinned):
+    room = rr.build_reading_room(twinned, load_body=load_body)
+    slugs = [e["slug"] for e in room["entries"]]
+    assert slugs == ["inflation-returns", "bitcoin-is-a-signal", "the-fed-is-late"]
+
+
+def test_build_never_links_an_entry_to_itself(twinned):
+    room = rr.build_reading_room(twinned, load_body=load_body)
+    for e in room["entries"]:
+        assert e["prev_slug"] != e["slug"]
+        assert e["next_slug"] != e["slug"]
+
+
+def test_build_chain_reaches_every_article_walking_back(twinned):
+    """Walking `prev_slug` from the oldest article must reach all of them (the "Newer" button)."""
+    room = rr.build_reading_room(twinned, load_body=load_body)
+    by_slug = {e["slug"]: e for e in room["entries"]}
+    seen, cur = [], room["entries"][-1]["slug"]
+    while cur is not None and cur not in seen:
+        seen.append(cur)
+        cur = by_slug[cur]["prev_slug"]
+    assert len(seen) == len(by_slug)
+
+
+def test_build_count_matches_the_deduped_entry_list(twinned):
+    room = rr.build_reading_room(twinned, load_body=load_body)
+    assert room["count"] == len(room["entries"]) == 3
+
+
+def test_build_first_seen_twin_wins_in_reading_order(twinned):
+    """The duplicate carries different metadata; the first record in reading order wins."""
+    room = rr.build_reading_room(twinned, load_body=load_body)
+    entry = next(e for e in room["entries"] if e["slug"] == "bitcoin-is-a-signal")
+    assert entry["url"] == "https://www.forbes.com/b1/"
+
+
+def test_build_limit_counts_distinct_articles(twinned):
+    """`limit` keeps the newest N *articles*, not the newest N manifest records.
+
+    The twin sorts adjacent to its original, so an un-deduped builder spends two of the
+    three slots on the same article and never reaches `the-fed-is-late`.
+    """
+    room = rr.build_reading_room(twinned, load_body=load_body, limit=3)
+    assert [e["slug"] for e in room["entries"]] == [
+        "inflation-returns",
+        "bitcoin-is-a-signal",
+        "the-fed-is-late",
+    ]
+
+
+def test_build_theme_counts_ignore_duplicates(twinned):
+    room = rr.build_reading_room(twinned, load_body=load_body)
+    assert room["themes"] == ["Fed / Inflation / Rates", "Crypto / Bitcoin / Blockchain"]
+
+
 # --- raw body reader -------------------------------------------------------------
 
 

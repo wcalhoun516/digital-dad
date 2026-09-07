@@ -77,3 +77,8 @@ build/
 # OS
 .DS_Store
 Thumbs.db
+
+# Corpus II ingest (#30). Dropped originals and staged extractions are private family
+# material — never committed. Only the reviewed manifest entry lands in git.
+data/inbox/
+data/ingest/
