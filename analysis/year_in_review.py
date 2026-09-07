@@ -18,6 +18,7 @@ import json
 from collections import Counter
 from pathlib import Path
 
+from .adjudicate import effective_verdict
 from .utils import ANALYSIS_DIR, DATA_DIR
 
 EMAIL_DIR = DATA_DIR / "cron" / "emails"
@@ -27,6 +28,14 @@ PREDICTIONS_PATH = ANALYSIS_DIR / "predictions.json"
 # Conviction ordering for ranking notable predictions (most → least committed). Anything
 # outside this list sorts last, so an unexpected confidence label can't outrank a real one.
 _CONVICTION_RANK = {"certain": 0, "confident": 1, "hedged": 2}
+
+# How the year *scored*, which outranks how loudly it was said. "unfalsifiable" and "pending"
+# sort below every adjudicated call: the first was never a testable call, the second has not
+# been ruled on yet, so neither belongs above a claim that actually came good (or didn't).
+_VERDICT_RANK = {"vindicated": 0, "mixed": 1, "wrong": 2, "unfalsifiable": 3, "pending": 4}
+
+# Verdicts that represent a call the archive has actually ruled on, for the year's scoreboard.
+ADJUDICATED_VERDICTS = ("vindicated", "mixed", "wrong")
 
 
 def articles_for_year(theme_articles: list[dict], year) -> list[dict]:
@@ -53,11 +62,18 @@ def top_themes(year_articles: list[dict], top_n: int = 5) -> list[dict]:
 def notable_predictions(
     predictions: list[dict], year, limit: int = 6, *, max_per_article: int = 1
 ) -> list[dict]:
-    """Pick a year's most notable predictions, most-committed first.
+    """Pick a year's most notable predictions, best-adjudicated first.
 
     Filters ``predictions`` (from ``predictions.json``) to those whose ``article_date`` falls
-    in ``year``, ranks by conviction (certain > confident > hedged > other), dedupes identical
-    claims, and returns at most ``limit``. Deterministic: ties keep first-seen order.
+    in ``year``, ranks by **effective verdict** (vindicated > mixed > wrong > unfalsifiable >
+    pending) and then by conviction (certain > confident > hedged) within a verdict, dedupes
+    identical claims, and returns at most ``limit``. Deterministic: ties keep first-seen order.
+
+    The verdict leads the ranking because a keepsake that headlines a claim the archive has
+    already judged *wrong* — purely because he stated it confidently — misrepresents the year.
+    Verdicts resolve through :func:`analysis.adjudicate.effective_verdict`, so a human ruling
+    outranks the advisory LLM one. Losing calls are ranked down, not hidden; the renderers
+    label every verdict.
 
     ``max_per_article`` caps how many calls a single article can contribute (default 1) so the
     digest spans his year rather than over-quoting one prolific piece.
@@ -66,7 +82,10 @@ def notable_predictions(
     in_year = [p for p in predictions if (p.get("article_date") or "")[:4] == y]
     ranked = sorted(
         in_year,
-        key=lambda p: _CONVICTION_RANK.get(p.get("confidence_language"), len(_CONVICTION_RANK)),
+        key=lambda p: (
+            _VERDICT_RANK.get(effective_verdict(p), len(_VERDICT_RANK)),
+            _CONVICTION_RANK.get(p.get("confidence_language"), len(_CONVICTION_RANK)),
+        ),
     )
     out: list[dict] = []
     seen: set[str] = set()

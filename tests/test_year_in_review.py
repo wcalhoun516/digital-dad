@@ -49,6 +49,26 @@ PREDICTIONS = [
      "article_title": "Old News", "article_url": "https://forbes.com/d"},
 ]
 
+# Deliberately ordered so conviction and verdict *disagree*: ranked by conviction alone the
+# certain-but-wrong call leads, and the hedged-but-right one comes last. Each claim gets its
+# own article_slug so the max_per_article cap doesn't mask the ordering under test.
+ADJUDICATED = [
+    {"claim": "Certain but wrong.", "confidence_language": "certain",
+     "article_date": "2024-03-01", "article_slug": "p1", "article_title": "One",
+     "llm_verdict": "wrong"},
+    {"claim": "Certain but unfalsifiable.", "confidence_language": "certain",
+     "article_date": "2024-03-02", "article_slug": "p2", "article_title": "Two",
+     "llm_verdict": "unfalsifiable"},
+    {"claim": "Certain but unjudged.", "confidence_language": "certain",
+     "article_date": "2024-03-03", "article_slug": "p3", "article_title": "Three"},
+    {"claim": "Confident and mixed.", "confidence_language": "confident",
+     "article_date": "2024-03-04", "article_slug": "p4", "article_title": "Four",
+     "llm_verdict": "mixed"},
+    {"claim": "Hedged but right.", "confidence_language": "hedged",
+     "article_date": "2024-03-05", "article_slug": "p5", "article_title": "Five",
+     "llm_verdict": "vindicated"},
+]
+
 
 class TestArticlesForYear:
     def test_filters_to_the_requested_year(self):
@@ -138,6 +158,45 @@ class TestNotablePredictions:
         slugs = [p["article_slug"] for p in got]
         assert slugs.count("big-piece") == 1
         assert "other-piece" in slugs
+
+    def test_a_vindicated_call_outranks_a_more_confident_wrong_one(self):
+        # The keepsake leads with calls that came good, not merely calls stated loudly.
+        got = notable_predictions(ADJUDICATED, 2024)
+        assert [p["claim"] for p in got] == [
+            "Hedged but right.",
+            "Confident and mixed.",
+            "Certain but wrong.",
+            "Certain but unfalsifiable.",
+            "Certain but unjudged.",
+        ]
+
+    def test_unfalsifiable_and_unjudged_claims_sink_below_real_calls(self):
+        got = notable_predictions(ADJUDICATED, 2024, limit=3)
+        claims = [p["claim"] for p in got]
+        assert "Certain but unfalsifiable." not in claims
+        assert "Certain but unjudged." not in claims
+
+    def test_conviction_still_orders_within_a_verdict_tier(self):
+        same_verdict = [
+            {"claim": "Hedged.", "confidence_language": "hedged", "article_date": "2024-01-01",
+             "article_slug": "h", "llm_verdict": "vindicated"},
+            {"claim": "Certain.", "confidence_language": "certain", "article_date": "2024-01-02",
+             "article_slug": "c", "llm_verdict": "vindicated"},
+        ]
+        got = notable_predictions(same_verdict, 2024)
+        assert [p["claim"] for p in got] == ["Certain.", "Hedged."]
+
+    def test_a_human_ruling_outranks_the_advisory_llm_verdict(self):
+        # adjudicate.effective_verdict precedence: human_verdict > evidence_verdict > llm_verdict.
+        overridden = [
+            {"claim": "LLM says wrong, human says right.", "confidence_language": "hedged",
+             "article_date": "2024-01-01", "article_slug": "a",
+             "llm_verdict": "wrong", "human_verdict": "vindicated"},
+            {"claim": "Plainly mixed.", "confidence_language": "certain",
+             "article_date": "2024-01-02", "article_slug": "b", "llm_verdict": "mixed"},
+        ]
+        got = notable_predictions(overridden, 2024)
+        assert got[0]["claim"] == "LLM says wrong, human says right."
 
     def test_max_per_article_is_configurable(self):
         hoggy = [
