@@ -48,6 +48,67 @@ Format:
 
 <!-- entries below -->
 
+### 2026-09-07 — family — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/89
+- Source: roadmap:family (least-recently-worked category; #22–#24 all shipped, so a defect in one)
+- Summary: **The annual keepsake headlined calls the archive had already judged wrong.**
+  `year_in_review.notable_predictions()` ranked "Notable calls" by `confidence_language`
+  alone — `certain` > `confident` > `hedged` — and never consulted a verdict, even though
+  `adjudicate.effective_verdict()` (precedence `human > evidence > llm > status`) has shipped
+  for months and the Track Record tab renders it. Measured on the real 611-prediction corpus:
+  the **2023** digest opened on *two* `wrong` calls with two more unjudged (4 of 6 not
+  vindicated); **2025**, the default year, opened on *"There is no deflation in the Chinese
+  economy, and there will be no deflation in the future"* — `wrong`; **2024** included an
+  `unfalsifiable` claim, which is not a call at all. Each was labelled only with its
+  confidence ("Certain"), so the verdict was silently dropped and a losing call read as a
+  highlight. Now ranked by effective verdict (vindicated → mixed → wrong → unfalsifiable →
+  pending) with conviction breaking ties *within* a tier, so unfalsifiable and not-yet-judged
+  claims sink below real calls without being censored. **Losing calls are ranked down, not
+  hidden** — that was the design call: the project's ethos is the falsifiable-prediction
+  audit, so every call now renders its verdict, and the section opens with the year's *whole*
+  adjudicated record (2023: "Of the 46 calls from 2023 the archive has since ruled on, 7 came
+  good, 24 landed partly and 15 went the other way") rather than letting the six shown imply
+  the story. `"pending"` renders as **"Not yet judged"** — a family reader should not have to
+  guess it doesn't mean "wrong". **Reused, not reinvented:** the verdict resolves through
+  `adjudicate.effective_verdict`, so a human ruling from `make adjudicate` outranks the
+  advisory LLM one here for free (pinned by a test). **TDD'd:** +20 tests (24 → 44 in
+  `tests/test_year_in_review.py`), proved red first. Because `verdict_tally` was a *new*
+  symbol its tests could only fail as ImportError, so the assertions were additionally
+  **mutation-tested** to prove they bite: dropping `{verdict}` from the HTML item fails 3
+  tests; letting the tally count unadjudicated calls fails 2; reverting the ranking key to
+  conviction-only fails the 2 real-corpus guards, which name the actual 2023 egg-problem call.
+  Those guards run against the shipped `predictions.json` (skipping if absent) and assert
+  invariants — verdict ranks non-decreasing, no year leading on `wrong` when better calls
+  exist, tally matching an independent count — not frozen numbers, so re-adjudication won't
+  make them brittle. **Considered and rejected:** normalizing claim text for near-duplicate
+  dedupe. Measured first — 43 duplicate groups exist, 5 would evade the current exact-string
+  dedupe, but **0** are reachable in a rendered digest (they sit inside a single article,
+  which `max_per_article=1` already caps) and no year 2018–2026 renders a repeat. Not worth
+  code for a case that can't happen. **Checked, not broken:** `delivery.latest_email_payload()`
+  globs `on_this_day_*.html`, so year-in-review files sharing `data/cron/emails/` cannot be
+  drafted as the weekly note. **Offline / unattended-safe:** no conductor, network, LLM or new
+  dependency; **no data artifact committed** (the dirty `data/` files from the weekly cron were
+  left alone). **Verification:** `make verify` green — ruff clean, **1012 passed**, dashboard
+  builds. Baseline measured, not assumed: a clean `origin/main` worktree collects **992**
+  (991 passed + 1 environment skip), so the delta is exactly the **+20** added here.
+  **Backlog:** 7 open `daily/*` PRs (#82–#88) at start — under 8; §3 resumed none (all
+  `ready-for-review`); `main` green. **Trap worth recording:** this repo lives on an external
+  volume, and after rewriting a module in place `pytest` silently ran a **stale `__pycache__`
+  `.pyc`** — two tests "failed" against source that was already correct, and the restored file
+  kept reporting the mutant's numbers. Clear `__pycache__` before trusting any red→green proof
+  here. **Deferred:** (1) there is **no delivery path** for this email — the docstring says
+  delivery is "human-in-the-loop via the existing Gmail-MCP draft path", but
+  `make send-on-this-day` only ever picks up `on_this_day_*.html`, so the year-in-review can be
+  rendered and never drafted; a `send-year-in-review` target is a small follow-up. (2) 2025's
+  six vindicated calls include two that restate the same recession point in different words
+  from different articles — beyond exact-string dedupe, needs semantic similarity, a judgment
+  call not a bugfix. (3) `docs/roadmap.md` is **stale**: #23 and #24 are both shipped
+  (`analysis/year_in_review.py`, `analysis/anthology.py`) but neither is marked done, which
+  cost this run real time in §5b — the roadmap is human-curated, so the owner has to make that
+  edit. **NB:** `docs/plans/ready/0008-geo-llm-finetune.md` is **finished** (D15 records the
+  verdict) but still sits in `plans/ready/`, so §4 picks it up and discards it every run — the
+  **sixth** ask that the owner move it to `plans/done/` to free the hot path.
+
 ### 2026-08-18 — family — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/81
 - Source: roadmap:#21 (defect in the shipped Reading Room) — duplicate-slug fallout #77/#80 didn't reach
