@@ -48,53 +48,91 @@ Format:
 
 <!-- entries below -->
 
-### 2026-08-23 — scraper — ready-for-review
-- PR: https://github.com/wcalhoun516/digital-dad/pull/86
-- Source: roadmap:scraper (the only category absent from the last 7 runs; #8–#10 all shipped, so
-  this is a defect in the shipped discovery gate)
-- Summary: **The front door of the archive was rejecting real articles, silently.**
-  `scraper/utils.py`'s `is_article_url()` gates *every* discovery tier (Playwright, sitemap,
-  Wayback CDX) before a URL is ever fetched, so a false reject there means an article never
-  enters the corpus — no error, no log line. It filtered `/amp/` duplicate pages with a
-  **substring** test, `"/amp" in path`, which also discards every article whose **slug begins
-  with "amp"**: `ampere-…`, `amplify-…`, `ample-…`, `amplified-…`, `amped-…`, `amputating-…`
-  were all **REJECTED**, while `amazon-…` and `why-ample-…` passed. That lands squarely on his
-  beat — he runs a multi-part *Semiconductor Scoreboard* series and **Ampere Computing** is a
-  server-silicon company; the corpus already uses `amplified` (11×), `amped` (5×), `amplifies`,
-  `ample`, `amplify`, `amplifying`, `amputated`. The mirror bug: the test was
-  **case-sensitive**, so a real `/AMP/` duplicate was *accepted* as a distinct article. Now
-  matched as a whole path **segment**, case-insensitively. Second defect: `normalize_url()`
-  preserved **host casing** — `HTTPS://WWW.Forbes.com/…` normalized to
-  `https://WWW.Forbes.com/…`, a different string from the canonical one, which is exactly the
-  mechanism that mints URL-variant twins in the manifest. Scheme and host are case-insensitive
-  (RFC 3986 §3.1/§3.2.2) and are now lowercased; the **path keeps its case**, since that is what
-  identifies the article. **§8.5 deepen — the sharpest find:** `make coverage-audit`, the tool
-  whose whole job is reporting what the archive is missing, **cannot catch this class of bug**.
-  Its "discovered" set comes from `discover_urls_from_wayback()`, which filters through the same
-  `is_article_url()` — so a wrongly-rejected URL is absent from *both* sides of the comparison
-  and the audit reports **100% coverage** while the article is genuinely gone. The safety net
-  had the same hole as the thing it was checking; PR #38's live "100% coverage today" result was
-  measured through it. Pinned with 4 interaction tests in `test_coverage_audit.py` and
-  documented as a new **"The discovery gate"** section in `scraper/README.md`. **TDD'd:** +22
-  tests (`test_scraper_utils.py` 14→32, `test_coverage_audit.py` 31→35); **852 → 874**.
-  Non-vacuousness proven by revert: restoring the substring test fails **12** tests (9 gate + 3
-  audit-interaction); restored → 67 green across both files; the RED commit stands in history at
-  **11 failing**. **No data churn:** `normalize_url` rewrites **0 of the 199** committed manifest
-  URLs and is idempotent over all of them; the 2 genuine `/amp/` rows are still correctly
-  rejected. **Measured non-finding (deliberately not changed):** `known_urls()` compares raw URL
-  strings while `upsert_article()` matches on slug — two notions of identity in one loop — but
-  against the real manifest that costs **0 redundant re-fetches** (all 174 canonical article keys
-  already resolve to a clean `https://www` entry), so I left it alone rather than churn the
-  scrape loop for no payoff. **Offline / unattended-safe:** stdlib string/URL ops only, no
-  conductor/network/LLM, **no re-scrape and no data artifact committed** — the gate fix changes
-  what *future* discovery accepts. **Verification:** `make verify` green — **874 passed** (vs 852
-  on `origin/main`, +22), ruff clean, dashboard builds. **Backlog:** 7 open `daily/*` PRs at start
-  (#78/#80/#81/#82/#83/#84/#85) — under 8, but one short of the stand-down threshold, so the
-  owner should merge or close some soon; §3 didn't resume (all 7 are `ready-for-review`, none
-  `in-progress`); `main` green. **Deferred:** canonicalizing scheme/`www.` in `normalize_url`
-  (would make `known_urls()` variant-proof, but rewrites manifest URLs — owner-gated, and
-  `manifest_dedup` already repairs the existing twins); and `is_article_url` is still
-  case-sensitive on the **author path** itself (`/sites/GeorgeCalhoun/` would be rejected).
+### 2026-09-05 — ingest — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/87
+- Source: roadmap:#32
+- Summary: **The backlog broke.** Between 08-27 and today the owner merged **six** PRs (#77–#81
+  plus his own `feat/corpus-ingest-thin-slice` **#79**), so the three-day stand-down is over: **5**
+  open `daily/*` PRs (#82–#86), well under the §2 threshold, `main` green, and §3 had nothing to
+  resume (all five are `ready-for-review`, none `in-progress`). The un-drafting note from 08-27
+  appears to have been acted on — that is what unblocked the queue.
+  **#79 also created a brand-new roadmap category, `ingest` (Corpus II)**, which no daily run has
+  ever worked, making it unambiguously the least-recently-worked category — no need for the
+  "most-deferred item" tie-break the last four cold-path runs had to fall back on. #29–31 are done,
+  so the first unstarted item is **#32 (P2·S·ingest) — the `.eml`/`.mbox` handler**, which the
+  design spec puts in the **core stdlib-only** tier and names as the canonical case of the
+  load-bearing "one source yields many documents" rule.
+  New `ingest/handlers/mail.py`: one document per message, `Subject`→title, `Date`→exact ISO date,
+  `modality: email`, `authorship: mixed` once a thread has more than one sender, `text/plain`
+  preferred over HTML, and a pure `strip_quoted_reply()`. **That stripper is the point of the
+  slice** — without it a 12-reply thread hands the same sentence to themes/embeddings/entity-graph
+  twelve times, the exact duplicate-counting defect PR #77 spent a day removing from the *manifest*
+  side. It truncates at an `On … wrote:` attribution, an `-----Original Message-----` block or a
+  `--` signature, then drops `>` lines. **§8.5 deepen:** the one genuine bug found after the first
+  green — **Gmail hard-wraps long attributions**, so `wrote:` lands a line or two below the `On`,
+  and a single-line regex left a dangling `Will Calhoun <will@example.com>` in the body; the
+  matcher now joins up to two continuation lines (proved red→green). Plus guard tests for RFC-2047
+  encoded subjects, quoted-printable/base64/iso-8859-1 decoding, the private-by-default provenance
+  block (email is the most sensitive modality in the corpus), and the **queue integration seam** —
+  an `.eml` in `data/inbox/` now counts as `staged`, not `skipped`.
+  **TDD'd:** +37 tests (`tests/test_ingest_mail.py`), the first 25 proved red (all
+  `UnsupportedFormat`) before any handler existed. **Offline / unattended-safe:** stdlib `email` +
+  `mailbox` only — no conductor, network, LLM, or new dependency; every fixture is synthetic, so
+  **no real family mail enters git** (the spec's testing rule). No data artifact committed.
+  **Verification:** `make verify` green — **1029 passed**, ruff clean, dashboard builds. Baseline
+  measured, not assumed: a clean `origin/main` worktree collects **992** (991 passed + 1
+  environment-skip), so the delta is exactly the **+37** added here. The wrapped-attribution fix
+  was proved **red→green** (reverted to the single-line regex → that one test fails; restored → 37
+  pass). **Deferred:** `.docx` (#33) is the next isolated handler PR; the one-time
+  provenance data migration flagged in #29 is still pending and still owner-gated.
+
+### 2026-08-18 — family — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/81
+- Source: roadmap:#21 (defect in the shipped Reading Room) — duplicate-slug fallout #77/#80 didn't reach
+- Summary: **The Reading Room's "Newer ←" button re-opened the article you were already on.**
+  `build_reading_room()` emits one entry per input record and chains them with
+  `prev_slug`/`next_slug`; the manifest's 23 `http`/`https` twins reach it through `themes.json`,
+  so the same article sat **twice in a row** in the reading order and its neighbour link pointed at
+  **its own slug**. The dashboard resolves those links through `bySlug[slug]` — a map that *cannot*
+  hold a slug twice — so the click re-opened the current article. Measured on the real corpus,
+  regenerating **both sides from the same `themes.json`** (not trusting the stale file on disk):
+  index rows **197 → 175**, duplicate rows **22 → 0**, self-referential links **44 → 0**, and the
+  "Newer" walk **7 → 175 of 175** articles. **No article lost or gained** — only duplicate rows
+  removed. This is the **fifth** reader carrying this defect; PR #80 audited for a fifth and
+  concluded there wasn't one, because it checked direct *manifest* readers and `reading_room.py` is
+  a **second-order** reader (it loads `themes.json`'s `.articles`, a derived artifact, and never
+  touches the manifest). **TDD'd:** +7 tests, six red first for the right reason; the
+  first-seen-wins tie-break was **proved non-vacuous** by implementing last-wins and watching it
+  fail. **§8.5 deepen:** (1) probed every other second-order reader empirically — ran each builder
+  on the real input vs a deduped copy and diffed: `anthology.corpus_span`/`signature_pieces`,
+  `year_in_review.articles_for_year`/`top_themes` and `intellectual_arc.arc_by_year` are **all
+  affected** (the 2022 digest counts **34** columns for **28**). But those are *count skew from a
+  stale derived input*, not broken structures, so the fix is regenerating `themes.json`, **not**
+  deduping at each reader — deduping there would hide the staleness. I **verified** the self-heal
+  rather than inheriting the claim: `load_articles()` now returns **176**, and the corpus fingerprint
+  is `a5cc3a1be358` vs the `593079338772` recorded by themes/linguistic/entities/predictions/
+  semantic_search/psychoprofile, so all six **re-run** on the next `make analyze`. The Reading Room
+  needed the builder fix anyway: a slug-keyed chain is a *structural* invariant, not a count.
+  (2) Found a second, unrelated defect while confirming that regeneration path: **`make reading-room`
+  did not exist.** It is documented in the README (3× with ARGS examples), in the module docstring,
+  in `.gitignore`, and — worst — in the **dashboard's own empty state**, which tells the family
+  "Run `make reading-room` then `make dashboard`". Doing that printed `No rule to make target`.
+  `make voice-style` was missing the same way (README + `voice_eval`'s docstring; the capability
+  existed as `--style-only`). Added both, and guarded the class with a test that pins every `make`
+  target documented **in a code context** to a real rule — two prose false positives ("columnists
+  make predictions") drove the extractor to read only fenced blocks / backticks / `<code>`.
+  `make voice-style` reproduces D15's published numbers exactly (fine-tune TTR 0.352 vs real 0.704).
+  **Offline / unattended-safe:** stdlib only, no conductor/network/LLM, no re-scrape, **no data
+  artifact committed** (`reading_room.json` is git-ignored; I deleted the `voice_style.*` files my
+  own verification run produced). **Verification:** `make verify` green — **891 passed** vs **852**
+  on `origin/main`, ruff clean, dashboard builds. **Backlog:** 2 open `daily/*` PRs (#78, #80) at
+  start — well under 8; §3 didn't resume either (both `ready-for-review`); `main` green.
+  **Hot path:** plan **0008 is finished** — 26a–26f all shipped and D15 records the 26f verdict —
+  but it still sits in `plans/ready/`, so §4 has picked it up and discarded it every run since
+  06-24. I left the file where it is rather than move it in an unrelated PR; **the owner should move
+  `docs/plans/ready/0008-geo-llm-finetune.md` to `docs/plans/done/`** to free the hot path.
+  **NB (fourth ask):** the corpus-ingest work (PR **#79**) still has no plan in `docs/plans/ready/`,
+  so §4 still can't see it; it remains higher value than anything left on the roadmap.
 
 ### 2026-08-15 — scraper — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/77
