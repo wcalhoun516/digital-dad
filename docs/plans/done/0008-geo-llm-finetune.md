@@ -1,5 +1,9 @@
 # Plan 0008 — "Geo LLM": fine-tune a George-Calhoun-voice model
 
+> **Closed.** 26a–26f all shipped; the verdict is recorded as **D15** in
+> [`decisions.md`](../../decisions.md) — RAG stays the product voice, the fine-tune stays
+> experimental and unregistered.
+
 ## Goal
 
 Run a series of **bite-size, individually-shippable experiments** toward a fine-tuned model
