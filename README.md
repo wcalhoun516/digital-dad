@@ -66,7 +66,7 @@ make serve       # Opens http://localhost:8000
 
 ```bash
 pip install -e ".[dev]"   # pytest, ruff, pre-commit
-make verify               # ruff check (tests/) + pytest + dashboard smoke build (what CI runs)
+make verify               # ruff check + pytest + dashboard smoke build (what CI runs)
 
 # Optional git hooks (roadmap #5) — run the same checks on `git commit`:
 make hooks                # installs .pre-commit-config.yaml (one-time per clone)
@@ -76,10 +76,16 @@ make lint-json            # standalone: validate the committed data/analysis/*.j
 pre-commit run --all-files
 ```
 
-Two hooks fire on commit: **ruff check** on staged `tests/` files (matching `make verify`)
-and a **JSON-validity** check on staged `data/analysis/*.json` so a malformed analysis
-artifact can't be committed. Both are `repo: local` — they reuse the tools in `.venv`, so no
-network fetch is needed. Formatting stays on-demand via `make fmt` (not a blocking hook).
+Two hooks fire on commit: **ruff check** on staged Python (matching `make verify`) and a
+**JSON-validity** check on staged `data/analysis/*.json` so a malformed analysis artifact
+can't be committed. Both are `repo: local` — they reuse the tools in `.venv`, so no network
+fetch is needed. Formatting stays on-demand via `make fmt` (not a blocking hook).
+
+`make lint` covers every package we ship — `analysis scraper viz training tools bin tests`
+(`LINT_PATHS`). The one carve-out is **E501 (long lines) in the source packages**: most of
+those lines are embedded LLM prompt literals, and re-wrapping one edits the prompt the model
+actually sees, so that cleanup is its own reviewed pass. `tests/` stays fully gated, and
+`tests/test_lint_scope.py` fails if a package ever drops out of the gate.
 
 ## Project Structure
 

@@ -34,6 +34,34 @@ so a single source going down doesn't break ingestion.
 title, date, url, tags, word_count, file, content_hash}]}`. `content_hash` is the MD5 of the
 body — the basis for change detection.
 
+## 1b. Ingest — Corpus II (`ingest/`)
+
+A second, human-reviewed path into the corpus for non-Forbes material (books, course
+materials, letters, email, talks):
+
+```
+data/inbox/ → make ingest → data/ingest/queue/ → make ingest-review → manifest
+```
+
+Handlers are pure `(Path) -> ExtractResult` functions registered by extension in
+`ingest/handlers/`, so adding a format is an isolated change. Core handlers (`.txt`, `.md`,
+and later `.eml`/`.mbox`) are stdlib-only; heavier formats live behind an opt-in `ingest`
+extra and degrade with a clear message rather than crashing.
+
+**Extraction never modifies the corpus** — only `ingest-review` does, and only on a human
+decision. Rejects move aside with a reason instead of being deleted.
+
+One *source* can yield many *documents* (a book → one per chapter; an mbox → one per
+message), all sharing a `source_id`, so every downstream analysis module keeps operating on
+documents unchanged.
+
+**Provenance block**, additive on each manifest entry: `{source_id, modality, authorship,
+privacy, license, acquisition:{method, ref, at}, date_confidence}`. Named `provenance`, not
+`source`, because `data/raw/*.json` already uses `source` for the acquisition channel
+(`wayback`/`playwright`). Ingested items default to `privacy: private`; `authorship` is the
+field Ask Dad must filter on, since only `george` is quotable as his thinking.
+`data/inbox/` and `data/ingest/` are gitignored — private material is never committed.
+
 ## 2. Analysis (`analysis/`)
 
 CLI: `python -m analysis [modules] [--dry-run] [--force] [--remote] [--verbose]`. Modules run in
@@ -56,6 +84,26 @@ ran against; on the next run a module is **skipped if the fingerprint is unchang
 | `psychoprofile.py` | `psychoprofile.json` + `.md` | Map-reduce LLM analysis → narrative profile + 8 personality dimension scores. Logs cost to `runs.jsonl`. |
 | `semantic_search.py` | `embeddings.npy`, `embeddings_meta.json`, `embeddings.json` | sbert-mpnet-v2 (384-dim) embedding index; cached + corpus-hash busted; flattened export with snippets for the dashboard. |
 | `predictions.py` | `predictions.json` | Two-pass: extract falsifiable claims per article, then optional batched LLM verdict (pending/vindicated/wrong/mixed/unfalsifiable). Saves incrementally every 10 articles; resumable. |
+
+**Sentence splitting (`linguistic.py`).** Everything the Linguistic Fingerprint reports —
+`sentence_count`, average sentence length, Flesch-Kincaid, Gunning Fog and the histogram —
+rests on `_split_sentences()`, so its two silent data losses biased all of them:
+
+- A period before a capital is **not** always a boundary. `Ms. Lagarde`, `Prof. Calhoun`,
+  `Federal Reserve Inc. Mark` and `Mont St. Michel` were each cut in two (122 bad splits on
+  the corpus). `ABBREVIATIONS` — a curated, editable lexicon in the same spirit as
+  `entity_aliases.py` — plus rules for single initials (`George W. Bush`) and dotted acronyms
+  (`U.S.`, `J.P.`) now hold those sentences together.
+- The old ≤10-character floor then **deleted** the orphaned halves (`Ms.`, `Prof.`) along with
+  81 genuine one-word sentences (`Why?`, `Perhaps.`, `Wrong.`, `Trust me.`). The floor is now
+  "contains a letter", so a stray numeral is still rejected but a retort is not. The splitter
+  retains **331,049 of the corpus's 331,050 words**.
+
+`sentence_length_histogram()` is a **complete partition** — its counts sum to the sentence
+total. Bins are 5 words wide up to 100; the final bucket is open-ended and carries
+`bin_end: null`, which the dashboard renders as a `100+` tick. Previously bins stopped at 100
+and were half-open throughout, so the 53 longest sentences (up to 286 words) were counted in
+no bin at all.
 
 `utils.py` — shared `load_manifest()`, `load_articles()`, `clean_text()` (strips Forbes
 boilerplate), `chunk_text()` (sentence-aware), `save_analysis()`.
@@ -113,8 +161,22 @@ model — the label-free "is it safe to swap?" number). Writes `data/analysis/em
 (owner-run, not committed). The gold set's hand-authored `relevant_slugs` are guarded offline by
 `make embedding-queries-check` (`python -m analysis.embedding_compare --check`): it validates every
 slug against the committed `data/manifest.json` — no conductor, no embedding — so a typo'd / renamed
-slug fails loudly instead of silently scoring 0 in a live pass. A dashboard viz is still deferred.
-(Roadmap #27.)
+slug fails loudly instead of silently scoring 0 in a live pass. The same offline check also reports
+whether the gold set is big enough to *decide* anything (`gold_set_power`): the sign test's p is
+bounded below by the unanimous outcome, so a 5-query set bottoms out at 0.0625 and no comparison
+against it could ever clear alpha=0.05. It says so, and names the number of labelled queries needed,
+before you spend a live pass that embeds the whole corpus once per candidate model.
+
+Because MRR moves in coarse steps on a small gold set, the summary does **not** treat the raw
+`best_mrr_model` argmax as a result. Each record also carries `per_query` (the rank of the first
+relevant hit per query, so a reviewer can see *which* queries moved) and, for every non-baseline
+model, `paired` — wins/losses/ties against the baseline **on the same queries**, an exact two-sided
+sign-test `p`, and `min_achievable_p`, the p a clean sweep of this many labelled queries could ever
+reach. `aggregate()` turns those into a `verdict` (`candidate_better` / `baseline_retained` /
+`inconclusive`, threshold `--alpha`, default 0.05) plus a plain-English `verdict_reason`. A
+candidate must beat the baseline on **both** direction and significance; when the gold set is too
+small for any outcome to clear alpha, the verdict says so rather than blaming the model. A
+dashboard viz is still deferred. (Roadmap #27.)
 
 `calhoun_isms.py` — also outside the default chain; run via `make calhoun-isms`. A pure/offline
 **derived** artifact: reads `themes.json`'s per-article theme assignments plus the corpus bodies,
@@ -171,6 +233,88 @@ as `rag_eval`/`voice_eval`/`embedding_compare`), and it degrades to a clear `SKI
 interim print-ready HTML) when no browser is present. The rendered `anthology.html`/`anthology.pdf`
 are **git-ignored** build outputs (regenerate on demand). No conductor/network. (Roadmap #24.)
 
+### Track Record: from advisory guess to family ruling
+
+`predictions.py` deliberately leaves every prediction's `status` at `pending` — an LLM's
+recollection is not a ruling on how Dad's bets turned out. Two modules layer verdicts on top of
+it, and both write back into `predictions.json`.
+
+`verdict_backfill.py` — **owner-gated and paid**; run via `make backfill-verdicts`. For each
+prediction it gathers external evidence (a web search) and asks a T3 model to rule *with the
+sources it relied on*, landing `evidence_*` fields (verdict, rationale, normalized source list)
+so the family can see the receipts. Because it spends real money it preflights the conductor and
+refuses to start when it's down. (Plan 0004 step 1, roadmap #11.)
+
+`adjudicate.py` — the **human-override layer**; run via `make adjudicate` for a resumable
+review loop over the unadjudicated predictions, writing `human_verdict` plus a free-text note.
+Effective-verdict precedence is `human_verdict` > `evidence_verdict` > `llm_verdict` > `status`
+> `pending`: an evidence-grounded ruling outranks an ungrounded one, and **a family ruling
+always wins**. `--report` additionally emits the confidence **calibration** view — hit-rate
+bucketed by his hedging language, plus "most right / most wrong" conviction boards (roadmap
+#12). Its stdout *is* the product here (an interactive review loop), so this module keeps its
+`print`s by design. Pure/offline.
+
+### Family keepsakes
+
+`reading_room.py` — the builder behind the dashboard's **Reading Room** tab (roadmap #21).
+Joins `themes.json` (per-article theme label) and the manifest (ordering, word counts) to the
+full bodies in `data/raw/*.json`, emitting `reading_room.json`: every column with its
+paragraphs, reading time, theme tag, prev/next links and a "read on Forbes" deep link. Because
+it embeds **full article text** it is **git-ignored** — regenerate on demand. Note there is **no
+`make` target**; run `python -m analysis.reading_room`. Deterministic and offline.
+
+`year_in_review.py` — the annual counterpart to On This Day (roadmap #23); run via
+`make year-in-review` (`ARGS="--year 2024"`; defaults to the last complete year). Reads
+`themes.json`, `predictions.json` and the corpus and renders one keepsake email to
+`data/cron/emails/` in the same Georgia-serif voice as the weekly note: how much he wrote, the
+themes that dominated, and his most notable calls. **No conductor, network, or LLM** — safe
+unattended. Delivery stays human-in-the-loop through the same Gmail-MCP draft path.
+
+`delivery.py` — the reusable, side-effect-free half of On This Day delivery (plan 0003 /
+decision **D9**): parses the git-ignored recipient list and assembles a dry-run summary that
+**sends nothing**. `bin/create_gmail_draft.py` is built on it, and `make send-on-this-day` is
+the owner's approval gate. Actual draft creation happens through the Gmail MCP in a Claude
+session, never from here — so no mail credentials are ever stored.
+
+### Evaluation harnesses & the Geo-LLM ladder
+
+These establish whether Ask Dad is *trustworthy* and whether a fine-tune would beat it
+(roadmap #25/#26, plans 0007/0008). All follow the same shape: the one networked seam is
+**injected**, so the scoring math is pure and TDD'd offline, and the live CLI is owner-gated on
+conductor reachability.
+
+`rag_eval.py` — **RAG faithfulness** baseline; `make rag-eval`. Mirrors production exactly
+(`semantic_search.search()` → answer only from retrieved snippets, cite by `title (year)`,
+abstain with "I haven't written about that specifically"), then judges each answer for
+citation accuracy, hallucination and correct abstention over the committed
+`eval/questions.json`. Writes `data/analysis/rag_eval.json` — the bar any fine-tune must beat.
+
+`voice_eval.py` — **voice fidelity**; `make voice-eval`. Blind A/B/C ranking: candidate
+passages (`real` excerpt / `rag` answer / `finetuned` answer) are anonymized to labels with a
+seeded, reproducible shuffle, ranked by a judge model on how much they read like Calhoun, then
+un-blinded into win-rates, average ranks and a `finetuned_over_rag` head-to-head. Also computes
+offline **style metrics** against his distinctive words (`--style-only` needs no judge).
+
+`voice_trials.py` — deterministic input builder for the above; `make voice-trials`. Turns 26a's
+held-out split (`data/training/heldout.jsonl`) into a real `eval/voice_trials.json` skeleton —
+each trial's prompt plus a length-balanced genuine excerpt, with `rag`/`finetuned` left as
+paste-here placeholders. **Leakage-free by construction** (prompts come from the held-out
+split). The output embeds real bodies, so it is git-ignored; the hand-authored
+`eval/voice_trials.example.json` template is committed.
+
+`geo_baseline.py` — freezes the pre-fine-tune numbers (plan 0008 step 26b). Reads the already
+written `rag_eval.json` and curates it into `geo_llm_baseline.json` plus a short markdown note,
+with a `voice` slot left pending for 26d. Makes **no** conductor calls of its own; if
+`rag_eval.json` is absent it tells the owner to run `make rag-eval` and exits without writing.
+Module CLI only (`python -m analysis.geo_baseline`).
+
+`geo_llm_status.py` — assembles `data/analysis/geo_llm.json`, the snapshot behind the
+dashboard's **Geo-LLM** tab: dataset stats, a sample training pair, the RAG/voice summaries,
+the 26a–26f pipeline checklist, and any fine-tune registration marker. Called **directly by
+`viz/build_dashboard.py`** during the dashboard build rather than from a `make` target, and
+every field degrades to a safe default when its source file is missing — so the build never
+breaks mid-experiment.
+
 ## 3. The conductor (LLM abstraction)
 
 All model calls go to a **local OpenAI-compatible server** at `http://127.0.0.1:8080/v1`
@@ -188,6 +332,14 @@ Code uses the `openai` Python SDK (or `fetch` from the browser) pointed at that 
 
 No API keys in this repo; T3's `OPENROUTER_API_KEY` lives in the conductor's own `.env`.
 
+**Preflight** (`analysis/conductor.py`, roadmap #6) — the single home for "is it up, and what
+do I say if it isn't", replacing three byte-for-byte copies of `_conductor_up()`. `conductor_up()`
+GETs `/models` (cheap — no model load) and treats any connection error or non-200 as down;
+`require_conductor()` is what the owner-gated CLIs (`rag_eval`, `voice_eval`, `verdict_backfill`,
+`embedding_compare`) call to abort with **exit 2** and one clear message before spending a paid
+T3 request. The network call sits behind an injectable `opener`, so callers test the gating
+offline. `make conductor-check` runs it standalone.
+
 > Full reference (exact signatures, return shapes, error/retry behavior, health check):
 > [`conductor-contract.md`](conductor-contract.md).
 
@@ -200,8 +352,22 @@ No API keys in this repo; T3's `OPENROUTER_API_KEY` lives in the conductor's own
 entities, embeddings, predictions) and writes `dashboard/index.html`. Missing inputs degrade
 to empty stubs. The dashboard is **fully client-side** — vanilla JS + D3 v7 from CDN, no
 build step, no backend. The only runtime calls are browser → conductor (for Ask Dad +
-search embeddings). Nine tabs: Theme Map, Timeline, Psychoprofile, Linguistic DNA, Influence
-Map, Raw Corpus, Semantic Search, **Ask Dad**, **Track Record**.
+search embeddings). **Sixteen tabs:** Theme Map, Timeline, Psychoprofile, Linguistic DNA,
+Influence Map, Raw Corpus, Semantic Search, **Ask Dad**, **Track Record**, Network,
+Stance, Intellectual Arc, Calhoun-isms, Second Thoughts, Reading Room, Geo-LLM. The nav
+`flex-wrap`s so added tabs can't overflow the row.
+
+Tabs whose artifact is git-ignored for licensing (Reading Room, Calhoun-isms, Second Thoughts)
+inline an **empty stub** on CI and fresh clones, and render a prompt naming the command that
+builds them.
+
+One placeholder is **transformed** rather than injected verbatim: `__MANIFEST_DATA__` runs
+through `dedupe_manifest_payload()`, which applies the shared
+`analysis.utils.dedupe_manifest_entries()` and re-derives `total_articles`. The manifest
+legitimately records http/https URL twins of one article (23 in the current corpus, all
+naming the same raw file); `load_articles()` collapses them for the analysis pipeline, and
+the dashboard needs the same corpus view or it reports an inflated article count and draws a
+duplicate Raw Corpus row per twin.
 
 ### Email (`analysis/on_this_day.py` + `bin/create_gmail_draft.py`)
 

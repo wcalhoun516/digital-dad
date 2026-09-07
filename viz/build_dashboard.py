@@ -6,14 +6,23 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = BASE_DIR / "data"
+
+# `make dashboard` runs this as a script, so the repo root isn't on sys.path yet.
+if str(BASE_DIR) not in sys.path:
+    sys.path.insert(0, str(BASE_DIR))
+
+from analysis.utils import dedupe_manifest_entries  # noqa: E402
+
 TEMPLATE_PATH = BASE_DIR / "dashboard" / "template.html"
 OUTPUT_PATH = BASE_DIR / "dashboard" / "index.html"
+
+MANIFEST_PLACEHOLDER = "/*__MANIFEST_DATA__*/"
 
 PLACEHOLDERS = {
     "/*__THEME_DATA__*/": DATA_DIR / "analysis" / "themes.json",
     "/*__PSYCHOPROFILE_DATA__*/": DATA_DIR / "analysis" / "psychoprofile.json",
     "/*__LINGUISTIC_DATA__*/": DATA_DIR / "analysis" / "linguistics.json",
-    "/*__MANIFEST_DATA__*/": DATA_DIR / "manifest.json",
+    MANIFEST_PLACEHOLDER: DATA_DIR / "manifest.json",
     "/*__ENTITY_DATA__*/": DATA_DIR / "analysis" / "entities.json",
     "/*__EMBEDDINGS_DATA__*/": DATA_DIR / "analysis" / "embeddings.json",
     "/*__PREDICTIONS_DATA__*/": DATA_DIR / "analysis" / "predictions.json",
@@ -57,6 +66,20 @@ _EMPTY_DEFAULTS = {
 }
 
 
+def dedupe_manifest_payload(payload: dict) -> dict:
+    """Return *payload* with one article entry per raw file and a matching count.
+
+    The manifest carries http/https twins of the same article (23 in the current corpus),
+    both naming one raw file. `analysis.utils.load_articles` already collapses them for the
+    analysis pipeline; the dashboard reads the manifest on its own path, so without this it
+    would render each twin as a separate row and report the inflated `total_articles`.
+    """
+    if "articles" not in payload:
+        return dict(payload)
+    unique = dedupe_manifest_entries(payload["articles"])
+    return {**payload, "articles": unique, "total_articles": len(unique)}
+
+
 def build():
     if not TEMPLATE_PATH.exists():
         print(f"Error: Template not found at {TEMPLATE_PATH}")
@@ -64,8 +87,6 @@ def build():
 
     # Regenerate the Geo-LLM tab snapshot so a plain `make dashboard` is always fresh.
     try:
-        if str(BASE_DIR) not in sys.path:
-            sys.path.insert(0, str(BASE_DIR))
         from analysis.geo_llm_status import write_status
 
         write_status()
@@ -79,7 +100,9 @@ def build():
             data = data_path.read_text()
             # Validate JSON
             try:
-                json.loads(data)
+                parsed = json.loads(data)
+                if placeholder == MANIFEST_PLACEHOLDER and isinstance(parsed, dict):
+                    data = json.dumps(dedupe_manifest_payload(parsed))
             except json.JSONDecodeError as e:
                 print(f"Warning: Invalid JSON in {data_path}: {e}")
                 data = _EMPTY_DEFAULTS.get(placeholder, "null")
