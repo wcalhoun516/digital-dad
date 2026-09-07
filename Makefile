@@ -86,7 +86,9 @@ send-on-this-day:
 
 # Annual "year in review" keepsake email (roadmap #23). Deterministic + offline (no conductor,
 # no network): builds from data/analysis/{themes,predictions}.json and writes the HTML to
-# data/cron/emails/. ARGS e.g. --year 2024 or --dry-run. Review then draft via the Gmail MCP.
+# data/cron/emails/. Notable calls are ranked by adjudicated verdict (vindicated first) and
+# each is labelled with it, above the year's won/lost record — so run `make adjudicate` first
+# if you want human rulings reflected. ARGS e.g. --year 2024 or --dry-run. Draft via Gmail MCP.
 year-in-review:
 	$(PYTHON) -m analysis.year_in_review $(ARGS)
 

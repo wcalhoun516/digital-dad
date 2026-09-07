@@ -6,10 +6,16 @@ email. No conductor, network, or Gmail MCP is exercised here.
 """
 
 import datetime
+import json
+from collections import Counter
+from pathlib import Path
 
 import pytest
 
+from analysis.adjudicate import effective_verdict
 from analysis.year_in_review import (
+    _VERDICT_LABEL,
+    _VERDICT_RANK,
     articles_for_year,
     build_digest,
     default_year,
@@ -18,7 +24,11 @@ from analysis.year_in_review import (
     render_markdown,
     run,
     top_themes,
+    verdict_tally,
 )
+
+ROOT = Path(__file__).resolve().parent.parent
+REAL_PREDICTIONS = ROOT / "data" / "analysis" / "predictions.json"
 
 THEME_ARTICLES = [
     {"slug": "a", "title": "Inflation Is Back", "date": "2024-02-01",
@@ -47,6 +57,26 @@ PREDICTIONS = [
     {"claim": "Last year's call.", "topic": "oil",
      "confidence_language": "certain", "article_date": "2023-05-05",
      "article_title": "Old News", "article_url": "https://forbes.com/d"},
+]
+
+# Deliberately ordered so conviction and verdict *disagree*: ranked by conviction alone the
+# certain-but-wrong call leads, and the hedged-but-right one comes last. Each claim gets its
+# own article_slug so the max_per_article cap doesn't mask the ordering under test.
+ADJUDICATED = [
+    {"claim": "Certain but wrong.", "confidence_language": "certain",
+     "article_date": "2024-03-01", "article_slug": "p1", "article_title": "One",
+     "llm_verdict": "wrong"},
+    {"claim": "Certain but unfalsifiable.", "confidence_language": "certain",
+     "article_date": "2024-03-02", "article_slug": "p2", "article_title": "Two",
+     "llm_verdict": "unfalsifiable"},
+    {"claim": "Certain but unjudged.", "confidence_language": "certain",
+     "article_date": "2024-03-03", "article_slug": "p3", "article_title": "Three"},
+    {"claim": "Confident and mixed.", "confidence_language": "confident",
+     "article_date": "2024-03-04", "article_slug": "p4", "article_title": "Four",
+     "llm_verdict": "mixed"},
+    {"claim": "Hedged but right.", "confidence_language": "hedged",
+     "article_date": "2024-03-05", "article_slug": "p5", "article_title": "Five",
+     "llm_verdict": "vindicated"},
 ]
 
 
@@ -139,6 +169,45 @@ class TestNotablePredictions:
         assert slugs.count("big-piece") == 1
         assert "other-piece" in slugs
 
+    def test_a_vindicated_call_outranks_a_more_confident_wrong_one(self):
+        # The keepsake leads with calls that came good, not merely calls stated loudly.
+        got = notable_predictions(ADJUDICATED, 2024)
+        assert [p["claim"] for p in got] == [
+            "Hedged but right.",
+            "Confident and mixed.",
+            "Certain but wrong.",
+            "Certain but unfalsifiable.",
+            "Certain but unjudged.",
+        ]
+
+    def test_unfalsifiable_and_unjudged_claims_sink_below_real_calls(self):
+        got = notable_predictions(ADJUDICATED, 2024, limit=3)
+        claims = [p["claim"] for p in got]
+        assert "Certain but unfalsifiable." not in claims
+        assert "Certain but unjudged." not in claims
+
+    def test_conviction_still_orders_within_a_verdict_tier(self):
+        same_verdict = [
+            {"claim": "Hedged.", "confidence_language": "hedged", "article_date": "2024-01-01",
+             "article_slug": "h", "llm_verdict": "vindicated"},
+            {"claim": "Certain.", "confidence_language": "certain", "article_date": "2024-01-02",
+             "article_slug": "c", "llm_verdict": "vindicated"},
+        ]
+        got = notable_predictions(same_verdict, 2024)
+        assert [p["claim"] for p in got] == ["Certain.", "Hedged."]
+
+    def test_a_human_ruling_outranks_the_advisory_llm_verdict(self):
+        # adjudicate.effective_verdict precedence: human_verdict > evidence_verdict > llm_verdict.
+        overridden = [
+            {"claim": "LLM says wrong, human says right.", "confidence_language": "hedged",
+             "article_date": "2024-01-01", "article_slug": "a",
+             "llm_verdict": "wrong", "human_verdict": "vindicated"},
+            {"claim": "Plainly mixed.", "confidence_language": "certain",
+             "article_date": "2024-01-02", "article_slug": "b", "llm_verdict": "mixed"},
+        ]
+        got = notable_predictions(overridden, 2024)
+        assert got[0]["claim"] == "LLM says wrong, human says right."
+
     def test_max_per_article_is_configurable(self):
         hoggy = [
             {"claim": "Call one.", "confidence_language": "certain",
@@ -148,6 +217,75 @@ class TestNotablePredictions:
         ]
         got = notable_predictions(hoggy, 2024, max_per_article=2)
         assert len(got) == 2
+
+
+class TestVerdictLabels:
+    def test_html_labels_each_call_with_its_verdict(self):
+        d = build_digest([], ADJUDICATED, 2024, predictions_n=6)
+        html = render_html(d)
+        assert "Vindicated" in html
+        assert "Wrong" in html
+
+    def test_html_does_not_present_a_wrong_call_as_merely_confident(self):
+        # The bug: a call judged wrong showed only its confidence label ("Certain").
+        d = build_digest([], [ADJUDICATED[0]], 2024)
+        html = render_html(d)
+        assert "Certain but wrong." in html
+        assert "Wrong" in html
+
+    def test_unjudged_calls_read_as_not_yet_judged_rather_than_pending(self):
+        d = build_digest([], [ADJUDICATED[2]], 2024)
+        html = render_html(d)
+        assert "Not yet judged" in html
+
+    def test_markdown_labels_each_call_with_its_verdict(self):
+        d = build_digest([], ADJUDICATED, 2024, predictions_n=6)
+        md = render_markdown(d)
+        assert "Vindicated" in md
+        assert "Wrong" in md
+
+
+class TestVerdictTally:
+    def test_counts_only_adjudicated_calls_for_the_year(self):
+        assert verdict_tally(ADJUDICATED, 2024) == {
+            "vindicated": 1, "mixed": 1, "wrong": 1, "total": 3
+        }
+
+    def test_ignores_other_years(self):
+        assert verdict_tally(ADJUDICATED, 2023) == {
+            "vindicated": 0, "mixed": 0, "wrong": 0, "total": 0
+        }
+
+    def test_counts_every_call_not_just_the_ones_shown(self):
+        # The scoreboard is the year's whole record; the digest only *shows* a handful.
+        many = [
+            dict(p, claim=f"c{i}", article_slug=f"s{i}", article_date="2024-01-01")
+            for i, p in enumerate([ADJUDICATED[0]] * 9)
+        ]
+        assert verdict_tally(many, 2024)["wrong"] == 9
+
+    def test_a_human_ruling_wins_in_the_tally_too(self):
+        overridden = [{"article_date": "2024-01-01", "llm_verdict": "wrong",
+                       "human_verdict": "vindicated"}]
+        assert verdict_tally(overridden, 2024)["vindicated"] == 1
+
+    def test_digest_carries_the_tally(self):
+        d = build_digest([], ADJUDICATED, 2024)
+        assert d["verdict_tally"]["total"] == 3
+
+    def test_html_states_the_years_record(self):
+        d = build_digest([], ADJUDICATED, 2024)
+        html = render_html(d)
+        assert "1 came good" in html
+
+    def test_markdown_states_the_years_record(self):
+        md = render_markdown(build_digest([], ADJUDICATED, 2024))
+        assert "1 came good" in md
+
+    def test_no_scoreboard_when_nothing_was_adjudicated(self):
+        unjudged = [{"claim": "x", "article_date": "2024-01-01", "article_slug": "u"}]
+        html = render_html(build_digest([], unjudged, 2024))
+        assert "came good" not in html
 
 
 class TestBuildDigest:
@@ -238,6 +376,76 @@ class TestRun:
             write=False,
         )
         assert result["year"] == default_year()
+
+
+class TestAgainstTheRealCorpus:
+    """Guards on the shipped predictions.json — this is where the bug was visible.
+
+    Before the fix the 2023 digest opened on two calls the archive had judged ``wrong`` and
+    the 2025 digest opened on one, each labelled only "Certain". Synthetic fixtures prove the
+    ordering rule; these prove it holds on the corpus the family actually receives.
+    """
+
+    def _predictions(self) -> list[dict]:
+        if not REAL_PREDICTIONS.exists():
+            pytest.skip("data/analysis/predictions.json not present")
+        return json.loads(REAL_PREDICTIONS.read_text())["predictions"]
+
+    def _years(self, preds: list[dict]) -> list[str]:
+        return sorted(
+            {
+                (p.get("article_date") or "")[:4]
+                for p in preds
+                if (p.get("article_date") or "")[:4].isdigit()
+            }
+        )
+
+    def test_every_years_calls_are_ordered_best_verdict_first(self):
+        preds = self._predictions()
+        years = self._years(preds)
+        assert years, "no dated predictions in the corpus"
+        for year in years:
+            ranks = [
+                _VERDICT_RANK.get(effective_verdict(p), len(_VERDICT_RANK))
+                for p in notable_predictions(preds, year)
+            ]
+            assert ranks == sorted(ranks), f"{year} digest is not ordered by verdict: {ranks}"
+
+    def test_no_year_leads_with_a_call_the_archive_judged_wrong(self):
+        preds = self._predictions()
+        for year in self._years(preds):
+            got = notable_predictions(preds, year)
+            if not got:
+                continue
+            tally = verdict_tally(preds, year)
+            if tally["vindicated"] or tally["mixed"]:
+                assert effective_verdict(got[0]) != "wrong", (
+                    f"{year} opens on a wrong call despite having better ones"
+                )
+
+    def test_the_scoreboard_matches_an_independent_count(self):
+        preds = self._predictions()
+        for year in self._years(preds):
+            tally = verdict_tally(preds, year)
+            counted = Counter(
+                effective_verdict(p)
+                for p in preds
+                if (p.get("article_date") or "")[:4] == year
+            )
+            assert tally["vindicated"] == counted["vindicated"]
+            assert tally["mixed"] == counted["mixed"]
+            assert tally["wrong"] == counted["wrong"]
+            assert tally["total"] == sum(
+                counted[v] for v in ("vindicated", "mixed", "wrong")
+            )
+
+    def test_the_rendered_email_names_a_verdict_for_every_call(self):
+        preds = self._predictions()
+        digest = build_digest([], preds, 2023)
+        html = render_html(digest)
+        assert html.count("&ldquo;") == len(digest["notable_predictions"])
+        for p in digest["notable_predictions"]:
+            assert _VERDICT_LABEL[effective_verdict(p)] in html
 
 
 if __name__ == "__main__":
