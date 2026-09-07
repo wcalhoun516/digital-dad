@@ -5,7 +5,7 @@ PYTHON := .venv/bin/python
 # package drops out of the gate. E501 is off for the source packages only (see pyproject).
 LINT_PATHS := analysis scraper viz training tools bin tests
 
-.PHONY: scrape manifest-check manifest-dedup coverage-audit ingest ingest-review analyze training dashboard all serve share search on-this-day send-on-this-day adjudicate backfill-verdicts entity-graph calhoun-isms contradictions rag-eval voice-eval voice-trials embedding-compare embedding-queries-check clean test lint fmt lint-json hooks verify verify-responsive
+.PHONY: scrape manifest-check manifest-dedup coverage-audit analyze training dashboard all serve share search on-this-day send-on-this-day adjudicate backfill-verdicts entity-graph calhoun-isms reading-room contradictions rag-eval voice-eval voice-style voice-trials embedding-compare embedding-queries-check clean test lint fmt lint-json hooks verify verify-responsive
 
 scrape:
 	$(PYTHON) -m scraper $(ARGS)
@@ -152,11 +152,10 @@ contradictions:
 calhoun-isms:
 	$(PYTHON) -m analysis.calhoun_isms $(ARGS)
 
-# Reading Room (roadmap #21): the family's full-article reader, joining data/analysis/themes.json
-# with the corpus bodies (run `make analyze` first). Pure/offline — no conductor, no network.
-# Writes the git-ignored data/analysis/reading_room.json (embeds full bodies), surfaced in the
-# dashboard's Reading Room tab — which is why the tab's empty state asks for this target.
-# ARGS e.g. --dry-run or --limit 20.
+# Reading Room (roadmap #21): the paginated full-article reader behind the dashboard tab,
+# joining data/analysis/themes.json + the manifest to the raw bodies. Pure/offline — no
+# conductor, no network. Writes the git-ignored data/analysis/reading_room.json (embeds full
+# article text). ARGS e.g. --dry-run, --limit 20.
 reading-room:
 	$(PYTHON) -m analysis.reading_room $(ARGS)
 
@@ -189,11 +188,10 @@ embedding-queries-check:
 voice-eval:
 	$(PYTHON) -m analysis.voice_eval $(ARGS)
 
-# The deterministic half of the 26d voice eval, on its own: type-token ratio, sentence length
-# and the Calhoun-"fingerprint" hit rate per source, with a delta vs `real`. Judge-independent —
-# no conductor, no paid calls — so it gives a voice signal before any fine-tune exists and is
-# safe to run unattended. Writes data/analysis/voice_style.json. ARGS e.g. --trials <path> or
-# --fingerprint-words 40 (voice_eval takes no --limit).
+# The deterministic half of the above: style metrics vs his distinctive words, no judge.
+# `--style-only` returns before the conductor gate, so this is offline, free and safe to run
+# unattended — the flag lives in the target so staying free isn't a thing to remember.
+# Writes data/analysis/voice_style.json.
 voice-style:
 	$(PYTHON) -m analysis.voice_eval --style-only $(ARGS)
 

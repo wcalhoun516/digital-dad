@@ -115,8 +115,10 @@ def is_article_url(url: str) -> bool:
     # Must be under /sites/georgecalhoun/ and have a slug after the author path
     if "/sites/georgecalhoun/" not in path:
         return False
-    # Filter out /amp/ variants (duplicates of the main article)
-    if "/amp" in path:
+    # Filter out /amp/ variants (duplicates of the main article). Matched as a whole path
+    # segment: a substring test also discards real articles whose slug merely starts with
+    # "amp" ("ampere-...", "amplify-...", "ample-...").
+    if any(segment.lower() == "amp" for segment in path.split("/")):
         return False
     # Filter out the author listing page itself
     after_author = path.split("/sites/georgecalhoun/")[-1].strip("/")
@@ -128,6 +130,11 @@ def is_article_url(url: str) -> bool:
     return True
 
 def normalize_url(url: str) -> str:
-    """Strip query params and fragments from a Forbes article URL."""
+    """Strip query params and fragments from a Forbes article URL.
+
+    Scheme and host are lowercased (they are case-insensitive per RFC 3986) so two
+    spellings of the same host can't mint two manifest entries for one article; the path
+    keeps its case, since that is what identifies the article.
+    """
     parsed = urlparse(url)
-    return f"{parsed.scheme}://{parsed.netloc}{parsed.path.rstrip('/')}/"
+    return f"{parsed.scheme.lower()}://{parsed.netloc.lower()}{parsed.path.rstrip('/')}/"
