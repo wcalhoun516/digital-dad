@@ -10,9 +10,14 @@ import json
 from training import prepare
 from training.prepare import (
     build_instruct_record,
+    chunk_body,
     eval_grounded_slugs,
     split_articles,
 )
+
+
+def _paragraph(n_sentences: int, marker: str = "x") -> str:
+    return " ".join(f"Sentence {i} about {marker}." for i in range(n_sentences))
 
 
 class TestBuildInstructRecord:
@@ -29,6 +34,56 @@ class TestBuildInstructRecord:
     def test_assistant_content_is_the_body(self):
         rec = build_instruct_record("Some Title", "The full article body.")
         assert rec["messages"][2]["content"] == "The full article body."
+
+
+class TestChunkBody:
+    """Plan 0009 step 1: article bodies become passage-sized chunks that fit the
+    fine-tune window, split on paragraph boundaries and never mid-sentence.
+    """
+
+    def test_short_body_is_one_chunk(self):
+        body = _paragraph(3)
+        assert chunk_body(body, max_chars=1000) == [body]
+
+    def test_no_chunk_exceeds_the_budget(self):
+        body = "\n\n".join(_paragraph(6, marker=f"topic{i}") for i in range(12))
+        chunks = chunk_body(body, max_chars=400)
+        assert chunks
+        assert all(len(c) <= 400 for c in chunks)
+
+    def test_splits_on_paragraph_boundaries(self):
+        # each paragraph fits alone, so no chunk may contain a partial paragraph
+        paragraphs = [_paragraph(4, marker=f"topic{i}") for i in range(8)]
+        chunks = chunk_body("\n\n".join(paragraphs), max_chars=300)
+        emitted = [p for c in chunks for p in c.split("\n\n")]
+        assert emitted == paragraphs
+
+    def test_packs_multiple_paragraphs_into_one_chunk(self):
+        paragraphs = [_paragraph(2, marker=f"topic{i}") for i in range(6)]
+        chunks = chunk_body("\n\n".join(paragraphs), max_chars=2000)
+        assert len(chunks) == 1
+
+    def test_never_ends_a_chunk_mid_sentence(self):
+        body = "\n\n".join(_paragraph(5, marker=f"topic{i}") for i in range(10))
+        for chunk in chunk_body(body, max_chars=350):
+            assert chunk.endswith("."), chunk
+
+    def test_preserves_every_sentence_exactly_once(self):
+        body = "\n\n".join(_paragraph(5, marker=f"topic{i}") for i in range(10))
+        chunks = chunk_body(body, max_chars=350)
+        rejoined = " ".join(" ".join(c.split()) for c in chunks)
+        assert rejoined == " ".join(body.split())
+
+    def test_oversized_paragraph_is_split_at_a_sentence_boundary(self):
+        # one paragraph, far over budget: it must still be cut between sentences
+        body = _paragraph(40)
+        chunks = chunk_body(body, max_chars=300)
+        assert len(chunks) > 1
+        assert all(len(c) <= 300 for c in chunks)
+        assert all(c.endswith(".") for c in chunks)
+
+    def test_blank_body_yields_no_chunks(self):
+        assert chunk_body("   \n\n  ", max_chars=500) == []
 
 
 class TestEvalGroundedSlugs:

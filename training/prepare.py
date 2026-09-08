@@ -25,7 +25,7 @@ import json
 import re
 from pathlib import Path
 
-from analysis.utils import dedupe_manifest_entries
+from analysis.utils import chunk_text, dedupe_manifest_entries
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT_DIR / "data"
@@ -66,6 +66,47 @@ def build_instruct_record(title: str, body: str, system_prompt: str = SYSTEM_PRO
             {"role": "assistant", "content": body},
         ]
     }
+
+
+_PARAGRAPH_SPLIT = re.compile(r"\n\s*\n")
+
+
+def chunk_body(body: str, max_chars: int) -> list[str]:
+    """Split an article body into passage-sized chunks of at most ``max_chars``.
+
+    Chunks are packed on paragraph boundaries: a paragraph that fits is never
+    divided, and consecutive paragraphs are grouped until the budget is reached.
+    A single paragraph longer than the budget falls back to ``chunk_text`` (the
+    corpus chunker Ask Dad retrieval already uses), which cuts at a sentence
+    boundary. Overlap is off — repeated text would over-weight those sentences
+    in the fine-tune.
+    """
+    paragraphs: list[str] = []
+    for para in _PARAGRAPH_SPLIT.split(body or ""):
+        para = para.strip()
+        if not para:
+            continue
+        if len(para) <= max_chars:
+            paragraphs.append(para)
+        else:
+            paragraphs.extend(
+                c for c in chunk_text(para, max_tokens=max(max_chars // 4, 1), overlap=0) if c
+            )
+
+    chunks: list[str] = []
+    current: list[str] = []
+    length = 0
+    for para in paragraphs:
+        separator = 2 if current else 0  # the "\n\n" that will rejoin them
+        if current and length + separator + len(para) > max_chars:
+            chunks.append("\n\n".join(current))
+            current, length = [], 0
+            separator = 0
+        current.append(para)
+        length += separator + len(para)
+    if current:
+        chunks.append("\n\n".join(current))
+    return chunks
 
 
 def _normalize_title(s: str) -> str:
