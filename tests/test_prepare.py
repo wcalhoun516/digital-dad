@@ -9,11 +9,19 @@ import json
 
 from training import prepare
 from training.prepare import (
+    TASK_SHAPES,
     build_instruct_record,
+    build_passage_record,
+    build_passage_records,
     chunk_body,
     eval_grounded_slugs,
+    passage_budget_chars,
     split_articles,
 )
+
+
+def _record_chars(record: dict) -> int:
+    return sum(len(m["content"]) for m in record["messages"])
 
 
 def _paragraph(n_sentences: int, marker: str = "x") -> str:
@@ -84,6 +92,108 @@ class TestChunkBody:
 
     def test_blank_body_yields_no_chunks(self):
         assert chunk_body("   \n\n  ", max_chars=500) == []
+
+
+class TestBuildPassageRecord:
+    """One passage, one task shape. The shape is recorded so the voice eval can
+    slice results by it (plan 0009 step 1)."""
+
+    PASSAGE = "The first claim is bold. The second sentence qualifies it. A third lands."
+
+    def test_every_shape_produces_a_well_formed_chat_record(self):
+        for shape in TASK_SHAPES:
+            rec = build_passage_record("A Title", self.PASSAGE, shape)
+            roles = [m["role"] for m in rec["messages"]]
+            assert roles == ["system", "user", "assistant"], shape
+            assert all(m["content"].strip() for m in rec["messages"]), shape
+
+    def test_record_carries_its_shape(self):
+        for shape in TASK_SHAPES:
+            assert build_passage_record("A Title", self.PASSAGE, shape)["shape"] == shape
+
+    def test_write_on_topic_completion_is_the_whole_passage(self):
+        rec = build_passage_record("Why Inflation Persists?", self.PASSAGE, "write-on-topic")
+        assert rec["messages"][2]["content"] == self.PASSAGE
+        assert "Inflation Persists" in rec["messages"][1]["content"]
+
+    def test_continue_passage_puts_the_opening_in_the_prompt(self):
+        rec = build_passage_record("A Title", self.PASSAGE, "continue-passage")
+        user, assistant = rec["messages"][1]["content"], rec["messages"][2]["content"]
+        assert "The first claim is bold." in user
+        assert assistant == "The second sentence qualifies it. A third lands."
+
+    def test_respond_to_claim_quotes_the_claim_and_answers_it(self):
+        rec = build_passage_record("A Title", self.PASSAGE, "respond-to-claim")
+        user, assistant = rec["messages"][1]["content"], rec["messages"][2]["content"]
+        assert "The first claim is bold." in user
+        assert "The first claim is bold." not in assistant
+
+    def test_split_shapes_lose_no_text_from_the_passage(self):
+        for shape in ("continue-passage", "respond-to-claim"):
+            rec = build_passage_record("A Title", self.PASSAGE, shape)
+            user, assistant = rec["messages"][1]["content"], rec["messages"][2]["content"]
+            assert self.PASSAGE.split(". ")[0] in user
+            assert assistant in self.PASSAGE
+
+    def test_single_sentence_passage_falls_back_to_write_on_topic(self):
+        # nothing to continue from, so the split shapes would emit an empty turn
+        rec = build_passage_record("A Title", "One lonely sentence.", "continue-passage")
+        assert rec["shape"] == "write-on-topic"
+        assert rec["messages"][2]["content"] == "One lonely sentence."
+
+    def test_unknown_shape_is_rejected(self):
+        try:
+            build_passage_record("A Title", self.PASSAGE, "freestyle")
+        except ValueError:
+            return
+        raise AssertionError("expected ValueError for an unknown task shape")
+
+
+class TestBuildPassageRecords:
+    """A whole article body becomes several in-budget records — the fix for D15's
+    100%-over-budget dataset."""
+
+    def _body(self, n_paragraphs=14):
+        return "\n\n".join(_paragraph(8, marker=f"topic{i}") for i in range(n_paragraphs))
+
+    def test_every_record_fits_the_sequence_budget(self):
+        budget = passage_budget_chars()
+        records = build_passage_records("A Title", self._body(60), slug="a-title")
+        assert records
+        assert all(_record_chars(r) <= budget for r in records)
+
+    def test_a_long_body_yields_several_records(self):
+        records = build_passage_records("A Title", self._body(60), slug="a-title")
+        assert len(records) > 1
+
+    def test_the_whole_body_reaches_the_model(self):
+        body = self._body(60)
+        records = build_passage_records("A Title", body, slug="a-title")
+        seen = " ".join(
+            " ".join((r["messages"][1]["content"] + " " + r["messages"][2]["content"]).split())
+            for r in records
+        )
+        for sentence in {s.strip() for s in body.replace("\n\n", " ").split(". ") if s.strip()}:
+            assert sentence.rstrip(".") in seen
+
+    def test_task_shapes_vary_across_an_article(self):
+        records = build_passage_records("A Title", self._body(60), slug="a-title")
+        assert len({r["shape"] for r in records}) > 1
+
+    def test_is_deterministic(self):
+        body = self._body()
+        assert build_passage_records("A Title", body, slug="s") == build_passage_records(
+            "A Title", body, slug="s"
+        )
+
+    def test_shape_rotation_differs_between_articles(self):
+        body = self._body()
+        first = [r["shape"] for r in build_passage_records("T", body, slug="alpha")]
+        second = [r["shape"] for r in build_passage_records("T", body, slug="beta-two")]
+        assert first != second
+
+    def test_empty_body_yields_no_records(self):
+        assert build_passage_records("A Title", "   ", slug="s") == []
 
 
 class TestEvalGroundedSlugs:

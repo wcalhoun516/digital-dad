@@ -26,6 +26,8 @@ import re
 from pathlib import Path
 
 from analysis.utils import chunk_text, dedupe_manifest_entries
+from training.finetune_config import QLoRAConfig
+from training.finetune_preflight import DEFAULT_CHARS_PER_TOKEN
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT_DIR / "data"
@@ -68,7 +70,31 @@ def build_instruct_record(title: str, body: str, system_prompt: str = SYSTEM_PRO
     }
 
 
+# The three moves the fine-tune should learn, not just "emit an article". One per
+# record; the shape is stored on the record so the voice eval can slice by it.
+TASK_SHAPES = ("write-on-topic", "continue-passage", "respond-to-claim")
+
+_WRITE_TEMPLATE = "Write an analysis of {topic}."
+_CONTINUE_TEMPLATE = "Continue this passage from your analysis of {topic}:\n\n{lead}"
+_RESPOND_TEMPLATE = "On the subject of {topic}, respond to this claim:\n\n“{claim}”"
+
+# The character estimate can't see the chat template's special tokens, so leave a
+# little of the window unspent rather than land exactly on max_seq_len.
+SEQ_HEADROOM = 0.95
+
 _PARAGRAPH_SPLIT = re.compile(r"\n\s*\n")
+_SENTENCE_SPLIT = re.compile(r"(?<=[.!?])\s+(?=[\"“'A-Z0-9])")
+
+
+def passage_budget_chars(config: QLoRAConfig | None = None) -> int:
+    """Character budget for one whole training record under the run's window.
+
+    Mirrors ``finetune_preflight.check_length_budget``'s arithmetic (total chat
+    characters ÷ chars-per-token vs ``max_seq_len``) so a dataset built here
+    passes the preflight that gates the run.
+    """
+    cfg = config or QLoRAConfig()
+    return int(cfg.max_seq_len * DEFAULT_CHARS_PER_TOKEN * SEQ_HEADROOM)
 
 
 def chunk_body(body: str, max_chars: int) -> list[str]:
@@ -107,6 +133,88 @@ def chunk_body(body: str, max_chars: int) -> list[str]:
     if current:
         chunks.append("\n\n".join(current))
     return chunks
+
+
+def _split_lead(passage: str) -> tuple[str, str]:
+    """Split a passage into its opening sentence and the remainder."""
+    parts = _SENTENCE_SPLIT.split(passage.strip(), maxsplit=1)
+    if len(parts) < 2 or not parts[1].strip():
+        return passage.strip(), ""
+    return parts[0].strip(), parts[1].strip()
+
+
+def _prompt_overhead(topic: str) -> int:
+    """Longest user-turn scaffolding across the shapes, for budgeting."""
+    return max(
+        len(_WRITE_TEMPLATE.format(topic=topic)),
+        len(_CONTINUE_TEMPLATE.format(topic=topic, lead="")),
+        len(_RESPOND_TEMPLATE.format(topic=topic, claim="")),
+    )
+
+
+def build_passage_record(
+    title: str, passage: str, shape: str, system_prompt: str = SYSTEM_PROMPT
+) -> dict:
+    """Shape one passage into a chat record for the given task shape.
+
+    ``continue-passage`` and ``respond-to-claim`` move the passage's opening
+    sentence into the user turn, so the model learns to develop an argument it
+    has been handed rather than only to start one. A passage with nothing after
+    its opening sentence has no remainder to complete, so it falls back to
+    ``write-on-topic`` rather than emitting an empty assistant turn.
+    """
+    if shape not in TASK_SHAPES:
+        raise ValueError(f"unknown task shape: {shape!r} (expected one of {TASK_SHAPES})")
+
+    topic = _article_to_topic(title)
+    passage = passage.strip()
+
+    if shape == "write-on-topic":
+        user, assistant = _WRITE_TEMPLATE.format(topic=topic), passage
+    else:
+        lead, rest = _split_lead(passage)
+        if not rest:
+            shape, user, assistant = "write-on-topic", _WRITE_TEMPLATE.format(topic=topic), passage
+        elif shape == "continue-passage":
+            user, assistant = _CONTINUE_TEMPLATE.format(topic=topic, lead=lead), rest
+        else:
+            user, assistant = _RESPOND_TEMPLATE.format(topic=topic, claim=lead), rest
+
+    return {
+        "messages": [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user},
+            {"role": "assistant", "content": assistant},
+        ],
+        "shape": shape,
+    }
+
+
+def _shape_for(slug: str, index: int) -> str:
+    """Deterministic task shape for an article's ``index``-th passage.
+
+    Rotates through the shapes so one article contributes several moves, offset
+    by a stable hash of the slug so every article doesn't open on the same one.
+    """
+    offset = int(hashlib.md5(slug.encode()).hexdigest(), 16) if slug else 0
+    return TASK_SHAPES[(offset + index) % len(TASK_SHAPES)]
+
+
+def build_passage_records(
+    title: str,
+    body: str,
+    slug: str = "",
+    max_chars: int | None = None,
+    system_prompt: str = SYSTEM_PROMPT,
+) -> list[dict]:
+    """Shape one article into in-budget passage records covering its whole body."""
+    max_chars = passage_budget_chars() if max_chars is None else max_chars
+    topic = _article_to_topic(title)
+    passage_budget = max_chars - len(system_prompt) - _prompt_overhead(topic)
+    return [
+        build_passage_record(title, passage, _shape_for(slug, i), system_prompt)
+        for i, passage in enumerate(chunk_body(body, passage_budget))
+    ]
 
 
 def _normalize_title(s: str) -> str:
