@@ -3,10 +3,17 @@
 Outputs:
   - data/training/finetune.jsonl   — raw text, one JSON per line (all articles)
   - data/training/instruct.jsonl   — chat message format for instruction fine-tuning
-  - data/training/train.jsonl      — instruct records for the Geo LLM fine-tune (plan 0008)
-  - data/training/heldout.jsonl    — held-out instruct records for the voice eval
+  - data/training/train.jsonl      — passage records for the Geo LLM fine-tune (plan 0009)
+  - data/training/heldout.jsonl    — held-out passage records for the voice eval
   - data/training/corpus.txt       — concatenated plain text, chronological
   - data/training/metadata.csv     — article metadata as CSV
+
+Passage-level records (plan 0009, step 1):
+  train.jsonl / heldout.jsonl hold **passages**, not whole articles. One record per article
+  (completion = the entire body) was 3–5x the fine-tune's max_seq_len, so mlx-lm truncated
+  every example and only ~33% of the corpus — always the article opening — ever reached the
+  model. Bodies are chunked on paragraph boundaries into records that fit the window, with the
+  task shape varied per passage. The split stays article-level (see below).
 
 Train/held-out split (plan 0008, 26a):
   Quality articles are partitioned deterministically (by a stable slug hash) into train and
@@ -279,11 +286,18 @@ def split_articles(
     return sorted(train), sorted(heldout)
 
 
-def _write_split(path: Path, slugs: list[str], records: dict[str, dict]) -> None:
-    """Write the instruct records for ``slugs`` (in order) to a JSONL file."""
+def _write_split(path: Path, slugs: list[str], records: dict[str, list[dict]]) -> int:
+    """Write every passage record for ``slugs`` (in order) to a JSONL file.
+
+    Keyed by slug, so an article's passages cannot straddle the split.
+    """
+    written = 0
     with open(path, "w") as f:
         for slug in slugs:
-            f.write(json.dumps(records[slug], ensure_ascii=False) + "\n")
+            for record in records[slug]:
+                f.write(json.dumps(record, ensure_ascii=False) + "\n")
+                written += 1
+    return written
 
 
 def _load_eval_questions() -> list[dict]:
@@ -355,8 +369,8 @@ def run():
     instruct_path = TRAINING_DIR / "instruct.jsonl"
     instruct_count = 0
     excluded_count = 0
-    # slug -> instruct record, for quality articles (drives the train/heldout split below)
-    quality_records: dict[str, dict] = {}
+    # slug -> passage records, for quality articles (drives the train/heldout split below)
+    quality_records: dict[str, list[dict]] = {}
     with open(instruct_path, "w") as f:
         for entry, article in loaded:
             body = article.get("body", "").strip()
@@ -369,7 +383,8 @@ def run():
             record = build_instruct_record(title, body)
             f.write(json.dumps(record, ensure_ascii=False) + "\n")
             instruct_count += 1
-            quality_records[entry.get("slug", "")] = record
+            slug = entry.get("slug", "")
+            quality_records[slug] = build_passage_records(title, body, slug=slug)
     print(f"  JSONL (instruct): {instruct_path}  ({instruct_count} articles, {excluded_count} excluded by quality filter)")
 
     # 2b. Train / held-out split (plan 0008 26a) over the de-duplicated quality articles.
@@ -381,12 +396,13 @@ def run():
     train_slugs, heldout_slugs = split_articles(
         list(quality_records.keys()), excluded=excluded_slugs
     )
-    _write_split(TRAINING_DIR / "train.jsonl", train_slugs, quality_records)
-    _write_split(TRAINING_DIR / "heldout.jsonl", heldout_slugs, quality_records)
+    n_train = _write_split(TRAINING_DIR / "train.jsonl", train_slugs, quality_records)
+    n_heldout = _write_split(TRAINING_DIR / "heldout.jsonl", heldout_slugs, quality_records)
     if not eval_questions:
         print("  WARNING: eval/questions.json absent — held-out split NOT excluding #25 eval articles.")
     print(
-        f"  Split: train.jsonl ({len(train_slugs)}) + heldout.jsonl ({len(heldout_slugs)}); "
+        f"  Split: train.jsonl ({n_train} passages from {len(train_slugs)} articles) + "
+        f"heldout.jsonl ({n_heldout} passages from {len(heldout_slugs)} articles); "
         f"{len(excluded_slugs)} eval-grounded article(s) reserved out of both."
     )
 

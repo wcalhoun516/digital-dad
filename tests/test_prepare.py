@@ -6,6 +6,7 @@ deterministic train/held-out partition.
 """
 
 import json
+import re
 
 from training import prepare
 from training.prepare import (
@@ -262,6 +263,103 @@ class TestSplitArticles:
         train, heldout = split_articles([a["slug"] for a in articles], excluded=excluded)
         assert "inflation-still-exist" not in heldout
         assert "inflation-still-exist" not in train
+
+
+class TestRunEmitsPassageLevelSplits:
+    """`run()` writes the fine-tune's train/held-out splits at **passage** level
+    (so 100% of each body fits the window) while the *partition* stays at
+    **article** level — every chunk of an article lands on one side or the other,
+    never both, or the voice eval leaks (plan 0009 step 1).
+    """
+
+    N_ARTICLES = 12
+
+    def _corpus(self, tmp_path, monkeypatch):
+        raw = tmp_path / "raw"
+        raw.mkdir()
+        entries = []
+        for i in range(self.N_ARTICLES):
+            slug = f"article-{i}"
+            # distinctive per-article token so a straddling chunk is detectable
+            body = "\n\n".join(
+                " ".join(f"Sentence {s} about marker{i}." for s in range(8)) for _ in range(40)
+            )
+            title, date = f"Title Number {i}", f"2021-01-{i + 1:02d}"
+            (raw / f"{slug}.json").write_text(
+                json.dumps({"title": title, "body": body, "date": date})
+            )
+            entries.append({
+                "slug": slug, "url": f"https://f.com/{slug}/", "file": f"raw/{slug}.json",
+                "title": title, "date": date, "word_count": 1000,
+            })
+        (tmp_path / "manifest.json").write_text(
+            json.dumps({"total_articles": len(entries), "articles": entries})
+        )
+        monkeypatch.setattr(prepare, "DATA_DIR", tmp_path)
+        monkeypatch.setattr(prepare, "MANIFEST_PATH", tmp_path / "manifest.json")
+        monkeypatch.setattr(prepare, "TRAINING_DIR", tmp_path / "training")
+        monkeypatch.setattr(prepare, "LINGUISTICS_PATH", tmp_path / "absent.json")
+        monkeypatch.setattr(prepare, "EVAL_QUESTIONS_PATH", tmp_path / "absent.json")
+        return tmp_path / "training"
+
+    def _read(self, out, name):
+        return [json.loads(x) for x in (out / name).read_text().splitlines() if x.strip()]
+
+    def _markers(self, records):
+        return {
+            m.group()
+            for r in records
+            for msg in r["messages"]
+            if (m := re.search(r"marker\d+", msg["content"]))
+        }
+
+    def test_splits_hold_more_records_than_articles(self, tmp_path, monkeypatch, capsys):
+        out = self._corpus(tmp_path, monkeypatch)
+        prepare.run()
+        n_records = len(self._read(out, "train.jsonl")) + len(self._read(out, "heldout.jsonl"))
+        assert n_records > self.N_ARTICLES
+
+    def test_both_sides_of_the_split_are_populated(self, tmp_path, monkeypatch, capsys):
+        out = self._corpus(tmp_path, monkeypatch)
+        prepare.run()
+        assert self._read(out, "train.jsonl")
+        assert self._read(out, "heldout.jsonl")
+
+    def test_no_articles_passages_straddle_the_split(self, tmp_path, monkeypatch, capsys):
+        out = self._corpus(tmp_path, monkeypatch)
+        prepare.run()
+        train_markers = self._markers(self._read(out, "train.jsonl"))
+        heldout_markers = self._markers(self._read(out, "heldout.jsonl"))
+        assert train_markers and heldout_markers
+        assert train_markers.isdisjoint(heldout_markers)
+
+    def test_every_split_record_fits_the_sequence_budget(self, tmp_path, monkeypatch, capsys):
+        out = self._corpus(tmp_path, monkeypatch)
+        prepare.run()
+        budget = passage_budget_chars()
+        records = self._read(out, "train.jsonl") + self._read(out, "heldout.jsonl")
+        assert all(_record_chars(r) <= budget for r in records)
+
+    def test_split_records_carry_their_task_shape(self, tmp_path, monkeypatch, capsys):
+        out = self._corpus(tmp_path, monkeypatch)
+        prepare.run()
+        records = self._read(out, "train.jsonl") + self._read(out, "heldout.jsonl")
+        assert all(r["shape"] in TASK_SHAPES for r in records)
+
+    def test_instruct_jsonl_stays_one_record_per_article(self, tmp_path, monkeypatch, capsys):
+        # the dashboard's geo-llm tab counts these lines as the corpus size
+        out = self._corpus(tmp_path, monkeypatch)
+        prepare.run()
+        assert len(self._read(out, "instruct.jsonl")) == self.N_ARTICLES
+
+    def test_eval_grounded_articles_stay_out_of_both_splits(self, tmp_path, monkeypatch, capsys):
+        out = self._corpus(tmp_path, monkeypatch)
+        questions = {"questions": [{"question": "q", "topic_hint": "Title Number 3 (2021)"}]}
+        (tmp_path / "questions.json").write_text(json.dumps(questions))
+        monkeypatch.setattr(prepare, "EVAL_QUESTIONS_PATH", tmp_path / "questions.json")
+        prepare.run()
+        records = self._read(out, "train.jsonl") + self._read(out, "heldout.jsonl")
+        assert "marker3" not in self._markers(records)
 
 
 class TestRunDeduplicatesTheCorpus:
