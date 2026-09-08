@@ -106,6 +106,21 @@ class TestPrepareMlxData:
         assert valid == heldout
         assert all(user_prompt(r) != "Write an analysis of heldout-only." for r in train)
 
+    def test_stages_plain_chat_records_without_dataset_metadata(self, tmp_path):
+        # Passage records (plan 0009) carry a "shape" for eval slicing; mlx-lm is
+        # handed the chat turns only, so the trainer never sees our bookkeeping.
+        training_dir = tmp_path / "training"
+        finetune_dir = tmp_path / "run"
+        train = [{**_rec("A"), "shape": "continue-passage"}]
+        heldout = [{**_rec("B"), "shape": "respond-to-claim"}]
+        self._seed_split(training_dir, train, heldout)
+
+        prepare_mlx_data(training_dir, finetune_dir)
+
+        staged = load_jsonl(finetune_dir / "train.jsonl") + load_jsonl(finetune_dir / "valid.jsonl")
+        assert [set(r) for r in staged] == [{"messages"}, {"messages"}]
+        assert staged[0]["messages"] == train[0]["messages"]
+
     def test_raises_when_26a_split_missing(self, tmp_path):
         training_dir = tmp_path / "training"
         training_dir.mkdir()
