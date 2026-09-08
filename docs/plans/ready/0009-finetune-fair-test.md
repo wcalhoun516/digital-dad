@@ -1,5 +1,20 @@
 # Plan 0009 — Give the Geo-LLM fine-tune a fair test
 
+## Status (2026-09-08)
+
+- **Step 1 — done** (PR #91). Passage-level records; preflight length budget 100% over → **0%**.
+- **Step 2 — was already done on `main`** before this plan was written: `--strict` exists in
+  `training/finetune_preflight.py` with red/green tests. Only "call it from the training path"
+  (a `make` wiring) remains.
+- **Step 3 — done** (PR #91). Regenerated on the real corpus; `make finetune-preflight` prints
+  **PASS**. Numbers in the PR.
+- **Step 4 — the owner's move, and the reason this plan stays in `ready/`.** Retrain + re-measure
+  needs hours of local GPU and a paid T3 judge, so it is not unattended agent work.
+- **Step 5 — after step 4**: record the outcome as an ADR superseding D15's revival path.
+
+**The plan stays in `ready/` deliberately.** A daily run that picks it up should go straight to
+step 4's gate, see it needs the owner, and pick other work rather than redoing steps 1–3.
+
 ## Goal
 
 The QLoRA fine-tune behind **D15** was trained on a dataset that could not fit through the

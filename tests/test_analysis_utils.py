@@ -1,6 +1,7 @@
 """Characterization tests for analysis/utils.py pure helpers."""
 
 import json
+import signal
 
 from analysis import utils
 from analysis.utils import chunk_text, clean_text, dedupe_manifest_entries
@@ -45,6 +46,43 @@ class TestChunkText:
         assert all(c for c in chunks)
         # the tail of the source survives in the final chunk
         assert chunks[-1].endswith("too.")
+
+
+class TestChunkTextTerminates:
+    """With the default ``overlap`` (200 tokens = 800 chars), any caller asking for
+    chunks smaller than the overlap walked the cursor *backwards* every iteration
+    and never returned. Found while reusing this chunker for passage-level training
+    records (plan 0009); `.epub`/`.pdf` ingest (plan 0010) will chunk the same way.
+    """
+
+    TEXT = " ".join(f"Sentence {i} about the economy." for i in range(60))
+
+    def _chunk_with_deadline(self, **kwargs):
+        def bail(signum, frame):
+            raise AssertionError("chunk_text did not terminate")
+
+        previous = signal.signal(signal.SIGALRM, bail)
+        signal.alarm(10)
+        try:
+            return chunk_text(self.TEXT, **kwargs)
+        finally:
+            signal.alarm(0)
+            signal.signal(signal.SIGALRM, previous)
+
+    def test_terminates_when_overlap_exceeds_the_chunk_size(self):
+        chunks = self._chunk_with_deadline(max_tokens=75)  # 300 chars < 800 of overlap
+        assert chunks
+        assert all(len(c) <= 300 for c in chunks)
+
+    def test_covers_the_whole_text_when_overlap_exceeds_the_chunk_size(self):
+        chunks = self._chunk_with_deadline(max_tokens=75)
+        assert chunks[-1].endswith("economy.")
+        assert "Sentence 0 " in chunks[0]
+
+    def test_still_overlaps_when_the_overlap_fits(self):
+        chunks = chunk_text(self.TEXT, max_tokens=100, overlap=20)
+        assert len(chunks) > 1
+        assert chunks[1].split(".")[0].strip() in chunks[0]
 
 
 class TestDedupeManifestEntries:

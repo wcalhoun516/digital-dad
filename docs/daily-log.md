@@ -48,6 +48,55 @@ Format:
 
 <!-- entries below -->
 
+### 2026-09-08 — training — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/91
+- Source: plan:ready/0009 (steps 1 and 3; step 2 turned out to be already shipped)
+- Summary: **Two-thirds of the corpus never reached the fine-tune.** `build_instruct_record`
+  emitted one record per article — completion = the entire body — against `max_seq_len=1024`,
+  so mlx-lm truncated **172/172** records and the model only ever saw article *openings*:
+  epigraphs, datelines, thesis paragraphs, never a conclusion or a sustained argument. The
+  repo's own `make finetune-preflight` has reported this since it was built, but it exits 0 by
+  design, so nothing blocked and **D15 was written without acting on it**. Measured here on the
+  real corpus: **33.2% of tokens survived truncation; now 100.0%.** `train.jsonl`/`heldout.jsonl`
+  are now **passage-level** (674 records: 544 train + 130 held-out) while the *partition* stays
+  **article-level**, which is the trap the design called out — chunking is exactly what breaks a
+  slug-keyed split, so an article's chunks all land on one side or the eval leaks. Preflight goes
+  **FAIL → PASS** on all three checks. **D15's verdict is not touched; it is now re-testable on
+  data that fits.** Task shape is varied per passage (continue-passage 227 / respond-to-claim 223
+  / write-on-topic 224) and recorded on each record so step 4's eval can slice by it; the mlx
+  staging strips that key so the trainer sees plain chat turns. **What chunking surfaced:**
+  full coverage reached his Forbes **footer** for the first time — the two-part author bio
+  (in 88 and 80 articles), the contact line (87), the book blurb (29), and Forbes' own
+  *comment-policy* text the scraper had swept up. Identical text in both splits is also
+  leakage, and the preflight caught **4 leaked records** the moment coverage went to 100%. The
+  threshold was measured, not guessed: genuine cross-article reuse tops out at **2** articles
+  while every footer paragraph sits at **23–88**, so "verbatim in ≥3 articles" lands exactly on
+  the boilerplate — 18 paragraphs, stripped from the *passage records only* (`instruct.jsonl`
+  and `finetune.jsonl` stay a faithful copy of the corpus, and the dashboard's `n_examples`
+  and `sample_pair` read those). **Bug found in a shared util:** `analysis.utils.chunk_text`
+  never terminates when asked for chunks smaller than its 800-char default overlap — the cursor
+  walks backwards each iteration. No shipped caller hit it (all use the 3000-token default), but
+  plan 0010's `.epub`/`.pdf` ingest chunks the same way. Fixed by capping overlap at half a
+  chunk; existing callers are bit-for-bit unaffected. **TDD'd:** +42 tests, each proved red
+  first; because the new symbols could only fail as ImportError, six assertions were additionally
+  **mutation-tested** — dropping the system/user budget reservation, removing the
+  single-sentence fallback, un-offsetting the shape rotation, chunking without paragraph
+  awareness, never flushing on budget, and reverting the `chunk_text` cap each fail the
+  intended test and only that test. **Verification:** `make verify` green — ruff clean,
+  **1254 passed**, dashboard builds; a clean `origin/main` worktree collects 1211+1 skip, so the
+  delta is exactly the **+42** added here. **No data artifact committed** — `data/training/**`
+  is gitignored and stays that way; the dirty `data/` files from the weekly cron were left alone.
+  **Deferred:** (1) **step 4 is the owner's** — retrain + `make voice-eval` vs D15's baseline
+  needs local GPU hours and a paid T3 judge, so plan 0009 stays in `plans/ready/` with a status
+  block at the top recording steps 1–3 done, precisely so a future run doesn't redo them (the
+  trap that made 0008 get picked up and discarded six times). (2) 84 of 674 records end on a
+  section **heading**, because headings are their own unpunctuated paragraph — structurally
+  correct, mildly odd as a training target; a heading-aware packer is step-4 tuning, not a
+  bugfix. (3) The one remaining half of plan step 2 — calling `--strict` from the training path
+  so a truncating dataset can never be trained on silently — is a small `make` wiring left
+  undone. **Stale plan text worth knowing:** 0009 asks for a `--strict` flag that already
+  shipped, tested, months ago.
+
 ### 2026-09-07 — family — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/89
 - Source: roadmap:family (least-recently-worked category; #22–#24 all shipped, so a defect in one)
