@@ -96,9 +96,11 @@ def prepare_mlx_data(training_dir=TRAINING_DIR, finetune_dir=FINETUNE_DIR) -> di
 
     ``mlx_lm.lora`` reads ``train.jsonl`` and ``valid.jsonl`` from its ``--data``
     directory. We copy 26a's leakage-free ``train.jsonl`` → mlx ``train.jsonl`` and
-    ``heldout.jsonl`` → mlx ``valid.jsonl`` **verbatim**, so training uses exactly
-    the deterministic, eval-safe split — no random re-shuffle, no eval-grounded
-    contamination. Returns ``{"n_train", "n_valid"}``.
+    ``heldout.jsonl`` → mlx ``valid.jsonl`` in order, so training uses exactly the
+    deterministic, eval-safe split — no random re-shuffle, no eval-grounded
+    contamination. Only the ``messages`` turns are staged: plan 0009's passage
+    records also carry a ``shape`` for eval slicing, which is ours, not mlx-lm's.
+    Returns ``{"n_train", "n_valid"}``.
     """
     training_dir = Path(training_dir)
     finetune_dir = Path(finetune_dir)
@@ -109,8 +111,8 @@ def prepare_mlx_data(training_dir=TRAINING_DIR, finetune_dir=FINETUNE_DIR) -> di
         raise FileNotFoundError(
             "Missing 26a split file(s): " + ", ".join(missing) + ". Run `make training` first."
         )
-    train_records = load_jsonl(train_src)
-    valid_records = load_jsonl(heldout_src)
+    train_records = [{"messages": r["messages"]} for r in load_jsonl(train_src)]
+    valid_records = [{"messages": r["messages"]} for r in load_jsonl(heldout_src)]
     finetune_dir.mkdir(parents=True, exist_ok=True)
     write_jsonl(finetune_dir / "train.jsonl", train_records)
     write_jsonl(finetune_dir / "valid.jsonl", valid_records)

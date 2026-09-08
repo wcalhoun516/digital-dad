@@ -3,10 +3,17 @@
 Outputs:
   - data/training/finetune.jsonl   — raw text, one JSON per line (all articles)
   - data/training/instruct.jsonl   — chat message format for instruction fine-tuning
-  - data/training/train.jsonl      — instruct records for the Geo LLM fine-tune (plan 0008)
-  - data/training/heldout.jsonl    — held-out instruct records for the voice eval
+  - data/training/train.jsonl      — passage records for the Geo LLM fine-tune (plan 0009)
+  - data/training/heldout.jsonl    — held-out passage records for the voice eval
   - data/training/corpus.txt       — concatenated plain text, chronological
   - data/training/metadata.csv     — article metadata as CSV
+
+Passage-level records (plan 0009, step 1):
+  train.jsonl / heldout.jsonl hold **passages**, not whole articles. One record per article
+  (completion = the entire body) was 3–5x the fine-tune's max_seq_len, so mlx-lm truncated
+  every example and only ~33% of the corpus — always the article opening — ever reached the
+  model. Bodies are chunked on paragraph boundaries into records that fit the window, with the
+  task shape varied per passage. The split stays article-level (see below).
 
 Train/held-out split (plan 0008, 26a):
   Quality articles are partitioned deterministically (by a stable slug hash) into train and
@@ -25,7 +32,9 @@ import json
 import re
 from pathlib import Path
 
-from analysis.utils import dedupe_manifest_entries
+from analysis.utils import chunk_text, dedupe_manifest_entries
+from training.finetune_config import QLoRAConfig
+from training.finetune_preflight import DEFAULT_CHARS_PER_TOKEN
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT_DIR / "data"
@@ -66,6 +75,186 @@ def build_instruct_record(title: str, body: str, system_prompt: str = SYSTEM_PRO
             {"role": "assistant", "content": body},
         ]
     }
+
+
+# The three moves the fine-tune should learn, not just "emit an article". One per
+# record; the shape is stored on the record so the voice eval can slice by it.
+TASK_SHAPES = ("write-on-topic", "continue-passage", "respond-to-claim")
+
+_WRITE_TEMPLATE = "Write an analysis of {topic}."
+_CONTINUE_TEMPLATE = "Continue this passage from your analysis of {topic}:\n\n{lead}"
+_RESPOND_TEMPLATE = "On the subject of {topic}, respond to this claim:\n\n“{claim}”"
+
+# The character estimate can't see the chat template's special tokens, so leave a
+# little of the window unspent rather than land exactly on max_seq_len.
+SEQ_HEADROOM = 0.95
+
+# A paragraph repeated verbatim in this many distinct articles is a footer, not
+# an argument. Measured on the corpus: real reuse tops out at 2 articles, while
+# the bio/blurb/comment-policy paragraphs sit at 23-88.
+BOILERPLATE_MIN_ARTICLES = 3
+
+_PARAGRAPH_SPLIT = re.compile(r"\n\s*\n")
+_SENTENCE_SPLIT = re.compile(r"(?<=[.!?])\s+(?=[\"“'A-Z0-9])")
+
+
+def passage_budget_chars(config: QLoRAConfig | None = None) -> int:
+    """Character budget for one whole training record under the run's window.
+
+    Mirrors ``finetune_preflight.check_length_budget``'s arithmetic (total chat
+    characters ÷ chars-per-token vs ``max_seq_len``) so a dataset built here
+    passes the preflight that gates the run.
+    """
+    cfg = config or QLoRAConfig()
+    return int(cfg.max_seq_len * DEFAULT_CHARS_PER_TOKEN * SEQ_HEADROOM)
+
+
+def chunk_body(body: str, max_chars: int) -> list[str]:
+    """Split an article body into passage-sized chunks of at most ``max_chars``.
+
+    Chunks are packed on paragraph boundaries: a paragraph that fits is never
+    divided, and consecutive paragraphs are grouped until the budget is reached.
+    A single paragraph longer than the budget falls back to ``chunk_text`` (the
+    corpus chunker Ask Dad retrieval already uses), which cuts at a sentence
+    boundary. Overlap is off — repeated text would over-weight those sentences
+    in the fine-tune.
+    """
+    paragraphs: list[str] = []
+    for para in _PARAGRAPH_SPLIT.split(body or ""):
+        para = para.strip()
+        if not para:
+            continue
+        if len(para) <= max_chars:
+            paragraphs.append(para)
+        else:
+            paragraphs.extend(
+                c for c in chunk_text(para, max_tokens=max(max_chars // 4, 1), overlap=0) if c
+            )
+
+    chunks: list[str] = []
+    current: list[str] = []
+    length = 0
+    for para in paragraphs:
+        separator = 2 if current else 0  # the "\n\n" that will rejoin them
+        if current and length + separator + len(para) > max_chars:
+            chunks.append("\n\n".join(current))
+            current, length = [], 0
+            separator = 0
+        current.append(para)
+        length += separator + len(para)
+    if current:
+        chunks.append("\n\n".join(current))
+    return chunks
+
+
+def boilerplate_paragraphs(bodies, min_articles: int = BOILERPLATE_MIN_ARTICLES) -> set[str]:
+    """Paragraphs that repeat verbatim across ``min_articles`` or more articles.
+
+    On this corpus that is his Forbes footer — the two-part author bio, the contact
+    line, the book blurb — plus Forbes' own comment-policy text picked up by the
+    scraper. None of it is his analytical voice, and it dwarfs any real repetition:
+    the top offenders appear in 79–88 articles, while genuine reuse tops out at two.
+    Repeats *within* one article don't count; only spread across articles does.
+    """
+    seen: dict[str, set[int]] = {}
+    for i, body in enumerate(bodies):
+        for para in _PARAGRAPH_SPLIT.split(body or ""):
+            para = para.strip()
+            if para:
+                seen.setdefault(para, set()).add(i)
+    return {para for para, articles in seen.items() if len(articles) >= min_articles}
+
+
+def strip_boilerplate(body: str, boilerplate: set[str]) -> str:
+    """Drop the ``boilerplate`` paragraphs from a body, keeping the rest in order."""
+    kept = [
+        para.strip()
+        for para in _PARAGRAPH_SPLIT.split(body or "")
+        if para.strip() and para.strip() not in boilerplate
+    ]
+    return "\n\n".join(kept)
+
+
+def _split_lead(passage: str) -> tuple[str, str]:
+    """Split a passage into its opening sentence and the remainder."""
+    parts = _SENTENCE_SPLIT.split(passage.strip(), maxsplit=1)
+    if len(parts) < 2 or not parts[1].strip():
+        return passage.strip(), ""
+    return parts[0].strip(), parts[1].strip()
+
+
+def _prompt_overhead(topic: str) -> int:
+    """Longest user-turn scaffolding across the shapes, for budgeting."""
+    return max(
+        len(_WRITE_TEMPLATE.format(topic=topic)),
+        len(_CONTINUE_TEMPLATE.format(topic=topic, lead="")),
+        len(_RESPOND_TEMPLATE.format(topic=topic, claim="")),
+    )
+
+
+def build_passage_record(
+    title: str, passage: str, shape: str, system_prompt: str = SYSTEM_PROMPT
+) -> dict:
+    """Shape one passage into a chat record for the given task shape.
+
+    ``continue-passage`` and ``respond-to-claim`` move the passage's opening
+    sentence into the user turn, so the model learns to develop an argument it
+    has been handed rather than only to start one. A passage with nothing after
+    its opening sentence has no remainder to complete, so it falls back to
+    ``write-on-topic`` rather than emitting an empty assistant turn.
+    """
+    if shape not in TASK_SHAPES:
+        raise ValueError(f"unknown task shape: {shape!r} (expected one of {TASK_SHAPES})")
+
+    topic = _article_to_topic(title)
+    passage = passage.strip()
+
+    if shape == "write-on-topic":
+        user, assistant = _WRITE_TEMPLATE.format(topic=topic), passage
+    else:
+        lead, rest = _split_lead(passage)
+        if not rest:
+            shape, user, assistant = "write-on-topic", _WRITE_TEMPLATE.format(topic=topic), passage
+        elif shape == "continue-passage":
+            user, assistant = _CONTINUE_TEMPLATE.format(topic=topic, lead=lead), rest
+        else:
+            user, assistant = _RESPOND_TEMPLATE.format(topic=topic, claim=lead), rest
+
+    return {
+        "messages": [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user},
+            {"role": "assistant", "content": assistant},
+        ],
+        "shape": shape,
+    }
+
+
+def _shape_for(slug: str, index: int) -> str:
+    """Deterministic task shape for an article's ``index``-th passage.
+
+    Rotates through the shapes so one article contributes several moves, offset
+    by a stable hash of the slug so every article doesn't open on the same one.
+    """
+    offset = int(hashlib.md5(slug.encode()).hexdigest(), 16) if slug else 0
+    return TASK_SHAPES[(offset + index) % len(TASK_SHAPES)]
+
+
+def build_passage_records(
+    title: str,
+    body: str,
+    slug: str = "",
+    max_chars: int | None = None,
+    system_prompt: str = SYSTEM_PROMPT,
+) -> list[dict]:
+    """Shape one article into in-budget passage records covering its whole body."""
+    max_chars = passage_budget_chars() if max_chars is None else max_chars
+    topic = _article_to_topic(title)
+    passage_budget = max_chars - len(system_prompt) - _prompt_overhead(topic)
+    return [
+        build_passage_record(title, passage, _shape_for(slug, i), system_prompt)
+        for i, passage in enumerate(chunk_body(body, passage_budget))
+    ]
 
 
 def _normalize_title(s: str) -> str:
@@ -130,11 +319,18 @@ def split_articles(
     return sorted(train), sorted(heldout)
 
 
-def _write_split(path: Path, slugs: list[str], records: dict[str, dict]) -> None:
-    """Write the instruct records for ``slugs`` (in order) to a JSONL file."""
+def _write_split(path: Path, slugs: list[str], records: dict[str, list[dict]]) -> int:
+    """Write every passage record for ``slugs`` (in order) to a JSONL file.
+
+    Keyed by slug, so an article's passages cannot straddle the split.
+    """
+    written = 0
     with open(path, "w") as f:
         for slug in slugs:
-            f.write(json.dumps(records[slug], ensure_ascii=False) + "\n")
+            for record in records[slug]:
+                f.write(json.dumps(record, ensure_ascii=False) + "\n")
+                written += 1
+    return written
 
 
 def _load_eval_questions() -> list[dict]:
@@ -206,8 +402,12 @@ def run():
     instruct_path = TRAINING_DIR / "instruct.jsonl"
     instruct_count = 0
     excluded_count = 0
-    # slug -> instruct record, for quality articles (drives the train/heldout split below)
-    quality_records: dict[str, dict] = {}
+    # Footer paragraphs shared across articles are stripped from the passage records
+    # only — instruct.jsonl/finetune.jsonl stay a faithful copy of the corpus.
+    boilerplate = boilerplate_paragraphs(a.get("body", "") for _, a in loaded)
+
+    # slug -> passage records, for quality articles (drives the train/heldout split below)
+    quality_records: dict[str, list[dict]] = {}
     with open(instruct_path, "w") as f:
         for entry, article in loaded:
             body = article.get("body", "").strip()
@@ -220,7 +420,10 @@ def run():
             record = build_instruct_record(title, body)
             f.write(json.dumps(record, ensure_ascii=False) + "\n")
             instruct_count += 1
-            quality_records[entry.get("slug", "")] = record
+            slug = entry.get("slug", "")
+            quality_records[slug] = build_passage_records(
+                title, strip_boilerplate(body, boilerplate), slug=slug
+            )
     print(f"  JSONL (instruct): {instruct_path}  ({instruct_count} articles, {excluded_count} excluded by quality filter)")
 
     # 2b. Train / held-out split (plan 0008 26a) over the de-duplicated quality articles.
@@ -232,12 +435,13 @@ def run():
     train_slugs, heldout_slugs = split_articles(
         list(quality_records.keys()), excluded=excluded_slugs
     )
-    _write_split(TRAINING_DIR / "train.jsonl", train_slugs, quality_records)
-    _write_split(TRAINING_DIR / "heldout.jsonl", heldout_slugs, quality_records)
+    n_train = _write_split(TRAINING_DIR / "train.jsonl", train_slugs, quality_records)
+    n_heldout = _write_split(TRAINING_DIR / "heldout.jsonl", heldout_slugs, quality_records)
     if not eval_questions:
         print("  WARNING: eval/questions.json absent — held-out split NOT excluding #25 eval articles.")
     print(
-        f"  Split: train.jsonl ({len(train_slugs)}) + heldout.jsonl ({len(heldout_slugs)}); "
+        f"  Split: train.jsonl ({n_train} passages from {len(train_slugs)} articles) + "
+        f"heldout.jsonl ({n_heldout} passages from {len(heldout_slugs)} articles); "
         f"{len(excluded_slugs)} eval-grounded article(s) reserved out of both."
     )
 

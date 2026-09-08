@@ -96,7 +96,9 @@ def chunk_text(text: str, max_tokens: int = 3000, overlap: int = 200) -> list[st
     Uses a rough 1 token ≈ 4 chars heuristic.
     """
     max_chars = max_tokens * 4
-    overlap_chars = overlap * 4
+    # An overlap at or above the chunk size would move the cursor backwards each
+    # iteration and never terminate; half a chunk is the most that still advances.
+    overlap_chars = min(overlap * 4, max_chars // 2)
 
     if len(text) <= max_chars:
         return [text]
