@@ -89,6 +89,11 @@ _RESPOND_TEMPLATE = "On the subject of {topic}, respond to this claim:\n\n“{cl
 # little of the window unspent rather than land exactly on max_seq_len.
 SEQ_HEADROOM = 0.95
 
+# A paragraph repeated verbatim in this many distinct articles is a footer, not
+# an argument. Measured on the corpus: real reuse tops out at 2 articles, while
+# the bio/blurb/comment-policy paragraphs sit at 23-88.
+BOILERPLATE_MIN_ARTICLES = 3
+
 _PARAGRAPH_SPLIT = re.compile(r"\n\s*\n")
 _SENTENCE_SPLIT = re.compile(r"(?<=[.!?])\s+(?=[\"“'A-Z0-9])")
 
@@ -140,6 +145,34 @@ def chunk_body(body: str, max_chars: int) -> list[str]:
     if current:
         chunks.append("\n\n".join(current))
     return chunks
+
+
+def boilerplate_paragraphs(bodies, min_articles: int = BOILERPLATE_MIN_ARTICLES) -> set[str]:
+    """Paragraphs that repeat verbatim across ``min_articles`` or more articles.
+
+    On this corpus that is his Forbes footer — the two-part author bio, the contact
+    line, the book blurb — plus Forbes' own comment-policy text picked up by the
+    scraper. None of it is his analytical voice, and it dwarfs any real repetition:
+    the top offenders appear in 79–88 articles, while genuine reuse tops out at two.
+    Repeats *within* one article don't count; only spread across articles does.
+    """
+    seen: dict[str, set[int]] = {}
+    for i, body in enumerate(bodies):
+        for para in _PARAGRAPH_SPLIT.split(body or ""):
+            para = para.strip()
+            if para:
+                seen.setdefault(para, set()).add(i)
+    return {para for para, articles in seen.items() if len(articles) >= min_articles}
+
+
+def strip_boilerplate(body: str, boilerplate: set[str]) -> str:
+    """Drop the ``boilerplate`` paragraphs from a body, keeping the rest in order."""
+    kept = [
+        para.strip()
+        for para in _PARAGRAPH_SPLIT.split(body or "")
+        if para.strip() and para.strip() not in boilerplate
+    ]
+    return "\n\n".join(kept)
 
 
 def _split_lead(passage: str) -> tuple[str, str]:
@@ -369,6 +402,10 @@ def run():
     instruct_path = TRAINING_DIR / "instruct.jsonl"
     instruct_count = 0
     excluded_count = 0
+    # Footer paragraphs shared across articles are stripped from the passage records
+    # only — instruct.jsonl/finetune.jsonl stay a faithful copy of the corpus.
+    boilerplate = boilerplate_paragraphs(a.get("body", "") for _, a in loaded)
+
     # slug -> passage records, for quality articles (drives the train/heldout split below)
     quality_records: dict[str, list[dict]] = {}
     with open(instruct_path, "w") as f:
@@ -384,7 +421,9 @@ def run():
             f.write(json.dumps(record, ensure_ascii=False) + "\n")
             instruct_count += 1
             slug = entry.get("slug", "")
-            quality_records[slug] = build_passage_records(title, body, slug=slug)
+            quality_records[slug] = build_passage_records(
+                title, strip_boilerplate(body, boilerplate), slug=slug
+            )
     print(f"  JSONL (instruct): {instruct_path}  ({instruct_count} articles, {excluded_count} excluded by quality filter)")
 
     # 2b. Train / held-out split (plan 0008 26a) over the de-duplicated quality articles.

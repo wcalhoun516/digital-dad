@@ -95,6 +95,49 @@ class TestChunkBody:
         assert chunk_body("   \n\n  ", max_chars=500) == []
 
 
+class TestBoilerplateParagraphs:
+    """His Forbes footer — author bio, contact line, book blurb, and Forbes' own
+    comment-policy text — repeats verbatim across scores of articles. Truncated
+    article-level records never reached it; passage records do, and identical text
+    on both sides of the split also registers as leakage (plan 0009 step 1).
+    """
+
+    BIO = "My second career: In 2003, I joined Stevens Institute of Technology."
+    ONE_OFF = "A paragraph that belongs to a single argument."
+
+    def _bodies(self):
+        return [
+            f"Body one opens here.\n\n{self.BIO}",
+            f"Body two opens here.\n\n{self.BIO}",
+            f"Body three opens here.\n\n{self.BIO}",
+            f"Body four opens here.\n\n{self.ONE_OFF}",
+            f"Body five opens here.\n\n{self.ONE_OFF}",
+        ]
+
+    def test_flags_a_paragraph_repeated_across_enough_articles(self):
+        assert self.BIO in prepare.boilerplate_paragraphs(self._bodies())
+
+    def test_leaves_a_paragraph_shared_by_only_two_articles(self):
+        # two articles can legitimately reuse a line; three is a footer
+        assert self.ONE_OFF not in prepare.boilerplate_paragraphs(self._bodies())
+
+    def test_threshold_is_configurable(self):
+        assert self.ONE_OFF in prepare.boilerplate_paragraphs(self._bodies(), min_articles=2)
+
+    def test_repeats_within_one_article_are_not_boilerplate(self):
+        bodies = [f"{self.BIO}\n\n{self.BIO}\n\n{self.BIO}"]
+        assert prepare.boilerplate_paragraphs(bodies) == set()
+
+    def test_strip_removes_the_boilerplate_and_keeps_the_argument(self):
+        body = f"Opening argument.\n\n{self.BIO}\n\nClosing argument."
+        stripped = prepare.strip_boilerplate(body, {self.BIO})
+        assert self.BIO not in stripped
+        assert stripped == "Opening argument.\n\nClosing argument."
+
+    def test_strip_of_an_all_boilerplate_body_is_empty(self):
+        assert prepare.strip_boilerplate(self.BIO, {self.BIO}) == ""
+
+
 class TestBuildPassageRecord:
     """One passage, one task shape. The shape is recorded so the voice eval can
     slice results by it (plan 0009 step 1)."""
@@ -274,7 +317,7 @@ class TestRunEmitsPassageLevelSplits:
 
     N_ARTICLES = 12
 
-    def _corpus(self, tmp_path, monkeypatch):
+    def _corpus(self, tmp_path, monkeypatch, footer=""):
         raw = tmp_path / "raw"
         raw.mkdir()
         entries = []
@@ -284,6 +327,8 @@ class TestRunEmitsPassageLevelSplits:
             body = "\n\n".join(
                 " ".join(f"Sentence {s} about marker{i}." for s in range(8)) for _ in range(40)
             )
+            if footer:  # the same trailing paragraph on every article
+                body = f"{body}\n\n{footer}"
             title, date = f"Title Number {i}", f"2021-01-{i + 1:02d}"
             (raw / f"{slug}.json").write_text(
                 json.dumps({"title": title, "body": body, "date": date})
@@ -351,6 +396,24 @@ class TestRunEmitsPassageLevelSplits:
         out = self._corpus(tmp_path, monkeypatch)
         prepare.run()
         assert len(self._read(out, "instruct.jsonl")) == self.N_ARTICLES
+
+    def test_shared_footer_never_reaches_the_passage_records(self, tmp_path, monkeypatch, capsys):
+        out = self._corpus(tmp_path, monkeypatch, footer="Contact me at gcalhoun@example.edu.")
+        prepare.run()
+        records = self._read(out, "train.jsonl") + self._read(out, "heldout.jsonl")
+        assert records
+        assert not any(
+            "gcalhoun@example.edu" in m["content"] for r in records for m in r["messages"]
+        )
+
+    def test_the_splits_share_no_passage(self, tmp_path, monkeypatch, capsys):
+        # identical text on both sides is leakage: it inflates validation
+        out = self._corpus(tmp_path, monkeypatch, footer="Contact me at gcalhoun@example.edu.")
+        prepare.run()
+        train = {r["messages"][2]["content"] for r in self._read(out, "train.jsonl")}
+        heldout = {r["messages"][2]["content"] for r in self._read(out, "heldout.jsonl")}
+        assert train and heldout
+        assert train.isdisjoint(heldout)
 
     def test_eval_grounded_articles_stay_out_of_both_splits(self, tmp_path, monkeypatch, capsys):
         out = self._corpus(tmp_path, monkeypatch)
