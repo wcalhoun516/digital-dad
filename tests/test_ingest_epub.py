@@ -181,3 +181,78 @@ class TestSpineParsing:
 
         assert handler_for(tmp_path / "a.epub") is not None
         assert handler_for(tmp_path / "A.EPUB") is not None
+
+
+class TestXhtmlToText:
+    def test_markup_is_stripped_but_inline_words_stay_joined(self):
+        from ingest.handlers.epub import xhtml_to_document
+
+        _, text = xhtml_to_document("<html><body><p>The <em>Fed</em> blinked.</p></body></html>")
+        assert text == "The Fed blinked."
+
+    def test_script_and_style_content_never_reaches_the_text(self):
+        from ingest.handlers.epub import xhtml_to_document
+
+        xhtml = (
+            "<html><head><style>p { color: red; }</style></head>"
+            "<body><script>var tracker = 1;</script><p>Real prose.</p></body></html>"
+        )
+        _, text = xhtml_to_document(xhtml)
+        assert text == "Real prose."
+
+    def test_paragraph_breaks_survive_as_blank_lines(self):
+        from ingest.handlers.epub import xhtml_to_document
+
+        _, text = xhtml_to_document("<html><body><p>First.</p><p>Second.</p></body></html>")
+        assert text == "First.\n\nSecond."
+
+    def test_an_unclosed_line_break_still_separates_the_lines(self):
+        from ingest.handlers.epub import xhtml_to_document
+
+        # A void tag fires no end tag, so only the start-tag break keeps these apart.
+        _, text = xhtml_to_document("<html><body><p>Line one<br>Line two</p></body></html>")
+        assert text == "Line one\n\nLine two"
+
+    def test_source_line_wrapping_inside_a_paragraph_is_collapsed(self):
+        from ingest.handlers.epub import xhtml_to_document
+
+        _, text = xhtml_to_document("<html><body><p>One\n   two\n\tthree.</p></body></html>")
+        assert text == "One two three."
+
+    def test_entities_are_unescaped(self):
+        from ingest.handlers.epub import xhtml_to_document
+
+        _, text = xhtml_to_document(
+            "<html><body><p>Ben &amp; Jerry&#8217;s &#x201c;deflation&#x201d;</p></body></html>"
+        )
+        assert text == "Ben & Jerry’s “deflation”"
+
+    def test_first_heading_becomes_the_title(self):
+        from ingest.handlers.epub import xhtml_to_document
+
+        title, _ = xhtml_to_document(
+            "<html><body><h2>On Central Banking</h2><p>Body.</p><h2>Later</h2></body></html>"
+        )
+        assert title == "On Central Banking"
+
+    def test_title_is_empty_when_the_chapter_has_no_heading(self):
+        from ingest.handlers.epub import xhtml_to_document
+
+        title, _ = xhtml_to_document("<html><body><p>Body only.</p></body></html>")
+        assert title == ""
+
+    def test_chapter_title_falls_back_to_the_href_stem(self, tmp_path):
+        from ingest.extract import extract
+
+        path = tmp_path / "noheading.epub"
+        write_epub(
+            path,
+            [
+                (
+                    "c1",
+                    "prologue-two.xhtml",
+                    "<html><body><p>" + ("Prose without a heading. " * 30) + "</p></body></html>",
+                )
+            ],
+        )
+        assert extract(path).documents[0]["title"] == "prologue-two"
