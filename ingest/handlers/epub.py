@@ -20,6 +20,10 @@ from analysis.utils import clean_text
 from ingest.extract import ExtractResult, empty_meta, register
 
 CONTAINER_PATH = "META-INF/container.xml"
+ENCRYPTION_PATH = "META-INF/encryption.xml"
+# Detect and refuse. Circumventing DRM is out of scope by design — the owner buys
+# DRM-free copies, and this message is what tells him which file needs replacing.
+DRM_WARNING = "this file appears to be DRM-protected — a DRM-free copy is required"
 _BLOCK_TAGS = frozenset({"p", "div", "br", "li", "h1", "h2", "h3", "h4", "h5", "h6", "blockquote"})
 _HEADING_TAGS = ("h1", "h2", "h3")
 _SILENT_TAGS = frozenset({"script", "style", "head"})
@@ -194,32 +198,59 @@ def _normalize_date(raw: str) -> tuple[str, str]:
     return "", "unknown"
 
 
+def _refused(path: Path, reason: str) -> ExtractResult:
+    """Refuse a file we cannot read, at zero confidence, without raising.
+
+    A whole ingest run must not die on one bad file — the queue stages this as a
+    zero-confidence item and a human sees the reason in review.
+    """
+    return ExtractResult(documents=[], meta=empty_meta(path.stem), confidence=0.0,
+                         warnings=[reason])
+
+
 @register(".epub")
 def extract_epub(path: Path) -> ExtractResult:
     """Extract one document per spine item from an ``.epub`` file."""
     path = Path(path)
 
-    with zipfile.ZipFile(path) as archive:
-        container = archive.read(CONTAINER_PATH).decode("utf-8", errors="replace")
-        opf_path = opf_path_from_container(container)
-        opf_dir = posixpath.dirname(opf_path)
-        opf_xml = archive.read(opf_path).decode("utf-8", errors="replace")
+    try:
+        with zipfile.ZipFile(path) as archive:
+            names = set(archive.namelist())
+            if ENCRYPTION_PATH in names:
+                return _refused(path, DRM_WARNING)
 
-        documents: list[dict] = []
-        warnings: list[str] = []
-        for ordinal, href in enumerate(spine_hrefs(opf_xml)):
-            member = posixpath.normpath(posixpath.join(opf_dir, href))
-            xhtml = archive.read(member).decode("utf-8", errors="replace")
-            title, text = xhtml_to_document(xhtml)
-            title = title or Path(href).stem
+            if CONTAINER_PATH not in names:
+                return _refused(path, f"no {CONTAINER_PATH} — this is not a readable EPUB")
+            container = archive.read(CONTAINER_PATH).decode("utf-8", errors="replace")
+            opf_path = opf_path_from_container(container)
+            if opf_path not in names:
+                return _refused(path, f"package document {opf_path!r} is missing")
+            opf_dir = posixpath.dirname(opf_path)
+            opf_xml = archive.read(opf_path).decode("utf-8", errors="replace")
 
-            reason = front_matter_reason(title, text)
-            if reason:
-                warnings.append(f"dropped {title!r} — {reason}")
-                continue
-            # Ordinal is the spine position, so a gap in the sequence shows where a drop
-            # happened rather than hiding it behind renumbering.
-            documents.append({"title": title, "text": text, "ordinal": ordinal})
+            documents: list[dict] = []
+            warnings: list[str] = []
+            for ordinal, href in enumerate(spine_hrefs(opf_xml)):
+                member = posixpath.normpath(posixpath.join(opf_dir, href))
+                if member not in names:
+                    warnings.append(f"spine item {href!r} is missing from the archive")
+                    continue
+                xhtml = archive.read(member).decode("utf-8", errors="replace")
+                title, text = xhtml_to_document(xhtml)
+                title = title or Path(href).stem
+
+                reason = front_matter_reason(title, text)
+                if reason:
+                    warnings.append(f"dropped {title!r} — {reason}")
+                    continue
+                # Ordinal is the spine position, so a gap in the sequence shows where a
+                # drop happened rather than hiding it behind renumbering.
+                documents.append({"title": title, "text": text, "ordinal": ordinal})
+    except zipfile.BadZipFile:
+        return _refused(path, "not a ZIP archive — the file is corrupt or not an EPUB")
+    except ElementTree.ParseError as error:
+        # Unparseable XML in a syntactically valid ZIP is the other shape DRM takes.
+        return _refused(path, f"package document is unreadable ({error}) — {DRM_WARNING}")
 
     book_title = _dc_field(opf_xml, "title")
     creator = _dc_field(opf_xml, "creator")

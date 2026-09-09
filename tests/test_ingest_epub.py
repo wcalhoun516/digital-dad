@@ -183,6 +183,114 @@ class TestSpineParsing:
         assert handler_for(tmp_path / "A.EPUB") is not None
 
 
+class TestDrmAndMalformedInput:
+    def test_an_encrypted_epub_is_refused_at_zero_confidence(self, tmp_path):
+        from ingest.extract import extract
+
+        path = tmp_path / "drm.epub"
+        write_epub(
+            path,
+            [("c1", "ch1.xhtml", chapter_xhtml("One", "Real argument. " * 60))],
+            extra_files={
+                "META-INF/encryption.xml": (
+                    '<?xml version="1.0"?><encryption '
+                    'xmlns="urn:oasis:names:tc:opendocument:xmlns:container"/>'
+                )
+            },
+        )
+        result = extract(path)
+        assert result.confidence == 0.0
+        assert result.documents == []
+        assert any("DRM" in warning for warning in result.warnings)
+
+    def test_the_drm_warning_says_a_drm_free_copy_is_needed(self, tmp_path):
+        from ingest.extract import extract
+
+        path = tmp_path / "drm.epub"
+        write_epub(
+            path,
+            [("c1", "ch1.xhtml", chapter_xhtml("One", "Real argument. " * 60))],
+            extra_files={"META-INF/encryption.xml": "<encryption/>"},
+        )
+        assert any("DRM-free" in warning for warning in extract(path).warnings)
+
+    def test_a_file_that_is_not_a_zip_is_refused_without_raising(self, tmp_path):
+        from ingest.extract import extract
+
+        path = tmp_path / "broken.epub"
+        path.write_bytes(b"this is not a zip archive")
+        result = extract(path)
+        assert result.confidence == 0.0
+        assert result.documents == []
+        assert result.warnings
+
+    def test_a_missing_container_is_refused_without_raising(self, tmp_path):
+        from ingest.extract import extract
+
+        path = tmp_path / "nocontainer.epub"
+        with zipfile.ZipFile(path, "w") as zf:
+            zf.writestr("mimetype", "application/epub+zip")
+        result = extract(path)
+        assert result.confidence == 0.0
+        assert result.documents == []
+        assert result.warnings
+
+    def test_an_unparseable_opf_is_refused_without_raising(self, tmp_path):
+        from ingest.extract import extract
+
+        path = tmp_path / "badopf.epub"
+        with zipfile.ZipFile(path, "w") as zf:
+            zf.writestr("META-INF/container.xml", CONTAINER.format(opf="OEBPS/content.opf"))
+            zf.writestr("OEBPS/content.opf", "<package><manifest>truncated")
+        result = extract(path)
+        assert result.confidence == 0.0
+        assert result.documents == []
+        assert result.warnings
+
+    def test_a_spine_item_missing_from_the_zip_warns_and_keeps_the_rest(self, tmp_path):
+        from ingest.extract import extract
+
+        path = tmp_path / "missing.epub"
+        write_epub(
+            path,
+            [
+                ("c1", "ch1.xhtml", chapter_xhtml("One", "Real argument. " * 60)),
+                ("c2", "gone.xhtml", chapter_xhtml("Two", "More argument. " * 60)),
+            ],
+        )
+        # Rewrite the archive without the second chapter's file.
+        with zipfile.ZipFile(path) as source:
+            keep = [n for n in source.namelist() if n != "OEBPS/gone.xhtml"]
+            payloads = {name: source.read(name) for name in keep}
+        with zipfile.ZipFile(path, "w") as target:
+            for name, payload in payloads.items():
+                target.writestr(name, payload)
+
+        result = extract(path)
+        assert [doc["title"] for doc in result.documents] == ["One"]
+        assert any("gone.xhtml" in warning for warning in result.warnings)
+
+
+class TestPurity:
+    def test_the_same_file_extracts_identically_twice(self, two_chapter_book):
+        from ingest.extract import extract
+
+        first, second = extract(two_chapter_book), extract(two_chapter_book)
+        assert first.documents == second.documents
+        assert (first.meta, first.warnings, first.confidence) == (
+            second.meta,
+            second.warnings,
+            second.confidence,
+        )
+
+    def test_the_input_file_is_not_mutated(self, two_chapter_book):
+        from ingest.extract import extract
+
+        before = two_chapter_book.read_bytes()
+        extract(two_chapter_book)
+        assert two_chapter_book.read_bytes() == before
+
+
 def _one_chapter(**kwargs):
     """A book with a single real chapter, so meta can be varied in isolation."""
     return dict(
