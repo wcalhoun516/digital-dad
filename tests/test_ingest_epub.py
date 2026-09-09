@@ -200,8 +200,10 @@ class TestWholeBook:
             for n in range(1, 13)
         ]
         # Long enough that the *title* rule is what drops these, not the length rule.
-        chapters += [("bm1", "author.xhtml", chapter_xhtml("About the Author", "He teaches. " * 90))]
-        chapters += [("bm2", "index.xhtml", chapter_xhtml("Index", "Fed, 12. " * 90))]
+        chapters += [
+            ("bm1", "author.xhtml", chapter_xhtml("About the Author", "He teaches. " * 90)),
+            ("bm2", "index.xhtml", chapter_xhtml("Index", "Fed, 12. " * 90)),
+        ]
         path = tmp_path / "the-book.epub"
         write_epub(
             path,
