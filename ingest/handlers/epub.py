@@ -10,6 +10,7 @@ entries in arbitrary order, and a book read out of sequence is worse than no boo
 """
 
 import posixpath
+import re
 import zipfile
 from html.parser import HTMLParser
 from pathlib import Path
@@ -47,6 +48,10 @@ _NON_PROSE_TITLES = frozenset(
         "title page",
     }
 )
+_FULL_DATE = re.compile(r"^\d{4}-\d{2}-\d{2}")
+_YEAR_ONLY = re.compile(r"^\d{4}$")
+_HIS_NAME = "calhoun"
+
 _NON_PROSE_PREFIXES = (
     "about the author",
     "also by ",
@@ -165,6 +170,30 @@ def spine_hrefs(opf_xml: str) -> list[str]:
     return hrefs
 
 
+def _dc_field(opf_xml: str, name: str) -> str:
+    """A Dublin Core ``<metadata>`` value from the OPF, or ""."""
+    root = ElementTree.fromstring(opf_xml)
+    for node in _find_all(root, name):
+        if node.text and node.text.strip():
+            return " ".join(node.text.split())
+    return ""
+
+
+def _normalize_date(raw: str) -> tuple[str, str]:
+    """``(date, date_confidence)`` from a Dublin Core date.
+
+    EPUB dates are only loosely specified: full ISO timestamps, plain dates and bare years
+    all occur. A bare year is kept as a year and marked approximate rather than invented
+    into a January 1st that a reader would take literally.
+    """
+    raw = raw.strip()
+    if _FULL_DATE.match(raw):
+        return raw[:10], "exact"
+    if _YEAR_ONLY.match(raw):
+        return raw, "approximate"
+    return "", "unknown"
+
+
 @register(".epub")
 def extract_epub(path: Path) -> ExtractResult:
     """Extract one document per spine item from an ``.epub`` file."""
@@ -192,7 +221,23 @@ def extract_epub(path: Path) -> ExtractResult:
             # happened rather than hiding it behind renumbering.
             documents.append({"title": title, "text": text, "ordinal": ordinal})
 
-    meta = empty_meta(path.stem)
+    book_title = _dc_field(opf_xml, "title")
+    creator = _dc_field(opf_xml, "creator")
+    meta = empty_meta(book_title or path.stem)
+    meta["modality"] = "book"
+    meta["date"], meta["date_confidence"] = _normalize_date(_dc_field(opf_xml, "date"))
+
+    if not book_title:
+        warnings.append("no title in the package metadata — using the filename")
+    if not creator:
+        warnings.append("no author in the package metadata — a reviewer must set authorship")
+        meta["authorship"] = "other"
+    elif _HIS_NAME not in creator.lower():
+        # An ebook of someone else's book must never enter the corpus as his voice. The
+        # review CLI is the gate; this warning is what makes a reviewer look at it.
+        warnings.append(f"author is {creator!r}, not Calhoun — filed as authorship 'other'")
+        meta["authorship"] = "other"
+
     if not documents:
         warnings.append("no prose chapters recovered")
         return ExtractResult(documents=[], meta=meta, confidence=0.0, warnings=warnings)

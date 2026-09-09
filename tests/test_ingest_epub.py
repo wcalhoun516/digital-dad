@@ -183,6 +183,113 @@ class TestSpineParsing:
         assert handler_for(tmp_path / "A.EPUB") is not None
 
 
+def _one_chapter(**kwargs):
+    """A book with a single real chapter, so meta can be varied in isolation."""
+    return dict(
+        chapters=[("c1", "ch1.xhtml", chapter_xhtml("One", "Real argument. " * 60))], **kwargs
+    )
+
+
+class TestMetadata:
+    def test_dublin_core_title_and_date_are_recovered(self, tmp_path):
+        from ingest.extract import extract
+
+        path = tmp_path / "m.epub"
+        args = _one_chapter(
+            metadata={"title": "Essays", "creator": "George Calhoun", "date": "2021-03-04"}
+        )
+        write_epub(path, args["chapters"], metadata=args["metadata"])
+        meta = extract(path).meta
+        assert meta["title"] == "Essays"
+        assert meta["date"] == "2021-03-04"
+        assert meta["date_confidence"] == "exact"
+
+    def test_modality_is_book_not_the_letter_default(self, tmp_path):
+        from ingest.extract import extract
+
+        path = tmp_path / "m.epub"
+        args = _one_chapter()
+        write_epub(path, args["chapters"])
+        assert extract(path).meta["modality"] == "book"
+
+    def test_a_year_only_date_is_marked_approximate(self, tmp_path):
+        from ingest.extract import extract
+
+        path = tmp_path / "m.epub"
+        args = _one_chapter(metadata={"title": "Essays", "creator": "Calhoun", "date": "2021"})
+        write_epub(path, args["chapters"], metadata=args["metadata"])
+        meta = extract(path).meta
+        assert meta["date"] == "2021"
+        assert meta["date_confidence"] == "approximate"
+
+    def test_an_unparseable_date_is_left_unknown(self, tmp_path):
+        from ingest.extract import extract
+
+        path = tmp_path / "m.epub"
+        args = _one_chapter(metadata={"title": "E", "creator": "Calhoun", "date": "sometime"})
+        write_epub(path, args["chapters"], metadata=args["metadata"])
+        meta = extract(path).meta
+        assert meta["date"] == ""
+        assert meta["date_confidence"] == "unknown"
+
+    def test_a_missing_title_falls_back_to_the_filename_and_warns(self, tmp_path):
+        from ingest.extract import extract
+
+        path = tmp_path / "some-book.epub"
+        args = _one_chapter(metadata={"creator": "George Calhoun"})
+        write_epub(path, args["chapters"], metadata=args["metadata"])
+        result = extract(path)
+        assert result.meta["title"] == "some-book"
+        assert any("title" in warning for warning in result.warnings)
+        assert result.confidence < 1.0
+
+    def test_a_non_calhoun_author_warns_and_is_not_filed_as_his(self, tmp_path):
+        from ingest.extract import extract
+
+        path = tmp_path / "other.epub"
+        args = _one_chapter(metadata={"title": "Someone Else's Book", "creator": "Jane Doe"})
+        write_epub(path, args["chapters"], metadata=args["metadata"])
+        result = extract(path)
+        assert result.meta["authorship"] == "other"
+        assert any("Jane Doe" in warning for warning in result.warnings)
+
+    def test_a_calhoun_author_is_filed_as_his_without_warning(self, tmp_path):
+        from ingest.extract import extract
+
+        path = tmp_path / "his.epub"
+        args = _one_chapter(metadata={"title": "Essays", "creator": "George S. Calhoun"})
+        write_epub(path, args["chapters"], metadata=args["metadata"])
+        result = extract(path)
+        assert result.meta["authorship"] == "george"
+        assert not any("author" in warning.lower() for warning in result.warnings)
+
+    def test_a_missing_author_warns_rather_than_assuming_his(self, tmp_path):
+        from ingest.extract import extract
+
+        path = tmp_path / "anon.epub"
+        args = _one_chapter(metadata={"title": "Essays"})
+        write_epub(path, args["chapters"], metadata=args["metadata"])
+        result = extract(path)
+        assert any("author" in warning.lower() for warning in result.warnings)
+
+    def test_meta_only_uses_the_provenance_vocabulary(self, tmp_path):
+        from ingest.extract import extract
+        from ingest.provenance import default_provenance
+
+        path = tmp_path / "vocab.epub"
+        args = _one_chapter(metadata={"title": "Essays", "creator": "Jane Doe", "date": "2021"})
+        write_epub(path, args["chapters"], metadata=args["metadata"])
+        meta = extract(path).meta
+        # Raises if any value is outside the vocabulary the review CLI validates against.
+        default_provenance(
+            modality=meta["modality"],
+            authorship=meta["authorship"],
+            privacy=meta["privacy"],
+            license=meta["license"],
+            date_confidence=meta["date_confidence"],
+        )
+
+
 class TestFrontMatter:
     def test_a_dedication_is_dropped(self):
         from ingest.handlers.epub import front_matter_reason
