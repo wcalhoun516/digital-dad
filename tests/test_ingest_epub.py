@@ -153,8 +153,8 @@ class TestSpineParsing:
         write_epub(
             path,
             [
-                ("c1", "alpha.xhtml", chapter_xhtml("First", "One. " * 40)),
-                ("c2", "beta.xhtml", chapter_xhtml("Second", "Two. " * 40)),
+                ("c1", "alpha.xhtml", chapter_xhtml("First", "One argument. " * 60)),
+                ("c2", "beta.xhtml", chapter_xhtml("Second", "Two arguments. " * 60)),
             ],
             entry_order=[
                 "OEBPS/beta.xhtml",
@@ -183,12 +183,97 @@ class TestSpineParsing:
         assert handler_for(tmp_path / "A.EPUB") is not None
 
 
+class TestFrontMatter:
+    def test_a_dedication_is_dropped(self):
+        from ingest.handlers.epub import front_matter_reason
+
+        assert front_matter_reason("Dedication", "For Mary.") != ""
+
+    def test_a_copyright_page_is_dropped_even_when_long(self):
+        from ingest.handlers.epub import front_matter_reason
+
+        assert front_matter_reason("Copyright", "All rights reserved. " * 200) != ""
+
+    @pytest.mark.parametrize(
+        "title",
+        ["About the Author", "Index", "Table of Contents", "Acknowledgments", "Title Page"],
+    )
+    def test_known_non_prose_titles_are_dropped(self, title):
+        from ingest.handlers.epub import front_matter_reason
+
+        assert front_matter_reason(title, "Body text. " * 200) != ""
+
+    def test_a_real_chapter_is_kept(self):
+        from ingest.handlers.epub import front_matter_reason
+
+        assert front_matter_reason("The Fed Blinked", "Real argument. " * 200) == ""
+
+    def test_a_very_short_item_is_dropped_whatever_its_title(self):
+        from ingest.handlers.epub import front_matter_reason
+
+        assert front_matter_reason("Chapter One", "Too short.") != ""
+
+    def test_a_chapter_about_an_author_is_not_mistaken_for_back_matter(self):
+        from ingest.handlers.epub import front_matter_reason
+
+        assert front_matter_reason("The Author of the Euro", "Real argument. " * 200) == ""
+
+    def test_dropped_chapters_are_warned_about_by_name(self, tmp_path):
+        from ingest.extract import extract
+
+        path = tmp_path / "withfront.epub"
+        write_epub(
+            path,
+            [
+                ("f1", "copy.xhtml", chapter_xhtml("Copyright", "All rights reserved.")),
+                ("c1", "ch1.xhtml", chapter_xhtml("The Fed Blinked", "Real argument. " * 60)),
+            ],
+        )
+        result = extract(path)
+        assert [doc["title"] for doc in result.documents] == ["The Fed Blinked"]
+        assert any("Copyright" in warning for warning in result.warnings)
+
+    def test_ordinal_is_the_spine_position_so_drops_leave_a_gap(self, tmp_path):
+        from ingest.extract import extract
+
+        path = tmp_path / "gap.epub"
+        write_epub(
+            path,
+            [
+                ("f1", "ded.xhtml", chapter_xhtml("Dedication", "For Mary.")),
+                ("c1", "ch1.xhtml", chapter_xhtml("One", "Real argument. " * 60)),
+                ("c2", "ch2.xhtml", chapter_xhtml("Two", "More argument. " * 60)),
+            ],
+        )
+        assert [doc["ordinal"] for doc in extract(path).documents] == [1, 2]
+
+    def test_a_book_that_is_all_front_matter_lands_at_zero_confidence(self, tmp_path):
+        from ingest.extract import extract
+
+        path = tmp_path / "empty.epub"
+        write_epub(
+            path,
+            [("f1", "ded.xhtml", chapter_xhtml("Dedication", "For Mary."))],
+        )
+        result = extract(path)
+        assert result.documents == []
+        assert result.confidence == 0.0
+
+
 class TestXhtmlToText:
     def test_markup_is_stripped_but_inline_words_stay_joined(self):
         from ingest.handlers.epub import xhtml_to_document
 
         _, text = xhtml_to_document("<html><body><p>The <em>Fed</em> blinked.</p></body></html>")
         assert text == "The Fed blinked."
+
+    def test_the_head_title_is_not_repeated_into_the_body_text(self):
+        from ingest.handlers.epub import xhtml_to_document
+
+        _, text = xhtml_to_document(
+            "<html><head><title>Dedication</title></head><body><p>For Mary.</p></body></html>"
+        )
+        assert text == "For Mary."
 
     def test_script_and_style_content_never_reaches_the_text(self):
         from ingest.handlers.epub import xhtml_to_document
