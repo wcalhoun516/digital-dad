@@ -48,6 +48,50 @@ Format:
 
 <!-- entries below -->
 
+### 2026-09-09 — infra — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/92
+- Source: plan:ready/0010 (all 6 steps; plan moved to `plans/done/`)
+- Summary: **`.epub` handler — one ebook is worth the entire 204-article corpus.** Stdlib
+  only (`zipfile` + `xml.etree` + `html.parser`), so the zero-dependency core is intact and
+  CI needs no install; the 2026-08-13 design had assigned `.epub` to an opt-in extra, and
+  that extra is still not needed. Reading order comes from the **spine**, proved against a
+  ZIP whose entries are deliberately shuffled — the failure mode here is silent, a book read
+  out of order looks fine and is worthless. Measured on a synthetic 770 KB, 24-spine-item
+  book: **20 chapters / 144,040 words / 1,220 paragraphs recovered, 4 non-prose items
+  dropped.** **Two bugs the tests found, not the plan:** (1) `<head><title>` text was being
+  emitted into the body, so every chapter began with its own title twice — caught by the
+  step-3 RED output, not by a test I set out to write; (2) confidence was computed as
+  `0.8 if warnings else 1.0`, and since *every* real book drops front matter, **every
+  well-formed book scored 0.8** — a number that can't distinguish a clean book from a
+  damaged one is worse than no number, so confidence now scores only what could not be
+  *recovered* (missing title/author/spine item), while correct drops are reported and not
+  scored. **`analysis.utils.clean_text` could not be reused as the plan directed** — it
+  collapses `\s+` to single spaces, which flattens paragraph structure, and paragraphs are
+  exactly what plan 0009's passage records are cut on. Applied per paragraph instead, so the
+  shared cleaner is still the only cleaner. **Found while verifying:** `ingest/` has been
+  **unlinted since its first commit** — `make verify`'s `LINT_PATHS` never included it. The
+  guard meant to prevent this (`tests/test_lint_scope.py`) hardcoded its package list, so a
+  package added after it was written could never trip it; it now **discovers** the packages,
+  which fails red on `ingest` and passes once `LINT_PATHS` and the pre-commit regex include
+  it. The widened gate immediately caught an E501 in this PR's own tests. **TDD'd:** +54
+  tests, all proved red first except the step-2 parser assertions, which passed on arrival
+  because step 1's integration tests had forced the parser to exist — those 12 assertions
+  were therefore **mutation-tested** and every mutant is caught (dropping script/style
+  suppression, the block-break insertion, per-paragraph cleaning, charref unescaping, the
+  first-heading rule, the href-stem fallback, unparseable-date handling, the author check,
+  the modality vocabulary, front-matter dropping, spine-position ordinals, and DRM
+  detection). **DRM is detected and refused at zero confidence, never circumvented**; a
+  corrupt ZIP, absent container, unparseable OPF and a spine item missing from the archive
+  all refuse or warn instead of raising, so one bad file cannot kill an ingest run — proved
+  end-to-end through `scan_inbox`. **Verification:** `make verify` exit 0 — ruff clean,
+  **1308 passed**, dashboard builds; a clean `origin/main` worktree collects 1254, so the
+  delta is exactly the **+54** added here. **Owner-run, not agent-run:** actually ingesting a
+  book needs a purchased DRM-free file, so no real book was ingested and **no training claim
+  is made** — per 0010's own sequencing note, the training payoff needs 0009 step 4 first.
+  **Deviation from the plan:** step 6 asks for an `ingest/README.md` section, but no such
+  file exists; the format table in `docs/architecture.md` was updated instead rather than
+  creating a second doc that would duplicate it.
+
 ### 2026-09-08 — training — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/91
 - Source: plan:ready/0009 (steps 1 and 3; step 2 turned out to be already shipped)

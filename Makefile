@@ -3,7 +3,7 @@ PYTHON := .venv/bin/python
 # Every top-level directory holding Python we ship. Keep this in lockstep with the
 # pre-commit `files:` regex and with tests/test_lint_scope.py, which fails if a source
 # package drops out of the gate. E501 is off for the source packages only (see pyproject).
-LINT_PATHS := analysis scraper viz training tools bin tests
+LINT_PATHS := analysis scraper viz training tools bin ingest tests
 
 .PHONY: scrape manifest-check manifest-dedup coverage-audit analyze training dashboard all serve share search on-this-day send-on-this-day adjudicate backfill-verdicts entity-graph calhoun-isms reading-room contradictions rag-eval voice-eval voice-style voice-trials embedding-compare embedding-queries-check clean test lint fmt lint-json hooks verify verify-responsive
 

@@ -18,7 +18,7 @@ repos:
         entry: .venv/bin/ruff check --force-exclude
         language: system
         types: [python]
-        files: ^(analysis|scraper|viz|training|tools|bin|tests)/
+        files: ^(analysis|scraper|viz|training|tools|bin|ingest|tests)/
 
       # JSON validity for the committed analysis artifacts. `\.json$` excludes runs.jsonl
       # (JSONL, not JSON); gitignored artifacts (embeddings*, geo_llm_registration) never

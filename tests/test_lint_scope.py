@@ -21,7 +21,28 @@ PYPROJECT = ROOT / "pyproject.toml"
 
 # Every top-level directory holding Python we ship. `bin/` is the weekly-cron scripts,
 # `tools/` the pre-commit helpers; both are import-free of each other but still ours.
-SOURCE_PACKAGES = ("analysis", "scraper", "viz", "training", "tools", "bin", "tests")
+#
+# Discovered, not listed: this guard used to hardcode the packages, so `ingest/` — added
+# later — silently never joined the gate and went unlinted from its first commit until
+# 2026-09-09. A hardcoded list cannot catch the package nobody remembered to add to it.
+_NOT_SHIPPED = {"build", "dist", "data", "docs", "logs", "notebooks", "scripts"}
+
+
+def _source_packages():
+    return tuple(
+        sorted(
+            path.name
+            for path in ROOT.iterdir()
+            if path.is_dir()
+            and not path.name.startswith(".")
+            and not path.name.endswith(".egg-info")
+            and path.name not in _NOT_SHIPPED
+            and any(path.rglob("*.py"))
+        )
+    )
+
+
+SOURCE_PACKAGES = _source_packages()
 
 
 def _lint_paths():
