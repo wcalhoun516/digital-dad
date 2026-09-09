@@ -11,7 +11,7 @@ quotes would count the same sentence once per reply.
 import mailbox
 import re
 from email import message_from_bytes, policy
-from email.utils import parsedate_to_datetime, parseaddr
+from email.utils import parseaddr, parsedate_to_datetime
 from pathlib import Path
 
 from ingest.extract import ExtractResult, empty_meta, register
