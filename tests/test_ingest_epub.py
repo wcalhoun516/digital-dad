@@ -183,6 +183,118 @@ class TestSpineParsing:
         assert handler_for(tmp_path / "A.EPUB") is not None
 
 
+class TestWholeBook:
+    """The shape a real ebook arrives in: front matter, chapters, back matter."""
+
+    @pytest.fixture
+    def book(self, tmp_path):
+        chapters = [("fm1", "cover.xhtml", chapter_xhtml("Cover", "A Book."))]
+        chapters += [("fm2", "copy.xhtml", chapter_xhtml("Copyright", "All rights reserved."))]
+        chapters += [("fm3", "ded.xhtml", chapter_xhtml("Dedication", "For Mary."))]
+        chapters += [
+            (
+                f"c{n}",
+                f"ch{n}.xhtml",
+                chapter_xhtml(f"Chapter {n}", f"Argument {n}. " * 80, f"Second point {n}. " * 80),
+            )
+            for n in range(1, 13)
+        ]
+        # Long enough that the *title* rule is what drops these, not the length rule.
+        chapters += [("bm1", "author.xhtml", chapter_xhtml("About the Author", "He teaches. " * 90))]
+        chapters += [("bm2", "index.xhtml", chapter_xhtml("Index", "Fed, 12. " * 90))]
+        path = tmp_path / "the-book.epub"
+        write_epub(
+            path,
+            chapters,
+            metadata={"title": "The Book", "creator": "George Calhoun", "date": "2021-06-01"},
+        )
+        return path
+
+    def test_every_chapter_and_only_the_chapters_survive(self, book):
+        from ingest.extract import extract
+
+        result = extract(book)
+        assert [doc["title"] for doc in result.documents] == [
+            f"Chapter {n}" for n in range(1, 13)
+        ]
+
+    def test_the_five_non_prose_items_are_each_reported(self, book):
+        from ingest.extract import extract
+
+        dropped = [w for w in extract(book).warnings if w.startswith("dropped")]
+        assert len(dropped) == 5
+
+    def test_routine_front_matter_drops_do_not_lower_confidence(self, book):
+        """Every real book has front matter.
+
+        If dropping it counted against confidence, every well-formed book would arrive at
+        the same lowered score and the number would tell a reviewer nothing. Confidence is
+        about what could not be recovered, not about what was correctly discarded.
+        """
+        from ingest.extract import extract
+
+        result = extract(book)
+        assert [w for w in result.warnings if w.startswith("dropped")]
+        assert result.confidence == 1.0
+
+    def test_chapter_text_keeps_its_paragraphs(self, book):
+        from ingest.extract import extract
+
+        first = extract(book).documents[0]["text"]
+        assert first.count("\n\n") >= 2  # heading + two paragraphs
+        assert "Argument 1." in first and "Second point 1." in first
+
+
+class TestQueueIntegration:
+    def test_a_book_stages_into_the_review_queue_with_its_chapters(self, tmp_path):
+        from ingest.queue import stage_file
+
+        book = tmp_path / "essays.epub"
+        write_epub(
+            book,
+            [
+                ("c1", "ch1.xhtml", chapter_xhtml("One", "Real argument. " * 60)),
+                ("c2", "ch2.xhtml", chapter_xhtml("Two", "More argument. " * 60)),
+            ],
+            metadata={"title": "Essays", "creator": "George Calhoun", "date": "2020-01-02"},
+        )
+        item = stage_file(book, queue_dir=tmp_path / "queue")
+        assert item["status"] == "pending"
+        assert len(item["documents"]) == 2
+        assert item["meta"]["modality"] == "book"
+
+    def test_a_staged_book_survives_the_json_round_trip(self, tmp_path):
+        import json
+
+        from ingest.queue import load_queue, stage_file
+
+        book = tmp_path / "essays.epub"
+        write_epub(book, [("c1", "ch1.xhtml", chapter_xhtml("One", "Real argument. " * 60))])
+        queue_dir = tmp_path / "queue"
+        staged = stage_file(book, queue_dir=queue_dir)
+        (reloaded,) = load_queue(queue_dir)
+        assert reloaded == json.loads(json.dumps(staged))
+
+    def test_a_drm_protected_book_stages_for_review_instead_of_failing_the_run(self, tmp_path):
+        from ingest.queue import scan_inbox
+
+        inbox = tmp_path / "inbox"
+        inbox.mkdir()
+        write_epub(
+            inbox / "locked.epub",
+            [("c1", "ch1.xhtml", chapter_xhtml("One", "Real argument. " * 60))],
+            extra_files={"META-INF/encryption.xml": "<encryption/>"},
+        )
+        counts = scan_inbox(inbox=inbox, queue_dir=tmp_path / "queue")
+        assert counts == {"staged": 1, "skipped": 0, "duplicates": 0}
+
+        from ingest.queue import load_queue
+
+        (item,) = load_queue(tmp_path / "queue")
+        assert item["confidence"] == 0.0
+        assert any("DRM-free" in warning for warning in item["warnings"])
+
+
 class TestDrmAndMalformedInput:
     def test_an_encrypted_epub_is_refused_at_zero_confidence(self, tmp_path):
         from ingest.extract import extract

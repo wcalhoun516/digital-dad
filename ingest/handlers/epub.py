@@ -230,10 +230,16 @@ def extract_epub(path: Path) -> ExtractResult:
 
             documents: list[dict] = []
             warnings: list[str] = []
+            # Dropping front matter is the handler working correctly, so it is reported
+            # but never scored. Only what we failed to recover moves confidence — else
+            # every well-formed book lands on the same lowered number and the score stops
+            # telling a reviewer anything.
+            unrecovered = 0
             for ordinal, href in enumerate(spine_hrefs(opf_xml)):
                 member = posixpath.normpath(posixpath.join(opf_dir, href))
                 if member not in names:
                     warnings.append(f"spine item {href!r} is missing from the archive")
+                    unrecovered += 1
                     continue
                 xhtml = archive.read(member).decode("utf-8", errors="replace")
                 title, text = xhtml_to_document(xhtml)
@@ -260,9 +266,11 @@ def extract_epub(path: Path) -> ExtractResult:
 
     if not book_title:
         warnings.append("no title in the package metadata — using the filename")
+        unrecovered += 1
     if not creator:
         warnings.append("no author in the package metadata — a reviewer must set authorship")
         meta["authorship"] = "other"
+        unrecovered += 1
     elif _HIS_NAME not in creator.lower():
         # An ebook of someone else's book must never enter the corpus as his voice. The
         # review CLI is the gate; this warning is what makes a reviewer look at it.
@@ -275,6 +283,6 @@ def extract_epub(path: Path) -> ExtractResult:
     return ExtractResult(
         documents=documents,
         meta=meta,
-        confidence=0.8 if warnings else 1.0,
+        confidence=0.8 if unrecovered else 1.0,
         warnings=warnings,
     )
