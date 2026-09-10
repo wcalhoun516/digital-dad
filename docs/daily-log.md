@@ -48,10 +48,58 @@ Format:
 
 <!-- entries below -->
 
-### 2026-09-10 — infra — in-progress
-- PR: (opening)
-- Source: plan:ready/0011 step 1
-- Summary: Operator console shell + route gate. In progress.
+### 2026-09-10 — infra — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/93
+- Source: plan:ready/0011 (step 1 of 6; plan stays in `ready/` for steps 2–6)
+- Summary: **Built the console's door and proved it locked, before putting anything behind
+  it.** Plan 0011 step 1 only — upload, review queue, job runner and scoreboard (steps 2–5)
+  are deliberately *not* here; they are the parts that write files and start processes, and
+  the plan makes tailnet-only listening a hard gate on them. **The gate is real, not
+  theoretical:** `tailscale serve status --json` on this machine shows **three** live public
+  Funnels — `:443→8501`, `:8443→8000`, `:10000→8502` — and `:8443→127.0.0.1:8000` is the
+  family dashboard's own listener, the one `make share` publishes. So the console started on
+  the default port would have been **internet-reachable behind one shared password**, with
+  upload and job execution behind it. It now refuses: run with `DIGITAL_DAD_CONSOLE=1` on
+  8000 and it exits 1 with a named reason (verified for real, not just in a test). It
+  **fails closed** — Tailscale present but unreadable is a refusal, because an unanswered
+  question about public exposure is not a yes; Tailscale *absent* is not a refusal, since
+  there is no Funnel to be exposed by. There is deliberately **no override env var**: an
+  escape hatch here is the whole vulnerability re-added for convenience. A check that only
+  knew the dashboard's own port would have waved the console onto 8501, so the parser reads
+  the whole `AllowFunnel` map (and `TCPForward`, not just HTTP proxies). **A leak the plan
+  did not mention:** routing `/console` is not sufficient, because `console.html` is a plain
+  file in the directory the Funnel publishes — the static handler served it 200 to any
+  family-password holder. Found by writing the test, then fixed: with the console off, the
+  page does not exist to GET *or* HEAD. **`bin/serve_dashboard.py` had zero tests before
+  this** — the Basic-Auth gate protecting the public link had never been exercised, which is
+  a poor foundation to add write routes to. It now has 33, driving a **real**
+  `ThreadingHTTPServer` over a real socket (a unit test calling `_authed()` would prove
+  nothing about whether the handler calls it) and a real subprocess against a fake
+  `tailscale` script rather than a mocked `subprocess.run`. The route table lives in one
+  place (`CONSOLE_ROUTES`) and the gate test *enumerates* it, so a route added by step 2–5
+  cannot silently skip the auth assertions — the same discovery-over-hardcoding lesson as
+  2026-09-09's `test_lint_scope`. **TDD'd:** all 33 proved red first (10/13, then 17/17).
+  Two of the initial reds were **test** bugs, not production bugs, and are worth recording:
+  one bound the real port 8000 and hit the *live* dashboard (`Address already in use`), the
+  other assumed `probe_funnel(None)` skipped discovery when None means "auto-detect". Because
+  the security claims are the whole point of the PR, the 9 load-bearing behaviors were
+  additionally **mutation-tested — every mutant caught**: dispatching console routes before
+  the auth gate, defaulting the console on, loosening the env check to any truthy value,
+  un-withholding `console.html`, ignoring `AllowFunnel`, failing *open* on an unreadable
+  Tailscale, skipping the port check, never consulting the gate at startup, and dropping
+  `TCPForward`. **Live browser pass** (headless Chromium, the `verify-responsive` precedent):
+  page renders, health check green, **no JS errors**; unauthenticated `/console` and
+  `/console/api/health` both 401, authed both 200. **Verification:** `make verify` **exit 0**
+  — ruff clean, **1287 passed**, dashboard builds; a clean `origin/main` worktree collects
+  1254, so the delta is exactly the **+33** added here. **ADR D17** records the console as a
+  second surface that is *not* covered by D4 (the family dashboard stays client-side and
+  self-contained) rather than leaving it a silent exception. **Deviation from the plan:** the
+  ADR is listed under step 6, but the decision it records is *made* in step 1 and the plan
+  asks that it be surfaced for the owner to rule on, so it is written now; step 6's README
+  section remains. **No data artifact committed** — the dirty `data/` files from the weekly
+  cron were left alone. **For the owner to rule on:** `make console` defaults to port 8765
+  and nothing publishes it yet — actually serving it needs a `tailscale serve` (tailnet-only,
+  *not* `funnel`) listener, which is a machine-config change outside this PR.
 
 ### 2026-09-08 — training — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/91
