@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import base64
 import hmac
+import json
 import os
 import sys
 import urllib.error
@@ -42,6 +43,21 @@ PORT = int(os.environ.get("DIGITAL_DAD_SHARE_PORT", "8000"))
 ADDRESS = os.environ.get("DIGITAL_DAD_SHARE_ADDRESS", "127.0.0.1")
 CONDUCTOR_URL = os.environ.get("DIGITAL_DAD_CONDUCTOR_URL", "http://127.0.0.1:8080").rstrip("/")
 REALM = "digital-dad dashboard"
+
+# The operator console (plan 0011) is opt-in: it is a WRITE surface, and this server is the
+# same one published to the public internet by Tailscale Funnel. Anything other than exactly
+# "1" leaves it off.
+CONSOLE_ENABLED = os.environ.get("DIGITAL_DAD_CONSOLE") == "1"
+
+# Every console route, in one place. tests/test_console_gate.py enumerates this tuple to
+# assert each route 401s unauthenticated, so a route added here cannot skip the gate test.
+CONSOLE_ROUTES = ("/console", "/console/api/health")
+
+# The console's page is a plain file inside the directory this server publishes, so routing
+# /console is not by itself enough to keep it out of the family artifact — the static handler
+# will hand over /console.html to anyone holding the dashboard password. With the console off,
+# these paths do not exist.
+CONSOLE_STATIC_PATHS = ("/console.html",)
 
 _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DASHBOARD_DIR = os.environ.get("DIGITAL_DAD_DASHBOARD_DIR", os.path.join(_REPO_ROOT, "dashboard"))
@@ -137,22 +153,76 @@ class GatedHandler(SimpleHTTPRequestHandler):
         finally:
             upstream.close()
 
+    # --- operator console ----------------------------------------------------
+    def _console_route(self) -> str | None:
+        path = self.path.split("?", 1)[0]
+        if path == "/console" or path.startswith("/console/"):
+            return path.rstrip("/") or "/console"
+        return None
+
+    def _send_bytes(self, status: int, ctype: str, payload: bytes) -> None:
+        self.send_response(status)
+        self.send_header("Content-Type", ctype)
+        self.send_header("Content-Length", str(len(payload)))
+        self.end_headers()
+        if self.command != "HEAD":
+            self.wfile.write(payload)
+
+    def _console_static_withheld(self) -> bool:
+        """True when the request is for a console asset the disabled console must not expose."""
+        if CONSOLE_ENABLED:
+            return False
+        if self.path.split("?", 1)[0] not in CONSOLE_STATIC_PATHS:
+            return False
+        self.send_error(404, "Not Found")
+        return True
+
+    def _console(self, route: str, method: str) -> None:
+        if not CONSOLE_ENABLED:
+            self.send_error(404, "Not Found")
+            return
+        if route == "/console" and method == "GET":
+            page = os.path.join(self.directory, "console.html")
+            if not os.path.isfile(page):
+                self.send_error(404, "console.html not found")
+                return
+            with open(page, "rb") as handle:
+                self._send_bytes(200, "text/html; charset=utf-8", handle.read())
+            return
+        if route == "/console/api/health" and method == "GET":
+            payload = json.dumps({"console": "enabled", "routes": list(CONSOLE_ROUTES)}).encode()
+            self._send_bytes(200, "application/json; charset=utf-8", payload)
+            return
+        self.send_error(404, "Not Found")
+
     # --- HTTP verbs ---------------------------------------------------------
     def do_GET(self) -> None:
         if not self._gate():
             return
+        route = self._console_route()
+        if route is not None:
+            self._console(route, "GET")
+            return
         if self.path.startswith("/v1/"):
             self._proxy("GET")
+            return
+        if self._console_static_withheld():
             return
         super().do_GET()
 
     def do_HEAD(self) -> None:
         if not self._gate():
             return
+        if self._console_static_withheld():
+            return
         super().do_HEAD()
 
     def do_POST(self) -> None:
         if not self._gate():
+            return
+        route = self._console_route()
+        if route is not None:
+            self._console(route, "POST")
             return
         if self.path.startswith("/v1/"):
             self._proxy("POST")
