@@ -144,3 +144,31 @@ E501-clean since the gate existed and stays fully gated, so this is a strict wid
 rule weakened anywhere. `tests/test_lint_scope.py` pins all of that — it fails if a package
 drops out of `LINT_PATHS`, if the pre-commit `files:` regex drifts out of lockstep with it,
 or if `tests/` ever acquires a per-file ignore.
+
+### D17 — The operator console is server-bound and tailnet-only; it is not part of D4
+**Why:** D4 makes the *family* dashboard fully client-side so `index.html` opens anywhere,
+forever. The operator console (plan 0011, roadmap #42) has the opposite requirement: it
+uploads source material, mutates the ingest queue, and starts training jobs, so it is
+inherently server-bound. Rather than leave that as a silent exception to D4, it is recorded
+here as a second surface with a second job.
+
+The security half is the load-bearing part. `bin/serve_dashboard.py` is published to the
+**public internet** by Tailscale Funnel (`:8443` → `127.0.0.1:8000`) behind a single shared
+password. Everything it served before this was read-only, so a leaked password meant "a
+stranger reads the archive". Adding upload and job execution to that same listener would
+change the worst case to "a stranger writes files and starts processes on the Mac mini" —
+a categorical escalation, not a degree.
+
+**Implication:** three structural rules, all tested:
+1. **Opt-in.** `DIGITAL_DAD_CONSOLE=1` exactly; the console is absent otherwise, and its page
+   is withheld even from the static handler so it cannot ride along inside the family artifact.
+2. **Refuses the Funnel.** At startup the console reads `tailscale serve status --json` and
+   exits 1 if its own listen port is Funnel-published. It **fails closed**: if Tailscale is
+   installed but its state cannot be read, that is a refusal, because an unanswered question
+   about public exposure is not a yes. No Tailscale at all is not a refusal — there is no
+   Funnel to be exposed by. There is deliberately **no override env var**: an escape hatch
+   here would be the whole vulnerability, re-added for convenience.
+3. **The password is not sufficient on its own.** Basic Auth stays, but it is the second
+   layer; the first is that the port is unreachable from outside the tailnet.
+
+`make console` runs it on 8765 (tailnet-only) instead of 8000 (Funnel-published).

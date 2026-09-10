@@ -30,7 +30,10 @@ from __future__ import annotations
 
 import base64
 import hmac
+import json
 import os
+import shutil
+import subprocess
 import sys
 import urllib.error
 import urllib.request
@@ -43,6 +46,24 @@ ADDRESS = os.environ.get("DIGITAL_DAD_SHARE_ADDRESS", "127.0.0.1")
 CONDUCTOR_URL = os.environ.get("DIGITAL_DAD_CONDUCTOR_URL", "http://127.0.0.1:8080").rstrip("/")
 REALM = "digital-dad dashboard"
 
+# The operator console (plan 0011) is opt-in: it is a WRITE surface, and this server is the
+# same one published to the public internet by Tailscale Funnel. Anything other than exactly
+# "1" leaves it off.
+CONSOLE_ENABLED = os.environ.get("DIGITAL_DAD_CONSOLE") == "1"
+
+# Every console route, in one place. tests/test_console_gate.py enumerates this tuple to
+# assert each route 401s unauthenticated, so a route added here cannot skip the gate test.
+CONSOLE_ROUTES = ("/console", "/console/api/health")
+
+# The console's page is a plain file inside the directory this server publishes, so routing
+# /console is not by itself enough to keep it out of the family artifact — the static handler
+# will hand over /console.html to anyone holding the dashboard password. With the console off,
+# these paths do not exist.
+CONSOLE_STATIC_PATHS = ("/console.html",)
+
+# The Tailscale CLI is not on PATH for a launchd job on macOS.
+_MACOS_TAILSCALE = "/Applications/Tailscale.app/Contents/MacOS/Tailscale"
+
 _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DASHBOARD_DIR = os.environ.get("DIGITAL_DAD_DASHBOARD_DIR", os.path.join(_REPO_ROOT, "dashboard"))
 
@@ -51,6 +72,93 @@ _HOP_BY_HOP = {
     "connection", "keep-alive", "proxy-authenticate", "proxy-authorization",
     "te", "trailers", "transfer-encoding", "upgrade",
 }
+
+
+def _proxy_target_port(target: str) -> int | None:
+    """Local port out of a serve target: 'http://127.0.0.1:8000' or '127.0.0.1:8000'."""
+    if not isinstance(target, str):
+        return None
+    _, _, hostport = target.rpartition("/")
+    _, _, port = hostport.rpartition(":")
+    return int(port) if port.isdigit() else None
+
+
+def funnel_exposed_local_ports(status: dict) -> set[int]:
+    """Local ports the PUBLIC internet can reach, per `tailscale serve status --json`.
+
+    Only entries whose host:port is flagged in AllowFunnel count — a plain `tailscale serve`
+    is tailnet-only, and that is the mode the console is meant to run behind.
+    """
+    if not isinstance(status, dict):
+        return set()
+    allow = status.get("AllowFunnel")
+    if not isinstance(allow, dict):
+        return set()
+    public = {hostport for hostport, on in allow.items() if on}
+    web = status.get("Web") if isinstance(status.get("Web"), dict) else {}
+    tcp = status.get("TCP") if isinstance(status.get("TCP"), dict) else {}
+
+    ports: set[int] = set()
+    for hostport in public:
+        entry = web.get(hostport)
+        if isinstance(entry, dict) and isinstance(entry.get("Handlers"), dict):
+            for handler in entry["Handlers"].values():
+                if isinstance(handler, dict):
+                    port = _proxy_target_port(handler.get("Proxy"))
+                    if port is not None:
+                        ports.add(port)
+        _, _, public_port = hostport.rpartition(":")
+        forward = tcp.get(public_port)
+        if isinstance(forward, dict):
+            port = _proxy_target_port(forward.get("TCPForward"))
+            if port is not None:
+                ports.add(port)
+    return ports
+
+
+def find_tailscale() -> str | None:
+    return shutil.which("tailscale") or (
+        _MACOS_TAILSCALE if os.path.isfile(_MACOS_TAILSCALE) else None
+    )
+
+
+def probe_funnel(binary: str | None = None) -> tuple[str, dict | None]:
+    """('absent'|'ok'|'error', status). 'absent' means no Tailscale, so no Funnel exists."""
+    binary = binary or find_tailscale()
+    if not binary:
+        return "absent", None
+    try:
+        done = subprocess.run(
+            [binary, "serve", "status", "--json"],
+            capture_output=True, text=True, timeout=15,
+        )
+        if done.returncode != 0:
+            return "error", None
+        return "ok", json.loads(done.stdout)
+    except Exception:
+        return "error", None
+
+
+def console_refusal_reason(listen_port: int, state: str, status: dict | None) -> str | None:
+    """Why the console must not start on this port, or None if it may.
+
+    Fails closed: if Tailscale is installed but its Funnel map cannot be read, the question
+    "is this port public?" is unanswered, and an unanswered question is not a yes.
+    """
+    if state == "absent":
+        return None
+    if state != "ok" or not isinstance(status, dict):
+        return (
+            "the console is enabled but the Tailscale Funnel state could not be determined, "
+            "so it cannot be confirmed that port {} is private".format(listen_port)
+        )
+    if listen_port in funnel_exposed_local_ports(status):
+        return (
+            f"the console is enabled on port {listen_port}, which Tailscale Funnel publishes "
+            "to the public internet. The console writes files and starts processes; it must "
+            "listen on a tailnet-only port (`tailscale serve`), not the Funnel."
+        )
+    return None
 
 
 class GatedHandler(SimpleHTTPRequestHandler):
@@ -137,22 +245,76 @@ class GatedHandler(SimpleHTTPRequestHandler):
         finally:
             upstream.close()
 
+    # --- operator console ----------------------------------------------------
+    def _console_route(self) -> str | None:
+        path = self.path.split("?", 1)[0]
+        if path == "/console" or path.startswith("/console/"):
+            return path.rstrip("/") or "/console"
+        return None
+
+    def _send_bytes(self, status: int, ctype: str, payload: bytes) -> None:
+        self.send_response(status)
+        self.send_header("Content-Type", ctype)
+        self.send_header("Content-Length", str(len(payload)))
+        self.end_headers()
+        if self.command != "HEAD":
+            self.wfile.write(payload)
+
+    def _console_static_withheld(self) -> bool:
+        """True when the request is for a console asset the disabled console must not expose."""
+        if CONSOLE_ENABLED:
+            return False
+        if self.path.split("?", 1)[0] not in CONSOLE_STATIC_PATHS:
+            return False
+        self.send_error(404, "Not Found")
+        return True
+
+    def _console(self, route: str, method: str) -> None:
+        if not CONSOLE_ENABLED:
+            self.send_error(404, "Not Found")
+            return
+        if route == "/console" and method == "GET":
+            page = os.path.join(self.directory, "console.html")
+            if not os.path.isfile(page):
+                self.send_error(404, "console.html not found")
+                return
+            with open(page, "rb") as handle:
+                self._send_bytes(200, "text/html; charset=utf-8", handle.read())
+            return
+        if route == "/console/api/health" and method == "GET":
+            payload = json.dumps({"console": "enabled", "routes": list(CONSOLE_ROUTES)}).encode()
+            self._send_bytes(200, "application/json; charset=utf-8", payload)
+            return
+        self.send_error(404, "Not Found")
+
     # --- HTTP verbs ---------------------------------------------------------
     def do_GET(self) -> None:
         if not self._gate():
             return
+        route = self._console_route()
+        if route is not None:
+            self._console(route, "GET")
+            return
         if self.path.startswith("/v1/"):
             self._proxy("GET")
+            return
+        if self._console_static_withheld():
             return
         super().do_GET()
 
     def do_HEAD(self) -> None:
         if not self._gate():
             return
+        if self._console_static_withheld():
+            return
         super().do_HEAD()
 
     def do_POST(self) -> None:
         if not self._gate():
+            return
+        route = self._console_route()
+        if route is not None:
+            self._console(route, "POST")
             return
         if self.path.startswith("/v1/"):
             self._proxy("POST")
@@ -163,6 +325,15 @@ class GatedHandler(SimpleHTTPRequestHandler):
         sys.stderr.write("[serve_dashboard] %s - %s\n" % (self.address_string(), fmt % args))
 
 
+def _serve_forever(server: ThreadingHTTPServer) -> None:
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        server.server_close()
+
+
 def main() -> int:
     if not PASSWORD and os.environ.get("DIGITAL_DAD_ALLOW_OPEN") != "1":
         sys.stderr.write(
@@ -171,6 +342,11 @@ def main() -> int:
             "DIGITAL_DAD_ALLOW_OPEN=1 to override for trusted local use.\n"
         )
         return 1
+    if CONSOLE_ENABLED:
+        refusal = console_refusal_reason(PORT, *probe_funnel())
+        if refusal:
+            sys.stderr.write(f"REFUSING TO START: {refusal}\n")
+            return 1
     if not os.path.isdir(DASHBOARD_DIR):
         sys.stderr.write(f"ERROR: dashboard dir not found: {DASHBOARD_DIR}\n")
         return 1
@@ -186,12 +362,7 @@ def main() -> int:
         f"[serve_dashboard] serving {DASHBOARD_DIR} on http://{ADDRESS}:{PORT} "
         f"[{gate}], proxying /v1/* → {CONDUCTOR_URL}\n"
     )
-    try:
-        server.serve_forever()
-    except KeyboardInterrupt:
-        pass
-    finally:
-        server.server_close()
+    _serve_forever(server)
     return 0
 
 

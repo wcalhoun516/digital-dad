@@ -377,6 +377,29 @@ naming the same raw file); `load_articles()` collapses them for the analysis pip
 the dashboard needs the same corpus view or it reports an inflated article count and draws a
 duplicate Raw Corpus row per twin.
 
+### Operator console (`dashboard/console.html`, served by `bin/serve_dashboard.py`)
+
+A **second, separate** surface from the family dashboard: it feeds the corpus, turns the
+flywheel crank, and keeps score (roadmap #42, plan 0011). It is server-bound by nature — it
+writes files and starts jobs — so it is explicitly *not* covered by D4, which keeps
+`index.html` client-side and self-contained. See **D17**.
+
+`bin/serve_dashboard.py` gained `/console` (the page) and `/console/api/*` (JSON), both behind
+the same Basic-Auth `_gate()` as everything else. Three structural rules, all tested in
+`tests/test_console_gate.py` and `tests/test_console_funnel_gate.py`:
+
+- **Off unless `DIGITAL_DAD_CONSOLE=1`.** Disabled means the routes 404 *and* the page is
+  withheld from the static handler, so `console.html` cannot be fetched out of the published
+  dashboard directory.
+- **Refuses a Funnel-exposed port.** On startup it reads `tailscale serve status --json` and
+  exits 1 if its own port is published to the internet. `make share` Funnels `:8443` →
+  `127.0.0.1:8000`, so 8000 is off-limits; `make console` uses 8765.
+- **Fails closed.** Tailscale present but unreadable ⇒ refuse. Tailscale absent ⇒ allow (no
+  Funnel can exist). There is no override flag, by design.
+
+The route table lives in one place (`CONSOLE_ROUTES`) and the gate test enumerates it, so a
+route added by a later step of the plan cannot silently skip the auth assertions.
+
 ### Email (`analysis/on_this_day.py` + `bin/create_gmail_draft.py`)
 
 On This Day writes an HTML email to disk; `create_gmail_draft.py` reads the latest one and

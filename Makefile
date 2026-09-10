@@ -5,7 +5,7 @@ PYTHON := .venv/bin/python
 # package drops out of the gate. E501 is off for the source packages only (see pyproject).
 LINT_PATHS := analysis scraper viz training tools bin tests
 
-.PHONY: scrape manifest-check manifest-dedup coverage-audit analyze training dashboard all serve share search on-this-day send-on-this-day adjudicate backfill-verdicts entity-graph calhoun-isms reading-room contradictions rag-eval voice-eval voice-style voice-trials embedding-compare embedding-queries-check clean test lint fmt lint-json hooks verify verify-responsive
+.PHONY: scrape manifest-check manifest-dedup coverage-audit analyze training dashboard all serve share console search on-this-day send-on-this-day adjudicate backfill-verdicts entity-graph calhoun-isms reading-room contradictions rag-eval voice-eval voice-style voice-trials embedding-compare embedding-queries-check clean test lint fmt lint-json hooks verify verify-responsive
 
 scrape:
 	$(PYTHON) -m scraper $(ARGS)
@@ -72,6 +72,15 @@ serve: dashboard
 # service so it survives reboots. Re-run any time; --rotate-password to change pw.
 share: dashboard
 	bash scripts/launchd/install_dashboard.sh $(ARGS)
+
+# Operator console (plan 0011) — a WRITE surface, so it is opt-in and must never share a
+# port with the Funnel that `make share` publishes. It refuses to start on one; 8765 is a
+# tailnet-only default. Password still required.
+CONSOLE_PORT ?= 8765
+console: dashboard
+	@echo "Operator console → http://127.0.0.1:$(CONSOLE_PORT)/console"
+	DIGITAL_DAD_CONSOLE=1 DIGITAL_DAD_SHARE_PORT=$(CONSOLE_PORT) \
+		$(PYTHON) bin/serve_dashboard.py
 
 search:
 	$(PYTHON) -m analysis.semantic_search "$(QUERY)"
