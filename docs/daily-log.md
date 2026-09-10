@@ -48,6 +48,11 @@ Format:
 
 <!-- entries below -->
 
+### 2026-09-10 — infra — in-progress
+- PR: (opening)
+- Source: plan:ready/0011 step 1
+- Summary: Operator console shell + route gate. In progress.
+
 ### 2026-09-08 — training — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/91
 - Source: plan:ready/0009 (steps 1 and 3; step 2 turned out to be already shipped)
