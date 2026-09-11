@@ -49,14 +49,16 @@ training:
 # Stage mlx-lm's train.jsonl/valid.jsonl in data/finetune_run/ from 26a's leakage-free
 # split (plan 0008 step 26c). Offline + free; the actual QLoRA run lives in
 # notebooks/finetune_qlora.ipynb. Run `make training` first to produce the split.
+# Refuses (exit 1) if the preflight below fails — ARGS=--force to stage anyway.
 finetune-prep:
-	$(PYTHON) -m training.finetune_config
+	$(PYTHON) -m training.finetune_config $(ARGS)
 
 # Preflight 26a's split against the QLoRA config before the 26c training run:
 # chat-shape integrity, train/heldout disjointness, and sequence-length budget vs
-# max_seq_len. Report-only (exit 0); add --strict for a non-zero gate.
+# max_seq_len. Report-only (exit 0); ARGS=--strict for a non-zero gate. The gate is
+# enforced for real in `finetune-prep`, which is what writes the trainer's data.
 finetune-preflight:
-	$(PYTHON) -m training.finetune_preflight
+	$(PYTHON) -m training.finetune_preflight $(ARGS)
 
 dashboard:
 	$(PYTHON) viz/build_dashboard.py

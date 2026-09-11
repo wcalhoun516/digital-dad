@@ -58,7 +58,7 @@ The shaping/splitting/overlap logic lives in `prepare.py` and is unit-tested in
   `random.shuffle` of `instruct.jsonl`**, which re-split *all* quality articles
   (including the ones 26a reserved out of the #25 RAG eval) and silently
   re-introduced eval leakage. Validation is now the leakage-free held-out set,
-  verbatim.
+  verbatim. It is also **where the preflight is enforced** — see below.
 - **`eval_prompts()`** — deterministic held-out prompts for the smoke generations.
 - **`style_metrics()`** — the cheap style heuristics (TTR, sentence length, Calhoun
   "fingerprint" word rate), shared with the 26d voice eval.
@@ -82,16 +82,37 @@ doomed at the data layer. It validates 26a's split against the `QLoRAConfig`:
   ~4 chars/token — no model download needed).
 
 Report-only (exit 0) by default so it never reddens `make verify`; `--strict` exits 1
-on any failing check (a future pre-run/CI gate). `--json` emits the machine-readable
-report; `--max-seq-len` / `--base` override the config for what-if runs.
+on any failing check. `--json` emits the machine-readable report; `--max-seq-len` /
+`--base` override the config for what-if runs.
 
-**Why this matters now:** on the real corpus the preflight passes shape + disjointness
-but **fails the length budget — 100% of records exceed the default `max_seq_len=1024`**
-(est. tokens median ~3,000, max ~5,300), because the assistant turn is a full article
-body. The report turns this into an action: it suggests a `max_seq_len` — the smallest
-power of two covering ~95% of records (currently **≈8192**, P95 ≈4,354 tokens) — so the
-26c run either raises the window or chunks bodies instead of training on almost nothing.
-The pure checks are unit-tested in `tests/test_finetune_preflight.py`.
+### The gate (plan 0009, step 2)
+
+Reporting was never enough. The preflight had been failing the length budget on the
+real corpus since the day it was written, and it exits 0 by design, so nothing ever
+stopped: **D15's fine-tune was trained on a dataset this tool was already rejecting**,
+and its verdict was written up without anyone acting on the warning.
+
+So the check now runs at the chokepoint instead of beside it. `prepare_mlx_data()` is
+the only thing that writes the `train.jsonl` / `valid.jsonl` that `mlx_lm.lora --data`
+reads — both `make finetune-prep` and the notebook go through it — and it **refuses to
+stage a split that fails any check**, raising `PreflightError` and writing nothing.
+
+- The refusal carries the **rendered report**, not just a failure flag, so the fix is
+  in the error.
+- If a previous run's files are still sitting in `data/finetune_run/`, the refusal
+  **names them**: the trainer would read that directory and happily train on stale
+  data while this run refused. They are named, not deleted.
+- `force=True` (`make finetune-prep ARGS=--force`) overrides the gate — deliberately
+  an argument and never a default, so reproducing D15's truncating run stays possible
+  but cannot happen by accident. The returned `preflight_ok` records that it was used.
+- The gate checks against the **config the run will actually use**, so raising
+  `max_seq_len` in the notebook re-checks the budget at the new value.
+
+On the real corpus the preflight now **passes** all three checks: plan 0009 step 1
+made the records passage-level, taking the length budget from 100% over to 0%.
+
+The pure checks are unit-tested in `tests/test_finetune_preflight.py`; the gate and its
+override in `tests/test_finetune_config.py`.
 
 ## Registering the fine-tune for Ask Dad (plan 0008, step 26e)
 
