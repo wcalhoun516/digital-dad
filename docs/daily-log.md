@@ -48,6 +48,53 @@ Format:
 
 <!-- entries below -->
 
+### 2026-09-11 — training — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/94
+- Source: plan:ready/0009 (step 2 — the half that never landed)
+- Summary: **The preflight has been rejecting this project's training data since the day it was
+  written, and nothing ever stopped.** Plan 0009 step 2 asked for two things — add `--strict`,
+  and *call it from the training path*. The flag landed in PR #91; the calling never did, and
+  that PR's own run-history entry records step 2 as "already shipped". So the tool still only
+  printed. This is the exact mechanism behind D15: the fine-tune was trained on a dataset
+  `make finetune-preflight` was already failing (100% of records over `max_seq_len`), and the
+  ADR was written up as a verdict on the *model* while the warning sat unread. **What matters
+  is where the gate lives, not that one exists.** The obvious wiring — have `finetune-prep` run
+  the preflight first — would have been theatre: `notebooks/finetune_qlora.ipynb` calls
+  `prepare_mlx_data()` **directly**, and the notebook *is* the training path, so a Makefile-only
+  gate leaves the real route ungated. The gate went into `prepare_mlx_data()` itself, the single
+  chokepoint that writes the `train.jsonl` / `valid.jsonl` that `mlx_lm.lora --data` reads. A
+  failing split now raises `PreflightError` and **stages nothing**. It gates on **all three**
+  checks rather than just the length budget a literal reading would suggest — a leaked split
+  inflates validation as thoroughly as truncation wastes it. **Proved on real data, not only
+  fixtures:** fed the article-level `instruct.jsonl` (the shape D15 actually trained on) it
+  refuses with `130/130 (100.0%) over max_seq_len=1024`; `make finetune-prep` on today's
+  passage-level corpus stages **train=544, valid=130** clean. **A hazard the plan did not
+  mention:** refusing is not sufficient, because a previous run's files sit in
+  `data/finetune_run/` and `mlx_lm.lora --data` reads the *directory* — a run that "refused"
+  could still train on stale data. The refusal now **names** those files. It does not delete
+  them; quietly removing the owner's artifacts is its own failure mode. The refusal also carries
+  the **rendered report**, so the fix is in the error rather than one CLI invocation away.
+  **There is an override here, unlike PR #93's security gate** — `force=True` / `ARGS=--force`.
+  The difference is blast radius: forcing wastes the owner's own GPU hours, and step 4 may
+  legitimately want to reproduce D15's truncating run for comparison. It is an argument, never a
+  default, and `preflight_ok` in the return value records that it was used. The notebook now
+  passes `config=cfg`, so raising `max_seq_len` there re-checks the budget at the value the run
+  will really use. **TDD'd:** 16 tests, all proved red first. Two pre-existing tests needed
+  updating and both were *informative* — their `_rec` helper gave every record an identical
+  assistant body, which the new gate correctly reads as a train/heldout leak. **Mutation-tested
+  — 10/10 caught:** gate never consulted, defaulting to force, gating only the length budget,
+  ignoring the caller's config, dropping the report from the message, not naming stale files,
+  *deleting* them instead, hardcoding `preflight_ok`, staging before refusing, and a CLI that
+  exits 0 on refusal. **Verification:** `make verify` **exit 0** — ruff clean, **1270 passed**,
+  dashboard builds; a clean `origin/main` worktree collects **1254**, so the delta is exactly
+  the **+16** added here and nothing was dropped. `training/README.md`'s "why this matters now"
+  was **stale** — still describing the length budget as 100% failing, which step 1 fixed in
+  PR #91 — and is corrected. Plan 0009's status block now marks step 2 done and records *why*
+  the gate is in the function rather than the Makefile, so a future run does not "fix" it back.
+  **No data artifact committed;** the weekly cron's dirty `data/` files were left alone.
+  **Still the owner's move:** step 4 (retrain + re-measure vs D15) needs hours of local GPU and
+  a paid T3 judge, so plan 0009 stays in `ready/`.
+
 ### 2026-09-08 — training — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/91
 - Source: plan:ready/0009 (steps 1 and 3; step 2 turned out to be already shipped)
