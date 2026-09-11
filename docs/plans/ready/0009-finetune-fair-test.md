@@ -1,11 +1,12 @@
 # Plan 0009 — Give the Geo-LLM fine-tune a fair test
 
-## Status (2026-09-08)
+## Status (2026-09-11)
 
 - **Step 1 — done** (PR #91). Passage-level records; preflight length budget 100% over → **0%**.
-- **Step 2 — was already done on `main`** before this plan was written: `--strict` exists in
-  `training/finetune_preflight.py` with red/green tests. Only "call it from the training path"
-  (a `make` wiring) remains.
+- **Step 2 — done** (PR #91 gave `--strict`; PR #94 called it from the training path). The gate
+  lives in `prepare_mlx_data()`, the chokepoint that writes the trainer's data, **not** in a
+  `make` recipe — the notebook calls that function directly, so a Makefile-only wiring would
+  have left the actual training path ungated. `force=True` is the explicit override.
 - **Step 3 — done** (PR #91). Regenerated on the real corpus; `make finetune-preflight` prints
   **PASS**. Numbers in the PR.
 - **Step 4 — the owner's move, and the reason this plan stays in `ready/`.** Retrain + re-measure

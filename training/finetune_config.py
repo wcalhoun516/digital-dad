@@ -107,7 +107,7 @@ def _refusal_message(report_text: str, finetune_dir: Path) -> str:
     if left_behind:
         parts += [
             "",
-            f"WARNING: a previous run's {', '.join(left_behind)} are still in {finetune_dir}. "
+            f"WARNING: a previous run left {', '.join(left_behind)} in {finetune_dir}. "
             "`mlx_lm.lora --data` reads that directory, so a training run started now would "
             "train on those stale files. They were left untouched — delete or regenerate them.",
         ]
