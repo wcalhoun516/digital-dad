@@ -15,8 +15,10 @@ Run `python -m training.finetune_config` (or `make finetune-prep`) to stage the
 mlx-lm `train.jsonl` / `valid.jsonl` from the 26a split — offline and free.
 """
 
+import argparse
 import json
 import re
+import sys
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
@@ -91,7 +93,30 @@ def user_prompt(record: dict) -> str | None:
     return None
 
 
-def prepare_mlx_data(training_dir=TRAINING_DIR, finetune_dir=FINETUNE_DIR) -> dict:
+def _refusal_message(report_text: str, finetune_dir: Path) -> str:
+    """The PreflightError text: why it refused, and what is still on disk."""
+    parts = [
+        "Refusing to stage training data — the fine-tune preflight failed.",
+        "",
+        report_text,
+        "",
+        "Nothing was staged. Regenerate the split (`make training`) or, to train on it "
+        "anyway, re-run with --force.",
+    ]
+    left_behind = [n for n in ("train.jsonl", "valid.jsonl") if (finetune_dir / n).exists()]
+    if left_behind:
+        parts += [
+            "",
+            f"WARNING: a previous run's {', '.join(left_behind)} are still in {finetune_dir}. "
+            "`mlx_lm.lora --data` reads that directory, so a training run started now would "
+            "train on those stale files. They were left untouched — delete or regenerate them.",
+        ]
+    return "\n".join(parts)
+
+
+def prepare_mlx_data(
+    training_dir=TRAINING_DIR, finetune_dir=FINETUNE_DIR, config=None, force=False
+) -> dict:
     """Stage mlx-lm's expected ``train.jsonl`` / ``valid.jsonl`` from 26a's split.
 
     ``mlx_lm.lora`` reads ``train.jsonl`` and ``valid.jsonl`` from its ``--data``
@@ -100,8 +125,18 @@ def prepare_mlx_data(training_dir=TRAINING_DIR, finetune_dir=FINETUNE_DIR) -> di
     deterministic, eval-safe split — no random re-shuffle, no eval-grounded
     contamination. Only the ``messages`` turns are staged: plan 0009's passage
     records also carry a ``shape`` for eval slicing, which is ours, not mlx-lm's.
-    Returns ``{"n_train", "n_valid"}``.
+
+    This is the single chokepoint that produces the files the trainer reads, so it
+    is where the preflight is enforced (plan 0009 step 2): a split that fails any
+    check raises ``PreflightError`` and **nothing is written**. D15's fine-tune was
+    trained on a dataset the preflight had been failing all along, because the
+    preflight only ever printed. ``force=True`` overrides it — deliberately an
+    argument, never a default. Returns ``{"n_train", "n_valid", "preflight_ok"}``.
     """
+    # Deferred: finetune_preflight imports this module, so importing it at module
+    # level would be circular.
+    from training.finetune_preflight import PreflightError, preflight, render_report
+
     training_dir = Path(training_dir)
     finetune_dir = Path(finetune_dir)
     train_src = training_dir / "train.jsonl"
@@ -111,12 +146,23 @@ def prepare_mlx_data(training_dir=TRAINING_DIR, finetune_dir=FINETUNE_DIR) -> di
         raise FileNotFoundError(
             "Missing 26a split file(s): " + ", ".join(missing) + ". Run `make training` first."
         )
-    train_records = [{"messages": r["messages"]} for r in load_jsonl(train_src)]
-    valid_records = [{"messages": r["messages"]} for r in load_jsonl(heldout_src)]
+    train_raw = load_jsonl(train_src)
+    valid_raw = load_jsonl(heldout_src)
+
+    report = preflight(train_raw, valid_raw, config or QLoRAConfig())
+    if not report["ok"] and not force:
+        raise PreflightError(_refusal_message(render_report(report), finetune_dir))
+
+    train_records = [{"messages": r["messages"]} for r in train_raw]
+    valid_records = [{"messages": r["messages"]} for r in valid_raw]
     finetune_dir.mkdir(parents=True, exist_ok=True)
     write_jsonl(finetune_dir / "train.jsonl", train_records)
     write_jsonl(finetune_dir / "valid.jsonl", valid_records)
-    return {"n_train": len(train_records), "n_valid": len(valid_records)}
+    return {
+        "n_train": len(train_records),
+        "n_valid": len(valid_records),
+        "preflight_ok": report["ok"],
+    }
 
 
 def eval_prompts(records, n: int = 5) -> list[str]:
@@ -163,18 +209,35 @@ def style_metrics(text: str, distinctive_words: set) -> dict:
     }
 
 
-def run():
-    """CLI: stage the mlx-lm data from 26a's split (offline, free)."""
+def run(argv=None) -> int:
+    """CLI: stage the mlx-lm data from 26a's split (offline, free). Returns an exit code."""
+    from training.finetune_preflight import PreflightError
+
+    parser = argparse.ArgumentParser(description="Stage mlx-lm training data from 26a's split.")
+    parser.add_argument("--training-dir", default=str(TRAINING_DIR), help="dir holding 26a's split")
+    parser.add_argument("--finetune-dir", default=str(FINETUNE_DIR), help="mlx-lm --data dir")
+    parser.add_argument(
+        "--force", action="store_true", help="stage even if the fine-tune preflight fails"
+    )
+    args = parser.parse_args(argv)
+
     try:
-        counts = prepare_mlx_data()
-    except FileNotFoundError as e:
-        print(f"Error: {e}")
-        return
+        counts = prepare_mlx_data(args.training_dir, args.finetune_dir, force=args.force)
+    except (FileNotFoundError, PreflightError) as e:
+        print(e)
+        return 1
+
+    if not counts["preflight_ok"]:
+        print(
+            "WARNING: --force staged a dataset the preflight rejected. This run is not "
+            "comparable to a clean one; record that in whatever you measure.\n"
+        )
     print(
-        f"Staged mlx-lm data in {FINETUNE_DIR} from 26a's leakage-free split: "
+        f"Staged mlx-lm data in {args.finetune_dir} from 26a's leakage-free split: "
         f"train={counts['n_train']}, valid/heldout={counts['n_valid']}."
     )
+    return 0
 
 
 if __name__ == "__main__":
-    run()
+    sys.exit(run())

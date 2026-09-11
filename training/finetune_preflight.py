@@ -36,6 +36,10 @@ DEFAULT_CHARS_PER_TOKEN = 4
 MAX_EXAMPLES = 5
 
 
+class PreflightError(RuntimeError):
+    """Raised when a dataset that fails preflight is about to be staged for training."""
+
+
 def assistant_content(record: dict) -> str | None:
     """The assistant-turn content of a chat record, or None if absent."""
     for m in record.get("messages", []):
