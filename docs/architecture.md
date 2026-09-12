@@ -348,6 +348,17 @@ GETs `/models` (cheap — no model load) and treats any connection error or non-
 T3 request. The network call sits behind an injectable `opener`, so callers test the gating
 offline. `make conductor-check` runs it standalone.
 
+**Privacy guard** (`analysis/conductor.assert_remote_allowed`, roadmap #38, ADR D18) — the
+preflight asks *can I call?*; this asks *am I allowed to send **this**?* T3 is the only tier
+that leaves the machine, so `predictions._call` — the single chokepoint that sets
+`allow_remote` — refuses a remote call carrying anything not provably `privacy: "public"`.
+It **fails closed**: a caller that declares no `sources` is refused, `sources=[]` is the
+explicit "no corpus material here", and an unreadable provenance block counts as private.
+This matters because `ingest/` defaults new documents to `privacy: private` — his letters,
+email and books are exactly what must never reach OpenRouter. Resolve slugs with
+`analysis.utils.provenance_for_slugs()`, or `corpus_provenance()` when the prompt could quote
+any article.
+
 > Full reference (exact signatures, return shapes, error/retry behavior, health check):
 > [`conductor-contract.md`](conductor-contract.md).
 
