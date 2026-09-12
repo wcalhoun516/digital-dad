@@ -65,6 +65,8 @@ def load_articles() -> list[dict]:
     manifest = load_manifest()
     articles = []
     for entry in dedupe_manifest_entries(manifest["articles"]):
+        if not entry.get("file"):
+            continue
         path = DATA_DIR / entry["file"]
         if path.exists():
             article = json.loads(path.read_text())
