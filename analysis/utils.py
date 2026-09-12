@@ -65,11 +65,44 @@ def load_articles() -> list[dict]:
     manifest = load_manifest()
     articles = []
     for entry in dedupe_manifest_entries(manifest["articles"]):
+        if not entry.get("file"):
+            continue
         path = DATA_DIR / entry["file"]
         if path.exists():
             article = json.loads(path.read_text())
             articles.append(article)
     return sorted(articles, key=lambda a: a.get("date", ""))
+
+
+def provenance_for_slugs(slugs, manifest: dict | None = None) -> list[dict]:
+    """Provenance blocks for the named corpus entries, for the T3 guard to rule on.
+
+    Legacy entries — every one in today's manifest, since roadmap #29's data migration is
+    still pending — are resolved through ``ingest.provenance.migrate_articles``, which is
+    the repo's own statement of what they are: scraped, public, Forbes-licensed. A slug the
+    manifest has never heard of yields a bare block with no ``privacy``, which the guard
+    reads as private.
+    """
+    from ingest.provenance import migrate_articles
+
+    manifest = manifest if manifest is not None else load_manifest()
+    migrated, _ = migrate_articles(manifest.get("articles", []))
+    known = {entry.get("slug", ""): entry.get("provenance", {}) for entry in migrated}
+
+    blocks, seen = [], set()
+    for slug in slugs:
+        if slug in seen:
+            continue
+        seen.add(slug)
+        blocks.append(known.get(slug) or {"source_id": slug})
+    return blocks
+
+
+def corpus_provenance(manifest: dict | None = None) -> list[dict]:
+    """Provenance for the whole corpus — for callers whose prompt could quote any article."""
+    manifest = manifest if manifest is not None else load_manifest()
+    slugs = [entry.get("slug", "") for entry in manifest.get("articles", [])]
+    return provenance_for_slugs(slugs, manifest=manifest)
 
 
 def clean_text(text: str) -> str:

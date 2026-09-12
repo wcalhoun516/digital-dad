@@ -72,7 +72,26 @@ text = response.choices[0].message.content or ""
 | `max_tokens` | int | Output budget. Modules pick per task (e.g. `4096` for extraction, `300`/`120` for short generations). |
 | `extra_body.tier` | `2` or `3` | Routing tier — see §4. |
 | `extra_body.function` | `"text"` | The capability class. Text generation is `"text"`. |
-| `extra_body.allow_remote` | `True` | **Required to actually permit a paid T3 call.** Set it whenever `tier >= 3`. |
+| `extra_body.allow_remote` | `True` | **Required to actually permit a paid T3 call.** Set it whenever `tier >= 3`. In this repo you do not set it by hand — `predictions._call` sets it only after the privacy guard below passes. |
+
+#### The T3 privacy guard (roadmap #38, ADR D18)
+
+T3 is the only tier where corpus text leaves the machine, so it is the only one that has to
+declare what it is carrying. `analysis/predictions.py::_call` takes a `sources` argument and
+runs `analysis.conductor.assert_remote_allowed(sources)` **before** its retry loop:
+
+| `sources` | Meaning | Result at `tier >= 3` |
+|-----------|---------|-----------------------|
+| `None` (default) | the caller never declared | **`PrivateContentError`** — silence is not consent |
+| `[]` | "this prompt contains no corpus material" | allowed |
+| `[provenance, …]` or `[article, …]` | the corpus material in the prompt | allowed **iff** every block is `privacy: "public"` |
+
+Anything unreadable as exactly `"public"` — a missing provenance block, an unknown vocabulary
+value, a slug the manifest has never seen — counts as private. Local tiers (T1/T2) need no
+declaration: nothing leaves the box.
+
+Resolve slugs to provenance with `analysis.utils.provenance_for_slugs(slugs)`, or
+`corpus_provenance()` when the prompt could quote any article.
 
 **Return shape.** A standard OpenAI `ChatCompletion`. Read text from
 `response.choices[0].message.content` (may be `None` → coerce with `or ""`). Token usage is on
@@ -216,7 +235,9 @@ request; on failure it clears stale SQLite WAL/SHM files and restarts the conduc
    the import.
 2. For text: `model="auto"`, `extra_body={"tier": 2, "function": "text"}`; read
    `choices[0].message.content or ""`. Default to **T2**; only reach for T3 behind an explicit
-   owner opt-in *and* `allow_remote=True`.
+   owner opt-in *and* `allow_remote=True`. Call T3 through `predictions._call` and **declare
+   your `sources`** (see the privacy guard above) — rolling your own request bypasses the
+   guard, which is the one thing this contract asks you not to do.
 3. For embeddings: pass `EMBED_MODEL` (`"sbert-mpnet-v2"`) — never a different embedder.
 4. If you make many or paid calls, `_conductor_up()`-preflight and abort with a clear message
    (exit `2`) when it's down. **Never let unattended code make an unguarded paid T3 call.**

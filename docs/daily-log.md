@@ -48,6 +48,43 @@ Format:
 
 <!-- entries below -->
 
+### 2026-09-12 — analysis — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/95
+- Source: roadmap:#38 (the T3 guard half; dashboard breakdown + per-module defaults deferred)
+- Summary: **The ingest arc ends in a crash, and the obvious fix opens a privacy hole.**
+  `ingest/review.py::accept_item` appends a manifest entry with **no `file` key**, and
+  `load_articles` did `DATA_DIR / entry["file"]` — an unguarded subscript. The first document
+  the owner ever *accepts* would not quietly fail to appear; it would raise `KeyError` and take
+  the whole analysis pipeline down. `dedupe_manifest_entries`' own docstring already claimed
+  such entries are "passed through … the caller skips them anyway" — **the code asserted the
+  opposite of what it did.** Nobody has hit it because nobody has accepted an ingested item yet.
+  **Why that is not a one-line fix:** `ingest/provenance.py` defaults every new document to
+  `privacy: private`, and `predictions._call` set `allow_remote=True` for any `tier >= 3`
+  **without checking what it was sending**. T3 is OpenRouter — the only tier that leaves the Mac
+  mini. So making ingested documents loadable *is* the change that makes his letters, email and
+  books eligible to be posted to a vendor. Harmless so far only because the corpus is 204 public
+  Forbes columns; the ingest arc exists to end exactly that. **The gate went into `_call`,
+  before the retry loop** — the single chokepoint that sets `allow_remote`, which
+  `verdict_backfill`, `voice_eval` and `rag_eval` all import rather than building their own
+  request, so guarding it guards all four. That is PR #94's lesson reapplied: what matters is
+  where the gate lives. **It fails closed on silence:** `sources=None` is refused, `sources=[]`
+  is the explicit "no corpus material here", and anything not provably `privacy: "public"`
+  counts as private. **Two callers declare coarsely on purpose** — `voice_eval`'s trial passages
+  carry no slug and `verdict_backfill`'s `chat(prompt)` seam has no prediction in hand, so both
+  declare the whole corpus; over-refusing costs an eval, under-refusing costs his privacy
+  permanently. **A trap the roadmap did not mention:** no manifest entry carries provenance
+  today (#29's data migration is still pending), so a naive lookup would read all 204 columns as
+  private and refuse *every* paid call the owner makes — `provenance_for_slugs` resolves legacy
+  entries through `migrate_articles`, the repo's own statement of what they are. **No data file
+  migrated or committed.** **Verification:** `make verify` **exit 0**, ruff clean, **1287
+  passed**; a clean `origin/main` worktree collects 1254 and an ID-level diff shows **+33 added,
+  zero removed**. **Mutation-tested — 10/10 caught**, including the guard moved *inside*
+  `_call`'s `try`, where `except Exception` swallows the refusal and retries it three times with
+  backoff. **Deferred on purpose:** `accept_item` writing `data/raw/<id>.json` is the step that
+  actually admits private material, and belongs *after* this guard merges. ADR **D18** (not D17
+  — PR #93 holds an unmerged D17). The Ask Dad browser tier toggle still sets `allow_remote`
+  client-side and is **not** covered; D18 says so rather than implying the boundary is sealed.
+
 ### 2026-09-08 — training — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/91
 - Source: plan:ready/0009 (steps 1 and 3; step 2 turned out to be already shipped)

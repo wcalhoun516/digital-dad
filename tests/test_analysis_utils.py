@@ -186,3 +186,16 @@ class TestLoadArticles:
         _write_corpus(tmp_path, entries, {"there.json": {"date": "2021-01-01"}})
         self._patch(monkeypatch, tmp_path)
         assert len(utils.load_articles()) == 1
+
+    def test_entry_with_no_file_key_at_all_is_skipped(self, tmp_path, monkeypatch):
+        """``ingest.review.accept_item`` writes exactly this shape — no ``file`` key.
+
+        ``dedupe_manifest_entries`` already documents that such entries are "passed
+        through … the caller skips them anyway", but the caller subscripted ``entry["file"]``
+        directly, so the first accepted document would take the whole pipeline down with a
+        ``KeyError`` rather than merely not appearing.
+        """
+        entries = [{"file": "raw/there.json"}, {"slug": "an-ingested-letter"}]
+        _write_corpus(tmp_path, entries, {"there.json": {"date": "2021-01-01"}})
+        self._patch(monkeypatch, tmp_path)
+        assert len(utils.load_articles()) == 1

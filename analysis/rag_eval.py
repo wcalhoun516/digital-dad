@@ -34,7 +34,7 @@ from pathlib import Path
 from typing import Callable
 
 from .conductor import require_conductor
-from .utils import DATA_DIR
+from .utils import DATA_DIR, provenance_for_slugs
 
 # Repo-root-relative fixture (source-controlled input, not a generated artifact).
 QUESTIONS_PATH = Path(__file__).resolve().parent.parent / "eval" / "questions.json"
@@ -334,7 +334,13 @@ def _live_generate(tier: int = 2) -> Callable[[str, list[dict]], str]:
 
     def generate(question: str, sources: list[dict]) -> str:
         prompt = _GEN_SYSTEM + _format_sources(sources) + f"\n\nQUESTION: {question}"
-        return _call(client, prompt, max_tokens=600, tier=tier)
+        return _call(
+            client,
+            prompt,
+            max_tokens=600,
+            tier=tier,
+            sources=provenance_for_slugs(s.get("slug", "") for s in sources),
+        )
 
     return generate
 
@@ -348,7 +354,15 @@ def _live_judge(tier: int = 3) -> Callable[[str, str, list[dict]], dict | None]:
         prompt = _JUDGE_PROMPT.format(
             question=question, answer=answer, sources=_format_sources(sources)
         )
-        return parse_judgment(_call(client, prompt, max_tokens=400, tier=tier))
+        return parse_judgment(
+            _call(
+                client,
+                prompt,
+                max_tokens=400,
+                tier=tier,
+                sources=provenance_for_slugs(s.get("slug", "") for s in sources),
+            )
+        )
 
     return judge
 

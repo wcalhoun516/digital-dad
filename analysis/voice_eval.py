@@ -38,7 +38,7 @@ from typing import Callable, Hashable
 from training.finetune_config import style_metrics
 
 from .conductor import require_conductor
-from .utils import DATA_DIR
+from .utils import DATA_DIR, corpus_provenance
 
 # Repo-root-relative fixture template (the real trials are owner-produced once the 26c
 # adapter exists and are not committed — see eval/voice_trials.example.json).
@@ -440,7 +440,16 @@ def _live_judge(tier: int = 3) -> Callable[[str, dict[str, str]], list[str] | No
     client = _get_client()
 
     def judge(prompt: str, blinded: dict[str, str]) -> list[str] | None:
-        reply = _call(client, build_judge_prompt(prompt, blinded), max_tokens=200, tier=tier)
+        # The trial set's "real" candidate is an unattributed corpus passage — it carries no
+        # slug — so the honest declaration is the whole corpus. One private document makes
+        # the remote judge refuse; `--judge-tier 2` keeps it running locally.
+        reply = _call(
+            client,
+            build_judge_prompt(prompt, blinded),
+            max_tokens=200,
+            tier=tier,
+            sources=corpus_provenance(),
+        )
         return parse_ranking(reply, sorted(blinded))
 
     return judge

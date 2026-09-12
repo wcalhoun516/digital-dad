@@ -144,3 +144,38 @@ E501-clean since the gate existed and stays fully gated, so this is a strict wid
 rule weakened anywhere. `tests/test_lint_scope.py` pins all of that — it fails if a package
 drops out of `LINT_PATHS`, if the pre-commit `files:` regex drifts out of lockstep with it,
 or if `tests/` ever acquires a per-file ignore.
+
+### D18 — Provenance is declared at the remote-call boundary, and silence means private
+**Why:** tier 3 is OpenRouter — the only tier where corpus text leaves the Mac mini and
+reaches a third party. Until roadmap #38 nothing checked *what* was being sent:
+`analysis/predictions.py::_call` set `extra["allow_remote"] = True` for any `tier >= 3` and
+posted the prompt. That was harmless only because the corpus was 204 scraped Forbes columns,
+all already public. The ingest arc (#29–#35) exists specifically to end that: letters, emails
+and books are `privacy: private` by default in `ingest/provenance.py`, and the moment one is
+accepted, "send the article body to the judge" silently becomes "send his private
+correspondence to a vendor".
+**Implication:** `analysis.conductor.assert_remote_allowed(sources)` runs inside `_call`,
+before the retry loop, and refuses outright. Three choices are load-bearing:
+
+1. **The gate is in `_call`, not in a `make` recipe or each CLI.** `_call` is the single
+   Python chokepoint that sets `allow_remote`; `verdict_backfill`, `voice_eval` and `rag_eval`
+   all import it rather than building their own request, so guarding it guards all four. A
+   per-CLI check would be theatre — the same mistake plan 0009 step 2 made before PR #94 moved
+   that gate into `prepare_mlx_data()`.
+2. **It fails closed on silence.** `sources=None` — a caller that never said what it was
+   sending — is refused, not waved through. `sources=[]` is the explicit, greppable way to
+   say "this prompt contains no corpus material". Anything whose provenance cannot be read as
+   exactly `"public"` (missing block, unknown vocabulary value, unrecognised slug) is treated
+   as private. A guard that defaults to permissive protects nothing.
+3. **Coarse declarations are allowed where precision is unavailable.** `predictions` and
+   `rag_eval` know the slugs in their prompt and declare exactly those, so one private letter
+   does not block an otherwise-public batch. `voice_eval`'s trial passages carry no slug, and
+   `verdict_backfill`'s `chat(prompt)` seam has no prediction in hand, so both declare
+   `corpus_provenance()` — the whole corpus. That is deliberately conservative: it can refuse a
+   run it did not strictly need to, and `--judge-tier 2` keeps it working locally. Over-refusing
+   costs an eval; under-refusing costs his privacy, permanently.
+
+**Deliberately not covered:** the dashboard's Ask Dad tier toggle
+(`dashboard/template.html` sets `allow_remote` client-side). That is the owner's own browser
+talking to his own conductor, outside this Python path — it needs its own gate, tracked as
+follow-up work, and this ADR does not claim to have closed it.

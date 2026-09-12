@@ -18,6 +18,48 @@ from urllib.request import urlopen
 CONDUCTOR_BASE_URL = "http://127.0.0.1:8080/v1"
 
 
+class PrivateContentError(RuntimeError):
+    """Raised when a remote (T3) call would carry private corpus material off the machine."""
+
+
+def _privacy_of(source: dict) -> tuple[str, str]:
+    """Read ``(source_id, privacy)`` from a provenance block *or* a whole article dict.
+
+    Anything it cannot read as an explicit ``"public"`` comes back private: a manifest
+    entry written before the provenance schema, or a typo'd vocabulary value, must not be
+    mistaken for a published column.
+    """
+    provenance = source.get("provenance") if "provenance" in source else source
+    provenance = provenance or {}
+    source_id = provenance.get("source_id") or source.get("slug") or "(unidentified)"
+    privacy = "public" if provenance.get("privacy") == "public" else "private"
+    return source_id, privacy
+
+
+def assert_remote_allowed(sources: list[dict] | None) -> None:
+    """Refuse a paid remote (T3) call that would carry private corpus material off the box.
+
+    ``sources`` is what the prompt is built from — provenance blocks or article dicts.
+    It **fails closed**: ``None`` means the caller never declared its inputs and is
+    refused. ``[]`` is the explicit, reviewable way to say "no corpus material here"
+    (a judge ranking model-generated text, for instance).
+    """
+    if sources is None:
+        raise PrivateContentError(
+            "Refusing a remote (T3) call: the caller did not declare what it is sending. "
+            "Pass sources=[...] naming the corpus material in the prompt, or sources=[] "
+            "if the prompt contains none."
+        )
+    private = [sid for sid, privacy in map(_privacy_of, sources) if privacy != "public"]
+    if private:
+        raise PrivateContentError(
+            "Refusing a remote (T3) call: it would send private material to OpenRouter — "
+            + ", ".join(private)
+            + ". Re-run on a local tier (--judge-tier 2), or correct the provenance with "
+            "`python -m ingest.review` if these are genuinely public."
+        )
+
+
 def conductor_up(base_url: str = CONDUCTOR_BASE_URL, timeout: float = 4, opener=None) -> bool:
     """Return True iff the conductor answers ``GET /models`` with HTTP 200.
 
