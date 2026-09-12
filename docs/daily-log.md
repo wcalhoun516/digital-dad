@@ -48,6 +48,12 @@ Format:
 
 <!-- entries below -->
 
+### 2026-09-12 — analysis — in-progress
+- PR: (opening)
+- Source: roadmap:#38
+- Summary: Ingested documents never reach analysis, and the change that would let them in is
+  also the change that would carry private material off the machine. Both halves, one PR.
+
 ### 2026-09-08 — training — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/91
 - Source: plan:ready/0009 (steps 1 and 3; step 2 turned out to be already shipped)
