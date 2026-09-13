@@ -1,5 +1,18 @@
 # Plan 0011 — Operator console: feed the corpus, turn the crank, keep score
 
+## Status (2026-09-13)
+
+- **Step 1 — done, unmerged** (PR #93). Console shell, route gate, Funnel refusal.
+- **Step 2 — validation core done, unmerged** (PR #96). `ingest/upload.py` holds the
+  sanitizer, the registry-derived extension allowlist, the size cap and the non-clobbering
+  writer, all tested. **The `POST /console/api/upload` route itself is NOT done** — it needs
+  step 1's dispatch in `bin/serve_dashboard.py`, which is still unmerged. Do that wiring once
+  #93 lands; it is a thin caller of `stage_upload`, not a reimplementation.
+- **Steps 3–6 — not started.**
+
+A daily run picking this plan up should start at the step-2 route wiring (if #93 has merged)
+or step 3, and should **not** rewrite `ingest/upload.py`.
+
 ## Goal
 
 A local web console for running the Geo-LLM flywheel without a terminal: drop files in, review

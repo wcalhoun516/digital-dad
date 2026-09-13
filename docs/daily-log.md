@@ -48,6 +48,42 @@ Format:
 
 <!-- entries below -->
 
+### 2026-09-13 — infra — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/96
+- Source: plan:ready/0011 (step 2 — the validation core; the HTTP route deliberately deferred)
+- Summary: **Plan 0011 step 2, done without touching the file step 1 is still holding.** The
+  `/console/api/*` dispatch lives in `bin/serve_dashboard.py`, which is PR #93's diff and is
+  **unmerged**. Branching off `main` and adding the upload *route* would have meant either
+  conflicting with #93 or re-implementing its dispatch — precisely the add/add trap §3 exists
+  to prevent, and the one that left `main` red for four weeks in July. So this PR ships the
+  half with no dependency on the route: `ingest/upload.py`, the single place that decides
+  whether a client-supplied file may become a path on disk. When #93 lands, the route is a
+  thin caller. **The plan already said this was the real work** — "the one piece of this plan
+  where a bug is a real vulnerability rather than a defect." **Four decisions worth review:**
+  (1) `sanitize_filename` **rejects** rather than repairs — a client sending a path has a
+  broken uploader or bad intent, and silently rewriting it into something valid hides both.
+  (2) The allowlist is read from the live `HANDLERS` registry, not restated as a literal, so
+  registering a handler is the only edit needed to accept a format — PR #92's `.epub` handler
+  becomes uploadable the moment it merges, with no edit here. (3) The size cap is applied to
+  `len(data)`, never to a claimed `Content-Length`: the header is a claim, the payload is the
+  fact. (4) A colliding name is written **alongside** the existing file, never over it — the
+  inbox holds the operator's only copy of material that may not exist anywhere else.
+  **A dotfile is rejected**, which is not obvious: `scan_inbox` skips names starting with
+  `.`, so accepting one would write a file that silently never gets staged — and one test
+  asserts the round trip, that a staged upload is actually picked up by `scan_inbox`.
+  **Mutation-tested — 13 mutants, and the first pass found a survivor:** the explicit `..`
+  check was unreachable. Once every separator is rejected a name cannot address a directory
+  at all, and a bare `..` is already caught as a dotfile, so the rule could be deleted with
+  no test noticing. Deleted rather than left as an untested line that reads like load-bearing
+  security; the reasoning is now a comment and an `architecture.md` sentence, because the
+  next reader's instinct will be to add it back. Re-run: **12/12 caught, zero survivors.**
+  **Verification:** `make verify` **exit 0**, ruff clean, **1297 passed**, dashboard builds;
+  a clean `origin/main` worktree collects 1254, and an ID-level diff shows **+43 added, zero
+  removed**, all in `tests/test_ingest_upload.py`. **No route, no data file, no new
+  dependency.** **Deferred:** the route wiring and steps 3–6; plan 0011 stays in `ready/`
+  with a status block at the top recording exactly which half of step 2 is done, so a future
+  run continues instead of rewriting the module.
+
 ### 2026-09-08 — training — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/91
 - Source: plan:ready/0009 (steps 1 and 3; step 2 turned out to be already shipped)
