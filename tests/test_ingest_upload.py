@@ -7,6 +7,7 @@ from ingest.upload import (
     MAX_UPLOAD_BYTES,
     UploadRejected,
     sanitize_filename,
+    stage_upload,
     validate_upload,
 )
 
@@ -109,3 +110,65 @@ class TestValidateUpload:
     def test_negative_size_is_rejected(self):
         with pytest.raises(UploadRejected):
             validate_upload("letter.txt", -1)
+
+
+class TestStageUpload:
+    def test_writes_the_bytes_into_the_inbox(self, tmp_path):
+        path = stage_upload("letter.txt", b"a body", inbox=tmp_path / "inbox")
+        assert path.read_bytes() == b"a body"
+        assert path.parent == tmp_path / "inbox"
+
+    def test_creates_a_missing_inbox(self, tmp_path):
+        inbox = tmp_path / "nested" / "inbox"
+        stage_upload("letter.txt", b"a body", inbox=inbox)
+        assert inbox.is_dir()
+
+    def test_rejects_a_traversal_name_without_writing_anything(self, tmp_path):
+        inbox = tmp_path / "inbox"
+        with pytest.raises(UploadRejected):
+            stage_upload("../escaped.txt", b"a body", inbox=inbox)
+        assert not (tmp_path / "escaped.txt").exists()
+        assert list(inbox.glob("*")) == [] if inbox.exists() else True
+
+    def test_rejects_an_unregistered_extension(self, tmp_path):
+        with pytest.raises(UploadRejected):
+            stage_upload("photo.jpeg", b"a body", inbox=tmp_path / "inbox")
+
+    def test_size_is_measured_from_the_bytes_not_a_claimed_length(self, tmp_path):
+        # The route hands over whatever the client sent; a Content-Length header is a claim,
+        # the payload is the fact. The cap must apply to the fact.
+        with pytest.raises(UploadRejected):
+            stage_upload("letter.txt", b"x" * (MAX_UPLOAD_BYTES + 1), inbox=tmp_path / "inbox")
+
+    def test_empty_payload_is_rejected(self, tmp_path):
+        with pytest.raises(UploadRejected):
+            stage_upload("letter.txt", b"", inbox=tmp_path / "inbox")
+
+    def test_second_upload_of_the_same_name_does_not_clobber_the_first(self, tmp_path):
+        inbox = tmp_path / "inbox"
+        first = stage_upload("letter.txt", b"original", inbox=inbox)
+        second = stage_upload("letter.txt", b"replacement", inbox=inbox)
+        assert first != second
+        assert first.read_bytes() == b"original"
+        assert second.read_bytes() == b"replacement"
+
+    def test_collision_suffix_keeps_the_extension_so_the_handler_still_matches(self, tmp_path):
+        inbox = tmp_path / "inbox"
+        stage_upload("letter.txt", b"original", inbox=inbox)
+        second = stage_upload("letter.txt", b"replacement", inbox=inbox)
+        assert second.suffix == ".txt"
+
+    def test_many_collisions_each_get_their_own_file(self, tmp_path):
+        inbox = tmp_path / "inbox"
+        for i in range(5):
+            stage_upload("letter.txt", f"body {i}".encode(), inbox=inbox)
+        assert len(list(inbox.glob("*.txt"))) == 5
+
+    def test_staged_file_is_picked_up_by_the_inbox_scan(self, tmp_path):
+        # The whole point of writing here: ingest.queue.scan_inbox must find it.
+        from ingest.queue import scan_inbox
+
+        inbox = tmp_path / "inbox"
+        stage_upload("letter.txt", b"a staged body", inbox=inbox)
+        counts = scan_inbox(inbox, tmp_path / "queue")
+        assert counts["staged"] == 1

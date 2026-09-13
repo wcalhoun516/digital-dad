@@ -7,6 +7,7 @@ place that decides whether a client-supplied file is allowed to become a path on
 from pathlib import Path
 
 from ingest.extract import HANDLERS
+from ingest.queue import INBOX_DIR
 
 MAX_FILENAME_LEN = 255
 MAX_UPLOAD_BYTES = 25 * 1024 * 1024
@@ -65,3 +66,30 @@ def validate_upload(filename: str, size: int) -> str:
             f"upload is {size} bytes, over the {MAX_UPLOAD_BYTES}-byte cap: {filename!r}"
         )
     return name
+
+
+def _free_path(inbox: Path, name: str) -> Path:
+    """Return a path under ``inbox`` that does not exist yet, suffixing on collision."""
+    candidate = inbox / name
+    if not candidate.exists():
+        return candidate
+    stem, suffix = Path(name).stem, Path(name).suffix
+    counter = 1
+    while (candidate := inbox / f"{stem}-{counter}{suffix}").exists():
+        counter += 1
+    return candidate
+
+
+def stage_upload(filename: str, data: bytes, inbox: Path = INBOX_DIR) -> Path:
+    """Validate ``data`` and write it into ``inbox``. Returns the path written.
+
+    The size cap is applied to the payload, never to a client-supplied length. An upload
+    that collides with an existing name is written alongside it, never over it: the inbox
+    holds the operator's only copy of material that may not exist anywhere else.
+    """
+    name = validate_upload(filename, len(data))
+    inbox = Path(inbox)
+    inbox.mkdir(parents=True, exist_ok=True)
+    path = _free_path(inbox, name)
+    path.write_bytes(data)
+    return path
