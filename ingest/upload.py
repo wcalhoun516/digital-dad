@@ -36,10 +36,10 @@ def sanitize_filename(name: str) -> str:
         reject(f"filename longer than {MAX_FILENAME_LEN} characters")
     if any(ord(ch) < 32 or ord(ch) == 127 for ch in trimmed):
         reject("filename contains control characters")
+    # Rejecting every separator is what makes traversal impossible: a name with no "/",
+    # "\" or ":" cannot address a directory at all, so no explicit ".." rule is needed.
     if any(sep in trimmed for sep in _SEPARATORS):
         reject("filename contains a path separator")
-    if ".." in trimmed:
-        reject("filename contains a parent-directory reference")
     if trimmed.startswith("."):
         reject("filename starts with a dot")
     return trimmed
