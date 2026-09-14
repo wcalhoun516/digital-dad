@@ -57,7 +57,16 @@ than crashing.
   then drops `>` quoted lines — without it a thread counts the same sentence once per reply.
 
 **Extraction never modifies the corpus** — only `ingest-review` does, and only on a human
-decision. Rejects move aside with a reason instead of being deleted.
+decision. Rejects keep their reason instead of being deleted.
+
+`review.apply_decision(item_id, "accept" | "edit" | "reject")` is the **only** way a decision
+reaches disk. It validates first and writes afterwards, so a refused decision leaves both the
+queue item and the manifest untouched; it refuses an item that was already decided, which is
+what stops a repeated call filing the same document into the corpus twice. `run_cli` is a
+prompt loop around that one call, and the operator console will be an HTTP handler around the
+same one — the front ends differ, the decision does not. `queue_view` renders the queue for a
+front end **without** the document bodies: a book is tens of thousands of words that default
+to `privacy: private`, and a listing has no reason to carry them.
 
 One *source* can yield many *documents* (a book → one per chapter; an mbox → one per
 message), all sharing a `source_id`, so every downstream analysis module keeps operating on

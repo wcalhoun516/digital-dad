@@ -23,6 +23,114 @@ from ingest.queue import QUEUE_DIR, load_queue, save_item
 
 MANIFEST_PATH = Path(__file__).resolve().parent.parent / "data" / "manifest.json"
 
+# The fields a reviewer may correct, and the vocabulary each is checked against. Anything
+# absent here — `status`, `content_hash`, `id`, `license` — is not a reviewer's to set.
+EDITABLE_FIELDS: dict[str, frozenset[str] | None] = {
+    "title": None,
+    "date": None,
+    "modality": MODALITIES,
+    "authorship": AUTHORSHIPS,
+    "privacy": PRIVACIES,
+}
+
+
+class ReviewError(ValueError):
+    """Any refusal a front end should report back rather than crash on."""
+
+
+class InvalidEdit(ReviewError):
+    """A correction no front end may apply: unknown field, or a value outside its vocabulary."""
+
+
+class InvalidDecision(ReviewError):
+    """A decision that cannot be applied: an unknown verb, or an item already decided."""
+
+
+class UnknownItem(ReviewError):
+    """No queue item carries the requested id."""
+
+
+def validate_field(name: str, value) -> str:
+    """Check one correction and return it stripped. Raises ``InvalidEdit`` if it is not one.
+
+    Shared by the API path and the CLI's prompt loop so neither can drift into accepting a
+    value the other refuses. A blank value is valid and means "keep the current one".
+    """
+    if name not in EDITABLE_FIELDS:
+        raise InvalidEdit(
+            f"{name!r} is not a correctable field — expected one of {sorted(EDITABLE_FIELDS)}"
+        )
+    if not isinstance(value, str):
+        raise InvalidEdit(f"{name} must be a string, got {type(value).__name__}")
+    value = value.strip()
+    vocabulary = EDITABLE_FIELDS[name]
+    if value and vocabulary is not None and value not in vocabulary:
+        raise InvalidEdit(f"invalid {name}: {value!r} — expected one of {sorted(vocabulary)}")
+    return value
+
+
+def edit_item(item: dict, fields: dict) -> dict:
+    """Apply vocabulary-checked corrections to an item's metadata.
+
+    Everything is validated before anything is written, so a refused edit leaves the item
+    untouched rather than half-applied. A blank value keeps the current one.
+    """
+    accepted = {
+        name: checked for name, value in fields.items() if (checked := validate_field(name, value))
+    }
+
+    item["meta"].update(accepted)
+    if "date" in accepted:
+        # A hand-entered date is a human's best recollection, never authoritative.
+        item["meta"]["date_confidence"] = "approximate"
+    return item
+
+
+PREVIEW_CHARS = 400
+
+
+def item_view(item: dict) -> dict:
+    """Shape one queue item for a front end: warnings, guessed metadata, then an opening.
+
+    Deliberately **not** the item itself. The document bodies stay on disk — a book is tens
+    of thousands of words of material that defaults to ``privacy: private``, and a queue
+    listing has no reason to carry it.
+    """
+    meta = item.get("meta", {})
+    documents = item.get("documents", [])
+    return {
+        "id": item.get("id", ""),
+        "status": item.get("status", ""),
+        "confidence": item.get("confidence", 0),
+        "warnings": list(item.get("warnings", [])),
+        "meta": {name: meta.get(name, "") for name in (*EDITABLE_FIELDS, "date_confidence")},
+        "documents": len(documents),
+        "preview": (documents[0].get("text", "") if documents else "")[:PREVIEW_CHARS],
+        "original": item.get("original", ""),
+        "reject_reason": item.get("reject_reason", ""),
+    }
+
+
+def queue_view(items: list[dict]) -> dict:
+    """The console's queue payload: what still needs a decision, plus the running totals."""
+    return {
+        "summary": queue_summary(items),
+        "items": [item_view(i) for i in items if i.get("status") == "pending"],
+    }
+
+
+def reject_item(item: dict, reason: str) -> dict:
+    """Mark an item rejected, keeping its reason and its extracted documents.
+
+    Nothing is deleted: a rejection is a judgement about an extraction, and the extraction
+    may be the only copy. The reason is mandatory — an unexplained reject cannot be revisited.
+    """
+    if not isinstance(reason, str) or not reason.strip():
+        raise InvalidEdit("a reject needs a reason")
+    item["status"] = "rejected"
+    item["reject_reason"] = reason.strip()
+    return item
+
 
 def queue_summary(items: list[dict]) -> dict:
     """Count queue items by status."""
@@ -83,6 +191,47 @@ def accept_item(item: dict, manifest: dict) -> dict:
     return manifest
 
 
+def apply_decision(
+    item_id: str,
+    decision: str,
+    *,
+    fields: dict | None = None,
+    reason: str = "",
+    queue_dir: Path = QUEUE_DIR,
+    manifest_path: Path = MANIFEST_PATH,
+) -> dict:
+    """Apply one accept / edit / reject decision to a queued item and persist the result.
+
+    The single entry point for every front end: a console route adds HTTP around this, it
+    does not re-decide anything. Returns the updated ``item_view``.
+
+    Validation runs before any write, so a refused decision leaves both the queue file and
+    the manifest exactly as they were.
+    """
+    if decision not in ("accept", "edit", "reject"):
+        raise InvalidDecision(f"{decision!r} is not a decision — expected accept, edit or reject")
+
+    queue_dir, manifest_path = Path(queue_dir), Path(manifest_path)
+    item = next((i for i in load_queue(queue_dir) if i.get("id") == item_id), None)
+    if item is None:
+        raise UnknownItem(f"no queue item with id {item_id!r}")
+    if item.get("status") != "pending":
+        raise InvalidDecision(
+            f"{item_id!r} was already {item['status']} — it is not awaiting a decision"
+        )
+
+    edit_item(item, fields or {})
+    if decision == "reject":
+        reject_item(item, reason)
+    elif decision == "accept":
+        manifest = json.loads(manifest_path.read_text())
+        accept_item(item, manifest)
+        manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
+
+    save_item(item, queue_dir)
+    return item_view(item)
+
+
 def _show(item: dict) -> None:
     meta = item["meta"]
     print("\n" + "=" * 72)
@@ -101,27 +250,24 @@ def _show(item: dict) -> None:
     print("  [a]ccept  [e]dit  [r]eject   ([s]kip / [q]uit)")
 
 
-def _edit(item: dict, input_fn) -> None:
-    """Correct the fields worth correcting. Blank input keeps the current value."""
+def _prompt_edits(item: dict, input_fn) -> dict:
+    """Collect corrections at the prompt. Blank input keeps the current value.
+
+    Returns the fields rather than applying them, so the whole correction travels with the
+    decision into ``apply_decision`` — the same call the console route makes.
+    """
     meta = item["meta"]
-    for field_name, vocabulary in (
-        ("title", None),
-        ("date", None),
-        ("modality", MODALITIES),
-        ("authorship", AUTHORSHIPS),
-        ("privacy", PRIVACIES),
-    ):
+    fields: dict[str, str] = {}
+    for field_name, vocabulary in EDITABLE_FIELDS.items():
         hint = f" {sorted(vocabulary)}" if vocabulary else ""
         answer = input_fn(f"  {field_name}{hint} [{meta.get(field_name, '')}]> ").strip()
         if not answer:
             continue
-        if vocabulary and answer not in vocabulary:
+        try:
+            fields[field_name] = validate_field(field_name, answer)
+        except InvalidEdit:
             print(f"  ! '{answer}' is not valid — keeping {meta.get(field_name)!r}")
-            continue
-        meta[field_name] = answer
-        if field_name == "date":
-            # A hand-entered date is a human's best recollection, never authoritative.
-            meta["date_confidence"] = "approximate"
+    return fields
 
 
 def run_cli(
@@ -138,7 +284,6 @@ def run_cli(
         print("Queue is empty. Drop files in data/inbox/ and run `make ingest`.")
         return 0
 
-    manifest = json.loads(manifest_path.read_text())
     summary = queue_summary(items)
     print(f"Loaded {summary['total']} item(s) — {summary['pending']} pending.")
 
@@ -157,24 +302,42 @@ def run_cli(
             break
         if choice in ("s", "skip", ""):
             continue
+
+        fields: dict[str, str] = {}
         if choice in ("e", "edit"):
-            _edit(item, input_fn)
+            fields = _prompt_edits(item, input_fn)
             choice = input_fn("  decision> ").strip().lower()
+
+        reason = ""
         if choice in ("r", "reject"):
-            item["status"] = "rejected"
-            item["reject_reason"] = input_fn("  reason> ").strip()
-            save_item(item, queue_dir)
-            print("  ✓ rejected")
-            done += 1
+            decision = "reject"
+            reason = input_fn("  reason> ").strip()
+        elif choice in ("a", "accept"):
+            decision = "accept"
+        elif fields:
+            # Neither accepted nor rejected, but the corrections were real work. Keep them.
+            decision = "edit"
+            print(f"  ! '{choice}' is not a decision — keeping the corrections.")
+        else:
+            print(f"  ! '{choice}' is not a decision — skipping.")
             continue
-        if choice in ("a", "accept"):
-            accept_item(item, manifest)
-            manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
-            save_item(item, queue_dir)
-            print("  ✓ accepted")
-            done += 1
+
+        try:
+            apply_decision(
+                item["id"],
+                decision,
+                fields=fields,
+                reason=reason,
+                queue_dir=queue_dir,
+                manifest_path=manifest_path,
+            )
+        except ReviewError as exc:
+            print(f"  ! {exc}")
             continue
-        print(f"  ! '{choice}' is not a decision — skipping.")
+
+        print(f"  ✓ {decision}ed" if decision != "edit" else "  ✓ corrections saved")
+        if decision != "edit":
+            done += 1
 
     print(f"\nDone. {done} decision(s) this session.")
     print_report(load_queue(queue_dir))
