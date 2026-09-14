@@ -70,6 +70,39 @@ def edit_item(item: dict, fields: dict) -> dict:
     return item
 
 
+PREVIEW_CHARS = 400
+
+
+def item_view(item: dict) -> dict:
+    """Shape one queue item for a front end: warnings, guessed metadata, then an opening.
+
+    Deliberately **not** the item itself. The document bodies stay on disk — a book is tens
+    of thousands of words of material that defaults to ``privacy: private``, and a queue
+    listing has no reason to carry it.
+    """
+    meta = item.get("meta", {})
+    documents = item.get("documents", [])
+    return {
+        "id": item.get("id", ""),
+        "status": item.get("status", ""),
+        "confidence": item.get("confidence", 0),
+        "warnings": list(item.get("warnings", [])),
+        "meta": {name: meta.get(name, "") for name in (*EDITABLE_FIELDS, "date_confidence")},
+        "documents": len(documents),
+        "preview": (documents[0].get("text", "") if documents else "")[:PREVIEW_CHARS],
+        "original": item.get("original", ""),
+        "reject_reason": item.get("reject_reason", ""),
+    }
+
+
+def queue_view(items: list[dict]) -> dict:
+    """The console's queue payload: what still needs a decision, plus the running totals."""
+    return {
+        "summary": queue_summary(items),
+        "items": [item_view(i) for i in items if i.get("status") == "pending"],
+    }
+
+
 def reject_item(item: dict, reason: str) -> dict:
     """Mark an item rejected, keeping its reason and its extracted documents.
 

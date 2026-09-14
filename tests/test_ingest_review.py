@@ -9,7 +9,9 @@ from ingest.review import (
     InvalidEdit,
     accept_item,
     edit_item,
+    item_view,
     queue_summary,
+    queue_view,
     reject_item,
     run_cli,
 )
@@ -140,6 +142,69 @@ class TestEditItem:
                 edit_item(item, {field: "x"})
         assert item["status"] == "pending"
         assert item["content_hash"] == "1234abcd"
+
+
+class TestItemView:
+    def test_carries_the_warnings_and_the_guessed_metadata(self):
+        item = _item()
+        item["warnings"] = ["no date found"]
+        view = item_view(item)
+        assert view["warnings"] == ["no date found"]
+        assert view["meta"]["modality"] == "letter"
+        assert view["meta"]["privacy"] == "private"
+
+    def test_previews_the_opening_not_the_whole_document(self):
+        item = _item()
+        item["documents"] = [{"title": "A", "text": "x" * 5000, "ordinal": 0}]
+        view = item_view(item)
+        assert view["preview"] == "x" * 400
+
+    def test_never_carries_the_document_bodies(self):
+        """A queue listing of a book would otherwise ship 80,000 words of private material."""
+        item = _item()
+        item["documents"] = [{"title": "A", "text": "SECRET" * 500, "ordinal": 0}]
+        assert "SECRET" * 500 not in json.dumps(item_view(item))
+
+    def test_reports_the_document_count_as_a_number(self):
+        item = _item()
+        item["documents"] = [{"text": "a"}, {"text": "b"}, {"text": "c"}]
+        assert item_view(item)["documents"] == 3
+
+    def test_an_item_with_no_documents_previews_empty(self):
+        item = _item()
+        item["documents"] = []
+        assert item_view(item)["preview"] == ""
+
+    def test_is_json_serialisable(self):
+        """It is an HTTP response body before it is anything else."""
+        assert json.loads(json.dumps(item_view(_item())))["id"] == "a-1234abcd"
+
+    def test_carries_the_reject_reason_once_rejected(self):
+        item = _item()
+        reject_item(item, "bad scan")
+        assert item_view(item)["reject_reason"] == "bad scan"
+
+
+class TestQueueView:
+    def test_lists_only_pending_items(self):
+        items = [_item("a"), _item("b", "accepted"), _item("c", "rejected")]
+        view = queue_view(items)
+        assert [i["id"] for i in view["items"]] == ["a"]
+
+    def test_reports_the_full_summary_alongside_the_pending_list(self):
+        items = [_item("a"), _item("b", "accepted"), _item("c", "rejected")]
+        assert queue_view(items)["summary"] == {
+            "total": 3,
+            "pending": 1,
+            "accepted": 1,
+            "rejected": 1,
+        }
+
+    def test_an_empty_queue_is_an_empty_list_not_an_error(self):
+        assert queue_view([]) == {
+            "summary": {"total": 0, "pending": 0, "accepted": 0, "rejected": 0},
+            "items": [],
+        }
 
 
 class TestRejectItem:
