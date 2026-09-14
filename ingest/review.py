@@ -23,6 +23,52 @@ from ingest.queue import QUEUE_DIR, load_queue, save_item
 
 MANIFEST_PATH = Path(__file__).resolve().parent.parent / "data" / "manifest.json"
 
+# The fields a reviewer may correct, and the vocabulary each is checked against. Anything
+# absent here — `status`, `content_hash`, `id`, `license` — is not a reviewer's to set.
+EDITABLE_FIELDS: dict[str, frozenset[str] | None] = {
+    "title": None,
+    "date": None,
+    "modality": MODALITIES,
+    "authorship": AUTHORSHIPS,
+    "privacy": PRIVACIES,
+}
+
+
+class InvalidEdit(ValueError):
+    """A correction no front end may apply: unknown field, or a value outside its vocabulary."""
+
+
+def edit_item(item: dict, fields: dict) -> dict:
+    """Apply vocabulary-checked corrections to an item's metadata.
+
+    Everything is validated before anything is written, so a refused edit leaves the item
+    untouched rather than half-applied. A blank value keeps the current one.
+    """
+    accepted: dict[str, str] = {}
+    for name, value in fields.items():
+        if name not in EDITABLE_FIELDS:
+            raise InvalidEdit(
+                f"{name!r} is not a correctable field — "
+                f"expected one of {sorted(EDITABLE_FIELDS)}"
+            )
+        if not isinstance(value, str):
+            raise InvalidEdit(f"{name} must be a string, got {type(value).__name__}")
+        value = value.strip()
+        if not value:
+            continue
+        vocabulary = EDITABLE_FIELDS[name]
+        if vocabulary is not None and value not in vocabulary:
+            raise InvalidEdit(
+                f"invalid {name}: {value!r} — expected one of {sorted(vocabulary)}"
+            )
+        accepted[name] = value
+
+    item["meta"].update(accepted)
+    if "date" in accepted:
+        # A hand-entered date is a human's best recollection, never authoritative.
+        item["meta"]["date_confidence"] = "approximate"
+    return item
+
 
 def queue_summary(items: list[dict]) -> dict:
     """Count queue items by status."""

@@ -2,8 +2,10 @@
 
 import json
 
+import pytest
+
 from ingest.queue import save_item
-from ingest.review import accept_item, queue_summary, run_cli
+from ingest.review import InvalidEdit, accept_item, edit_item, queue_summary, run_cli
 
 
 def _item(item_id="a-1234abcd", status="pending"):
@@ -74,6 +76,63 @@ class TestAcceptItem:
         item = _item()
         accept_item(item, {"last_updated": "", "total_articles": 0, "articles": []})
         assert item["status"] == "accepted"
+
+
+class TestEditItem:
+    def test_applies_a_corrected_title(self):
+        item = _item()
+        edit_item(item, {"title": "Real Title"})
+        assert item["meta"]["title"] == "Real Title"
+
+    def test_accepts_a_value_from_the_vocabulary(self):
+        item = _item()
+        edit_item(item, {"modality": "book"})
+        assert item["meta"]["modality"] == "book"
+
+    def test_a_hand_entered_date_is_approximate_never_exact(self):
+        item = _item()
+        edit_item(item, {"date": "1998-04-01"})
+        assert item["meta"]["date"] == "1998-04-01"
+        assert item["meta"]["date_confidence"] == "approximate"
+
+    def test_blank_keeps_the_current_value(self):
+        item = _item()
+        edit_item(item, {"title": ""})
+        assert item["meta"]["title"] == "A"
+
+    def test_a_value_outside_the_vocabulary_is_refused(self):
+        item = _item()
+        with pytest.raises(InvalidEdit) as excinfo:
+            edit_item(item, {"privacy": "pubic"})
+        assert "pubic" in str(excinfo.value)
+
+    def test_a_refused_edit_changes_nothing(self):
+        """Partial application would leave the item in a state no front end asked for."""
+        item = _item()
+        with pytest.raises(InvalidEdit):
+            edit_item(item, {"title": "Real Title", "privacy": "pubic"})
+        assert item["meta"]["title"] == "A"
+
+    def test_a_field_the_reviewer_may_not_set_is_refused(self):
+        item = _item()
+        with pytest.raises(InvalidEdit):
+            edit_item(item, {"license": "forbes"})
+
+    def test_a_non_string_value_is_refused_not_crashed_on(self):
+        """JSON from a console client can carry any type; a 500 is not an answer."""
+        item = _item()
+        for value in (7, None, ["Real Title"], {"title": "x"}):
+            with pytest.raises(InvalidEdit):
+                edit_item(item, {"title": value})
+
+    def test_a_queue_field_cannot_be_smuggled_in_as_a_correction(self):
+        """A console client must not be able to set status or rewrite the content hash."""
+        item = _item()
+        for field in ("status", "content_hash", "id"):
+            with pytest.raises(InvalidEdit):
+                edit_item(item, {field: "x"})
+        assert item["status"] == "pending"
+        assert item["content_hash"] == "1234abcd"
 
 
 class TestRunCli:
