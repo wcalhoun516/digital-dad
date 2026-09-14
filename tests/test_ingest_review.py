@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from ingest.queue import save_item
+from ingest.queue import load_queue, save_item, scan_inbox
 from ingest.review import (
     InvalidDecision,
     InvalidEdit,
@@ -14,6 +14,7 @@ from ingest.review import (
     apply_decision,
     edit_item,
     item_view,
+    print_report,
     queue_summary,
     queue_view,
     reject_item,
@@ -57,6 +58,70 @@ def _empty_manifest(tmp_path):
     path = tmp_path / "manifest.json"
     path.write_text(json.dumps({"last_updated": "", "total_articles": 0, "articles": []}))
     return path
+
+
+class TestEndToEnd:
+    """A real file through the real arc: inbox → queue → console payload → manifest."""
+
+    def test_a_dropped_file_becomes_a_corpus_entry_through_apply_decision(self, tmp_path):
+        inbox, queue = tmp_path / "inbox", tmp_path / "queue"
+        inbox.mkdir()
+        (inbox / "letter.md").write_text("# A Letter Home\n\nDear Will,\n\nLove, Dad\n")
+        manifest_path = _empty_manifest(tmp_path)
+
+        assert scan_inbox(inbox, queue)["staged"] == 1
+
+        listing = queue_view(load_queue(queue))
+        assert listing["summary"]["pending"] == 1
+        (pending,) = listing["items"]
+        assert pending["meta"]["title"] == "A Letter Home"
+        assert "Dear Will" in pending["preview"]
+
+        view = apply_decision(
+            pending["id"],
+            "accept",
+            fields={"modality": "letter", "date": "1998-04-01"},
+            queue_dir=queue,
+            manifest_path=manifest_path,
+        )
+
+        assert view["status"] == "accepted"
+        (entry,) = json.loads(manifest_path.read_text())["articles"]
+        assert entry["title"] == "A Letter Home"
+        assert entry["date"] == "1998-04-01"
+        assert entry["provenance"]["modality"] == "letter"
+        # Ingested material is private until a human says otherwise.
+        assert entry["provenance"]["privacy"] == "private"
+        assert entry["provenance"]["date_confidence"] == "approximate"
+
+    def test_the_accepted_item_drops_out_of_the_pending_listing(self, tmp_path):
+        inbox, queue = tmp_path / "inbox", tmp_path / "queue"
+        inbox.mkdir()
+        (inbox / "letter.md").write_text("# A Letter Home\n\nDear Will,\n")
+        manifest_path = _empty_manifest(tmp_path)
+        scan_inbox(inbox, queue)
+
+        item_id = queue_view(load_queue(queue))["items"][0]["id"]
+        apply_decision(
+            item_id, "accept", queue_dir=queue, manifest_path=manifest_path
+        )
+
+        listing = queue_view(load_queue(queue))
+        assert listing["items"] == []
+        assert listing["summary"] == {
+            "total": 1,
+            "pending": 0,
+            "accepted": 1,
+            "rejected": 0,
+        }
+
+
+class TestPrintReport:
+    def test_lists_only_what_still_needs_a_decision(self, capsys):
+        print_report([_item("still-pending"), _item("already-done", "accepted")])
+        out = capsys.readouterr().out
+        assert "still-pending" in out
+        assert "already-done" not in out
 
 
 class TestQueueSummary:
@@ -432,6 +497,40 @@ class TestRunCli:
         run_cli(queue_dir=queue, manifest_path=manifest_path, input_fn=_scripted([]))
 
         assert json.loads(manifest_path.read_text())["articles"] == []
+
+    def test_a_reject_with_no_reason_is_refused_and_reported(self, tmp_path, capsys):
+        """The CLI must surface the refusal, not print a tick and count it as decided."""
+        queue = tmp_path / "queue"
+        save_item(_item(), queue)
+        manifest_path = _empty_manifest(tmp_path)
+
+        run_cli(
+            queue_dir=queue,
+            manifest_path=manifest_path,
+            input_fn=_scripted(["r", "", "q"]),
+        )
+
+        out = capsys.readouterr().out
+        assert "a reject needs a reason" in out
+        assert "✓" not in out
+        assert "0 decision(s)" in out
+        assert json.loads((queue / "a-1234abcd.json").read_text())["status"] == "pending"
+
+    def test_an_out_of_vocabulary_answer_keeps_the_current_value(self, tmp_path, capsys):
+        queue = tmp_path / "queue"
+        save_item(_item(), queue)
+        manifest_path = _empty_manifest(tmp_path)
+
+        # edit -> title kept blank, date blank, modality nonsense, then accept
+        run_cli(
+            queue_dir=queue,
+            manifest_path=manifest_path,
+            input_fn=_scripted(["e", "", "", "sonnet", "", "", "a"]),
+        )
+
+        assert "not valid" in capsys.readouterr().out
+        entry = json.loads(manifest_path.read_text())["articles"][0]
+        assert entry["provenance"]["modality"] == "letter"
 
     def test_corrections_survive_an_unrecognised_decision(self, tmp_path):
         """Typing a typo after carefully retyping a title should not discard the retyping."""
