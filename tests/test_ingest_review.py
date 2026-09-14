@@ -5,7 +5,14 @@ import json
 import pytest
 
 from ingest.queue import save_item
-from ingest.review import InvalidEdit, accept_item, edit_item, queue_summary, run_cli
+from ingest.review import (
+    InvalidEdit,
+    accept_item,
+    edit_item,
+    queue_summary,
+    reject_item,
+    run_cli,
+)
 
 
 def _item(item_id="a-1234abcd", status="pending"):
@@ -133,6 +140,34 @@ class TestEditItem:
                 edit_item(item, {field: "x"})
         assert item["status"] == "pending"
         assert item["content_hash"] == "1234abcd"
+
+
+class TestRejectItem:
+    def test_marks_the_item_rejected_with_its_reason(self):
+        item = _item()
+        reject_item(item, "bad scan")
+        assert item["status"] == "rejected"
+        assert item["reject_reason"] == "bad scan"
+
+    def test_a_blank_reason_is_refused(self):
+        """A reject with no reason is unrecoverable later — the plan requires the why."""
+        item = _item()
+        for reason in ("", "   "):
+            with pytest.raises(InvalidEdit):
+                reject_item(item, reason)
+        assert item["status"] == "pending"
+
+    def test_a_non_string_reason_is_refused(self):
+        item = _item()
+        with pytest.raises(InvalidEdit):
+            reject_item(item, None)
+        assert item["status"] == "pending"
+
+    def test_the_documents_are_kept_not_deleted(self):
+        """Rejects are never destroyed — a bad extraction must stay recoverable."""
+        item = _item()
+        reject_item(item, "bad scan")
+        assert item["documents"] == [{"title": "A", "text": "body", "ordinal": 0}]
 
 
 class TestRunCli:

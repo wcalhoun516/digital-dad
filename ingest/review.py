@@ -70,6 +70,19 @@ def edit_item(item: dict, fields: dict) -> dict:
     return item
 
 
+def reject_item(item: dict, reason: str) -> dict:
+    """Mark an item rejected, keeping its reason and its extracted documents.
+
+    Nothing is deleted: a rejection is a judgement about an extraction, and the extraction
+    may be the only copy. The reason is mandatory — an unexplained reject cannot be revisited.
+    """
+    if not isinstance(reason, str) or not reason.strip():
+        raise InvalidEdit("a reject needs a reason")
+    item["status"] = "rejected"
+    item["reject_reason"] = reason.strip()
+    return item
+
+
 def queue_summary(items: list[dict]) -> dict:
     """Count queue items by status."""
     return {
