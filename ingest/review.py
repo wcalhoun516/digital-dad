@@ -34,8 +34,20 @@ EDITABLE_FIELDS: dict[str, frozenset[str] | None] = {
 }
 
 
-class InvalidEdit(ValueError):
+class ReviewError(ValueError):
+    """Any refusal a front end should report back rather than crash on."""
+
+
+class InvalidEdit(ReviewError):
     """A correction no front end may apply: unknown field, or a value outside its vocabulary."""
+
+
+class InvalidDecision(ReviewError):
+    """A decision that cannot be applied: an unknown verb, or an item already decided."""
+
+
+class UnknownItem(ReviewError):
+    """No queue item carries the requested id."""
 
 
 def edit_item(item: dict, fields: dict) -> dict:
@@ -173,6 +185,49 @@ def accept_item(item: dict, manifest: dict) -> dict:
     manifest["total_articles"] = len(manifest["articles"])
     item["status"] = "accepted"
     return manifest
+
+
+def apply_decision(
+    item_id: str,
+    decision: str,
+    *,
+    fields: dict | None = None,
+    reason: str = "",
+    queue_dir: Path = QUEUE_DIR,
+    manifest_path: Path = MANIFEST_PATH,
+) -> dict:
+    """Apply one accept / edit / reject decision to a queued item and persist the result.
+
+    The single entry point for every front end: a console route adds HTTP around this, it
+    does not re-decide anything. Returns the updated ``item_view``.
+
+    Validation runs before any write, so a refused decision leaves both the queue file and
+    the manifest exactly as they were.
+    """
+    if decision not in ("accept", "edit", "reject"):
+        raise InvalidDecision(
+            f"{decision!r} is not a decision — expected accept, edit or reject"
+        )
+
+    queue_dir, manifest_path = Path(queue_dir), Path(manifest_path)
+    item = next((i for i in load_queue(queue_dir) if i.get("id") == item_id), None)
+    if item is None:
+        raise UnknownItem(f"no queue item with id {item_id!r}")
+    if item.get("status") != "pending":
+        raise InvalidDecision(
+            f"{item_id!r} was already {item['status']} — it is not awaiting a decision"
+        )
+
+    edit_item(item, fields or {})
+    if decision == "reject":
+        reject_item(item, reason)
+    elif decision == "accept":
+        manifest = json.loads(manifest_path.read_text())
+        accept_item(item, manifest)
+        manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
+
+    save_item(item, queue_dir)
+    return item_view(item)
 
 
 def _show(item: dict) -> None:

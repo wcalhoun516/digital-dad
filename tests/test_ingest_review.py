@@ -6,8 +6,12 @@ import pytest
 
 from ingest.queue import save_item
 from ingest.review import (
+    InvalidDecision,
     InvalidEdit,
+    ReviewError,
+    UnknownItem,
     accept_item,
+    apply_decision,
     edit_item,
     item_view,
     queue_summary,
@@ -142,6 +146,129 @@ class TestEditItem:
                 edit_item(item, {field: "x"})
         assert item["status"] == "pending"
         assert item["content_hash"] == "1234abcd"
+
+
+class TestApplyDecision:
+    """The one entry point both front ends call. A console route adds HTTP, not logic."""
+
+    def _queue(self, tmp_path, item=None):
+        queue = tmp_path / "queue"
+        save_item(item or _item(), queue)
+        return queue, _empty_manifest(tmp_path)
+
+    def test_accept_appends_to_the_manifest_and_persists_the_item(self, tmp_path):
+        queue, manifest_path = self._queue(tmp_path)
+
+        view = apply_decision(
+            "a-1234abcd", "accept", queue_dir=queue, manifest_path=manifest_path
+        )
+
+        assert view["status"] == "accepted"
+        assert len(json.loads(manifest_path.read_text())["articles"]) == 1
+        assert json.loads((queue / "a-1234abcd.json").read_text())["status"] == "accepted"
+
+    def test_reject_persists_the_reason_and_leaves_the_manifest_alone(self, tmp_path):
+        queue, manifest_path = self._queue(tmp_path)
+
+        apply_decision(
+            "a-1234abcd",
+            "reject",
+            reason="bad scan",
+            queue_dir=queue,
+            manifest_path=manifest_path,
+        )
+
+        stored = json.loads((queue / "a-1234abcd.json").read_text())
+        assert stored["status"] == "rejected"
+        assert stored["reject_reason"] == "bad scan"
+        assert json.loads(manifest_path.read_text())["articles"] == []
+
+    def test_edit_corrects_the_metadata_and_leaves_the_item_pending(self, tmp_path):
+        queue, manifest_path = self._queue(tmp_path)
+
+        view = apply_decision(
+            "a-1234abcd",
+            "edit",
+            fields={"title": "Real Title"},
+            queue_dir=queue,
+            manifest_path=manifest_path,
+        )
+
+        assert view["status"] == "pending"
+        assert json.loads((queue / "a-1234abcd.json").read_text())["meta"]["title"] == (
+            "Real Title"
+        )
+        assert json.loads(manifest_path.read_text())["articles"] == []
+
+    def test_accept_applies_corrections_in_the_same_call(self, tmp_path):
+        queue, manifest_path = self._queue(tmp_path)
+
+        apply_decision(
+            "a-1234abcd",
+            "accept",
+            fields={"title": "Real Title", "privacy": "public"},
+            queue_dir=queue,
+            manifest_path=manifest_path,
+        )
+
+        entry = json.loads(manifest_path.read_text())["articles"][0]
+        assert entry["title"] == "Real Title"
+        assert entry["provenance"]["privacy"] == "public"
+
+    def test_an_already_decided_item_is_refused(self, tmp_path):
+        """Without this, POSTing accept twice files the same document in the corpus twice."""
+        queue, manifest_path = self._queue(tmp_path)
+        apply_decision(
+            "a-1234abcd", "accept", queue_dir=queue, manifest_path=manifest_path
+        )
+
+        with pytest.raises(InvalidDecision):
+            apply_decision(
+                "a-1234abcd", "accept", queue_dir=queue, manifest_path=manifest_path
+            )
+
+        assert len(json.loads(manifest_path.read_text())["articles"]) == 1
+
+    def test_an_unknown_id_is_distinguishable_from_a_bad_decision(self, tmp_path):
+        """A route answers 404 for one and 400 for the other; one exception cannot say both."""
+        queue, manifest_path = self._queue(tmp_path)
+
+        with pytest.raises(UnknownItem):
+            apply_decision(
+                "nope", "accept", queue_dir=queue, manifest_path=manifest_path
+            )
+
+    def test_an_unknown_verb_is_refused(self, tmp_path):
+        queue, manifest_path = self._queue(tmp_path)
+
+        with pytest.raises(InvalidDecision):
+            apply_decision(
+                "a-1234abcd", "delete", queue_dir=queue, manifest_path=manifest_path
+            )
+
+    def test_a_refused_correction_leaves_nothing_written(self, tmp_path):
+        """An accept that fails validation must not half-file the document."""
+        queue, manifest_path = self._queue(tmp_path)
+
+        with pytest.raises(InvalidEdit):
+            apply_decision(
+                "a-1234abcd",
+                "accept",
+                fields={"privacy": "pubic"},
+                queue_dir=queue,
+                manifest_path=manifest_path,
+            )
+
+        assert json.loads(manifest_path.read_text())["articles"] == []
+        stored = json.loads((queue / "a-1234abcd.json").read_text())
+        assert stored["status"] == "pending"
+        assert stored["meta"]["privacy"] == "private"
+
+    def test_every_refusal_is_catchable_as_one_error_type(self, tmp_path):
+        """A route wants a single `except ReviewError` rather than a growing tuple."""
+        assert issubclass(InvalidEdit, ReviewError)
+        assert issubclass(InvalidDecision, ReviewError)
+        assert issubclass(UnknownItem, ReviewError)
 
 
 class TestItemView:
