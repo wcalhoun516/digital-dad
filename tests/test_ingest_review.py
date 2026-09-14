@@ -433,6 +433,61 @@ class TestRunCli:
 
         assert json.loads(manifest_path.read_text())["articles"] == []
 
+    def test_corrections_survive_an_unrecognised_decision(self, tmp_path):
+        """Typing a typo after carefully retyping a title should not discard the retyping."""
+        queue = tmp_path / "queue"
+        save_item(_item(), queue)
+        manifest_path = _empty_manifest(tmp_path)
+
+        run_cli(
+            queue_dir=queue,
+            manifest_path=manifest_path,
+            input_fn=_scripted(["e", "Real Title", "", "", "", "", "xyzzy"]),
+        )
+
+        stored = json.loads((queue / "a-1234abcd.json").read_text())
+        assert stored["meta"]["title"] == "Real Title"
+        assert stored["status"] == "pending"
+        assert json.loads(manifest_path.read_text())["articles"] == []
+
+    def test_the_cli_and_the_api_reach_an_identical_result(self, tmp_path):
+        """Plan 0011's criterion: one decision implementation, two front ends."""
+        cli_queue, api_queue = tmp_path / "cli", tmp_path / "api"
+        save_item(_item(), cli_queue)
+        save_item(_item(), api_queue)
+        cli_manifest = tmp_path / "cli-manifest.json"
+        api_manifest = tmp_path / "api-manifest.json"
+        empty = json.dumps({"last_updated": "", "total_articles": 0, "articles": []})
+        cli_manifest.write_text(empty)
+        api_manifest.write_text(empty)
+
+        run_cli(
+            queue_dir=cli_queue,
+            manifest_path=cli_manifest,
+            input_fn=_scripted(
+                ["e", "Real Title", "1998-04-01", "book", "", "public", "a"]
+            ),
+        )
+        apply_decision(
+            "a-1234abcd",
+            "accept",
+            fields={
+                "title": "Real Title",
+                "date": "1998-04-01",
+                "modality": "book",
+                "privacy": "public",
+            },
+            queue_dir=api_queue,
+            manifest_path=api_manifest,
+        )
+
+        assert json.loads(cli_manifest.read_text()) == json.loads(
+            api_manifest.read_text()
+        )
+        assert json.loads((cli_queue / "a-1234abcd.json").read_text()) == json.loads(
+            (api_queue / "a-1234abcd.json").read_text()
+        )
+
     def test_empty_queue_returns_zero(self, tmp_path):
         manifest_path = _empty_manifest(tmp_path)
         assert run_cli(queue_dir=tmp_path / "queue", manifest_path=manifest_path) == 0
