@@ -48,6 +48,39 @@ Format:
 
 <!-- entries below -->
 
+### 2026-09-14 — infra — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/97
+- Source: plan:ready/0011 (step 3 — the decision core; the HTTP routes deliberately deferred)
+- Summary: **The plan asked the console to call "`ingest/review.py`'s existing decision
+  functions". They did not exist.** Only `accept_item` was callable; **reject and edit were
+  inlined in `run_cli`'s prompt loop**, wired to `input_fn` — a route could not have reached
+  them without reimplementing them, which is how the CLI and the console would have drifted
+  into two different answers to "what does accepting mean". So this PR builds the core:
+  `apply_decision` (one entry point for accept/edit/reject, persisting queue item *and*
+  manifest), `edit_item`, `reject_item`, `validate_field`, and `queue_view`/`item_view` for
+  the listing payload. **`run_cli` was then rewired onto the same functions**, so the plan's
+  verification criterion — "a queue item accepted through the API produces the same result as
+  the CLI path on the same fixture" — is now structural rather than hopeful; a test asserts
+  the two paths reach byte-identical manifests and queue files. **Three things worth review:**
+  (1) **A decided item is refused.** The CLI could never double-accept because it skips
+  non-pending items, but an HTTP route with no guard would file the same document into the
+  corpus twice on a repeated POST. (2) **`queue_view` never carries document bodies** — a book
+  is tens of thousands of words defaulting to `privacy: private`, and a listing has no reason
+  to ship them. (3) **Validation precedes every write**, so a refused correction leaves both
+  the queue file and the manifest untouched rather than half-applied. **One real behaviour
+  change:** typing a typo after retyping a title used to discard the retyping; corrections are
+  now kept. **Routes deferred, same reason as #96:** `/console/api/*` dispatch lives in
+  `bin/serve_dashboard.py`, which is #93's still-unmerged diff. **Lint scope left alone:**
+  `ingest/` is unlinted, but **PR #92 already fixes that** (`LINT_PATHS`, the pre-commit regex
+  and `test_lint_scope.py`) — duplicating it here would have been a direct add/add conflict on
+  the Makefile, which is the failure mode §3 exists to prevent. **Mutation-tested:** 14
+  mutants across the new code; the two survivors were real gaps in the *CLI* paths (a reject
+  with no reason, and an out-of-vocabulary answer at the edit prompt), both now covered, and
+  the last survivor is an equivalent mutant that rewrites the manifest with identical content.
+  **Verification:** `make verify` exit 0 — ruff clean, **1293 passed**, dashboard builds; a
+  clean `origin/main` worktree collects **1253 passed, 1 skipped**, so the delta is exactly
+  the **+40** added here (`test_ingest_review.py` goes 9 → 49).
+
 ### 2026-09-08 — training — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/91
 - Source: plan:ready/0009 (steps 1 and 3; step 2 turned out to be already shipped)
