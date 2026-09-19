@@ -10,3 +10,15 @@
 {"timestamp": "2026-06-14T07:55:45.371994+00:00", "module": "psychoprofile", "router": "conductor_local", "model": "gemma4:12b-it-qat", "num_articles": 199, "input_tokens": 165195, "output_tokens": 1332, "cost_usd": 0.5156, "duration_s": 1396.5, "corpus_fingerprint": "5930793387722d80a0e476687b14dc88"}
 {"timestamp": "2026-06-14T07:56:05.009818+00:00", "module": "semantic_search", "corpus_fingerprint": "5930793387722d80a0e476687b14dc88"}
 {"timestamp": "2026-06-14T10:21:39.809745+00:00", "module": "predictions", "corpus_fingerprint": "5930793387722d80a0e476687b14dc88"}
+{"timestamp": "2026-08-23T07:53:01.203333+00:00", "module": "linguistic", "corpus_fingerprint": "ef7212876568d66acbf23157bc1b9da6"}
+{"timestamp": "2026-08-23T07:53:08.980944+00:00", "module": "themes", "corpus_fingerprint": "ef7212876568d66acbf23157bc1b9da6"}
+{"timestamp": "2026-08-23T07:53:50.740499+00:00", "module": "entities", "corpus_fingerprint": "ef7212876568d66acbf23157bc1b9da6"}
+{"timestamp": "2026-08-23T08:34:37.663123+00:00", "module": "psychoprofile", "router": "conductor_local", "model": "gemma4:12b-it-qat", "num_articles": 180, "input_tokens": 75887, "output_tokens": 23065, "cost_usd": 0.5736, "duration_s": 2446.6, "corpus_fingerprint": "ef7212876568d66acbf23157bc1b9da6"}
+{"timestamp": "2026-08-23T08:34:55.542375+00:00", "module": "semantic_search", "corpus_fingerprint": "ef7212876568d66acbf23157bc1b9da6"}
+{"timestamp": "2026-08-23T10:59:11.762482+00:00", "module": "predictions", "corpus_fingerprint": "ef7212876568d66acbf23157bc1b9da6"}
+{"timestamp": "2026-09-06T07:39:59.659109+00:00", "module": "linguistic", "corpus_fingerprint": "4d15b0e5ce30ed173539eea5b312c41a"}
+{"timestamp": "2026-09-06T07:40:05.891406+00:00", "module": "themes", "corpus_fingerprint": "4d15b0e5ce30ed173539eea5b312c41a"}
+{"timestamp": "2026-09-06T07:40:52.060986+00:00", "module": "entities", "corpus_fingerprint": "4d15b0e5ce30ed173539eea5b312c41a"}
+{"timestamp": "2026-09-06T08:21:28.528104+00:00", "module": "psychoprofile", "router": "conductor_local", "model": "gemma4:12b-it-qat", "num_articles": 181, "input_tokens": 78444, "output_tokens": 22802, "cost_usd": 0.5774, "duration_s": 2436.0, "corpus_fingerprint": "4d15b0e5ce30ed173539eea5b312c41a"}
+{"timestamp": "2026-09-06T08:21:43.112626+00:00", "module": "semantic_search", "corpus_fingerprint": "4d15b0e5ce30ed173539eea5b312c41a"}
+{"timestamp": "2026-09-06T10:45:21.738128+00:00", "module": "predictions", "corpus_fingerprint": "4d15b0e5ce30ed173539eea5b312c41a"}

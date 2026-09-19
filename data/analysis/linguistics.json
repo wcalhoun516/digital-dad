@@ -1,33 +1,16 @@
 {
   "aggregate": {
-    "total_articles": 199,
-    "total_words": 369092,
-    "avg_word_count": 1854.73,
-    "avg_sentence_length": 21.92,
+    "total_articles": 181,
+    "total_words": 341081,
+    "avg_word_count": 1884.43,
+    "avg_sentence_length": 21.96,
     "avg_type_token_ratio": 0.4,
-    "avg_flesch_reading_ease": 41.7,
+    "avg_flesch_reading_ease": 41.5,
     "avg_flesch_grade_level": 12.8,
-    "avg_gunning_fog": 16.29,
+    "avg_gunning_fog": 16.31,
     "sentiment_by_year": {}
   },
   "per_article": [
-    {
-      "slug": "george-calhoun",
-      "date": "",
-      "word_count": 266,
-      "sentence_count": 11,
-      "avg_sentence_length": 24.8,
-      "sentence_length_std": 8.1,
-      "vocabulary_size": 144,
-      "type_token_ratio": 0.5414,
-      "hapax_ratio": 0.6806,
-      "flesch_kincaid": {
-        "reading_ease": 24.5,
-        "grade_level": 15.8
-      },
-      "gunning_fog": 20.5,
-      "sentiment": {}
-    },
     {
       "slug": "george-calhoun",
       "date": "",
@@ -145,23 +128,6 @@
         "grade_level": 14.8
       },
       "gunning_fog": 18.8,
-      "sentiment": {}
-    },
-    {
-      "slug": "europes-hamiltonian-moment-what-is-it-really",
-      "date": "2020-05-26",
-      "word_count": 1821,
-      "sentence_count": 80,
-      "avg_sentence_length": 23.1,
-      "sentence_length_std": 17.4,
-      "vocabulary_size": 756,
-      "type_token_ratio": 0.4152,
-      "hapax_ratio": 0.6799,
-      "flesch_kincaid": {
-        "reading_ease": 43.0,
-        "grade_level": 12.9
-      },
-      "gunning_fog": 16.9,
       "sentiment": {}
     },
     {
@@ -488,23 +454,6 @@
       "sentiment": {}
     },
     {
-      "slug": "the-stock-split-anomaly-how-apple-tesla-created-powerful-alpha-last-month",
-      "date": "2020-09-21",
-      "word_count": 1802,
-      "sentence_count": 84,
-      "avg_sentence_length": 22.1,
-      "sentence_length_std": 15.7,
-      "vocabulary_size": 675,
-      "type_token_ratio": 0.3746,
-      "hapax_ratio": 0.6563,
-      "flesch_kincaid": {
-        "reading_ease": 46.8,
-        "grade_level": 12.1
-      },
-      "gunning_fog": 15.3,
-      "sentiment": {}
-    },
-    {
       "slug": "after-apple-and-tesla-berkshire-and-amazon-should-split-their-shares-too",
       "date": "2020-09-26",
       "word_count": 1898,
@@ -539,23 +488,6 @@
       "sentiment": {}
     },
     {
-      "slug": "the-european-unions-next-step-a-hamiltonian-commonwealth",
-      "date": "2020-09-28",
-      "word_count": 1844,
-      "sentence_count": 81,
-      "avg_sentence_length": 23.2,
-      "sentence_length_std": 14.1,
-      "vocabulary_size": 754,
-      "type_token_ratio": 0.4089,
-      "hapax_ratio": 0.6857,
-      "flesch_kincaid": {
-        "reading_ease": 45.5,
-        "grade_level": 12.6
-      },
-      "gunning_fog": 16.3,
-      "sentiment": {}
-    },
-    {
       "slug": "the-small-investors-only-advantage-and-how-to-capture-it",
       "date": "2020-09-30",
       "word_count": 1400,
@@ -570,23 +502,6 @@
         "grade_level": 12.6
       },
       "gunning_fog": 16.4,
-      "sentiment": {}
-    },
-    {
-      "slug": "buffett-takes-on-japan-but-does-value-still-exist",
-      "date": "2020-10-05",
-      "word_count": 2261,
-      "sentence_count": 119,
-      "avg_sentence_length": 19.3,
-      "sentence_length_std": 13.7,
-      "vocabulary_size": 821,
-      "type_token_ratio": 0.3631,
-      "hapax_ratio": 0.6541,
-      "flesch_kincaid": {
-        "reading_ease": 48.8,
-        "grade_level": 11.2
-      },
-      "gunning_fog": 15.0,
       "sentiment": {}
     },
     {
@@ -689,23 +604,6 @@
         "grade_level": 13.9
       },
       "gunning_fog": 17.7,
-      "sentiment": {}
-    },
-    {
-      "slug": "why-china-stopped-the-ant-groups-ipo-part-2-ants-dangerous-business-model",
-      "date": "2020-11-16",
-      "word_count": 2219,
-      "sentence_count": 124,
-      "avg_sentence_length": 18.3,
-      "sentence_length_std": 13.3,
-      "vocabulary_size": 834,
-      "type_token_ratio": 0.3758,
-      "hapax_ratio": 0.6511,
-      "flesch_kincaid": {
-        "reading_ease": 47.3,
-        "grade_level": 11.1
-      },
-      "gunning_fog": 15.0,
       "sentiment": {}
     },
     {
@@ -896,23 +794,6 @@
       "sentiment": {}
     },
     {
-      "slug": "jack-ma-reappears-but-what-does-the-market-see",
-      "date": "2021-01-22",
-      "word_count": 1140,
-      "sentence_count": 59,
-      "avg_sentence_length": 19.8,
-      "sentence_length_std": 20.7,
-      "vocabulary_size": 552,
-      "type_token_ratio": 0.4842,
-      "hapax_ratio": 0.7029,
-      "flesch_kincaid": {
-        "reading_ease": 44.4,
-        "grade_level": 11.9
-      },
-      "gunning_fog": 15.2,
-      "sentiment": {}
-    },
-    {
       "slug": "will-tesla-break-the-sp-500-pt-4-managing-insane-trading-volume",
       "date": "2021-01-30",
       "word_count": 1892,
@@ -995,23 +876,6 @@
         "grade_level": 10.0
       },
       "gunning_fog": 13.5,
-      "sentiment": {}
-    },
-    {
-      "slug": "gamestop-the-second-surge-anatomy-of-a-gamma-swarm",
-      "date": "2021-03-10",
-      "word_count": 2417,
-      "sentence_count": 118,
-      "avg_sentence_length": 21.2,
-      "sentence_length_std": 12.9,
-      "vocabulary_size": 839,
-      "type_token_ratio": 0.3471,
-      "hapax_ratio": 0.6615,
-      "flesch_kincaid": {
-        "reading_ease": 51.1,
-        "grade_level": 11.2
-      },
-      "gunning_fog": 14.6,
       "sentiment": {}
     },
     {
@@ -1117,23 +981,6 @@
       "sentiment": {}
     },
     {
-      "slug": "the-inflation-scare-doesnt-match-reality",
-      "date": "2021-05-01",
-      "word_count": 1537,
-      "sentence_count": 68,
-      "avg_sentence_length": 23.0,
-      "sentence_length_std": 15.9,
-      "vocabulary_size": 696,
-      "type_token_ratio": 0.4528,
-      "hapax_ratio": 0.6839,
-      "flesch_kincaid": {
-        "reading_ease": 40.5,
-        "grade_level": 13.2
-      },
-      "gunning_fog": 17.1,
-      "sentiment": {}
-    },
-    {
       "slug": "commodity-price-increases-do-not-create-inflation",
       "date": "2021-05-05",
       "word_count": 1880,
@@ -1165,23 +1012,6 @@
         "grade_level": 12.5
       },
       "gunning_fog": 15.7,
-      "sentiment": {}
-    },
-    {
-      "slug": "the-inflation-bump-is-not-real-it-is-a-statistical-artifact",
-      "date": "2021-05-12",
-      "word_count": 1389,
-      "sentence_count": 68,
-      "avg_sentence_length": 21.1,
-      "sentence_length_std": 13.6,
-      "vocabulary_size": 581,
-      "type_token_ratio": 0.4183,
-      "hapax_ratio": 0.6747,
-      "flesch_kincaid": {
-        "reading_ease": 49.0,
-        "grade_level": 11.5
-      },
-      "gunning_fog": 15.0,
       "sentiment": {}
     },
     {
@@ -1253,23 +1083,6 @@
       "sentiment": {}
     },
     {
-      "slug": "covid-19-testing-free-with-insurance-a-new-form-of-health-care-fraud",
-      "date": "2021-06-03",
-      "word_count": 1973,
-      "sentence_count": 86,
-      "avg_sentence_length": 23.4,
-      "sentence_length_std": 16.1,
-      "vocabulary_size": 726,
-      "type_token_ratio": 0.368,
-      "hapax_ratio": 0.6419,
-      "flesch_kincaid": {
-        "reading_ease": 49.1,
-        "grade_level": 12.1
-      },
-      "gunning_fog": 15.4,
-      "sentiment": {}
-    },
-    {
       "slug": "the-sad-end-of-jack-ma-inc",
       "date": "2021-06-07",
       "word_count": 1560,
@@ -1321,40 +1134,6 @@
       "sentiment": {}
     },
     {
-      "slug": "inflation-the-media-screams-but-the-market-is-unfazed",
-      "date": "2021-06-20",
-      "word_count": 2299,
-      "sentence_count": 108,
-      "avg_sentence_length": 22.0,
-      "sentence_length_std": 16.0,
-      "vocabulary_size": 877,
-      "type_token_ratio": 0.3815,
-      "hapax_ratio": 0.6784,
-      "flesch_kincaid": {
-        "reading_ease": 44.5,
-        "grade_level": 12.3
-      },
-      "gunning_fog": 16.5,
-      "sentiment": {}
-    },
-    {
-      "slug": "what-really-happened-to-jack-ma",
-      "date": "2021-06-24",
-      "word_count": 2040,
-      "sentence_count": 104,
-      "avg_sentence_length": 19.9,
-      "sentence_length_std": 14.8,
-      "vocabulary_size": 857,
-      "type_token_ratio": 0.4201,
-      "hapax_ratio": 0.6908,
-      "flesch_kincaid": {
-        "reading_ease": 46.8,
-        "grade_level": 11.6
-      },
-      "gunning_fog": 15.0,
-      "sentiment": {}
-    },
-    {
       "slug": "what-really-happened-to-jack-ma",
       "date": "2021-06-24",
       "word_count": 2040,
@@ -1386,23 +1165,6 @@
         "grade_level": 13.2
       },
       "gunning_fog": 17.0,
-      "sentiment": {}
-    },
-    {
-      "slug": "there-is-no-inflation-the-june-cpi-headline-head-fake",
-      "date": "2021-07-14",
-      "word_count": 1249,
-      "sentence_count": 67,
-      "avg_sentence_length": 19.3,
-      "sentence_length_std": 15.6,
-      "vocabulary_size": 547,
-      "type_token_ratio": 0.438,
-      "hapax_ratio": 0.6673,
-      "flesch_kincaid": {
-        "reading_ease": 47.9,
-        "grade_level": 11.2
-      },
-      "gunning_fog": 15.2,
       "sentiment": {}
     },
     {
@@ -1780,23 +1542,6 @@
       "sentiment": {}
     },
     {
-      "slug": "semiconductors-the-chips-act-what-it-is-part-1",
-      "date": "2021-11-23",
-      "word_count": 1539,
-      "sentence_count": 73,
-      "avg_sentence_length": 21.6,
-      "sentence_length_std": 17.9,
-      "vocabulary_size": 657,
-      "type_token_ratio": 0.4269,
-      "hapax_ratio": 0.7062,
-      "flesch_kincaid": {
-        "reading_ease": 38.1,
-        "grade_level": 13.2
-      },
-      "gunning_fog": 16.9,
-      "sentiment": {}
-    },
-    {
       "slug": "the-chips-act-good-questions-bad-questions-bad-bets-part-2",
       "date": "2021-11-27",
       "word_count": 1982,
@@ -1828,23 +1573,6 @@
         "grade_level": 13.5
       },
       "gunning_fog": 17.5,
-      "sentiment": {}
-    },
-    {
-      "slug": "two-pseudo-facts-about-semiconductors-that-could-distort-the-chips-act-part-4",
-      "date": "2021-11-30",
-      "word_count": 1229,
-      "sentence_count": 60,
-      "avg_sentence_length": 20.6,
-      "sentence_length_std": 13.4,
-      "vocabulary_size": 575,
-      "type_token_ratio": 0.4679,
-      "hapax_ratio": 0.7078,
-      "flesch_kincaid": {
-        "reading_ease": 38.6,
-        "grade_level": 13.0
-      },
-      "gunning_fog": 16.1,
       "sentiment": {}
     },
     {
@@ -2137,23 +1865,6 @@
       "sentiment": {}
     },
     {
-      "slug": "the-biggest-crypto-fantasy-of-all",
-      "date": "2022-09-18",
-      "word_count": 1460,
-      "sentence_count": 64,
-      "avg_sentence_length": 23.4,
-      "sentence_length_std": 17.5,
-      "vocabulary_size": 626,
-      "type_token_ratio": 0.4288,
-      "hapax_ratio": 0.7204,
-      "flesch_kincaid": {
-        "reading_ease": 46.9,
-        "grade_level": 12.4
-      },
-      "gunning_fog": 15.8,
-      "sentiment": {}
-    },
-    {
       "slug": "the-putcall-ratio-says-get-in-the-market-now",
       "date": "2022-09-27",
       "word_count": 1434,
@@ -2239,23 +1950,6 @@
       "sentiment": {}
     },
     {
-      "slug": "the-recession-meme-is-intense-but-can-the-market-see-around-the-corner",
-      "date": "2022-10-19",
-      "word_count": 2036,
-      "sentence_count": 117,
-      "avg_sentence_length": 18.1,
-      "sentence_length_std": 11.7,
-      "vocabulary_size": 727,
-      "type_token_ratio": 0.3571,
-      "hapax_ratio": 0.6602,
-      "flesch_kincaid": {
-        "reading_ease": 48.1,
-        "grade_level": 10.9
-      },
-      "gunning_fog": 14.3,
-      "sentiment": {}
-    },
-    {
       "slug": "when-is-a-cycle-not-a-cycle-the-economist-magazine-flunks-semiconductors",
       "date": "2022-10-31",
       "word_count": 1446,
@@ -2290,23 +1984,6 @@
       "sentiment": {}
     },
     {
-      "slug": "when-is-a-cycle-not-a-cycle-the-economist-magazine-flunks-semiconductors",
-      "date": "2022-10-31",
-      "word_count": 1446,
-      "sentence_count": 65,
-      "avg_sentence_length": 22.6,
-      "sentence_length_std": 17.4,
-      "vocabulary_size": 645,
-      "type_token_ratio": 0.4461,
-      "hapax_ratio": 0.7519,
-      "flesch_kincaid": {
-        "reading_ease": 40.6,
-        "grade_level": 13.1
-      },
-      "gunning_fog": 16.6,
-      "sentiment": {}
-    },
-    {
       "slug": "the-un-wisdom-of-crowds-prediction-markets-failed-their-midterm-exams",
       "date": "2022-11-14",
       "word_count": 2418,
@@ -2321,23 +1998,6 @@
         "grade_level": 14.1
       },
       "gunning_fog": 17.6,
-      "sentiment": {}
-    },
-    {
-      "slug": "ftx-and-esg-a-panorama-of-failed-governance-pt-1-the-internal-failures",
-      "date": "2022-11-21",
-      "word_count": 1585,
-      "sentence_count": 74,
-      "avg_sentence_length": 21.6,
-      "sentence_length_std": 15.7,
-      "vocabulary_size": 737,
-      "type_token_ratio": 0.465,
-      "hapax_ratio": 0.7408,
-      "flesch_kincaid": {
-        "reading_ease": 38.4,
-        "grade_level": 13.2
-      },
-      "gunning_fog": 17.3,
       "sentiment": {}
     },
     {
@@ -2409,40 +2069,6 @@
       "sentiment": {}
     },
     {
-      "slug": "dissecting-the-consumer-price-index-pt-1-inflation-is-over",
-      "date": "2022-12-14",
-      "word_count": 1217,
-      "sentence_count": 67,
-      "avg_sentence_length": 18.7,
-      "sentence_length_std": 13.0,
-      "vocabulary_size": 517,
-      "type_token_ratio": 0.4248,
-      "hapax_ratio": 0.6634,
-      "flesch_kincaid": {
-        "reading_ease": 46.7,
-        "grade_level": 11.3
-      },
-      "gunning_fog": 14.9,
-      "sentiment": {}
-    },
-    {
-      "slug": "why-the-federal-reserve-gets-inflation-wrong-and-why-monetary-policy-is-always-l",
-      "date": "2022-12-29",
-      "word_count": 1520,
-      "sentence_count": 74,
-      "avg_sentence_length": 21.2,
-      "sentence_length_std": 12.3,
-      "vocabulary_size": 535,
-      "type_token_ratio": 0.352,
-      "hapax_ratio": 0.6374,
-      "flesch_kincaid": {
-        "reading_ease": 45.3,
-        "grade_level": 12.0
-      },
-      "gunning_fog": 16.0,
-      "sentiment": {}
-    },
-    {
       "slug": "why-the-federal-reserve-gets-inflation-wrong-and-why-monetary-policy-is-always-l",
       "date": "2022-12-29",
       "word_count": 1520,
@@ -2474,23 +2100,6 @@
         "grade_level": 14.3
       },
       "gunning_fog": 17.2,
-      "sentiment": {}
-    },
-    {
-      "slug": "the-federal-reserve-has-an-egg-problem-and-a-chicken-and-egg-problem",
-      "date": "2023-01-17",
-      "word_count": 1546,
-      "sentence_count": 69,
-      "avg_sentence_length": 22.9,
-      "sentence_length_std": 14.7,
-      "vocabulary_size": 642,
-      "type_token_ratio": 0.4153,
-      "hapax_ratio": 0.6791,
-      "flesch_kincaid": {
-        "reading_ease": 42.9,
-        "grade_level": 12.8
-      },
-      "gunning_fog": 16.3,
       "sentiment": {}
     },
     {
@@ -3393,88 +3002,173 @@
       },
       "gunning_fog": 14.8,
       "sentiment": {}
+    },
+    {
+      "slug": "the-oil-market-canceled-the-hormuz-crisis-before-the-ceasefire",
+      "date": "2026-06-18",
+      "word_count": 1593,
+      "sentence_count": 84,
+      "avg_sentence_length": 19.5,
+      "sentence_length_std": 12.8,
+      "vocabulary_size": 671,
+      "type_token_ratio": 0.4212,
+      "hapax_ratio": 0.7004,
+      "flesch_kincaid": {
+        "reading_ease": 38.6,
+        "grade_level": 12.6
+      },
+      "gunning_fog": 16.0,
+      "sentiment": {}
+    },
+    {
+      "slug": "three-ways-in-which-greenspan-changed-forever-the-way-markets-work",
+      "date": "2026-06-26",
+      "word_count": 2300,
+      "sentence_count": 95,
+      "avg_sentence_length": 24.5,
+      "sentence_length_std": 16.4,
+      "vocabulary_size": 877,
+      "type_token_ratio": 0.3813,
+      "hapax_ratio": 0.7127,
+      "flesch_kincaid": {
+        "reading_ease": 40.4,
+        "grade_level": 13.6
+      },
+      "gunning_fog": 16.9,
+      "sentiment": {}
+    },
+    {
+      "slug": "the-us-is-awash-in-oil-and-gasoline-so-why-are-pump-prices-so-high",
+      "date": "2026-07-06",
+      "word_count": 2036,
+      "sentence_count": 104,
+      "avg_sentence_length": 19.9,
+      "sentence_length_std": 10.3,
+      "vocabulary_size": 667,
+      "type_token_ratio": 0.3276,
+      "hapax_ratio": 0.6297,
+      "flesch_kincaid": {
+        "reading_ease": 46.9,
+        "grade_level": 11.6
+      },
+      "gunning_fog": 15.0,
+      "sentiment": {}
+    },
+    {
+      "slug": "is-the-us-gas-tank-running-on-empty-are-reported-shortages-real",
+      "date": "2026-07-31",
+      "word_count": 2104,
+      "sentence_count": 118,
+      "avg_sentence_length": 18.1,
+      "sentence_length_std": 12.3,
+      "vocabulary_size": 804,
+      "type_token_ratio": 0.3821,
+      "hapax_ratio": 0.6642,
+      "flesch_kincaid": {
+        "reading_ease": 50.0,
+        "grade_level": 10.7
+      },
+      "gunning_fog": 14.0,
+      "sentiment": {}
+    },
+    {
+      "slug": "the-feds-influence-over-interest-rates-is-weakening-as-it-should",
+      "date": "2026-09-02",
+      "word_count": 1791,
+      "sentence_count": 82,
+      "avg_sentence_length": 22.1,
+      "sentence_length_std": 14.7,
+      "vocabulary_size": 652,
+      "type_token_ratio": 0.364,
+      "hapax_ratio": 0.6656,
+      "flesch_kincaid": {
+        "reading_ease": 46.0,
+        "grade_level": 12.3
+      },
+      "gunning_fog": 15.6,
+      "sentiment": {}
     }
   ],
   "sentence_length_histogram": [
     {
       "bin_start": 0,
       "bin_end": 5,
-      "count": 723
+      "count": 666
     },
     {
       "bin_start": 5,
       "bin_end": 10,
-      "count": 2802
+      "count": 2562
     },
     {
       "bin_start": 10,
       "bin_end": 15,
-      "count": 3340
+      "count": 3095
     },
     {
       "bin_start": 15,
       "bin_end": 20,
-      "count": 2848
+      "count": 2647
     },
     {
       "bin_start": 20,
       "bin_end": 25,
-      "count": 2332
+      "count": 2142
     },
     {
       "bin_start": 25,
       "bin_end": 30,
-      "count": 1772
+      "count": 1623
     },
     {
       "bin_start": 30,
       "bin_end": 35,
-      "count": 1076
+      "count": 995
     },
     {
       "bin_start": 35,
       "bin_end": 40,
-      "count": 771
+      "count": 720
     },
     {
       "bin_start": 40,
       "bin_end": 45,
-      "count": 496
+      "count": 457
     },
     {
       "bin_start": 45,
       "bin_end": 50,
-      "count": 325
+      "count": 292
     },
     {
       "bin_start": 50,
       "bin_end": 55,
-      "count": 254
+      "count": 240
     },
     {
       "bin_start": 55,
       "bin_end": 60,
-      "count": 194
+      "count": 182
     },
     {
       "bin_start": 60,
       "bin_end": 65,
-      "count": 117
+      "count": 111
     },
     {
       "bin_start": 65,
       "bin_end": 70,
-      "count": 160
+      "count": 143
     },
     {
       "bin_start": 70,
       "bin_end": 75,
-      "count": 85
+      "count": 74
     },
     {
       "bin_start": 75,
       "bin_end": 80,
-      "count": 49
+      "count": 50
     },
     {
       "bin_start": 80,
@@ -3484,269 +3178,269 @@
     {
       "bin_start": 85,
       "bin_end": 90,
-      "count": 28
+      "count": 26
     },
     {
       "bin_start": 90,
       "bin_end": 95,
-      "count": 37
+      "count": 33
     },
     {
       "bin_start": 95,
       "bin_end": 100,
-      "count": 32
+      "count": 30
     }
   ],
   "distinctive_words": [
     {
       "word": "market",
-      "count": 1880,
-      "frequency": 63.75
-    },
-    {
-      "word": "inflation",
-      "count": 1225,
-      "frequency": 41.54
+      "count": 1747,
+      "frequency": 64.06
     },
     {
       "word": "china",
-      "count": 1144,
-      "frequency": 38.79
+      "count": 1091,
+      "frequency": 40.01
+    },
+    {
+      "word": "inflation",
+      "count": 1048,
+      "frequency": 38.43
     },
     {
       "word": "price",
-      "count": 935,
-      "frequency": 31.7
+      "count": 872,
+      "frequency": 31.98
     },
     {
       "word": "value",
-      "count": 831,
-      "frequency": 28.18
+      "count": 735,
+      "frequency": 26.95
     },
     {
       "word": "may",
-      "count": 781,
+      "count": 722,
       "frequency": 26.48
     },
     {
       "word": "financial",
-      "count": 749,
-      "frequency": 25.4
+      "count": 684,
+      "frequency": 25.08
     },
     {
       "word": "chinese",
-      "count": 695,
-      "frequency": 23.57
-    },
-    {
-      "word": "years",
-      "count": 682,
-      "frequency": 23.13
-    },
-    {
-      "word": "industry",
-      "count": 641,
-      "frequency": 21.74
-    },
-    {
-      "word": "company",
-      "count": 635,
-      "frequency": 21.53
-    },
-    {
-      "word": "prices",
-      "count": 623,
-      "frequency": 21.12
-    },
-    {
-      "word": "covid",
-      "count": 619,
-      "frequency": 20.99
-    },
-    {
-      "word": "rate",
-      "count": 611,
-      "frequency": 20.72
+      "count": 667,
+      "frequency": 24.46
     },
     {
       "word": "fed",
-      "count": 597,
-      "frequency": 20.24
+      "count": 654,
+      "frequency": 23.98
     },
     {
-      "word": "technology",
-      "count": 573,
-      "frequency": 19.43
+      "word": "years",
+      "count": 630,
+      "frequency": 23.1
     },
     {
-      "word": "public",
-      "count": 570,
-      "frequency": 19.33
+      "word": "rate",
+      "count": 610,
+      "frequency": 22.37
+    },
+    {
+      "word": "prices",
+      "count": 604,
+      "frequency": 22.15
+    },
+    {
+      "word": "covid",
+      "count": 594,
+      "frequency": 21.78
+    },
+    {
+      "word": "industry",
+      "count": 567,
+      "frequency": 20.79
+    },
+    {
+      "word": "company",
+      "count": 566,
+      "frequency": 20.75
     },
     {
       "word": "companies",
-      "count": 561,
-      "frequency": 19.02
+      "count": 516,
+      "frequency": 18.92
+    },
+    {
+      "word": "public",
+      "count": 509,
+      "frequency": 18.66
+    },
+    {
+      "word": "technology",
+      "count": 499,
+      "frequency": 18.3
     },
     {
       "word": "economic",
-      "count": 531,
-      "frequency": 18.01
+      "count": 497,
+      "frequency": 18.22
     },
     {
       "word": "were",
-      "count": 515,
-      "frequency": 17.46
-    },
-    {
-      "word": "several",
-      "count": 511,
-      "frequency": 17.33
+      "count": 497,
+      "frequency": 18.22
     },
     {
       "word": "policy",
-      "count": 493,
-      "frequency": 16.72
+      "count": 484,
+      "frequency": 17.75
+    },
+    {
+      "word": "several",
+      "count": 453,
+      "frequency": 16.61
     },
     {
       "word": "high",
-      "count": 475,
-      "frequency": 16.11
+      "count": 442,
+      "frequency": 16.21
     },
     {
       "word": "index",
-      "count": 471,
-      "frequency": 15.97
-    },
-    {
-      "word": "stock",
-      "count": 443,
-      "frequency": 15.02
+      "count": 438,
+      "frequency": 16.06
     },
     {
       "word": "economy",
-      "count": 443,
-      "frequency": 15.02
-    },
-    {
-      "word": "cpi",
-      "count": 434,
-      "frequency": 14.72
-    },
-    {
-      "word": "wireless",
-      "count": 418,
-      "frequency": 14.17
-    },
-    {
-      "word": "chairman",
-      "count": 403,
-      "frequency": 13.67
-    },
-    {
-      "word": "federal",
-      "count": 402,
-      "frequency": 13.63
+      "count": 423,
+      "frequency": 15.51
     },
     {
       "word": "markets",
-      "count": 398,
-      "frequency": 13.5
+      "count": 408,
+      "frequency": 14.96
     },
     {
-      "word": "business",
-      "count": 394,
-      "frequency": 13.36
+      "word": "stock",
+      "count": 402,
+      "frequency": 14.74
+    },
+    {
+      "word": "federal",
+      "count": 374,
+      "frequency": 13.71
     },
     {
       "word": "here",
-      "count": 392,
-      "frequency": 13.29
+      "count": 367,
+      "frequency": 13.46
+    },
+    {
+      "word": "cpi",
+      "count": 367,
+      "frequency": 13.46
+    },
+    {
+      "word": "business",
+      "count": 362,
+      "frequency": 13.27
+    },
+    {
+      "word": "wireless",
+      "count": 361,
+      "frequency": 13.24
     },
     {
       "word": "last",
-      "count": 391,
-      "frequency": 13.26
+      "count": 361,
+      "frequency": 13.24
     },
     {
-      "word": "stevens",
-      "count": 379,
-      "frequency": 12.85
+      "word": "chairman",
+      "count": 353,
+      "frequency": 12.94
     },
     {
       "word": "world",
-      "count": 369,
-      "frequency": 12.51
-    },
-    {
-      "word": "investors",
-      "count": 369,
-      "frequency": 12.51
-    },
-    {
-      "word": "down",
-      "count": 360,
-      "frequency": 12.21
-    },
-    {
-      "word": "development",
-      "count": 357,
-      "frequency": 12.11
-    },
-    {
-      "word": "government",
-      "count": 349,
-      "frequency": 11.83
-    },
-    {
-      "word": "short",
-      "count": 342,
-      "frequency": 11.6
-    },
-    {
-      "word": "equity",
-      "count": 332,
-      "frequency": 11.26
-    },
-    {
-      "word": "share",
-      "count": 330,
-      "frequency": 11.19
-    },
-    {
-      "word": "photo",
-      "count": 328,
-      "frequency": 11.12
-    },
-    {
-      "word": "today",
-      "count": 325,
-      "frequency": 11.02
+      "count": 353,
+      "frequency": 12.94
     },
     {
       "word": "rates",
-      "count": 323,
-      "frequency": 10.95
-    },
-    {
-      "word": "career",
-      "count": 322,
-      "frequency": 10.92
+      "count": 343,
+      "frequency": 12.58
     },
     {
       "word": "supply",
-      "count": 322,
-      "frequency": 10.92
+      "count": 340,
+      "frequency": 12.47
     },
     {
-      "word": "consumer",
-      "count": 322,
-      "frequency": 10.92
+      "word": "down",
+      "count": 335,
+      "frequency": 12.28
     },
     {
-      "word": "private",
-      "count": 316,
-      "frequency": 10.72
+      "word": "investors",
+      "count": 335,
+      "frequency": 12.28
+    },
+    {
+      "word": "stevens",
+      "count": 325,
+      "frequency": 11.92
+    },
+    {
+      "word": "oil",
+      "count": 325,
+      "frequency": 11.92
+    },
+    {
+      "word": "government",
+      "count": 323,
+      "frequency": 11.84
+    },
+    {
+      "word": "development",
+      "count": 311,
+      "frequency": 11.4
+    },
+    {
+      "word": "short",
+      "count": 311,
+      "frequency": 11.4
+    },
+    {
+      "word": "funds",
+      "count": 303,
+      "frequency": 11.11
+    },
+    {
+      "word": "reserve",
+      "count": 301,
+      "frequency": 11.04
+    },
+    {
+      "word": "risk",
+      "count": 299,
+      "frequency": 10.96
+    },
+    {
+      "word": "photo",
+      "count": 297,
+      "frequency": 10.89
+    },
+    {
+      "word": "today",
+      "count": 296,
+      "frequency": 10.85
+    },
+    {
+      "word": "equity",
+      "count": 288,
+      "frequency": 10.56
     }
   ]
 }
