@@ -105,8 +105,80 @@ def corpus_provenance(manifest: dict | None = None) -> list[dict]:
     return provenance_for_slugs(slugs, manifest=manifest)
 
 
+# Wire-service junk embedded in scraped Forbes bodies. Stock-photo captions sit at
+# article tops, so they land disproportionately at the START of a chunk — exactly where
+# a model learns how to begin a piece. Measured 2026-09-19: 22% of training passages.
+_PHOTO_CREDIT = re.compile(r"\((?:Photo|Picture)\s*(?:by|credit|:)[^)]{0,200}\)", re.I)
+_AGENCY_CREDIT = re.compile(
+    r"AFP PHOTO/\S+(?:\s+\S+)?"           # AFP PHOTO/Emmanuel Dunand
+    r"|REUTERS/\S+"                         # REUTERS/Kim
+    r"|[\w.\-]*(?:/[\w.\-]+)*\s*via Getty Images"
+    r"|\bGetty Images\b"
+    r"|RESTRICTED TO EDITORIAL USE[^()]{0,200}?(?=\(|$)"
+    r"|MANDATORY CREDIT[^()]{0,200}?(?=\(|$)"
+    r"|NO MARKETING NO ADVERTISING CAMPAIGNS",
+    re.I,
+)
+_TRUNCATION = re.compile(r"\[\+\]")
+# "MADRID, SPAIN - 2019/04/03:" / "WASHINGTON, DC - JULY 15:" / "TAIPEI, TAIWAN:"
+_DATELINE = re.compile(
+    r"\b[A-Z][A-Z.'\- ]{1,30}(?:,\s*[A-Z][A-Z.'\- ]{1,30})?\s*[-\u2013:]\s"
+)
+_CAPTION_WINDOW = 400   # a caption never runs longer than this; bounds any mistake
+
+
+def strip_wire_boilerplate(text: str) -> str:
+    """Remove stock-photo captions and agency credits from a scraped article body.
+
+    Deliberately conservative: a greedy cleaner that eats his prose is worse than
+    leaving captions in. A dateline is only treated as a caption when the window after
+    it also carries a caption *signal* (a ``[+]`` truncation marker or an agency
+    credit) — so "CPI, PCE - these two measures diverged" is left alone.
+    """
+    if not text:
+        return ""
+
+    # Datelines first: the [+] and credit markers are the signal, so remove spans
+    # before the markers themselves are stripped.
+    out, pos = [], 0
+    for m in _DATELINE.finditer(text):
+        if m.start() < pos:
+            continue
+        window = text[m.start():m.start() + _CAPTION_WINDOW]
+        signal = _TRUNCATION.search(window) or _AGENCY_CREDIT.search(window)
+        if not signal:
+            continue
+        # End the caption at the first sentence break after the signal. If there is
+        # no sentence break inside the window, FAIL CLOSED: cut only through the
+        # signal itself. Deleting the whole window would swallow the prose that
+        # follows — which it did, eating a real sentence about Minsheng's CEO.
+        # A caption is its own block, so a blank line ends it; otherwise a sentence
+        # break does. Match "." followed by ANY whitespace — the real corpus ends
+        # captions with a newline, and looking only for ". " skipped past the
+        # sentence that followed and ate it.
+        rest = window[signal.end():]
+        stop = re.search(r"\n\s*\n|\.\s", rest)
+        end = m.start() + signal.end() + (stop.end() if stop else 0)
+        out.append(text[pos:m.start()])
+        pos = end
+    out.append(text[pos:])
+    text = "".join(out)
+
+    text = _PHOTO_CREDIT.sub(" ", text)
+    text = _AGENCY_CREDIT.sub(" ", text)
+    text = _TRUNCATION.sub(" ", text)
+    # Collapse horizontal runs only — PARAGRAPH BREAKS MUST SURVIVE. Flattening \n\n
+    # here silently broke training/prepare.py's repeated-paragraph footer stripper,
+    # which splits on blank lines; its test caught it.
+    text = re.sub(r"[ \t]+", " ", text)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return text.strip()
+
+
 def clean_text(text: str) -> str:
     """Basic text cleaning for analysis."""
+    text = strip_wire_boilerplate(text)
+
     # Remove common Forbes boilerplate
     boilerplate = [
         r"Follow me on Twitter.*",

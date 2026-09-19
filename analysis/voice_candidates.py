@@ -44,6 +44,11 @@ DEFAULT_TRIALS_OUT = REPO_ROOT / "eval" / "voice_trials_generated.json"
 DEFAULT_ADAPTER_DIR = FINETUNE_DIR / "adapters_reshaped"
 
 BASE_3B = "mlx-community/Qwen2.5-3B-Instruct-4bit"
+# Gemma 4 e4b, not the 12B tier 2 serves: every MLX Gemma 4 12B conversion declares
+# model_type "gemma4_unified", which mlx-lm implements nowhere (0.31.3 or main).
+GEMMA_E4B = "mlx-community/gemma-4-e4b-it-4bit"
+EXEMPLARS_PATH = REPO_ROOT / "eval" / "voice_exemplars.json"
+HISTORY_PATH = DATA_DIR / "analysis" / "voice_eval_history.jsonl"
 
 # Capped near the reference excerpt length. D17's run used 400 with no repetition
 # penalty, so the fine-tune wrote ~357 words against real's ~134 — which both depressed
@@ -65,6 +70,7 @@ class ArmSpec:
     adapter_dir: Path | None = None
     tier: int | None = None
     retrieve: bool = False
+    exemplars: int = 0             # how many voice exemplars to put in-context (0 = none)
 
 
 ARM_REGISTRY: dict[str, ArmSpec] = {
@@ -75,6 +81,25 @@ ARM_REGISTRY: dict[str, ArmSpec] = {
     "base-3b": ArmSpec("base-3b", kind="mlx", model=BASE_3B, adapter_dir=None),
     "rag": ArmSpec("rag", kind="conductor", tier=2, retrieve=True),
     "prompted-12b": ArmSpec("prompted-12b", kind="conductor", tier=2, retrieve=False),
+    # Gemma 4 e4b arms — the 2x2 of ADR D19, plus the in-context variants.
+    "gemma-plain": ArmSpec("gemma-plain", kind="mlx", model=GEMMA_E4B),
+    "gemma-ft": ArmSpec("gemma-ft", kind="mlx", model=GEMMA_E4B,
+                        adapter_dir=FINETUNE_DIR / "adapters_gemma4_e4b_best"),
+    "gemma-plain-rag": ArmSpec("gemma-plain-rag", kind="mlx", model=GEMMA_E4B, retrieve=True),
+    "gemma-ft-rag": ArmSpec("gemma-ft-rag", kind="mlx", model=GEMMA_E4B, retrieve=True,
+                            adapter_dir=FINETUNE_DIR / "adapters_gemma4_e4b_best"),
+    # In-context arms. 50 hand-picked exemplars (~24k tokens) sit inside e4b's 131k
+    # context. The plain-* variants are controls: D19 showed the un-tuned base beats
+    # its own adapter, so testing exemplars only on the fine-tune would repeat that
+    # mistake.
+    "gemma-ft-shot": ArmSpec("gemma-ft-shot", kind="mlx", model=GEMMA_E4B, exemplars=50,
+                             adapter_dir=FINETUNE_DIR / "adapters_gemma4_e4b_best"),
+    "gemma-ft-shot-rag": ArmSpec("gemma-ft-shot-rag", kind="mlx", model=GEMMA_E4B,
+                                 exemplars=50, retrieve=True,
+                                 adapter_dir=FINETUNE_DIR / "adapters_gemma4_e4b_best"),
+    "gemma-plain-shot": ArmSpec("gemma-plain-shot", kind="mlx", model=GEMMA_E4B, exemplars=50),
+    "gemma-plain-shot-rag": ArmSpec("gemma-plain-shot-rag", kind="mlx", model=GEMMA_E4B,
+                                    exemplars=50, retrieve=True),
 }
 
 
@@ -106,6 +131,62 @@ def checkpoint_filename(iteration: int) -> str:
 
 
 # --- arm resolution --------------------------------------------------------------
+
+def load_exemplars(path: Path = EXEMPLARS_PATH) -> list[dict]:
+    """The hand-picked voice exemplars. Empty list when the file is absent."""
+    if not path.exists():
+        return []
+    return json.loads(path.read_text()).get("exemplars", [])
+
+
+def build_exemplar_block(exemplars: list[dict], n: int) -> str:
+    """Format the first *n* exemplars as an in-context voice reference.
+
+    Labelled as examples of his writing rather than as instructions, so the model
+    imitates the prose instead of answering the exemplars.
+    """
+    chosen = exemplars[:n]
+    if not chosen:
+        return ""
+    parts = [
+        "Below are passages you wrote. Study the voice — the argument structure, the "
+        "asides, the rhythm — then answer in that voice.\n"
+    ]
+    for i, ex in enumerate(chosen, 1):
+        parts.append(f"--- PASSAGE {i} ---\n{ex['text'].strip()}\n")
+    return "\n".join(parts)
+
+
+def append_history(
+    record: dict, path: Path = HISTORY_PATH
+) -> Path:
+    """Append one eval result to the run history.
+
+    The point is the *series*: how the arms move as the corpus grows. Every row
+    carries the corpus size beside the score, because "how much text is enough" is the
+    question this project exists to answer (see docs/goals.md).
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a") as fh:
+        fh.write(json.dumps(record, sort_keys=True) + "\n")
+    return path
+
+
+def history_rows(path: Path = HISTORY_PATH) -> list[dict]:
+    """Every recorded eval, oldest first. Malformed lines are skipped, not fatal."""
+    if not path.exists():
+        return []
+    rows = []
+    for line in path.read_text().splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            rows.append(json.loads(line))
+        except json.JSONDecodeError:
+            continue
+    return rows
+
 
 def resolve_arms(names: list[str]) -> list[ArmSpec]:
     """Look up *names* in the registry, preserving order."""
@@ -192,7 +273,8 @@ def _stage_best_adapter(adapter_dir: Path, log_path: Path, dest: Path) -> tuple[
     return dest, iteration, loss
 
 
-def _live_mlx(arm: ArmSpec, *, max_tokens: int, repetition_penalty: float):
+def _live_mlx(arm: ArmSpec, *, max_tokens: int, repetition_penalty: float,
+              sources: dict[str, list[dict]] | None = None):
     from mlx_lm import generate as mlx_generate
     from mlx_lm import load
 
@@ -201,13 +283,22 @@ def _live_mlx(arm: ArmSpec, *, max_tokens: int, repetition_penalty: float):
     model, tokenizer = load(
         arm.model, adapter_path=str(arm.adapter_dir) if arm.adapter_dir else None
     )
+    block = build_exemplar_block(load_exemplars(), arm.exemplars) if arm.exemplars else ""
 
     def run(_arm: ArmSpec, prompts: list[str]) -> list[str]:
+        from .rag_eval import _GEN_SYSTEM, _format_sources
+
         out = []
-        for prompt in prompts:
+        for idx, prompt in enumerate(prompts):
+            system = SYSTEM_PROMPT + ("\n\n" + block if block else "")
+            if arm.retrieve and sources is not None:
+                srcs = sources.get(str(idx), []) or []
+                user = _GEN_SYSTEM + _format_sources(srcs) + f"\n\nQUESTION: {prompt}"
+            else:
+                user = prompt
             text = tokenizer.apply_chat_template(
-                [{"role": "system", "content": SYSTEM_PROMPT},
-                 {"role": "user", "content": prompt}],
+                [{"role": "system", "content": system},
+                 {"role": "user", "content": user}],
                 add_generation_prompt=True, tokenize=False,
             )
             kwargs = {"max_tokens": max_tokens, "verbose": False}

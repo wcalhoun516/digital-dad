@@ -14,6 +14,11 @@ data/finetune_run/
 eval/voice_trials*.json
 !eval/voice_trials.example.json
 
+# Hand-picked voice exemplars for the in-context arms — 50 passages, ~18k words of his
+# actual prose. Same licensing rule as the trials (D7). Regenerate locally; the
+# selection is reproducible from the recorded record_index + sha1 in the file.
+eval/voice_exemplars.json
+
 # Voice-eval raw reports — the JSON carries the prompts (which quote article
 # fragments). The rendered .md reports are tables only and ARE committed: they
 # are the finding, and they are what a future run compares against.
