@@ -131,6 +131,86 @@ then re-run `make voice-eval`. The adapter, trials, and eval report live under
 `data/finetune_run/` and `data/analysis/voice_eval.*` (all gitignored). Mild overfitting
 appeared by iter ~100 (val loss bottomed there), consistent with the tiny training set.
 
+### D19 — Fine-tuning makes it *worse*. The control arm settles it.
+**Date:** 2026-09-19. Closes roadmap **#50**. Supersedes D17's open question; D15/D17's
+product verdict (RAG is the voice) stands and is now properly controlled.
+
+**What D17 could not answer.** D17 compared a Qwen **3B with no context** against a Gemma
+**12B holding 8 retrieved passages** — a 4x parameter gap plus a retrieval advantage — so "the
+fine-tune lost" could not be separated from "a 3B model lost". The owner called this out and
+specified the right design: hold the model constant, vary only tuning and retrieval.
+
+**Design.** One model throughout — Gemma 4 e4b (7.46B, `mlx-community/gemma-4-e4b-it-4bit`),
+LoRA on 16 of 42 layers, rank 16, 300 iters, best checkpoint by val loss (iter 260).
+Generation matched for length (220-token cap, 1.1 repetition penalty) against ~134-word
+reference excerpts. Retrieval cached before training so memory never competed. Two 3-way blind
+rankings, 8 held-out prompts each, T3 judge.
+
+*Intended* base was tier 2's own `gemma4:12b-it-qat`. **Not possible:** every MLX conversion of
+Gemma 4 12B (12 repos checked) declares `model_type: gemma4_unified`, and mlx-lm implements no
+`gemma4_unified` in 0.31.3 **or on upstream main**. e4b is plain `gemma4`, same generation, and
+already in the owner's Ollama roster. So this measures e4b, not the 12B serving tier 2.
+
+**Experiment A — no retrieval**
+
+| arm | win-rate | avg rank | TTR | fingerprint/1k |
+|---|---|---|---|---|
+| real | 100% | 1.00 | 0.709 | 28.1 |
+| gemma-plain | 0% | 2.25 | 0.757 | 37.1 |
+| gemma-ft | 0% | **2.75** | **0.220** | 48.5 |
+
+**Experiment B — with retrieval**
+
+| arm | win-rate | avg rank | TTR | fingerprint/1k |
+|---|---|---|---|---|
+| real | 88% | 1.12 | 0.709 | 28.1 |
+| gemma-plain-rag | 12% | 2.25 | **0.762** | **23.0** |
+| gemma-ft-rag | 0% | **2.62** | **0.280** | **98.1** |
+
+**The finding: the adapter is a net negative.** Head-to-head, the *un-tuned base beats its own
+fine-tuned self* — **75%** without retrieval, **62%** with. The question was never "did the
+fine-tune win"; it is "the fine-tune costs you something", and it costs you in both conditions.
+
+**It is not a Qwen artifact.** The same failure mode reproduced on a different, larger base:
+lexical diversity collapses (TTR 0.22–0.28 against real's 0.709) while his distinctive
+vocabulary is over-produced — **98.1 per 1k against real's 28.1, a 3.5x over-use**. Two
+architectures, two parameter scales, one behaviour.
+
+**And it is NOT overfitting.** Val loss was still *descending* at the best checkpoint (3.074 @
+iter 260 from 4.655), and final train loss 3.233 sits essentially on top of val 3.186 — no
+memorization gap at all, unlike the Qwen run's train 1.845 vs val 3.058. The adapter was
+**underfit and harmful at the same time**. That matters: "train longer" and "add more tokens of
+the same kind" are not obviously the fix, because the model was not failing to fit — it was
+fitting the wrong thing.
+
+**Diagnosis.** Instruction-pair fine-tuning on ~453K tokens optimizes the cheapest available
+loss reduction: reproduce the surface markers of his prose. That is exactly what the metrics
+show — hinge vocabulary up 3.5x, lexical variety down two-thirds. The objective is teaching
+mimicry, not voice.
+
+**Implication.** Ask Dad (RAG) remains the shipped voice, and the fine-tune should not be
+registered in the conductor. Note how close the *plain* model plus retrieval sits to the real
+thing on style: TTR 0.762 vs 0.709, fingerprint 23.0 vs 28.1 — slightly *under*-using his
+vocabulary rather than over-using it. Retrieval is doing real work (plain-rag took a win off
+`real`; plain took none).
+
+**What to try instead of more of this.** Not more iterations, not more rank, not more
+instruction pairs:
+1. **Many-shot in-context.** Gemma 4 carries a 262K context and the entire corpus is ~453K
+   tokens — over half of everything he wrote fits in one prompt. No training, and it cannot
+   invent positions.
+2. **DAPT** — continued pretraining on raw prose rather than instruction pairs, so the
+   objective stops rewarding format mimicry.
+3. **Synthetic preference pairs (DPO/ORPO)** — his passage vs a blandly rewritten one. The one
+   technique that manufactures signal from the corpus already in hand.
+4. **Better retrieval** — reranking, hybrid BM25+dense. Improving the arm that is winning.
+
+Artifacts: `data/analysis/voice_eval_exp{A,B}.md` (committed). Training log:
+`logs/gemma4e4b_20260919_133400.log`. Corpus at time of measurement: **181 articles,
+340,849 words, ~453K tokens** — record this beside every future score.
+
+---
+
 ### D17 — The fine-tune's problem was never the data *shape*. RAG stays the voice.
 **Date:** 2026-09-19. **Supersedes D15's revival path** (not its verdict). Closes roadmap #40,
 plan 0009 step 4–5.
