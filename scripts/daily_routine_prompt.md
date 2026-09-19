@@ -133,8 +133,10 @@ If there are no actionable pins, fall to §5b.
 
 ## §5b — Cold path: roadmap (lowest priority)
 
-1. Read the **last 7** entries under `## Run history` in `docs/daily-log.md`. Tally their
-   `Category` values.
+1. Read the **last 7** entries under `## Run history` in `docs/daily-log.md` — the file is
+   chronological, so these are the **bottom 7**, nearest the end. Tally their `Category`
+   values. If the dates have gaps against the merged `daily/*` PRs, entries have been lost
+   (see §10) — say so in your PR rather than tallying a file you know is incomplete.
 2. Choose the category that is **least-recently / least-frequently** worked among the
    roadmap's categories (`infra · scraper · analysis · dashboard · training · family · docs`).
    Ties → prefer the category with a `P1` item available.
@@ -241,8 +243,18 @@ that, stop and flip to `in-progress` for a future run to continue.
 
 ## §10 — Run history
 
-Append a **newest-on-top** entry under `## Run history` in `docs/daily-log.md`, commit it on
-your branch, and push (so it's part of the PR). Format:
+Append your entry at the **very end of `docs/daily-log.md`** — the file is chronological,
+oldest first, newest last. Do **not** insert at the top; do not insert after any marker.
+Commit it on your branch and push (so it's part of the PR).
+
+**Never delete an existing entry.** If a rebase or merge conflicts in this file, the
+resolution is always **keep both sides** and order by date. Another run's entry is not an
+alternative to yours. Five entries (PRs #92–#96) were silently lost on 2026-09-19 by resolving
+this conflict the other way, and because §5b tallies the last 7 entries, that corrupted the
+cold-path category selection for every run afterward. If you resolve a conflict here, say so
+explicitly in your PR body.
+
+Format:
 ```
 ### YYYY-MM-DD — <Category> — <Status>
 - PR: <url or #num>   (or "skipped" / "none")
