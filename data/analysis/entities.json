@@ -1,10 +1,10 @@
 {
-  "total_articles_analyzed": 199,
+  "total_articles_analyzed": 181,
   "top_organizations": [
     {
       "name": "Fed",
-      "count": 492,
-      "article_count": 55,
+      "count": 538,
+      "article_count": 57,
       "articles": [
         "a-deflation-alert-hidden-in-the-latest-consumer-price-indicators",
         "a-long-overdue-reckoning-for-the-bureau-of-labor-statistics",
@@ -15,7 +15,7 @@
     },
     {
       "name": "Huawei",
-      "count": 202,
+      "count": 201,
       "article_count": 16,
       "articles": [
         "5g-risk-huawei-is-small-potatoes-compared-to-tsmc-who",
@@ -27,8 +27,8 @@
     },
     {
       "name": "the Federal Reserve",
-      "count": 164,
-      "article_count": 70,
+      "count": 153,
+      "article_count": 72,
       "articles": [
         "a-check-on-market-sentiment-has-the-pandemic-changed-the-signal",
         "a-deflation-alert-hidden-in-the-latest-consumer-price-indicators",
@@ -38,8 +38,20 @@
       ]
     },
     {
+      "name": "Treasury",
+      "count": 143,
+      "article_count": 39,
+      "articles": [
+        "beijing-embraces-moral-hazard-the-huarong-bailout-was-the-right-move",
+        "collateral-damage-from-fed-policy-3-money-market-funds-a-powder-keg",
+        "collateral-damage-from-fed-policy-part-2-a-broken-housing-market",
+        "decoding-the-inflation-signals-how-to-read-and-correct-the-latest-cpi-figure",
+        "europes-hamiltonian-moment-what-is-it-really"
+      ]
+    },
+    {
       "name": "Ant",
-      "count": 156,
+      "count": 118,
       "article_count": 12,
       "articles": [
         "alibaba-update-its-down-75-is-it-still-a-value-play",
@@ -50,20 +62,8 @@
       ]
     },
     {
-      "name": "Treasury",
-      "count": 153,
-      "article_count": 37,
-      "articles": [
-        "beijing-embraces-moral-hazard-the-huarong-bailout-was-the-right-move",
-        "collateral-damage-from-fed-policy-3-money-market-funds-a-powder-keg",
-        "collateral-damage-from-fed-policy-part-2-a-broken-housing-market",
-        "decoding-the-inflation-signals-how-to-read-and-correct-the-latest-cpi-figure",
-        "europes-hamiltonian-moment-what-is-it-really"
-      ]
-    },
-    {
       "name": "Getty Images",
-      "count": 129,
+      "count": 114,
       "article_count": 89,
       "articles": [
         "a-check-on-market-sentiment-has-the-pandemic-changed-the-signal",
@@ -75,7 +75,7 @@
     },
     {
       "name": "Stevens Institute of Technology",
-      "count": 103,
+      "count": 89,
       "article_count": 88,
       "articles": [
         "5g-risk-huawei-is-small-potatoes-compared-to-tsmc-who",
@@ -87,7 +87,7 @@
     },
     {
       "name": "Illinois Superconductor Corporation",
-      "count": 102,
+      "count": 88,
       "article_count": 88,
       "articles": [
         "5g-risk-huawei-is-small-potatoes-compared-to-tsmc-who",
@@ -99,7 +99,7 @@
     },
     {
       "name": "Elliott Associates",
-      "count": 102,
+      "count": 88,
       "article_count": 88,
       "articles": [
         "5g-risk-huawei-is-small-potatoes-compared-to-tsmc-who",
@@ -111,7 +111,7 @@
     },
     {
       "name": "the Hanlon Financial Systems Research Center",
-      "count": 102,
+      "count": 88,
       "article_count": 88,
       "articles": [
         "5g-risk-huawei-is-small-potatoes-compared-to-tsmc-who",
@@ -123,7 +123,7 @@
     },
     {
       "name": "the National Science Foundation",
-      "count": 102,
+      "count": 88,
       "article_count": 88,
       "articles": [
         "5g-risk-huawei-is-small-potatoes-compared-to-tsmc-who",
@@ -135,7 +135,7 @@
     },
     {
       "name": "Industry/University Cooperative Research Center",
-      "count": 102,
+      "count": 88,
       "article_count": 88,
       "articles": [
         "5g-risk-huawei-is-small-potatoes-compared-to-tsmc-who",
@@ -147,7 +147,7 @@
     },
     {
       "name": "Springer/Apress",
-      "count": 102,
+      "count": 88,
       "article_count": 88,
       "articles": [
         "5g-risk-huawei-is-small-potatoes-compared-to-tsmc-who",
@@ -158,20 +158,8 @@
       ]
     },
     {
-      "name": "EU",
-      "count": 96,
-      "article_count": 23,
-      "articles": [
-        "can-the-euro-survive-the-progressive-critique-joseph-stiglitz-part-1",
-        "carthage-must-be-destroyed-or-will-covid-19-kill-huawei",
-        "chinas-economic-crisis-is-tracking-japans-downturn-in-the-1990s",
-        "europes-hamiltonian-moment-what-is-it-really",
-        "george-floyd-robert-e-lee-blm-global-and-the-economics-of-diversity"
-      ]
-    },
-    {
       "name": "Tesla",
-      "count": 89,
+      "count": 83,
       "article_count": 11,
       "articles": [
         "after-apple-and-tesla-berkshire-and-amazon-should-split-their-shares-too",
@@ -182,20 +170,20 @@
       ]
     },
     {
-      "name": "PCE",
+      "name": "EU",
       "count": 82,
-      "article_count": 18,
+      "article_count": 24,
       "articles": [
-        "a-deflation-alert-hidden-in-the-latest-consumer-price-indicators",
-        "decoding-the-inflation-signals-how-to-read-and-correct-the-latest-cpi-figure",
-        "dissecting-the-consumer-price-index-pt-1-inflation-is-over",
-        "get-ready-for-more-inflation-panic-porn-the-may-cpi-release",
-        "inflation-is-a-fever-is-it-a-common-cold-or-economic-leukemia"
+        "can-the-euro-survive-the-progressive-critique-joseph-stiglitz-part-1",
+        "carthage-must-be-destroyed-or-will-covid-19-kill-huawei",
+        "chinas-economic-crisis-is-tracking-japans-downturn-in-the-1990s",
+        "europes-hamiltonian-moment-what-is-it-really",
+        "george-floyd-robert-e-lee-blm-global-and-the-economics-of-diversity"
       ]
     },
     {
       "name": "Intel",
-      "count": 77,
+      "count": 71,
       "article_count": 12,
       "articles": [
         "5g-risk-huawei-is-small-potatoes-compared-to-tsmc-who",
@@ -206,8 +194,20 @@
       ]
     },
     {
+      "name": "PCE",
+      "count": 70,
+      "article_count": 18,
+      "articles": [
+        "a-deflation-alert-hidden-in-the-latest-consumer-price-indicators",
+        "decoding-the-inflation-signals-how-to-read-and-correct-the-latest-cpi-figure",
+        "dissecting-the-consumer-price-index-pt-1-inflation-is-over",
+        "get-ready-for-more-inflation-panic-porn-the-may-cpi-release",
+        "inflation-is-a-fever-is-it-a-common-cold-or-economic-leukemia"
+      ]
+    },
+    {
       "name": "IPO",
-      "count": 71,
+      "count": 67,
       "article_count": 17,
       "articles": [
         "a-check-on-market-sentiment-has-the-pandemic-changed-the-signal",
@@ -219,7 +219,7 @@
     },
     {
       "name": "Apple",
-      "count": 68,
+      "count": 51,
       "article_count": 22,
       "articles": [
         "5g-risk-huawei-is-small-potatoes-compared-to-tsmc-who",
@@ -243,31 +243,31 @@
     },
     {
       "name": "Ford",
-      "count": 43,
-      "article_count": 8,
+      "count": 44,
+      "article_count": 9,
       "articles": [
         "germanys-pearl-harbor-moment-the-wars-weightiest-consequence",
         "how-covid-19-will-change-finance-ford-the-fed-and-the-bond-market",
         "how-covid-19-will-change-finance-whatever-it-takes-vs-full-faith-and-credit",
         "intel-nvidia-et-al-and-american-semiconductor-hegemony",
-        "the-hierarchy-of-financial-superpowers-whos-really-on-top"
+        "is-the-us-gas-tank-running-on-empty-are-reported-shortages-real"
       ]
     },
     {
-      "name": "Amazon",
-      "count": 42,
-      "article_count": 14,
+      "name": "FFR",
+      "count": 44,
+      "article_count": 5,
       "articles": [
-        "after-apple-and-tesla-berkshire-and-amazon-should-split-their-shares-too",
-        "alibaba-is-a-spring-loaded-value-play-ready-to-explode",
-        "alibaba-update-its-down-75-is-it-still-a-value-play",
-        "alibaba-update-whoops-is-this-stock-really-a-value-trap",
-        "ants-botched-ipo-part-3-the-regulators-performed-a-radical-value-ectomy"
+        "does-raising-the-fed-funds-rate-tame-inflation-is-there-collateral-damage",
+        "the-feds-influence-over-interest-rates-is-weakening-as-it-should",
+        "the-feds-rate-cut-a-soft-landing-or-fake-news",
+        "three-ways-in-which-greenspan-changed-forever-the-way-markets-work",
+        "update-on-interest-rates-is-the-federal-reserve-shooting-blanks"
       ]
     },
     {
       "name": "Treasurys",
-      "count": 42,
+      "count": 41,
       "article_count": 17,
       "articles": [
         "chinas-economic-crisis-is-tracking-japans-downturn-in-the-1990s",
@@ -278,8 +278,20 @@
       ]
     },
     {
-      "name": "TSMC",
+      "name": "Congress",
       "count": 38,
+      "article_count": 28,
+      "articles": [
+        "5g-risk-huawei-is-small-potatoes-compared-to-tsmc-who",
+        "a-huawei-recovery-plan-step-1-playing-peekaboo-pcaob-compliance",
+        "a-long-overdue-reckoning-for-the-bureau-of-labor-statistics",
+        "carthage-must-be-destroyed-or-will-covid-19-kill-huawei",
+        "didi-means-war-a-financial-cold-war-with-china"
+      ]
+    },
+    {
+      "name": "TSMC",
+      "count": 37,
       "article_count": 9,
       "articles": [
         "5g-risk-huawei-is-small-potatoes-compared-to-tsmc-who",
@@ -290,56 +302,15 @@
       ]
     },
     {
-      "name": "Congress",
-      "count": 36,
-      "article_count": 26,
+      "name": "Amazon",
+      "count": 34,
+      "article_count": 14,
       "articles": [
-        "5g-risk-huawei-is-small-potatoes-compared-to-tsmc-who",
-        "a-huawei-recovery-plan-step-1-playing-peekaboo-pcaob-compliance",
-        "a-long-overdue-reckoning-for-the-bureau-of-labor-statistics",
-        "carthage-must-be-destroyed-or-will-covid-19-kill-huawei",
-        "didi-means-war-a-financial-cold-war-with-china"
-      ]
-    },
-    {
-      "name": "FTX",
-      "count": 36,
-      "article_count": 1,
-      "articles": [
-        "ftx-and-esg-a-panorama-of-failed-governance-pt-1-the-internal-failures"
-      ]
-    },
-    {
-      "name": "GME",
-      "count": 33,
-      "article_count": 4,
-      "articles": [
-        "gamestop-the-screenplay-5-hollywood-projects-3-competing-morality-tales",
-        "gamestop-the-second-surge-anatomy-of-a-gamma-swarm",
-        "gamestop-were-the-short-sellers-routed-does-it-matter-beware-the-gamma",
-        "gamestopgamestonk-has-nothing-to-do-with-the-madness-of-crowds"
-      ]
-    },
-    {
-      "name": "BLS",
-      "count": 32,
-      "article_count": 8,
-      "articles": [
-        "a-long-overdue-reckoning-for-the-bureau-of-labor-statistics",
-        "dissecting-the-consumer-price-index-pt-1-inflation-is-over",
-        "more-problems-with-inflation-coping-with-volatility",
-        "the-31-flavors-of-inflation-do-we-really-understand-these-numbers",
-        "the-flawed-cpi-the-fallacy-of-year-over-year-inflation-reporting"
-      ]
-    },
-    {
-      "name": "FFR",
-      "count": 32,
-      "article_count": 3,
-      "articles": [
-        "does-raising-the-fed-funds-rate-tame-inflation-is-there-collateral-damage",
-        "the-feds-rate-cut-a-soft-landing-or-fake-news",
-        "update-on-interest-rates-is-the-federal-reserve-shooting-blanks"
+        "after-apple-and-tesla-berkshire-and-amazon-should-split-their-shares-too",
+        "alibaba-is-a-spring-loaded-value-play-ready-to-explode",
+        "alibaba-update-its-down-75-is-it-still-a-value-play",
+        "alibaba-update-whoops-is-this-stock-really-a-value-trap",
+        "ants-botched-ipo-part-3-the-regulators-performed-a-radical-value-ectomy"
       ]
     },
     {
@@ -355,24 +326,31 @@
       ]
     },
     {
-      "name": "ESG",
-      "count": 28,
-      "article_count": 1,
+      "name": "BLS",
+      "count": 30,
+      "article_count": 8,
       "articles": [
-        "ftx-and-esg-a-panorama-of-failed-governance-pt-1-the-internal-failures"
+        "a-long-overdue-reckoning-for-the-bureau-of-labor-statistics",
+        "dissecting-the-consumer-price-index-pt-1-inflation-is-over",
+        "more-problems-with-inflation-coping-with-volatility",
+        "the-31-flavors-of-inflation-do-we-really-understand-these-numbers",
+        "the-flawed-cpi-the-fallacy-of-year-over-year-inflation-reporting"
       ]
     },
     {
-      "name": "YoY",
-      "count": 28,
-      "article_count": 1,
+      "name": "GME",
+      "count": 27,
+      "article_count": 4,
       "articles": [
-        "why-the-federal-reserve-gets-inflation-wrong-and-why-monetary-policy-is-always-l"
+        "gamestop-the-screenplay-5-hollywood-projects-3-competing-morality-tales",
+        "gamestop-the-second-surge-anatomy-of-a-gamma-swarm",
+        "gamestop-were-the-short-sellers-routed-does-it-matter-beware-the-gamma",
+        "gamestopgamestonk-has-nothing-to-do-with-the-madness-of-crowds"
       ]
     },
     {
       "name": "NASDAQ",
-      "count": 27,
+      "count": 25,
       "article_count": 13,
       "articles": [
         "a-check-on-market-sentiment-has-the-pandemic-changed-the-signal",
@@ -380,42 +358,6 @@
         "carthage-must-be-destroyed-or-will-covid-19-kill-huawei",
         "does-inflation-still-exist-does-anyone-really-know",
         "europes-hamiltonian-moment-what-is-it-really"
-      ]
-    },
-    {
-      "name": "Finance",
-      "count": 23,
-      "article_count": 13,
-      "articles": [
-        "a-check-on-market-sentiment-has-the-pandemic-changed-the-signal",
-        "a-strange-new-bubble-in-chinese-a-shares-a-is-for-arbitrage",
-        "ants-botched-ipo-part-3-the-regulators-performed-a-radical-value-ectomy",
-        "beijing-embraces-moral-hazard-the-huarong-bailout-was-the-right-move",
-        "beijings-jack-ma-kabuki-play-continues-is-alibaba-a-value-play"
-      ]
-    },
-    {
-      "name": "Senate",
-      "count": 22,
-      "article_count": 14,
-      "articles": [
-        "a-huawei-recovery-plan-step-1-playing-peekaboo-pcaob-compliance",
-        "carthage-must-be-destroyed-or-will-covid-19-kill-huawei",
-        "how-covid-19-will-change-finance-whatever-it-takes-vs-full-faith-and-credit",
-        "janet-yellen-forgets-how-to-do-fedspeak-or-whats-that-floating-in-the-punchbowl",
-        "semiconductors-the-chips-act-is-it-really-necessary-part-3"
-      ]
-    },
-    {
-      "name": "Federal Reserve",
-      "count": 22,
-      "article_count": 19,
-      "articles": [
-        "collateral-damage-from-fed-policy-3-money-market-funds-a-powder-keg",
-        "decoding-the-inflation-signals-how-to-read-and-correct-the-latest-cpi-figure",
-        "does-inflation-still-exist-does-anyone-really-know",
-        "does-raising-the-fed-funds-rate-tame-inflation-is-there-collateral-damage",
-        "inflation-the-media-screams-but-the-market-is-unfazed"
       ]
     },
     {
@@ -428,6 +370,30 @@
         "chinas-covid-exit-wave-2-is-it-over",
         "chinas-covid-exit-wave-3-what-other-countries-zero-covid-exits-show",
         "chinas-covid-exit-wave-4-flattening-the-curve"
+      ]
+    },
+    {
+      "name": "Senate",
+      "count": 21,
+      "article_count": 15,
+      "articles": [
+        "a-huawei-recovery-plan-step-1-playing-peekaboo-pcaob-compliance",
+        "carthage-must-be-destroyed-or-will-covid-19-kill-huawei",
+        "how-covid-19-will-change-finance-whatever-it-takes-vs-full-faith-and-credit",
+        "janet-yellen-forgets-how-to-do-fedspeak-or-whats-that-floating-in-the-punchbowl",
+        "semiconductors-the-chips-act-is-it-really-necessary-part-3"
+      ]
+    },
+    {
+      "name": "Finance",
+      "count": 21,
+      "article_count": 13,
+      "articles": [
+        "a-check-on-market-sentiment-has-the-pandemic-changed-the-signal",
+        "a-strange-new-bubble-in-chinese-a-shares-a-is-for-arbitrage",
+        "ants-botched-ipo-part-3-the-regulators-performed-a-radical-value-ectomy",
+        "beijing-embraces-moral-hazard-the-huarong-bailout-was-the-right-move",
+        "beijings-jack-ma-kabuki-play-continues-is-alibaba-a-value-play"
       ]
     },
     {
@@ -460,24 +426,36 @@
       ]
     },
     {
+      "name": "QE",
+      "count": 20,
+      "article_count": 8,
+      "articles": [
+        "collateral-damage-from-fed-policy-part-2-a-broken-housing-market",
+        "does-inflation-still-exist-does-anyone-really-know",
+        "how-covid-19-will-change-finance-ford-the-fed-and-the-bond-market",
+        "janet-yellen-forgets-how-to-do-fedspeak-or-whats-that-floating-in-the-punchbowl",
+        "the-fed-doesnt-just-print-money-it-also-prints-alpha"
+      ]
+    },
+    {
+      "name": "Federal Reserve",
+      "count": 20,
+      "article_count": 19,
+      "articles": [
+        "collateral-damage-from-fed-policy-3-money-market-funds-a-powder-keg",
+        "decoding-the-inflation-signals-how-to-read-and-correct-the-latest-cpi-figure",
+        "does-inflation-still-exist-does-anyone-really-know",
+        "does-raising-the-fed-funds-rate-tame-inflation-is-there-collateral-damage",
+        "inflation-the-media-screams-but-the-market-is-unfazed"
+      ]
+    },
+    {
       "name": "SVB",
       "count": 20,
       "article_count": 2,
       "articles": [
         "the-market-fears-the-fed-more-than-hamas",
         "the-markets-big-fear-is-not-geopolitics-it-is-the-federal-reserve"
-      ]
-    },
-    {
-      "name": "the New York Stock Exchange",
-      "count": 19,
-      "article_count": 15,
-      "articles": [
-        "5g-risk-huawei-is-small-potatoes-compared-to-tsmc-who",
-        "a-huawei-recovery-plan-step-1-playing-peekaboo-pcaob-compliance",
-        "alibaba-is-a-spring-loaded-value-play-ready-to-explode",
-        "ants-botched-ipo-part-3-the-regulators-performed-a-radical-value-ectomy",
-        "didi-means-war-a-financial-cold-war-with-china"
       ]
     },
     {
@@ -489,18 +467,6 @@
         "tariff-uncertainties-pt-5-the-big-one-will-it-cause-a-recession",
         "the-putcall-ratio-of-market-sentiment-went-crazy-in-november-what-can-it-mean",
         "will-electoral-chaos-wreck-the-market"
-      ]
-    },
-    {
-      "name": "Social Security",
-      "count": 19,
-      "article_count": 7,
-      "articles": [
-        "beijing-embraces-moral-hazard-the-huarong-bailout-was-the-right-move",
-        "inflation-is-a-fever-is-it-a-common-cold-or-economic-leukemia",
-        "inflation-is-a-fever-is-it-as-mild-as-a-common-cold-or-something-more-serious",
-        "media-laziness-in-evaluating-economic-data-inflation-gas-prices-china-russia",
-        "review-of-a-world-without-work-part-2-what-doesnt-work"
       ]
     },
     {
@@ -516,8 +482,87 @@
       ]
     },
     {
-      "name": "InterDigital Communications",
+      "name": "Social Security",
       "count": 18,
+      "article_count": 7,
+      "articles": [
+        "beijing-embraces-moral-hazard-the-huarong-bailout-was-the-right-move",
+        "inflation-is-a-fever-is-it-a-common-cold-or-economic-leukemia",
+        "inflation-is-a-fever-is-it-as-mild-as-a-common-cold-or-something-more-serious",
+        "media-laziness-in-evaluating-economic-data-inflation-gas-prices-china-russia",
+        "review-of-a-world-without-work-part-2-what-doesnt-work"
+      ]
+    },
+    {
+      "name": "FTX",
+      "count": 18,
+      "article_count": 1,
+      "articles": [
+        "ftx-and-esg-a-panorama-of-failed-governance-pt-1-the-internal-failures"
+      ]
+    },
+    {
+      "name": "Fed Funds",
+      "count": 18,
+      "article_count": 12,
+      "articles": [
+        "collateral-damage-from-fed-policy-3-money-market-funds-a-powder-keg",
+        "collateral-damage-from-fed-policy-part-2-a-broken-housing-market",
+        "does-raising-the-fed-funds-rate-tame-inflation-is-there-collateral-damage",
+        "tariff-uncertainties-part-3-the-bond-markets",
+        "the-egg-crisis-another-pseudo-inflation-phenomenon"
+      ]
+    },
+    {
+      "name": "ECB",
+      "count": 17,
+      "article_count": 4,
+      "articles": [
+        "how-covid-19-will-change-finance-fear-federalism-and-fixed-income",
+        "how-covid-19-will-change-finance-whatever-it-takes-vs-full-faith-and-credit",
+        "whatever-it-takes-or-whatever-germany-allows",
+        "why-a-liberal-arts-education-is-the-best-foundation-for-a-career-in-finance"
+      ]
+    },
+    {
+      "name": "Google",
+      "count": 17,
+      "article_count": 16,
+      "articles": [
+        "5g-risk-huawei-is-small-potatoes-compared-to-tsmc-who",
+        "a-check-on-market-sentiment-has-the-pandemic-changed-the-signal",
+        "after-apple-and-tesla-berkshire-and-amazon-should-split-their-shares-too",
+        "ants-botched-ipo-part-3-the-regulators-performed-a-radical-value-ectomy",
+        "carthage-must-be-destroyed-or-will-covid-19-kill-huawei"
+      ]
+    },
+    {
+      "name": "CCP",
+      "count": 17,
+      "article_count": 10,
+      "articles": [
+        "5g-risk-huawei-is-small-potatoes-compared-to-tsmc-who",
+        "a-huawei-recovery-plan-step-1-playing-peekaboo-pcaob-compliance",
+        "beijings-jack-ma-kabuki-play-continues-is-alibaba-a-value-play",
+        "didi-means-war-a-financial-cold-war-with-china",
+        "how-huawei-could-save-itself-a-five-point-plan"
+      ]
+    },
+    {
+      "name": "Nasdaq",
+      "count": 17,
+      "article_count": 7,
+      "articles": [
+        "a-huawei-recovery-plan-step-1-playing-peekaboo-pcaob-compliance",
+        "the-market-fears-the-fed-more-than-hamas",
+        "the-markets-big-fear-is-not-geopolitics-it-is-the-federal-reserve",
+        "what-happens-if-chinese-firms-are-kicked-out-of-the-us-stock-market",
+        "why-china-stepped-on-the-ant-group-part-1-a-bubble-looming"
+      ]
+    },
+    {
+      "name": "InterDigital Communications",
+      "count": 16,
       "article_count": 8,
       "articles": [
         "carthage-must-be-destroyed-or-will-covid-19-kill-huawei",
@@ -529,7 +574,7 @@
     },
     {
       "name": "IDCC",
-      "count": 18,
+      "count": 16,
       "article_count": 8,
       "articles": [
         "carthage-must-be-destroyed-or-will-covid-19-kill-huawei",
@@ -538,48 +583,12 @@
         "gradually-then-suddenly-clarity-comes-to-the-eu",
         "how-covid-19-will-change-finance-fear-federalism-and-fixed-income"
       ]
-    },
-    {
-      "name": "Google",
-      "count": 18,
-      "article_count": 16,
-      "articles": [
-        "5g-risk-huawei-is-small-potatoes-compared-to-tsmc-who",
-        "a-check-on-market-sentiment-has-the-pandemic-changed-the-signal",
-        "after-apple-and-tesla-berkshire-and-amazon-should-split-their-shares-too",
-        "ants-botched-ipo-part-3-the-regulators-performed-a-radical-value-ectomy",
-        "carthage-must-be-destroyed-or-will-covid-19-kill-huawei"
-      ]
-    },
-    {
-      "name": "QE",
-      "count": 18,
-      "article_count": 7,
-      "articles": [
-        "collateral-damage-from-fed-policy-part-2-a-broken-housing-market",
-        "does-inflation-still-exist-does-anyone-really-know",
-        "how-covid-19-will-change-finance-ford-the-fed-and-the-bond-market",
-        "janet-yellen-forgets-how-to-do-fedspeak-or-whats-that-floating-in-the-punchbowl",
-        "the-fed-doesnt-just-print-money-it-also-prints-alpha"
-      ]
-    },
-    {
-      "name": "CCP",
-      "count": 18,
-      "article_count": 10,
-      "articles": [
-        "5g-risk-huawei-is-small-potatoes-compared-to-tsmc-who",
-        "a-huawei-recovery-plan-step-1-playing-peekaboo-pcaob-compliance",
-        "beijings-jack-ma-kabuki-play-continues-is-alibaba-a-value-play",
-        "didi-means-war-a-financial-cold-war-with-china",
-        "how-huawei-could-save-itself-a-five-point-plan"
-      ]
     }
   ],
   "top_people": [
     {
       "name": "Covid",
-      "count": 190,
+      "count": 180,
       "article_count": 37,
       "articles": [
         "a-check-on-market-sentiment-has-the-pandemic-changed-the-signal",
@@ -591,7 +600,7 @@
     },
     {
       "name": "Stevens",
-      "count": 103,
+      "count": 89,
       "article_count": 88,
       "articles": [
         "5g-risk-huawei-is-small-potatoes-compared-to-tsmc-who",
@@ -602,20 +611,8 @@
       ]
     },
     {
-      "name": "Jack Ma",
-      "count": 100,
-      "article_count": 17,
-      "articles": [
-        "alibaba-is-a-spring-loaded-value-play-ready-to-explode",
-        "alibaba-update-its-down-75-is-it-still-a-value-play",
-        "alibaba-update-whoops-is-this-stock-really-a-value-trap",
-        "ants-botched-ipo-part-3-the-regulators-performed-a-radical-value-ectomy",
-        "beijings-jack-ma-kabuki-play-continues-is-alibaba-a-value-play"
-      ]
-    },
-    {
       "name": "Rafael",
-      "count": 93,
+      "count": 80,
       "article_count": 80,
       "articles": [
         "5g-risk-huawei-is-small-potatoes-compared-to-tsmc-who",
@@ -626,8 +623,20 @@
       ]
     },
     {
+      "name": "Jack Ma",
+      "count": 79,
+      "article_count": 17,
+      "articles": [
+        "alibaba-is-a-spring-loaded-value-play-ready-to-explode",
+        "alibaba-update-its-down-75-is-it-still-a-value-play",
+        "alibaba-update-whoops-is-this-stock-really-a-value-trap",
+        "ants-botched-ipo-part-3-the-regulators-performed-a-radical-value-ectomy",
+        "beijings-jack-ma-kabuki-play-continues-is-alibaba-a-value-play"
+      ]
+    },
+    {
       "name": "George Calhoun",
-      "count": 73,
+      "count": 61,
       "article_count": 61,
       "articles": [
         "5g-risk-huawei-is-small-potatoes-compared-to-tsmc-who",
@@ -639,7 +648,7 @@
     },
     {
       "name": "Calhoun",
-      "count": 72,
+      "count": 60,
       "article_count": 60,
       "articles": [
         "5g-risk-huawei-is-small-potatoes-compared-to-tsmc-who",
@@ -651,7 +660,7 @@
     },
     {
       "name": "Ma",
-      "count": 68,
+      "count": 52,
       "article_count": 11,
       "articles": [
         "alibaba-is-a-spring-loaded-value-play-ready-to-explode",
@@ -663,7 +672,7 @@
     },
     {
       "name": "Powell",
-      "count": 60,
+      "count": 50,
       "article_count": 17,
       "articles": [
         "a-deflation-alert-hidden-in-the-latest-consumer-price-indicators",
@@ -671,17 +680,6 @@
         "dissecting-the-consumer-price-index-pt-1-inflation-is-over",
         "does-inflation-still-exist-does-anyone-really-know",
         "inflation-the-media-screams-but-the-market-is-unfazed"
-      ]
-    },
-    {
-      "name": "Buffett",
-      "count": 47,
-      "article_count": 4,
-      "articles": [
-        "after-apple-and-tesla-berkshire-and-amazon-should-split-their-shares-too",
-        "alibaba-update-whoops-is-this-stock-really-a-value-trap",
-        "buffett-takes-on-japan-but-does-value-still-exist",
-        "the-real-warren-buffett-anomaly-and-how-to-profit-from-it"
       ]
     },
     {
@@ -697,50 +695,26 @@
       ]
     },
     {
-      "name": "Twitter @GeoCalhoun520",
-      "count": 29,
-      "article_count": 23,
-      "articles": [
-        "a-check-on-market-sentiment-has-the-pandemic-changed-the-signal",
-        "covid-19-testing-free-with-insurance-a-new-form-of-health-care-fraud",
-        "gamestop-tesla-do-asset-bubbles-exist-can-they-be-managed",
-        "gamestop-the-screenplay-5-hollywood-projects-3-competing-morality-tales",
-        "gamestop-the-second-surge-anatomy-of-a-gamma-swarm"
-      ]
-    },
-    {
-      "name": "Jack",
-      "count": 29,
-      "article_count": 6,
-      "articles": [
-        "alibaba-is-a-spring-loaded-value-play-ready-to-explode",
-        "alibaba-update-its-down-75-is-it-still-a-value-play",
-        "beijings-jack-ma-kabuki-play-continues-is-alibaba-a-value-play",
-        "kill-chicken-scare-monkey-杀鸡儆猴-beijings-philosophy-of-regulation-wont-work",
-        "the-latest-jack-ma-sighting-is-it-for-real"
-      ]
-    },
-    {
-      "name": "Bitcoin",
-      "count": 29,
+      "name": "Buffett",
+      "count": 38,
       "article_count": 4,
       "articles": [
-        "inflation-the-media-screams-but-the-market-is-unfazed",
-        "media-negativity-is-the-bond-rout-real-should-we-panic-over-inflation",
-        "the-biggest-crypto-fantasy-of-all",
-        "the-ethics-of-crypto-sorting-out-good-intentions-and-bad-actors"
+        "after-apple-and-tesla-berkshire-and-amazon-should-split-their-shares-too",
+        "alibaba-update-whoops-is-this-stock-really-a-value-trap",
+        "buffett-takes-on-japan-but-does-value-still-exist",
+        "the-real-warren-buffett-anomaly-and-how-to-profit-from-it"
       ]
     },
     {
-      "name": "Photo",
-      "count": 28,
-      "article_count": 22,
+      "name": "Greenspan",
+      "count": 31,
+      "article_count": 7,
       "articles": [
-        "a-strange-new-bubble-in-chinese-a-shares-a-is-for-arbitrage",
-        "alibaba-is-a-spring-loaded-value-play-ready-to-explode",
-        "ants-botched-ipo-part-3-the-regulators-performed-a-radical-value-ectomy",
-        "beijing-is-intentionally-underreporting-chinas-covid-death-rate-part-1",
-        "can-the-euro-survive-the-progressive-critique-joseph-stiglitz-part-1"
+        "does-inflation-still-exist-does-anyone-really-know",
+        "janet-yellen-forgets-how-to-do-fedspeak-or-whats-that-floating-in-the-punchbowl",
+        "tapering-talking-tightening-the-federal-reserves-masterful-messaging",
+        "the-fed-doesnt-just-print-money-it-also-prints-alpha",
+        "three-ways-in-which-greenspan-changed-forever-the-way-markets-work"
       ]
     },
     {
@@ -756,18 +730,45 @@
       ]
     },
     {
-      "name": "Hamilton",
-      "count": 24,
-      "article_count": 2,
+      "name": "Photo",
+      "count": 26,
+      "article_count": 22,
       "articles": [
-        "europes-hamiltonian-moment-what-is-it-really",
-        "gradually-then-suddenly-clarity-comes-to-the-eu"
+        "a-strange-new-bubble-in-chinese-a-shares-a-is-for-arbitrage",
+        "alibaba-is-a-spring-loaded-value-play-ready-to-explode",
+        "ants-botched-ipo-part-3-the-regulators-performed-a-radical-value-ectomy",
+        "beijing-is-intentionally-underreporting-chinas-covid-death-rate-part-1",
+        "can-the-euro-survive-the-progressive-critique-joseph-stiglitz-part-1"
+      ]
+    },
+    {
+      "name": "Jack",
+      "count": 25,
+      "article_count": 6,
+      "articles": [
+        "alibaba-is-a-spring-loaded-value-play-ready-to-explode",
+        "alibaba-update-its-down-75-is-it-still-a-value-play",
+        "beijings-jack-ma-kabuki-play-continues-is-alibaba-a-value-play",
+        "kill-chicken-scare-monkey-杀鸡儆猴-beijings-philosophy-of-regulation-wont-work",
+        "the-latest-jack-ma-sighting-is-it-for-real"
+      ]
+    },
+    {
+      "name": "Hormuz",
+      "count": 25,
+      "article_count": 5,
+      "articles": [
+        "is-the-us-gas-tank-running-on-empty-are-reported-shortages-real",
+        "is-there-price-gouging-in-the-gasoline-market",
+        "the-oil-market-canceled-the-hormuz-crisis-before-the-ceasefire",
+        "the-us-is-awash-in-oil-and-gasoline-so-why-are-pump-prices-so-high",
+        "to-price-in-hormuz-markets-must-recognize-two-economic-risks"
       ]
     },
     {
       "name": "Jerome Powell",
       "count": 23,
-      "article_count": 15,
+      "article_count": 16,
       "articles": [
         "a-deflation-alert-hidden-in-the-latest-consumer-price-indicators",
         "jackson-hole-the-federal-reserve-does-shark-week-for-the-markets",
@@ -777,8 +778,29 @@
       ]
     },
     {
-      "name": "Warren Buffett",
+      "name": "Twitter @GeoCalhoun520",
       "count": 23,
+      "article_count": 23,
+      "articles": [
+        "a-check-on-market-sentiment-has-the-pandemic-changed-the-signal",
+        "covid-19-testing-free-with-insurance-a-new-form-of-health-care-fraud",
+        "gamestop-tesla-do-asset-bubbles-exist-can-they-be-managed",
+        "gamestop-the-screenplay-5-hollywood-projects-3-competing-morality-tales",
+        "gamestop-the-second-surge-anatomy-of-a-gamma-swarm"
+      ]
+    },
+    {
+      "name": "Crypto",
+      "count": 22,
+      "article_count": 2,
+      "articles": [
+        "the-biggest-crypto-fantasy-of-all",
+        "the-ethics-of-crypto-sorting-out-good-intentions-and-bad-actors"
+      ]
+    },
+    {
+      "name": "Warren Buffett",
+      "count": 19,
       "article_count": 10,
       "articles": [
         "after-apple-and-tesla-berkshire-and-amazon-should-split-their-shares-too",
@@ -789,29 +811,19 @@
       ]
     },
     {
-      "name": "Crypto",
-      "count": 23,
-      "article_count": 2,
+      "name": "Bitcoin",
+      "count": 18,
+      "article_count": 4,
       "articles": [
+        "inflation-the-media-screams-but-the-market-is-unfazed",
+        "media-negativity-is-the-bond-rout-real-should-we-panic-over-inflation",
         "the-biggest-crypto-fantasy-of-all",
         "the-ethics-of-crypto-sorting-out-good-intentions-and-bad-actors"
       ]
     },
     {
-      "name": "Larry Summers",
-      "count": 18,
-      "article_count": 11,
-      "articles": [
-        "a-deflation-alert-hidden-in-the-latest-consumer-price-indicators",
-        "inflation-is-a-fever-is-it-a-common-cold-or-economic-leukemia",
-        "inflation-is-a-fever-is-it-as-mild-as-a-common-cold-or-something-more-serious",
-        "inflation-is-over-what-comes-next",
-        "shortages-gluts-deflation-the-bottlenecks-in-the-economy-are-breaking"
-      ]
-    },
-    {
       "name": "Xi Jinping",
-      "count": 17,
+      "count": 16,
       "article_count": 14,
       "articles": [
         "ants-botched-ipo-part-3-the-regulators-performed-a-radical-value-ectomy",
@@ -832,50 +844,35 @@
       ]
     },
     {
-      "name": "Putin",
-      "count": 16,
-      "article_count": 7,
+      "name": "Larry Summers",
+      "count": 15,
+      "article_count": 11,
       "articles": [
-        "germanys-pearl-harbor-moment-the-wars-weightiest-consequence",
-        "shortages-gluts-deflation-the-bottlenecks-in-the-economy-are-breaking",
-        "the-inflation-narrative-falters-instead-we-have-gluts-now-and-soon-deflation",
-        "the-market-fears-the-fed-more-than-hamas",
-        "the-markets-big-fear-is-not-geopolitics-it-is-the-federal-reserve"
+        "a-deflation-alert-hidden-in-the-latest-consumer-price-indicators",
+        "inflation-is-a-fever-is-it-a-common-cold-or-economic-leukemia",
+        "inflation-is-a-fever-is-it-as-mild-as-a-common-cold-or-something-more-serious",
+        "inflation-is-over-what-comes-next",
+        "shortages-gluts-deflation-the-bottlenecks-in-the-economy-are-breaking"
       ]
     },
     {
-      "name": "Greenspan",
-      "count": 15,
-      "article_count": 6,
-      "articles": [
-        "does-inflation-still-exist-does-anyone-really-know",
-        "janet-yellen-forgets-how-to-do-fedspeak-or-whats-that-floating-in-the-punchbowl",
-        "tapering-talking-tightening-the-federal-reserves-masterful-messaging",
-        "the-fed-doesnt-just-print-money-it-also-prints-alpha",
-        "update-on-interest-rates-is-the-federal-reserve-shooting-blanks"
-      ]
-    },
-    {
-      "name": "Alexander Hamilton",
-      "count": 15,
-      "article_count": 4,
+      "name": "Hamilton",
+      "count": 14,
+      "article_count": 2,
       "articles": [
         "europes-hamiltonian-moment-what-is-it-really",
-        "germanys-pearl-harbor-moment-the-wars-weightiest-consequence",
-        "gradually-then-suddenly-clarity-comes-to-the-eu",
-        "the-european-unions-next-step-a-hamiltonian-commonwealth"
+        "gradually-then-suddenly-clarity-comes-to-the-eu"
       ]
     },
     {
-      "name": "Jack Ma’s",
-      "count": 14,
-      "article_count": 9,
+      "name": "Alan Greenspan",
+      "count": 13,
+      "article_count": 4,
       "articles": [
-        "alibaba-is-a-spring-loaded-value-play-ready-to-explode",
-        "alibaba-update-its-down-75-is-it-still-a-value-play",
-        "didi-means-war-a-financial-cold-war-with-china",
-        "financial-regulation-chinese-style-and-where-is-jack-ma",
-        "jack-mas-hostage-video-fake-news-the-old-fashioned-way"
+        "janet-yellen-forgets-how-to-do-fedspeak-or-whats-that-floating-in-the-punchbowl",
+        "the-fed-doesnt-just-print-money-it-also-prints-alpha",
+        "three-ways-in-which-greenspan-changed-forever-the-way-markets-work",
+        "will-the-fed-cut-interest-rates-does-it-matter-recent-history-says-no"
       ]
     },
     {
@@ -902,57 +899,9 @@
       ]
     },
     {
-      "name": "Berkshire Hathaway",
+      "name": "Bernanke",
       "count": 12,
       "article_count": 6,
-      "articles": [
-        "after-apple-and-tesla-berkshire-and-amazon-should-split-their-shares-too",
-        "buffett-takes-on-japan-but-does-value-still-exist",
-        "the-hierarchy-of-financial-superpowers-whos-really-on-top",
-        "the-real-warren-buffett-anomaly-and-how-to-profit-from-it",
-        "will-tesla-break-the-sp-500-index-part-1"
-      ]
-    },
-    {
-      "name": "Ant",
-      "count": 12,
-      "article_count": 5,
-      "articles": [
-        "alibaba-update-its-down-75-is-it-still-a-value-play",
-        "ants-botched-ipo-part-3-the-regulators-performed-a-radical-value-ectomy",
-        "the-sad-end-of-jack-ma-inc",
-        "why-china-stepped-on-the-ant-group-part-1-a-bubble-looming",
-        "why-china-stopped-the-ant-groups-ipo-part-2-ants-dangerous-business-model"
-      ]
-    },
-    {
-      "name": "Core",
-      "count": 12,
-      "article_count": 8,
-      "articles": [
-        "a-deflation-alert-hidden-in-the-latest-consumer-price-indicators",
-        "dissecting-the-consumer-price-index-pt-1-inflation-is-over",
-        "get-ready-for-more-inflation-panic-porn-the-may-cpi-release",
-        "more-problems-with-inflation-coping-with-volatility",
-        "the-31-flavors-of-inflation-do-we-really-understand-these-numbers"
-      ]
-    },
-    {
-      "name": "Biden",
-      "count": 12,
-      "article_count": 5,
-      "articles": [
-        "covid-19-testing-free-with-insurance-a-new-form-of-health-care-fraud",
-        "germanys-pearl-harbor-moment-the-wars-weightiest-consequence",
-        "is-inflation-created-by-corporate-greed-evidence-from-the-current-egg-flation-ep",
-        "semiconductors-the-chips-act-what-it-is-part-1",
-        "the-case-against-quarterly-reporting-by-public-companies-part-1-the-fundamentals"
-      ]
-    },
-    {
-      "name": "Bernanke",
-      "count": 11,
-      "article_count": 5,
       "articles": [
         "does-inflation-still-exist-does-anyone-really-know",
         "jackson-hole-the-federal-reserve-does-shark-week-for-the-markets",
@@ -962,27 +911,27 @@
       ]
     },
     {
-      "name": "Tesla",
-      "count": 11,
-      "article_count": 5,
+      "name": "Putin",
+      "count": 12,
+      "article_count": 7,
       "articles": [
-        "gamestop-tesla-do-asset-bubbles-exist-can-they-be-managed",
-        "the-stock-split-anomaly-how-apple-tesla-created-powerful-alpha-last-month",
-        "will-tesla-break-the-sp-500-index-part-1",
-        "will-tesla-break-the-sp-500part-2-the-mechanics-of-market-turmoil",
-        "will-tesla-break-the-sp500-pt-3-did-the-way-it-was-added-help-create-a-bubble"
+        "germanys-pearl-harbor-moment-the-wars-weightiest-consequence",
+        "shortages-gluts-deflation-the-bottlenecks-in-the-economy-are-breaking",
+        "the-inflation-narrative-falters-instead-we-have-gluts-now-and-soon-deflation",
+        "the-market-fears-the-fed-more-than-hamas",
+        "the-markets-big-fear-is-not-geopolitics-it-is-the-federal-reserve"
       ]
     },
     {
-      "name": "Joe Biden",
+      "name": "Berkshire Hathaway",
       "count": 11,
       "article_count": 6,
       "articles": [
-        "janet-yellen-forgets-how-to-do-fedspeak-or-whats-that-floating-in-the-punchbowl",
-        "semiconductors-the-chips-act-what-it-is-part-1",
-        "the-american-election-calendar-drives-foreign-stock-markets-too",
-        "the-chips-act-good-questions-bad-questions-bad-bets-part-2",
-        "the-presidential-election-cycle-and-the-stock-market-a-classic-calendar-anomaly"
+        "after-apple-and-tesla-berkshire-and-amazon-should-split-their-shares-too",
+        "buffett-takes-on-japan-but-does-value-still-exist",
+        "the-hierarchy-of-financial-superpowers-whos-really-on-top",
+        "the-real-warren-buffett-anomaly-and-how-to-profit-from-it",
+        "will-tesla-break-the-sp-500-index-part-1"
       ]
     },
     {
@@ -995,6 +944,18 @@
         "jack-mas-hostage-video-fake-news-the-old-fashioned-way",
         "the-sad-end-of-jack-ma-inc",
         "why-china-stepped-on-the-ant-group-part-1-a-bubble-looming"
+      ]
+    },
+    {
+      "name": "Jack Ma’s",
+      "count": 11,
+      "article_count": 9,
+      "articles": [
+        "alibaba-is-a-spring-loaded-value-play-ready-to-explode",
+        "alibaba-update-its-down-75-is-it-still-a-value-play",
+        "didi-means-war-a-financial-cold-war-with-china",
+        "financial-regulation-chinese-style-and-where-is-jack-ma",
+        "jack-mas-hostage-video-fake-news-the-old-fashioned-way"
       ]
     },
     {
@@ -1018,37 +979,27 @@
       ]
     },
     {
-      "name": "Qualcomm",
+      "name": "Tesla",
       "count": 10,
       "article_count": 5,
       "articles": [
-        "5g-risk-huawei-is-small-potatoes-compared-to-tsmc-who",
-        "in-semiconductors-china-is-in-commodity-hell-part-4",
-        "semiconductors-more-us-leverage-more-bad-news-for-beijing-part-3",
-        "the-case-for-intel-an-illustration-of-the-value-investing-mindset",
-        "when-is-a-cycle-not-a-cycle-the-economist-magazine-flunks-semiconductors"
+        "gamestop-tesla-do-asset-bubbles-exist-can-they-be-managed",
+        "the-stock-split-anomaly-how-apple-tesla-created-powerful-alpha-last-month",
+        "will-tesla-break-the-sp-500-index-part-1",
+        "will-tesla-break-the-sp-500part-2-the-mechanics-of-market-turmoil",
+        "will-tesla-break-the-sp500-pt-3-did-the-way-it-was-added-help-create-a-bubble"
       ]
     },
     {
-      "name": "Jeff Bezos",
+      "name": "Core",
       "count": 10,
       "article_count": 8,
       "articles": [
-        "after-apple-and-tesla-berkshire-and-amazon-should-split-their-shares-too",
-        "alibaba-update-whoops-is-this-stock-really-a-value-trap",
-        "ants-botched-ipo-part-3-the-regulators-performed-a-radical-value-ectomy",
-        "jack-ma-reappears-but-what-does-the-market-see",
-        "jack-mas-hostage-video-fake-news-the-old-fashioned-way"
-      ]
-    },
-    {
-      "name": "GME",
-      "count": 10,
-      "article_count": 3,
-      "articles": [
-        "gamestop-the-screenplay-5-hollywood-projects-3-competing-morality-tales",
-        "gamestop-the-second-surge-anatomy-of-a-gamma-swarm",
-        "gamestopgamestonk-has-nothing-to-do-with-the-madness-of-crowds"
+        "a-deflation-alert-hidden-in-the-latest-consumer-price-indicators",
+        "dissecting-the-consumer-price-index-pt-1-inflation-is-over",
+        "get-ready-for-more-inflation-panic-porn-the-may-cpi-release",
+        "more-problems-with-inflation-coping-with-volatility",
+        "the-31-flavors-of-inflation-do-we-really-understand-these-numbers"
       ]
     },
     {
@@ -1069,11 +1020,14 @@
       ]
     },
     {
-      "name": "MoM",
-      "count": 10,
-      "article_count": 1,
+      "name": "Alexander Hamilton",
+      "count": 9,
+      "article_count": 4,
       "articles": [
-        "why-the-federal-reserve-gets-inflation-wrong-and-why-monetary-policy-is-always-l"
+        "europes-hamiltonian-moment-what-is-it-really",
+        "germanys-pearl-harbor-moment-the-wars-weightiest-consequence",
+        "gradually-then-suddenly-clarity-comes-to-the-eu",
+        "the-european-unions-next-step-a-hamiltonian-commonwealth"
       ]
     },
     {
@@ -1088,22 +1042,39 @@
       ]
     },
     {
-      "name": "Berkshire",
+      "name": "Qualcomm",
       "count": 9,
-      "article_count": 3,
+      "article_count": 5,
       "articles": [
-        "after-apple-and-tesla-berkshire-and-amazon-should-split-their-shares-too",
-        "buffett-takes-on-japan-but-does-value-still-exist",
-        "the-real-warren-buffett-anomaly-and-how-to-profit-from-it"
+        "5g-risk-huawei-is-small-potatoes-compared-to-tsmc-who",
+        "in-semiconductors-china-is-in-commodity-hell-part-4",
+        "semiconductors-more-us-leverage-more-bad-news-for-beijing-part-3",
+        "the-case-for-intel-an-illustration-of-the-value-investing-mindset",
+        "when-is-a-cycle-not-a-cycle-the-economist-magazine-flunks-semiconductors"
       ]
     },
     {
-      "name": "Hormuz",
+      "name": "Ant",
       "count": 9,
-      "article_count": 2,
+      "article_count": 5,
       "articles": [
-        "is-there-price-gouging-in-the-gasoline-market",
-        "to-price-in-hormuz-markets-must-recognize-two-economic-risks"
+        "alibaba-update-its-down-75-is-it-still-a-value-play",
+        "ants-botched-ipo-part-3-the-regulators-performed-a-radical-value-ectomy",
+        "the-sad-end-of-jack-ma-inc",
+        "why-china-stepped-on-the-ant-group-part-1-a-bubble-looming",
+        "why-china-stopped-the-ant-groups-ipo-part-2-ants-dangerous-business-model"
+      ]
+    },
+    {
+      "name": "Biden",
+      "count": 9,
+      "article_count": 6,
+      "articles": [
+        "covid-19-testing-free-with-insurance-a-new-form-of-health-care-fraud",
+        "germanys-pearl-harbor-moment-the-wars-weightiest-consequence",
+        "is-inflation-created-by-corporate-greed-evidence-from-the-current-egg-flation-ep",
+        "is-the-us-gas-tank-running-on-empty-are-reported-shortages-real",
+        "semiconductors-the-chips-act-what-it-is-part-1"
       ]
     },
     {
@@ -1119,73 +1090,77 @@
       ]
     },
     {
-      "name": "Xi Jinping’s",
-      "count": 8,
-      "article_count": 7,
-      "articles": [
-        "alibaba-is-a-spring-loaded-value-play-ready-to-explode",
-        "alibaba-update-its-down-75-is-it-still-a-value-play",
-        "carthage-must-be-destroyed-or-will-covid-19-kill-huawei",
-        "chinas-covid-catastrophe-5-the-unvaxxed-elderly-are-a-deadly-accelerant",
-        "shortages-gluts-deflation-the-bottlenecks-in-the-economy-are-breaking"
-      ]
-    },
-    {
-      "name": "Alan Greenspan",
+      "name": "Berkshire",
       "count": 8,
       "article_count": 3,
       "articles": [
+        "after-apple-and-tesla-berkshire-and-amazon-should-split-their-shares-too",
+        "buffett-takes-on-japan-but-does-value-still-exist",
+        "the-real-warren-buffett-anomaly-and-how-to-profit-from-it"
+      ]
+    },
+    {
+      "name": "Jeff Bezos",
+      "count": 8,
+      "article_count": 8,
+      "articles": [
+        "after-apple-and-tesla-berkshire-and-amazon-should-split-their-shares-too",
+        "alibaba-update-whoops-is-this-stock-really-a-value-trap",
+        "ants-botched-ipo-part-3-the-regulators-performed-a-radical-value-ectomy",
+        "jack-ma-reappears-but-what-does-the-market-see",
+        "jack-mas-hostage-video-fake-news-the-old-fashioned-way"
+      ]
+    },
+    {
+      "name": "Joe Biden",
+      "count": 8,
+      "article_count": 6,
+      "articles": [
         "janet-yellen-forgets-how-to-do-fedspeak-or-whats-that-floating-in-the-punchbowl",
-        "the-fed-doesnt-just-print-money-it-also-prints-alpha",
-        "will-the-fed-cut-interest-rates-does-it-matter-recent-history-says-no"
+        "semiconductors-the-chips-act-what-it-is-part-1",
+        "the-american-election-calendar-drives-foreign-stock-markets-too",
+        "the-chips-act-good-questions-bad-questions-bad-bets-part-2",
+        "the-presidential-election-cycle-and-the-stock-market-a-classic-calendar-anomaly"
+      ]
+    },
+    {
+      "name": "Lai Xiaomin",
+      "count": 8,
+      "article_count": 5,
+      "articles": [
+        "beijing-embraces-moral-hazard-the-huarong-bailout-was-the-right-move",
+        "financial-regulation-chinese-style-and-where-is-jack-ma",
+        "kill-chicken-scare-monkey-杀鸡儆猴-beijings-philosophy-of-regulation-wont-work",
+        "the-latest-jack-ma-sighting-is-it-for-real",
+        "the-sad-end-of-jack-ma-inc"
+      ]
+    },
+    {
+      "name": "Janet Yellen",
+      "count": 8,
+      "article_count": 6,
+      "articles": [
+        "janet-yellen-forgets-how-to-do-fedspeak-or-whats-that-floating-in-the-punchbowl",
+        "tapering-talking-tightening-the-federal-reserves-masterful-messaging",
+        "the-feds-two-pronged-monetary-blitzkrieg-pt-1-surveying-the-damage",
+        "the-inflation-bump-is-not-real-it-is-a-statistical-artifact",
+        "the-new-inflation-scare-is-the-economy-really-in-danger"
+      ]
+    },
+    {
+      "name": "Mario Draghi",
+      "count": 7,
+      "article_count": 6,
+      "articles": [
+        "how-covid-19-will-change-finance-fear-federalism-and-fixed-income",
+        "how-covid-19-will-change-finance-whatever-it-takes-vs-full-faith-and-credit",
+        "janet-yellen-forgets-how-to-do-fedspeak-or-whats-that-floating-in-the-punchbowl",
+        "tapering-talking-tightening-the-federal-reserves-masterful-messaging",
+        "the-chips-act-good-questions-bad-questions-bad-bets-part-2"
       ]
     }
   ],
   "per_article": [
-    {
-      "slug": "george-calhoun",
-      "date": "",
-      "orgs": [
-        [
-          "Illinois Superconductor Corporation",
-          1
-        ],
-        [
-          "Elliott Associates",
-          1
-        ],
-        [
-          "Stevens Institute of Technology",
-          1
-        ],
-        [
-          "the Hanlon Financial Systems Research Center",
-          1
-        ],
-        [
-          "the National Science Foundation",
-          1
-        ],
-        [
-          "Industry/University Cooperative Research Center",
-          1
-        ],
-        [
-          "Springer/Apress",
-          1
-        ]
-      ],
-      "people": [
-        [
-          "Rafael",
-          1
-        ],
-        [
-          "Stevens",
-          1
-        ]
-      ]
-    },
     {
       "slug": "george-calhoun",
       "date": "",
@@ -1746,94 +1721,6 @@
         ],
         [
           "James Madison",
-          1
-        ]
-      ]
-    },
-    {
-      "slug": "europes-hamiltonian-moment-what-is-it-really",
-      "date": "2020-05-26",
-      "orgs": [
-        [
-          "EU",
-          7
-        ],
-        [
-          "Treasury",
-          3
-        ],
-        [
-          "Hamilton",
-          3
-        ],
-        [
-          "InterDigital Communications",
-          2
-        ],
-        [
-          "NASDAQ",
-          2
-        ],
-        [
-          "IDCC",
-          2
-        ],
-        [
-          "The Richard Rodgers Theatre",
-          1
-        ],
-        [
-          "the Richard Rodgers Theatre",
-          1
-        ],
-        [
-          "pan-EU",
-          1
-        ],
-        [
-          "State",
-          1
-        ]
-      ],
-      "people": [
-        [
-          "Hamilton",
-          10
-        ],
-        [
-          "Alexander Hamilton",
-          3
-        ],
-        [
-          "Jefferson",
-          3
-        ],
-        [
-          "Madison",
-          3
-        ],
-        [
-          "Lin-Manuel Miranda",
-          1
-        ],
-        [
-          "Robert Alexander",
-          1
-        ],
-        [
-          "Marie Antoinette",
-          1
-        ],
-        [
-          "Merkel",
-          1
-        ],
-        [
-          "Macron",
-          1
-        ],
-        [
-          "George Calhoun",
           1
         ]
       ]
@@ -3471,94 +3358,6 @@
       ]
     },
     {
-      "slug": "the-stock-split-anomaly-how-apple-tesla-created-powerful-alpha-last-month",
-      "date": "2020-09-21",
-      "orgs": [
-        [
-          "Apple",
-          14
-        ],
-        [
-          "Tesla",
-          4
-        ],
-        [
-          "Exxon",
-          2
-        ],
-        [
-          "Getty Images",
-          1
-        ],
-        [
-          "Eduardo MunozAlvarez",
-          1
-        ],
-        [
-          "Tesla Share Price",
-          1
-        ],
-        [
-          "Apple Share Prices Before",
-          1
-        ],
-        [
-          "Dow",
-          1
-        ],
-        [
-          "NVR",
-          1
-        ],
-        [
-          "BlackRock",
-          1
-        ]
-      ],
-      "people": [
-        [
-          "Photo",
-          1
-        ],
-        [
-          "Alex Tai",
-          1
-        ],
-        [
-          "Split Apple",
-          1
-        ],
-        [
-          "Jones Industrial Averageitself",
-          1
-        ],
-        [
-          "Pfizer",
-          1
-        ],
-        [
-          "Eugene Fama",
-          1
-        ],
-        [
-          "Tesla",
-          1
-        ],
-        [
-          "Ikenberry et al",
-          1
-        ],
-        [
-          "Huang",
-          1
-        ],
-        [
-          "George Calhoun",
-          1
-        ]
-      ]
-    },
-    {
       "slug": "after-apple-and-tesla-berkshire-and-amazon-should-split-their-shares-too",
       "date": "2020-09-26",
       "orgs": [
@@ -3731,90 +3530,6 @@
       ]
     },
     {
-      "slug": "the-european-unions-next-step-a-hamiltonian-commonwealth",
-      "date": "2020-09-28",
-      "orgs": [
-        [
-          "EU",
-          3
-        ],
-        [
-          "Haves",
-          2
-        ],
-        [
-          "Getty Images",
-          1
-        ],
-        [
-          "Union",
-          1
-        ],
-        [
-          "European Union",
-          1
-        ],
-        [
-          "Treasury",
-          1
-        ],
-        [
-          "EU Winners",
-          1
-        ],
-        [
-          "the Democratic party",
-          1
-        ],
-        [
-          "Democratic Blue",
-          1
-        ],
-        [
-          "medicare",
-          1
-        ]
-      ],
-      "people": [
-        [
-          "Alexander Hamilton",
-          3
-        ],
-        [
-          "mirrors”we",
-          1
-        ],
-        [
-          "Angela Merkel",
-          1
-        ],
-        [
-          "Mark Rutte",
-          1
-        ],
-        [
-          "Rutte",
-          1
-        ],
-        [
-          "George Calhoun",
-          1
-        ],
-        [
-          "Calhoun",
-          1
-        ],
-        [
-          "Rafael",
-          1
-        ],
-        [
-          "Stevens",
-          1
-        ]
-      ]
-    },
-    {
       "slug": "the-small-investors-only-advantage-and-how-to-capture-it",
       "date": "2020-09-30",
       "orgs": [
@@ -3890,94 +3605,6 @@
         ],
         [
           "Stevens",
-          1
-        ]
-      ]
-    },
-    {
-      "slug": "buffett-takes-on-japan-but-does-value-still-exist",
-      "date": "2020-10-05",
-      "orgs": [
-        [
-          "Sumitomo",
-          5
-        ],
-        [
-          "Energy",
-          1
-        ],
-        [
-          "Exxon",
-          1
-        ],
-        [
-          "Chevron",
-          1
-        ],
-        [
-          "andDividend Yields",
-          1
-        ],
-        [
-          "Facebook’s",
-          1
-        ],
-        [
-          "Berkshire",
-          1
-        ],
-        [
-          "Coke",
-          1
-        ],
-        [
-          "the Value Factor",
-          1
-        ],
-        [
-          "the Global Market Benchmarks",
-          1
-        ]
-      ],
-      "people": [
-        [
-          "Buffett",
-          9
-        ],
-        [
-          "Warren Buffett",
-          3
-        ],
-        [
-          "Warren Buffett’s",
-          2
-        ],
-        [
-          "Matthew Perry",
-          1
-        ],
-        [
-          "Berkshire Hathaway",
-          1
-        ],
-        [
-          "Sogo Shosha - Low",
-          1
-        ],
-        [
-          "Berkshire",
-          1
-        ],
-        [
-          "JC Penney",
-          1
-        ],
-        [
-          "George Calhoun",
-          1
-        ],
-        [
-          "Calhoun",
           1
         ]
       ]
@@ -4498,94 +4125,6 @@
         ],
         [
           "Ant’s IPO",
-          1
-        ]
-      ]
-    },
-    {
-      "slug": "why-china-stopped-the-ant-groups-ipo-part-2-ants-dangerous-business-model",
-      "date": "2020-11-16",
-      "orgs": [
-        [
-          "Ant",
-          35
-        ],
-        [
-          "Ant’s",
-          4
-        ],
-        [
-          "IPO",
-          3
-        ],
-        [
-          "Amazon",
-          2
-        ],
-        [
-          "Visa",
-          2
-        ],
-        [
-          "Tech",
-          2
-        ],
-        [
-          "Costfoto / Barcroft Studios / Future Publishing",
-          1
-        ],
-        [
-          "Costfoto/Barcroft Media",
-          1
-        ],
-        [
-          "Getty Images",
-          1
-        ],
-        [
-          "the Ant Group’s",
-          1
-        ]
-      ],
-      "people": [
-        [
-          "Ant",
-          3
-        ],
-        [
-          "calledXiang Hu Bao(“mutual",
-          1
-        ],
-        [
-          "Obamacarehas",
-          1
-        ],
-        [
-          "Mastercard",
-          1
-        ],
-        [
-          "Alipay",
-          1
-        ],
-        [
-          "Ant’s",
-          1
-        ],
-        [
-          "Ant haveanyskin",
-          1
-        ],
-        [
-          "Antto",
-          1
-        ],
-        [
-          "Dodd",
-          1
-        ],
-        [
-          "Jack Ma’s",
           1
         ]
       ]
@@ -5551,94 +5090,6 @@
       ]
     },
     {
-      "slug": "jack-ma-reappears-but-what-does-the-market-see",
-      "date": "2021-01-22",
-      "orgs": [
-        [
-          "Ant",
-          3
-        ],
-        [
-          "Ant Group",
-          1
-        ],
-        [
-          "the Shanghai Stock Exchange",
-          1
-        ],
-        [
-          "the Hong Kong Stock Exchange",
-          1
-        ],
-        [
-          "Ant Technology Group Co.",
-          1
-        ],
-        [
-          "Costfoto / Barcroft Studios / Future Publishing",
-          1
-        ],
-        [
-          "Costfoto/Barcroft Media",
-          1
-        ],
-        [
-          "Getty Images",
-          1
-        ],
-        [
-          "ofThe Ant Group",
-          1
-        ],
-        [
-          "The Ant Group",
-          1
-        ]
-      ],
-      "people": [
-        [
-          "Jack Ma",
-          10
-        ],
-        [
-          "Ma",
-          3
-        ],
-        [
-          "Ma’s",
-          2
-        ],
-        [
-          "Fintech",
-          1
-        ],
-        [
-          "Xi Jinping",
-          1
-        ],
-        [
-          "Mao",
-          1
-        ],
-        [
-          "Confucius",
-          1
-        ],
-        [
-          "Bruce Lee",
-          1
-        ],
-        [
-          "Steve Jobs",
-          1
-        ],
-        [
-          "Jeff Bezos",
-          1
-        ]
-      ]
-    },
-    {
       "slug": "will-tesla-break-the-sp-500-pt-4-managing-insane-trading-volume",
       "date": "2021-01-30",
       "orgs": [
@@ -6155,94 +5606,6 @@
       ]
     },
     {
-      "slug": "gamestop-the-second-surge-anatomy-of-a-gamma-swarm",
-      "date": "2021-03-10",
-      "orgs": [
-        [
-          "GME",
-          6
-        ],
-        [
-          "Call Options",
-          2
-        ],
-        [
-          "Tesla",
-          2
-        ],
-        [
-          "Photo Illustration",
-          1
-        ],
-        [
-          "Rafael Henrique/SOPA Images/LightRocket",
-          1
-        ],
-        [
-          "Getty Images",
-          1
-        ],
-        [
-          "the Madness of Crowds",
-          1
-        ],
-        [
-          "GME Shares",
-          1
-        ],
-        [
-          "GME Call Options Feb",
-          1
-        ],
-        [
-          "GME Call Option Volume Feb",
-          1
-        ]
-      ],
-      "people": [
-        [
-          "GME",
-          4
-        ],
-        [
-          "GME traded4",
-          1
-        ],
-        [
-          "GME Share",
-          1
-        ],
-        [
-          "GME Short Interest",
-          1
-        ],
-        [
-          "Gamma Squeeze",
-          1
-        ],
-        [
-          "George Calhoun",
-          1
-        ],
-        [
-          "Calhoun",
-          1
-        ],
-        [
-          "Twitter @GeoCalhoun520",
-          1
-        ],
-        [
-          "Rafael",
-          1
-        ],
-        [
-          "Stevens",
-          1
-        ]
-      ]
-    },
-    {
       "slug": "gamestop-were-the-short-sellers-routed-does-it-matter-beware-the-gamma",
       "date": "2021-03-19",
       "orgs": [
@@ -6651,94 +6014,6 @@
       ]
     },
     {
-      "slug": "the-inflation-scare-doesnt-match-reality",
-      "date": "2021-05-01",
-      "orgs": [
-        [
-          "Treasury",
-          5
-        ],
-        [
-          "EU",
-          5
-        ],
-        [
-          "Universal History Archive/Universal Images Group",
-          1
-        ],
-        [
-          "Fake News",
-          1
-        ],
-        [
-          "theFinancial Times",
-          1
-        ],
-        [
-          "Hedge",
-          1
-        ],
-        [
-          "Finance",
-          1
-        ],
-        [
-          "The Bank of America",
-          1
-        ],
-        [
-          "Harvard",
-          1
-        ],
-        [
-          "Brookings Institute",
-          1
-        ]
-      ],
-      "people": [
-        [
-          "Larry Summers",
-          2
-        ],
-        [
-          "Inflation Missing",
-          1
-        ],
-        [
-          "Ken Griffin",
-          1
-        ],
-        [
-          "Ray Dalio",
-          1
-        ],
-        [
-          "Summers",
-          1
-        ],
-        [
-          "Larry",
-          1
-        ],
-        [
-          "Bond Yields",
-          1
-        ],
-        [
-          "Covid",
-          1
-        ],
-        [
-          "George Calhoun",
-          1
-        ],
-        [
-          "Calhoun",
-          1
-        ]
-      ]
-    },
-    {
       "slug": "commodity-price-increases-do-not-create-inflation",
       "date": "2021-05-05",
       "orgs": [
@@ -6983,94 +6258,6 @@
       ]
     },
     {
-      "slug": "the-inflation-bump-is-not-real-it-is-a-statistical-artifact",
-      "date": "2021-05-12",
-      "orgs": [
-        [
-          "Fed",
-          2
-        ],
-        [
-          "Banknotes of US Dollar",
-          1
-        ],
-        [
-          "US Dollar",
-          1
-        ],
-        [
-          "Getty Images",
-          1
-        ],
-        [
-          "Social Security",
-          1
-        ],
-        [
-          "Inflation-Protected Treasury Bonds",
-          1
-        ],
-        [
-          "the Federal Reserve",
-          1
-        ],
-        [
-          "Fact",
-          1
-        ],
-        [
-          "Illinois Superconductor Corporation",
-          1
-        ],
-        [
-          "Elliott Associates",
-          1
-        ]
-      ],
-      "people": [
-        [
-          "Zhang Peng/LightRocket",
-          1
-        ],
-        [
-          "Headline",
-          1
-        ],
-        [
-          "May",
-          1
-        ],
-        [
-          "Jerome Powellemphasizes",
-          1
-        ],
-        [
-          "Powell",
-          1
-        ],
-        [
-          "Larry Summers",
-          1
-        ],
-        [
-          "Warren Buffett",
-          1
-        ],
-        [
-          "James Mackintosh",
-          1
-        ],
-        [
-          "Janet Yellen",
-          1
-        ],
-        [
-          "George Calhoun",
-          1
-        ]
-      ]
-    },
-    {
       "slug": "the-inflation-figures-are-grossly-inflated-heres-how",
       "date": "2021-05-22",
       "orgs": [
@@ -7202,90 +6389,6 @@
         ],
         [
           "Geico",
-          1
-        ],
-        [
-          "George Calhoun",
-          1
-        ],
-        [
-          "Calhoun",
-          1
-        ],
-        [
-          "Twitter @GeoCalhoun520",
-          1
-        ],
-        [
-          "Rafael",
-          1
-        ],
-        [
-          "Stevens",
-          1
-        ]
-      ]
-    },
-    {
-      "slug": "covid-19-testing-free-with-insurance-a-new-form-of-health-care-fraud",
-      "date": "2021-06-03",
-      "orgs": [
-        [
-          "Healthcare",
-          4
-        ],
-        [
-          "Aetna",
-          4
-        ],
-        [
-          "FBI",
-          2
-        ],
-        [
-          "Queens",
-          1
-        ],
-        [
-          "Getty Images",
-          1
-        ],
-        [
-          "IRS",
-          1
-        ],
-        [
-          "GAO",
-          1
-        ],
-        [
-          "the Healthcare Titanic: Covid-19",
-          1
-        ],
-        [
-          "the Dept of Justice",
-          1
-        ],
-        [
-          "Covid-19 Diagnostic Testing Prices",
-          1
-        ]
-      ],
-      "people": [
-        [
-          "Covid",
-          7
-        ],
-        [
-          "Biden",
-          2
-        ],
-        [
-          "Covid 19",
-          1
-        ],
-        [
-          "Lindsey Nicholson/",
           1
         ],
         [
@@ -7651,182 +6754,6 @@
       ]
     },
     {
-      "slug": "inflation-the-media-screams-but-the-market-is-unfazed",
-      "date": "2021-06-20",
-      "orgs": [
-        [
-          "Treasury",
-          5
-        ],
-        [
-          "Fed",
-          4
-        ],
-        [
-          "Der Schrei",
-          1
-        ],
-        [
-          "Universal History Archive/Universal Images Group",
-          1
-        ],
-        [
-          "Getty Images",
-          1
-        ],
-        [
-          "the Bureau of Labor Statistics",
-          1
-        ],
-        [
-          "Crude Oil Prices",
-          1
-        ],
-        [
-          "TheJournalhas",
-          1
-        ],
-        [
-          "Lumber",
-          1
-        ],
-        [
-          "White/US National Archives",
-          1
-        ]
-      ],
-      "people": [
-        [
-          "Bitcoin",
-          2
-        ],
-        [
-          "Natur",
-          1
-        ],
-        [
-          "Twitter",
-          1
-        ],
-        [
-          "Elon Musk’s",
-          1
-        ],
-        [
-          "TheWSJ",
-          1
-        ],
-        [
-          "John",
-          1
-        ],
-        [
-          "Treasury Bond",
-          1
-        ],
-        [
-          "Powell",
-          1
-        ],
-        [
-          "May",
-          1
-        ],
-        [
-          "George Calhoun",
-          1
-        ]
-      ]
-    },
-    {
-      "slug": "what-really-happened-to-jack-ma",
-      "date": "2021-06-24",
-      "orgs": [
-        [
-          "Getty Images",
-          3
-        ],
-        [
-          "Bloomberg",
-          3
-        ],
-        [
-          "Softbank",
-          3
-        ],
-        [
-          "Alibaba Group",
-          2
-        ],
-        [
-          "Alexei Navalny",
-          1
-        ],
-        [
-          "Vivatech",
-          1
-        ],
-        [
-          "The Ant Group",
-          1
-        ],
-        [
-          "Fintech",
-          1
-        ],
-        [
-          "Success",
-          1
-        ],
-        [
-          "Ma",
-          1
-        ]
-      ],
-      "people": [
-        [
-          "Ma",
-          13
-        ],
-        [
-          "Jack Ma",
-          11
-        ],
-        [
-          "Jack",
-          4
-        ],
-        [
-          "Putin",
-          4
-        ],
-        [
-          "Jack Ma’s",
-          2
-        ],
-        [
-          "Lesperance",
-          2
-        ],
-        [
-          "Bloomberg",
-          2
-        ],
-        [
-          "Vladimir Putin’s",
-          1
-        ],
-        [
-          "Jack Mawasrich",
-          1
-        ],
-        [
-          "Deng",
-          1
-        ]
-      ]
-    },
-    {
       "slug": "what-really-happened-to-jack-ma",
       "date": "2021-06-24",
       "orgs": [
@@ -7974,86 +6901,6 @@
         ],
         [
           "Treasury Bond",
-          1
-        ],
-        [
-          "George Calhoun",
-          1
-        ],
-        [
-          "Calhoun",
-          1
-        ],
-        [
-          "Twitter @GeoCalhoun520",
-          1
-        ],
-        [
-          "Rafael",
-          1
-        ],
-        [
-          "Stevens",
-          1
-        ]
-      ]
-    },
-    {
-      "slug": "there-is-no-inflation-the-june-cpi-headline-head-fake",
-      "date": "2021-07-14",
-      "orgs": [
-        [
-          "PCE",
-          4
-        ],
-        [
-          "Capitol Hill",
-          1
-        ],
-        [
-          "The Bureau of Labor Statistics",
-          1
-        ],
-        [
-          "the Federal Reserve",
-          1
-        ],
-        [
-          "the Commerce Department’s",
-          1
-        ],
-        [
-          "the Personal Consumption Expenditure Index",
-          1
-        ],
-        [
-          "the Labor Department’s",
-          1
-        ],
-        [
-          "theBureau",
-          1
-        ],
-        [
-          "Labor Statisticsputs",
-          1
-        ],
-        [
-          "BLS",
-          1
-        ]
-      ],
-      "people": [
-        [
-          "Ron Johnson",
-          1
-        ],
-        [
-          "Drew Angerer",
-          1
-        ],
-        [
-          "Core",
           1
         ],
         [
@@ -9811,78 +8658,6 @@
       ]
     },
     {
-      "slug": "semiconductors-the-chips-act-what-it-is-part-1",
-      "date": "2021-11-23",
-      "orgs": [
-        [
-          "SEMATECH",
-          8
-        ],
-        [
-          "Intel",
-          2
-        ],
-        [
-          "AIG",
-          2
-        ],
-        [
-          "the State Dining Room of",
-          1
-        ],
-        [
-          "the White House",
-          1
-        ],
-        [
-          "Photo by Doug Mills/Pool/Getty Images",
-          1
-        ],
-        [
-          "the Federal Government",
-          1
-        ],
-        [
-          "Texas Instruments",
-          1
-        ],
-        [
-          "theNew York Times",
-          1
-        ],
-        [
-          "theWall Street Journal",
-          1
-        ]
-      ],
-      "people": [
-        [
-          "Joe Biden",
-          2
-        ],
-        [
-          "Biden",
-          2
-        ],
-        [
-          "Andy Grove",
-          1
-        ],
-        [
-          "Jake Sullivan",
-          1
-        ],
-        [
-          "Amr Alfiky-Pool",
-          1
-        ],
-        [
-          "Obama",
-          1
-        ]
-      ]
-    },
-    {
       "slug": "the-chips-act-good-questions-bad-questions-bad-bets-part-2",
       "date": "2021-11-27",
       "orgs": [
@@ -10034,66 +8809,6 @@
         ],
         [
           "IC Fab Investment",
-          1
-        ]
-      ]
-    },
-    {
-      "slug": "two-pseudo-facts-about-semiconductors-that-could-distort-the-chips-act-part-4",
-      "date": "2021-11-30",
-      "orgs": [
-        [
-          "Pseudo-Facts",
-          3
-        ],
-        [
-          "Intel",
-          3
-        ],
-        [
-          "Commerce Gina Raimondo",
-          1
-        ],
-        [
-          "House",
-          1
-        ],
-        [
-          "Raimondo",
-          1
-        ],
-        [
-          "Senate",
-          1
-        ],
-        [
-          "the “Key Facts",
-          1
-        ],
-        [
-          "Powerpoint",
-          1
-        ],
-        [
-          "Huawei",
-          1
-        ],
-        [
-          "Success",
-          1
-        ]
-      ],
-      "people": [
-        [
-          "Raimondo",
-          3
-        ],
-        [
-          "Joe Biden",
-          1
-        ],
-        [
-          "Common Knowledge",
           1
         ]
       ]
@@ -11391,86 +10106,6 @@
       ]
     },
     {
-      "slug": "the-biggest-crypto-fantasy-of-all",
-      "date": "2022-09-18",
-      "orgs": [
-        [
-          "Amazon",
-          3
-        ],
-        [
-          "Ethereum",
-          3
-        ],
-        [
-          "Visa",
-          2
-        ],
-        [
-          "Solana",
-          2
-        ],
-        [
-          "Eduardo Parra/Europa Press",
-          1
-        ],
-        [
-          "Getty Images",
-          1
-        ],
-        [
-          "Ethereum’s",
-          1
-        ],
-        [
-          "the Bitcoin Savings and Trust",
-          1
-        ],
-        [
-          "the Dutch Tulip Mania",
-          1
-        ],
-        [
-          "Fiat",
-          1
-        ]
-      ],
-      "people": [
-        [
-          "Bitcoin",
-          9
-        ],
-        [
-          "Merge",
-          4
-        ],
-        [
-          "Ethereum",
-          2
-        ],
-        [
-          "Ethereum Merge'",
-          1
-        ],
-        [
-          "Bernie Madoff",
-          1
-        ],
-        [
-          "Crypto",
-          1
-        ],
-        [
-          "Alipay",
-          1
-        ],
-        [
-          "Blockchain",
-          1
-        ]
-      ]
-    },
-    {
       "slug": "the-putcall-ratio-says-get-in-the-market-now",
       "date": "2022-09-27",
       "orgs": [
@@ -11835,62 +10470,6 @@
       ]
     },
     {
-      "slug": "the-recession-meme-is-intense-but-can-the-market-see-around-the-corner",
-      "date": "2022-10-19",
-      "orgs": [
-        [
-          "the Financial Crisis",
-          3
-        ],
-        [
-          "OECD",
-          2
-        ],
-        [
-          "CLI",
-          2
-        ],
-        [
-          "the New York Stock Exchange",
-          1
-        ],
-        [
-          "NYSE",
-          1
-        ],
-        [
-          "Getty Images",
-          1
-        ],
-        [
-          "Pimco",
-          1
-        ],
-        [
-          "theFinancial Timeschimes",
-          1
-        ],
-        [
-          "Recession",
-          1
-        ],
-        [
-          "Wikipedia’s Current Events",
-          1
-        ]
-      ],
-      "people": [
-        [
-          "Obama",
-          1
-        ],
-        [
-          "Covid",
-          1
-        ]
-      ]
-    },
-    {
       "slug": "when-is-a-cycle-not-a-cycle-the-economist-magazine-flunks-semiconductors",
       "date": "2022-10-31",
       "orgs": [
@@ -12019,70 +10598,6 @@
       ]
     },
     {
-      "slug": "when-is-a-cycle-not-a-cycle-the-economist-magazine-flunks-semiconductors",
-      "date": "2022-10-31",
-      "orgs": [
-        [
-          "Kellogg",
-          3
-        ],
-        [
-          "Costco",
-          3
-        ],
-        [
-          "Sotheby",
-          2
-        ],
-        [
-          "Economist",
-          1
-        ],
-        [
-          "Getty Images",
-          1
-        ],
-        [
-          "POV",
-          1
-        ],
-        [
-          "Intel",
-          1
-        ],
-        [
-          "Nvidia",
-          1
-        ],
-        [
-          "American Chip Industry’s",
-          1
-        ],
-        [
-          "Economistattributes",
-          1
-        ]
-      ],
-      "people": [
-        [
-          "Carrie Shaltz",
-          1
-        ],
-        [
-          "Patrick McMullan",
-          1
-        ],
-        [
-          "Chris Miller",
-          1
-        ],
-        [
-          "Qualcomm",
-          1
-        ]
-      ]
-    },
-    {
       "slug": "the-un-wisdom-of-crowds-prediction-markets-failed-their-midterm-exams",
       "date": "2022-11-14",
       "orgs": [
@@ -12166,94 +10681,6 @@
         ],
         [
           "Kalshi",
-          1
-        ]
-      ]
-    },
-    {
-      "slug": "ftx-and-esg-a-panorama-of-failed-governance-pt-1-the-internal-failures",
-      "date": "2022-11-21",
-      "orgs": [
-        [
-          "FTX",
-          18
-        ],
-        [
-          "ESG",
-          14
-        ],
-        [
-          "Antigua & Barbuda",
-          2
-        ],
-        [
-          "the Chicago Mercantile Exchange",
-          1
-        ],
-        [
-          "Bankman-Fried",
-          1
-        ],
-        [
-          "FTX US Derivatives",
-          1
-        ],
-        [
-          "the Intercontinental Exchange",
-          1
-        ],
-        [
-          "the House Agriculture Committee",
-          1
-        ],
-        [
-          "Trends",
-          1
-        ],
-        [
-          "New Clearinghouse Models",
-          1
-        ]
-      ],
-      "people": [
-        [
-          "Bankman-Fried",
-          3
-        ],
-        [
-          "Terrence A. Duffy",
-          1
-        ],
-        [
-          "Sam",
-          1
-        ],
-        [
-          "Christopher Edmonds",
-          1
-        ],
-        [
-          "Christopher Perkins",
-          1
-        ],
-        [
-          "Tom Williams/CQ-Roll Call",
-          1
-        ],
-        [
-          "Lydenberg",
-          1
-        ],
-        [
-          "Domini",
-          1
-        ],
-        [
-          "Sustainalytics",
-          1
-        ],
-        [
-          "Refinitiv",
           1
         ]
       ]
@@ -12519,130 +10946,6 @@
       ]
     },
     {
-      "slug": "dissecting-the-consumer-price-index-pt-1-inflation-is-over",
-      "date": "2022-12-14",
-      "orgs": [
-        [
-          "Fed",
-          7
-        ],
-        [
-          "the Federal Reserve",
-          4
-        ],
-        [
-          "PCE",
-          2
-        ],
-        [
-          "BLS",
-          1
-        ],
-        [
-          "the Federal Reserve’s",
-          1
-        ],
-        [
-          "the Personal Consumption Expenditure Index",
-          1
-        ],
-        [
-          "Comparison of Inflation Metrics Averages",
-          1
-        ],
-        [
-          "CPImiss",
-          1
-        ],
-        [
-          "Numbers",
-          1
-        ]
-      ],
-      "people": [
-        [
-          "Powell",
-          2
-        ],
-        [
-          "Core",
-          1
-        ],
-        [
-          "Headline",
-          1
-        ]
-      ]
-    },
-    {
-      "slug": "why-the-federal-reserve-gets-inflation-wrong-and-why-monetary-policy-is-always-l",
-      "date": "2022-12-29",
-      "orgs": [
-        [
-          "YoY",
-          14
-        ],
-        [
-          "Fed",
-          12
-        ],
-        [
-          "the Federal Reserve",
-          8
-        ],
-        [
-          "PCE",
-          6
-        ],
-        [
-          "Federal Reserve Board",
-          1
-        ],
-        [
-          "Federal Open Market Committee",
-          1
-        ],
-        [
-          "the Bureau of Labor Statistics",
-          1
-        ],
-        [
-          "the Bureau of Economic Analysis",
-          1
-        ],
-        [
-          "The November Personal Consumption Expenditure Index",
-          1
-        ],
-        [
-          "theBureau of Economic Analysis",
-          1
-        ]
-      ],
-      "people": [
-        [
-          "Powell",
-          6
-        ],
-        [
-          "MoM",
-          5
-        ],
-        [
-          "Jerome Powell",
-          1
-        ],
-        [
-          "Photo",
-          1
-        ],
-        [
-          "Samuel Corum",
-          1
-        ]
-      ]
-    },
-    {
       "slug": "why-the-federal-reserve-gets-inflation-wrong-and-why-monetary-policy-is-always-l",
       "date": "2022-12-29",
       "orgs": [
@@ -12786,78 +11089,6 @@
         ],
         [
           "Zhong Nanshan",
-          1
-        ]
-      ]
-    },
-    {
-      "slug": "the-federal-reserve-has-an-egg-problem-and-a-chicken-and-egg-problem",
-      "date": "2023-01-17",
-      "orgs": [
-        [
-          "the Federal Reserve",
-          5
-        ],
-        [
-          "Fed",
-          2
-        ],
-        [
-          "Labor Statistics BERLIN",
-          1
-        ],
-        [
-          "GERMANY - JANUARY",
-          1
-        ],
-        [
-          "Photo Illustration",
-          1
-        ],
-        [
-          "the “Big Inflation",
-          1
-        ],
-        [
-          "Global Food",
-          1
-        ],
-        [
-          "No Holiday Demand-Driven",
-          1
-        ],
-        [
-          "OurForbeshas",
-          1
-        ],
-        [
-          "WhenGeneral",
-          1
-        ]
-      ],
-      "people": [
-        [
-          "Harles",
-          1
-        ],
-        [
-          "Jentsch GmbH",
-          1
-        ],
-        [
-          "Andreas Rentz/Getty Images",
-          1
-        ],
-        [
-          "Chicken Feed Nov",
-          1
-        ],
-        [
-          "M2",
-          1
-        ],
-        [
-          "Covid",
           1
         ]
       ]
@@ -16670,6 +14901,322 @@
         ],
         [
           "Jack Ma",
+          1
+        ]
+      ]
+    },
+    {
+      "slug": "the-oil-market-canceled-the-hormuz-crisis-before-the-ceasefire",
+      "date": "2026-06-18",
+      "orgs": [
+        [
+          "EV",
+          1
+        ],
+        [
+          "aUnited Nationsexecutive",
+          1
+        ],
+        [
+          "Economist",
+          1
+        ],
+        [
+          "TheAmerican Association of Petroleum Geologistsprojects",
+          1
+        ],
+        [
+          "TheInternational Energy Agency(Paris",
+          1
+        ],
+        [
+          "UAE",
+          1
+        ],
+        [
+          "IEA",
+          1
+        ],
+        [
+          "another600K b/din",
+          1
+        ],
+        [
+          "European EV",
+          1
+        ]
+      ],
+      "people": [
+        [
+          "Hormuz",
+          12
+        ],
+        [
+          "like7",
+          1
+        ],
+        [
+          "toGoldman Sachs",
+          1
+        ],
+        [
+          "buff",
+          1
+        ]
+      ]
+    },
+    {
+      "slug": "three-ways-in-which-greenspan-changed-forever-the-way-markets-work",
+      "date": "2026-06-26",
+      "orgs": [
+        [
+          "Fed",
+          40
+        ],
+        [
+          "the Federal Reserve",
+          9
+        ],
+        [
+          "Congress",
+          3
+        ],
+        [
+          "FFR",
+          3
+        ],
+        [
+          "Put",
+          3
+        ],
+        [
+          "Treasury",
+          2
+        ],
+        [
+          "QE",
+          2
+        ],
+        [
+          "Lehman",
+          1
+        ],
+        [
+          "Greenspan’s Fed",
+          1
+        ],
+        [
+          "Dual Mandate",
+          1
+        ]
+      ],
+      "people": [
+        [
+          "Greenspan",
+          16
+        ],
+        [
+          "Alan Greenspan",
+          5
+        ],
+        [
+          "Ben Bernanke",
+          2
+        ],
+        [
+          "Bernanke",
+          1
+        ],
+        [
+          "Janet Yellen",
+          1
+        ],
+        [
+          "Jerome Powell",
+          1
+        ],
+        [
+          "Kevin Warsh",
+          1
+        ],
+        [
+          "Yorkermagazine",
+          1
+        ],
+        [
+          "David Einhorn",
+          1
+        ],
+        [
+          "Charlie Rose",
+          1
+        ]
+      ]
+    },
+    {
+      "slug": "the-us-is-awash-in-oil-and-gasoline-so-why-are-pump-prices-so-high",
+      "date": "2026-07-06",
+      "orgs": [
+        [
+          "unfoldingglutin",
+          1
+        ],
+        [
+          "Nat Gas",
+          1
+        ],
+        [
+          "TTF",
+          1
+        ],
+        [
+          "EU",
+          1
+        ],
+        [
+          "Congress",
+          1
+        ]
+      ],
+      "people": [
+        [
+          "Iranper se",
+          1
+        ],
+        [
+          "Hormuz",
+          1
+        ],
+        [
+          "Henry Hub",
+          1
+        ],
+        [
+          "jettison",
+          1
+        ]
+      ]
+    },
+    {
+      "slug": "is-the-us-gas-tank-running-on-empty-are-reported-shortages-real",
+      "date": "2026-07-31",
+      "orgs": [
+        [
+          "SPR",
+          5
+        ],
+        [
+          "Cushing",
+          2
+        ],
+        [
+          "Petroleum Reserve",
+          1
+        ],
+        [
+          "Wall Street Journal",
+          1
+        ],
+        [
+          "Ford",
+          1
+        ],
+        [
+          "Keynes",
+          1
+        ],
+        [
+          "Congress of the Crude Oil Export Act",
+          1
+        ],
+        [
+          "NYMEX",
+          1
+        ],
+        [
+          "CME",
+          1
+        ],
+        [
+          "the Strategic Petroleum Reserve",
+          1
+        ]
+      ],
+      "people": [
+        [
+          "Hormuz",
+          3
+        ],
+        [
+          "Reader",
+          1
+        ],
+        [
+          "Moroever",
+          1
+        ],
+        [
+          "Biden",
+          1
+        ]
+      ]
+    },
+    {
+      "slug": "the-feds-influence-over-interest-rates-is-weakening-as-it-should",
+      "date": "2026-09-02",
+      "orgs": [
+        [
+          "Fed",
+          35
+        ],
+        [
+          "FFR",
+          9
+        ],
+        [
+          "the Federal Reserve",
+          3
+        ],
+        [
+          "EFFR",
+          3
+        ],
+        [
+          "Treasury",
+          2
+        ],
+        [
+          "the Federal Funds Rate",
+          1
+        ],
+        [
+          "The Federal Funds Rate",
+          1
+        ],
+        [
+          "Interest on Reserve Balances",
+          1
+        ],
+        [
+          "the Overnight Repurchase",
+          1
+        ],
+        [
+          "U.S Treasurys",
+          1
+        ]
+      ],
+      "people": [
+        [
+          "Reverse Repo",
+          2
+        ],
+        [
+          "Reverse Repurchase",
+          1
+        ],
+        [
+          "Kevin Warsh",
           1
         ]
       ]

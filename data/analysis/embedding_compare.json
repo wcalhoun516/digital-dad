@@ -1,0 +1,46 @@
+{
+  "generated_at": "2026-07-18T05:12:59.427113+00:00",
+  "summary": {
+    "baseline": "sbert-mpnet-v2",
+    "n_models": 2,
+    "best_mrr_model": "sbert-mpnet-v2",
+    "best_mrr": 0.5556
+  },
+  "records": [
+    {
+      "model": "sbert-mpnet-v2",
+      "is_baseline": true,
+      "retrieval": {
+        "n_scored": 5,
+        "precision_at_1": 0.4,
+        "recall_at_1": 0.4,
+        "precision_at_3": 0.4,
+        "recall_at_3": 0.6667,
+        "precision_at_5": 0.32,
+        "recall_at_5": 0.6667,
+        "mrr": 0.5556
+      },
+      "agreement": null
+    },
+    {
+      "model": "nomic-embed-text",
+      "is_baseline": false,
+      "retrieval": {
+        "n_scored": 5,
+        "precision_at_1": 0.4,
+        "recall_at_1": 0.4,
+        "precision_at_3": 0.3333,
+        "recall_at_3": 0.6,
+        "precision_at_5": 0.24,
+        "recall_at_5": 0.6,
+        "mrr": 0.5286
+      },
+      "agreement": {
+        "mean_overlap_at_1": 0.6,
+        "mean_overlap_at_3": 0.69,
+        "mean_overlap_at_5": 0.5686,
+        "mean_kendall_tau": 0.5578
+      }
+    }
+  ]
+}
