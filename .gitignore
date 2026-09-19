@@ -11,7 +11,14 @@ data/training/heldout.jsonl
 data/finetune_run/
 
 # Generated voice-eval trials (embeds real article excerpts — licensing; example is committed)
-eval/voice_trials.json
+eval/voice_trials*.json
+!eval/voice_trials.example.json
+
+# Voice-eval raw reports — the JSON carries the prompts (which quote article
+# fragments). The rendered .md reports are tables only and ARE committed: they
+# are the finding, and they are what a future run compares against.
+data/analysis/voice_eval*
+!data/analysis/voice_eval*.md
 
 # Geo-LLM fine-tune registration marker (plan 0008 26e) — owner-produced, local;
 # mirrors what's registered in the sibling conductor's models.yaml.

@@ -110,6 +110,10 @@ reviewer should rotate/resize a real viewport before merging. Plan 0006 steps 3�
 reflow, dual-breakpoint device verification) remain.
 
 ### D15 — RAG is the product voice; the QLoRA fine-tune stays experimental (26f)
+> **Superseded in part by [D17](#d17--the-fine-tunes-problem-was-never-the-data-shape-rag-stays-the-voice) (2026-09-19).**
+> The *verdict* below stands and is now better evidenced. The **revival path** it
+> prescribes — "more examples-per-article (138 → 500+) plus more iters / higher LoRA
+> rank" — was tested and **did not work**. Do not start from it.
 **Why:** the first real Geo-LLM adapter (Qwen2.5-3B QLoRA, 138 training examples, plan 0008
 26c/26e) was scored by the 26d blind voice-fidelity eval against the RAG "Ask Dad" answer and a
 genuine Calhoun excerpt. Result (8 held-out prompts, T3 judge): **fine-tune 0% win-rate, avg
@@ -126,6 +130,78 @@ first: more examples-per-article (138 → 500+, a 26a change) plus more iters / 
 then re-run `make voice-eval`. The adapter, trials, and eval report live under
 `data/finetune_run/` and `data/analysis/voice_eval.*` (all gitignored). Mild overfitting
 appeared by iter ~100 (val loss bottomed there), consistent with the tiny training set.
+
+### D17 — The fine-tune's problem was never the data *shape*. RAG stays the voice.
+**Date:** 2026-09-19. **Supersedes D15's revival path** (not its verdict). Closes roadmap #40,
+plan 0009 step 4–5.
+
+**What was tested.** D15 blamed the fine-tune's loss on too few examples and prescribed
+"138 → 500+ examples, more iters, higher LoRA rank". Plan 0009 found a sharper cause: every one
+of the 138 records exceeded `max_seq_len`, so only ~33% of the corpus ever reached the model and
+all of it was article *openings*. PR #91 reshaped the dataset into passage-level records. This
+run re-tested the fine-tune on that clean data.
+
+| | D15 run | this run |
+|---|---|---|
+| train / valid records | 138 / 34 | **544 / 130** |
+| records over `max_seq_len` | 138/138 (100%) | **0/674 (0%)** |
+| corpus reaching the model | ~33% | **100%** |
+| iters | 200 | 1600 (~2.9 epochs) |
+
+Everything else held identical — Qwen2.5-3B-Instruct-4bit, LoRA rank 8, 8 layers, lr 1e-4,
+batch 1, seed 42 — so the variable under test was the data, not the recipe. `iters` scaled with
+the dataset because holding it at 200 would have shown the model a *smaller* fraction of the
+corpus, not a fairer test.
+
+**Result: the hypothesis is falsified.** Blind A/B/C, 8 held-out prompts, T3 judge:
+
+| source | win-rate | avg rank | | D15 |
+|---|---|---|---|---|
+| real | 75% | 1.25 | | 1.63 |
+| rag | 25% | 1.75 | | 1.50 |
+| **finetuned** | **0%** | **3.00** | | 2.88 |
+
+The fine-tune placed **last in all 8 trials** — marginally *worse* than D15's 2.88, where it at
+least sometimes placed second. Fixing the truncation did not help.
+
+**Val loss bottomed at iter 100 — exactly where D15's run bottomed on a quarter of the data.**
+It then degraded to 3.058 by iter 1600, *above* the 3.026 starting point, while train loss fell
+to 1.845. Quadrupling the examples did not delay overfitting at all.
+
+**Why, and this is the load-bearing insight.** The 544 records are chunks of the same **181
+articles**. Example *count* quadrupled; distinct *material* did not. The model saw the same
+corpus sliced finer, and overfit it on the same schedule. For the product thesis in `goals.md`,
+this is the sharpest lesson available: **"enough text" means enough distinct source material,
+not more examples carved from the same material.** Chunking is necessary — a truncated dataset
+is strictly worse — but it is not a substitute for corpus.
+
+**The failure mode also changed, for the worse.** D15's model over-used his vocabulary (~2×) and
+hallucinated specifics. This one **loops**: the 5-gram *"been trying to gain access"* appears 13
+times across 8 samples (real's most-repeated 5-gram appears once). Length-controlled type-token
+ratio is 0.459 against real's 0.724 and RAG's 0.716.
+
+**Caveats, stated because they bound the claim.** Generation was capped at 400 tokens with no
+repetition penalty, and the fine-tune wrote ~357 words against real's ~134 — length was not
+matched. Raw TTR (0.197) is therefore unfairly low; the length-controlled 0.459 is the honest
+number, and it is still far below both comparators. A rerun with a repetition penalty and
+length-matched generation is a cheap sanity check worth doing before anyone calls this final.
+n=8, one judge — matched to D15's protocol for comparability, not large.
+
+**Implication.** Ask Dad (RAG) remains the shipped, trustworthy voice, now on stronger evidence:
+the judge ranked *real* above *RAG* 75/25 here, where D15 found them indistinguishable, so RAG is
+not perfect either — but it is second to the real thing and the fine-tune is not close. The
+adapter is **not** registered in the conductor and the dashboard toggle stays hidden.
+
+**What is NOT the next lever:** more iterations, higher LoRA rank, or more chunking on this same
+181-article corpus. That experiment has now been run twice and the constraint is not there.
+**What is:** more distinct material — the ingest arc (#33–#37) and source discovery (#49).
+Re-run `make voice-eval` when the corpus has meaningfully grown, and record corpus size beside
+the score so the "how much is enough" curve accumulates.
+
+Artifacts: `data/analysis/voice_eval_reshaped*.md` (committed); adapters and trials are
+gitignored. Training log: `logs/retrain_20260919_104018.log`.
+
+---
 
 ### D16 — The lint gate covers the whole tree; E501 is carved out of the source packages
 **Why:** `make lint` was scoped to `LINT_PATHS := tests` from the day it existed, so no

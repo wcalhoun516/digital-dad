@@ -27,7 +27,7 @@ turns the crank.
 
 | Order | Plan | Roadmap items | Status |
 |-------|------|---------------|--------|
-| 1 | `plans/ready/0009-finetune-fair-test.md` | #39 → #40 | **⏸ owner-blocked.** Steps 1–3 done (#91, #94); #39 is shipped. **Step 4 — retrain + `make voice-eval` — needs the owner** (local GPU hours + a paid T3 judge). A daily run should read the status block, see the gate, and pick other work. |
+| 1 | ~~`plans/ready/0009-finetune-fair-test.md`~~ | #39 → #40 | **✅ done 2026-09-19** — moved to `plans/done/`. Step 4 ran and answered **no**: 0% win-rate, avg rank **3.00**, last in all 8 trials. **ADR D17** — the constraint is corpus *diversity*, not data shape. Next lever is the ingest arc (#33–#37) and discovery (#49), **not** more iters or higher rank. |
 | 2 | ~~`plans/ready/0010-epub-ingest-handler.md`~~ | #35 | **✅ done** (#92) — moved to `plans/done/`. |
 | 3 | `plans/ready/0011-operator-console.md` | #42 | **🔄 in progress.** Steps 1–3 done (#93 shell/gate, #96 upload validation core, #97 review decision core). **Next: the route wiring for steps 2–3** — thin callers of `stage_upload` / `queue_view` + `apply_decision`, now unblocked because #93 has merged — then steps 4–6 (job runner, scoreboard, docs+ADR). |
 
@@ -213,7 +213,8 @@ rank) is superseded — the defect is example **shape**, not count.
     held-out split **article-level** so chunks cannot leak across it. ~800–1,200 examples from
     the 204 articles already in hand, using 100% of the corpus instead of 33%. No new source
     material, no new dependency. *(queued: ready/0009)*
-40. **P1 · S · training** — retrain on the reshaped set and re-measure against D15's baseline
+40. **P1 · S · training** *(done 2026-09-19 — answered NO; see ADR D17)* — retrain on the
+    reshaped set and re-measure against D15's baseline
     (fine-tune 0% win-rate / avg rank 2.88; RAG 1.50; real 1.63; TTR 0.35 vs 0.70). Record the
     result as an ADR **including a negative one** — a fair test that still loses is a real
     finding. Owner-interactive (local GPU hours + a paid T3 judge). *(queued: ready/0009)*

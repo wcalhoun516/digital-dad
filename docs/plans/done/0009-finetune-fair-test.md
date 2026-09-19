@@ -1,6 +1,18 @@
 # Plan 0009 — Give the Geo-LLM fine-tune a fair test
 
-## Status (2026-09-11)
+## Status — COMPLETE (2026-09-19)
+
+> **Step 4 ran on 2026-09-19 and the answer was no.** Reshaped data (544/130 records,
+> 0% over `max_seq_len`, 100% of the corpus reaching the model) did **not** rescue the
+> fine-tune: **0% win-rate, avg rank 3.00**, last in all 8 trials — marginally worse than
+> D15's 2.88. Val loss bottomed at **iter 100**, exactly where it did on a quarter of the
+> data. **The constraint is corpus diversity, not data shape** — 544 records were chunks
+> of the same 181 articles. Full write-up: **ADR D17**.
+>
+> Do not re-run this plan. Grow the corpus (#33–#37 ingest, #49 discovery) and re-measure
+> then, recording corpus size beside the score.
+
+### Original status (2026-09-11)
 
 - **Step 1 — done** (PR #91). Passage-level records; preflight length budget 100% over → **0%**.
 - **Step 2 — done** (PR #91 gave `--strict`; PR #94 called it from the training path). The gate
