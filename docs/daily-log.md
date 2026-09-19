@@ -81,6 +81,224 @@ Format:
   clean `origin/main` worktree collects **1253 passed, 1 skipped**, so the delta is exactly
   the **+40** added here (`test_ingest_review.py` goes 9 → 49).
 
+### 2026-09-13 — infra — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/96
+- Source: plan:ready/0011 (step 2 — the validation core; the HTTP route deliberately deferred)
+- Summary: **Plan 0011 step 2, done without touching the file step 1 is still holding.** The
+  `/console/api/*` dispatch lives in `bin/serve_dashboard.py`, which is PR #93's diff and is
+  **unmerged**. Branching off `main` and adding the upload *route* would have meant either
+  conflicting with #93 or re-implementing its dispatch — precisely the add/add trap §3 exists
+  to prevent, and the one that left `main` red for four weeks in July. So this PR ships the
+  half with no dependency on the route: `ingest/upload.py`, the single place that decides
+  whether a client-supplied file may become a path on disk. When #93 lands, the route is a
+  thin caller. **The plan already said this was the real work** — "the one piece of this plan
+  where a bug is a real vulnerability rather than a defect." **Four decisions worth review:**
+  (1) `sanitize_filename` **rejects** rather than repairs — a client sending a path has a
+  broken uploader or bad intent, and silently rewriting it into something valid hides both.
+  (2) The allowlist is read from the live `HANDLERS` registry, not restated as a literal, so
+  registering a handler is the only edit needed to accept a format — PR #92's `.epub` handler
+  becomes uploadable the moment it merges, with no edit here. (3) The size cap is applied to
+  `len(data)`, never to a claimed `Content-Length`: the header is a claim, the payload is the
+  fact. (4) A colliding name is written **alongside** the existing file, never over it — the
+  inbox holds the operator's only copy of material that may not exist anywhere else.
+  **A dotfile is rejected**, which is not obvious: `scan_inbox` skips names starting with
+  `.`, so accepting one would write a file that silently never gets staged — and one test
+  asserts the round trip, that a staged upload is actually picked up by `scan_inbox`.
+  **Mutation-tested — 13 mutants, and the first pass found a survivor:** the explicit `..`
+  check was unreachable. Once every separator is rejected a name cannot address a directory
+  at all, and a bare `..` is already caught as a dotfile, so the rule could be deleted with
+  no test noticing. Deleted rather than left as an untested line that reads like load-bearing
+  security; the reasoning is now a comment and an `architecture.md` sentence, because the
+  next reader's instinct will be to add it back. Re-run: **12/12 caught, zero survivors.**
+  **Verification:** `make verify` **exit 0**, ruff clean, **1297 passed**, dashboard builds;
+  a clean `origin/main` worktree collects 1254, and an ID-level diff shows **+43 added, zero
+  removed**, all in `tests/test_ingest_upload.py`. **No route, no data file, no new
+  dependency.** **Deferred:** the route wiring and steps 3–6; plan 0011 stays in `ready/`
+  with a status block at the top recording exactly which half of step 2 is done, so a future
+  run continues instead of rewriting the module.
+
+### 2026-09-12 — analysis — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/95
+- Source: roadmap:#38 (the T3 guard half; dashboard breakdown + per-module defaults deferred)
+- Summary: **The ingest arc ends in a crash, and the obvious fix opens a privacy hole.**
+  `ingest/review.py::accept_item` appends a manifest entry with **no `file` key**, and
+  `load_articles` did `DATA_DIR / entry["file"]` — an unguarded subscript. The first document
+  the owner ever *accepts* would not quietly fail to appear; it would raise `KeyError` and take
+  the whole analysis pipeline down. `dedupe_manifest_entries`' own docstring already claimed
+  such entries are "passed through … the caller skips them anyway" — **the code asserted the
+  opposite of what it did.** Nobody has hit it because nobody has accepted an ingested item yet.
+  **Why that is not a one-line fix:** `ingest/provenance.py` defaults every new document to
+  `privacy: private`, and `predictions._call` set `allow_remote=True` for any `tier >= 3`
+  **without checking what it was sending**. T3 is OpenRouter — the only tier that leaves the Mac
+  mini. So making ingested documents loadable *is* the change that makes his letters, email and
+  books eligible to be posted to a vendor. Harmless so far only because the corpus is 204 public
+  Forbes columns; the ingest arc exists to end exactly that. **The gate went into `_call`,
+  before the retry loop** — the single chokepoint that sets `allow_remote`, which
+  `verdict_backfill`, `voice_eval` and `rag_eval` all import rather than building their own
+  request, so guarding it guards all four. That is PR #94's lesson reapplied: what matters is
+  where the gate lives. **It fails closed on silence:** `sources=None` is refused, `sources=[]`
+  is the explicit "no corpus material here", and anything not provably `privacy: "public"`
+  counts as private. **Two callers declare coarsely on purpose** — `voice_eval`'s trial passages
+  carry no slug and `verdict_backfill`'s `chat(prompt)` seam has no prediction in hand, so both
+  declare the whole corpus; over-refusing costs an eval, under-refusing costs his privacy
+  permanently. **A trap the roadmap did not mention:** no manifest entry carries provenance
+  today (#29's data migration is still pending), so a naive lookup would read all 204 columns as
+  private and refuse *every* paid call the owner makes — `provenance_for_slugs` resolves legacy
+  entries through `migrate_articles`, the repo's own statement of what they are. **No data file
+  migrated or committed.** **Verification:** `make verify` **exit 0**, ruff clean, **1287
+  passed**; a clean `origin/main` worktree collects 1254 and an ID-level diff shows **+33 added,
+  zero removed**. **Mutation-tested — 10/10 caught**, including the guard moved *inside*
+  `_call`'s `try`, where `except Exception` swallows the refusal and retries it three times with
+  backoff. **Deferred on purpose:** `accept_item` writing `data/raw/<id>.json` is the step that
+  actually admits private material, and belongs *after* this guard merges. ADR **D18** (not D17
+  — PR #93 holds an unmerged D17). The Ask Dad browser tier toggle still sets `allow_remote`
+  client-side and is **not** covered; D18 says so rather than implying the boundary is sealed.
+
+### 2026-09-11 — training — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/94
+- Source: plan:ready/0009 (step 2 — the half that never landed)
+- Summary: **The preflight has been rejecting this project's training data since the day it was
+  written, and nothing ever stopped.** Plan 0009 step 2 asked for two things — add `--strict`,
+  and *call it from the training path*. The flag landed in PR #91; the calling never did, and
+  that PR's own run-history entry records step 2 as "already shipped". So the tool still only
+  printed. This is the exact mechanism behind D15: the fine-tune was trained on a dataset
+  `make finetune-preflight` was already failing (100% of records over `max_seq_len`), and the
+  ADR was written up as a verdict on the *model* while the warning sat unread. **What matters
+  is where the gate lives, not that one exists.** The obvious wiring — have `finetune-prep` run
+  the preflight first — would have been theatre: `notebooks/finetune_qlora.ipynb` calls
+  `prepare_mlx_data()` **directly**, and the notebook *is* the training path, so a Makefile-only
+  gate leaves the real route ungated. The gate went into `prepare_mlx_data()` itself, the single
+  chokepoint that writes the `train.jsonl` / `valid.jsonl` that `mlx_lm.lora --data` reads. A
+  failing split now raises `PreflightError` and **stages nothing**. It gates on **all three**
+  checks rather than just the length budget a literal reading would suggest — a leaked split
+  inflates validation as thoroughly as truncation wastes it. **Proved on real data, not only
+  fixtures:** fed the article-level `instruct.jsonl` (the shape D15 actually trained on) it
+  refuses with `130/130 (100.0%) over max_seq_len=1024`; `make finetune-prep` on today's
+  passage-level corpus stages **train=544, valid=130** clean. **A hazard the plan did not
+  mention:** refusing is not sufficient, because a previous run's files sit in
+  `data/finetune_run/` and `mlx_lm.lora --data` reads the *directory* — a run that "refused"
+  could still train on stale data. The refusal now **names** those files. It does not delete
+  them; quietly removing the owner's artifacts is its own failure mode. The refusal also carries
+  the **rendered report**, so the fix is in the error rather than one CLI invocation away.
+  **There is an override here, unlike PR #93's security gate** — `force=True` / `ARGS=--force`.
+  The difference is blast radius: forcing wastes the owner's own GPU hours, and step 4 may
+  legitimately want to reproduce D15's truncating run for comparison. It is an argument, never a
+  default, and `preflight_ok` in the return value records that it was used. The notebook now
+  passes `config=cfg`, so raising `max_seq_len` there re-checks the budget at the value the run
+  will really use. **TDD'd:** 16 tests, all proved red first. Two pre-existing tests needed
+  updating and both were *informative* — their `_rec` helper gave every record an identical
+  assistant body, which the new gate correctly reads as a train/heldout leak. **Mutation-tested
+  — 10/10 caught:** gate never consulted, defaulting to force, gating only the length budget,
+  ignoring the caller's config, dropping the report from the message, not naming stale files,
+  *deleting* them instead, hardcoding `preflight_ok`, staging before refusing, and a CLI that
+  exits 0 on refusal. **Verification:** `make verify` **exit 0** — ruff clean, **1270 passed**,
+  dashboard builds; a clean `origin/main` worktree collects **1254**, so the delta is exactly
+  the **+16** added here and nothing was dropped. `training/README.md`'s "why this matters now"
+  was **stale** — still describing the length budget as 100% failing, which step 1 fixed in
+  PR #91 — and is corrected. Plan 0009's status block now marks step 2 done and records *why*
+  the gate is in the function rather than the Makefile, so a future run does not "fix" it back.
+  **No data artifact committed;** the weekly cron's dirty `data/` files were left alone.
+  **Still the owner's move:** step 4 (retrain + re-measure vs D15) needs hours of local GPU and
+  a paid T3 judge, so plan 0009 stays in `ready/`.
+
+### 2026-09-10 — infra — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/93
+- Source: plan:ready/0011 (step 1 of 6; plan stays in `ready/` for steps 2–6)
+- Summary: **Built the console's door and proved it locked, before putting anything behind
+  it.** Plan 0011 step 1 only — upload, review queue, job runner and scoreboard (steps 2–5)
+  are deliberately *not* here; they are the parts that write files and start processes, and
+  the plan makes tailnet-only listening a hard gate on them. **The gate is real, not
+  theoretical:** `tailscale serve status --json` on this machine shows **three** live public
+  Funnels — `:443→8501`, `:8443→8000`, `:10000→8502` — and `:8443→127.0.0.1:8000` is the
+  family dashboard's own listener, the one `make share` publishes. So the console started on
+  the default port would have been **internet-reachable behind one shared password**, with
+  upload and job execution behind it. It now refuses: run with `DIGITAL_DAD_CONSOLE=1` on
+  8000 and it exits 1 with a named reason (verified for real, not just in a test). It
+  **fails closed** — Tailscale present but unreadable is a refusal, because an unanswered
+  question about public exposure is not a yes; Tailscale *absent* is not a refusal, since
+  there is no Funnel to be exposed by. There is deliberately **no override env var**: an
+  escape hatch here is the whole vulnerability re-added for convenience. A check that only
+  knew the dashboard's own port would have waved the console onto 8501, so the parser reads
+  the whole `AllowFunnel` map (and `TCPForward`, not just HTTP proxies). **A leak the plan
+  did not mention:** routing `/console` is not sufficient, because `console.html` is a plain
+  file in the directory the Funnel publishes — the static handler served it 200 to any
+  family-password holder. Found by writing the test, then fixed: with the console off, the
+  page does not exist to GET *or* HEAD. **`bin/serve_dashboard.py` had zero tests before
+  this** — the Basic-Auth gate protecting the public link had never been exercised, which is
+  a poor foundation to add write routes to. It now has 33, driving a **real**
+  `ThreadingHTTPServer` over a real socket (a unit test calling `_authed()` would prove
+  nothing about whether the handler calls it) and a real subprocess against a fake
+  `tailscale` script rather than a mocked `subprocess.run`. The route table lives in one
+  place (`CONSOLE_ROUTES`) and the gate test *enumerates* it, so a route added by step 2–5
+  cannot silently skip the auth assertions — the same discovery-over-hardcoding lesson as
+  2026-09-09's `test_lint_scope`. **TDD'd:** all 33 proved red first (10/13, then 17/17).
+  Two of the initial reds were **test** bugs, not production bugs, and are worth recording:
+  one bound the real port 8000 and hit the *live* dashboard (`Address already in use`), the
+  other assumed `probe_funnel(None)` skipped discovery when None means "auto-detect". Because
+  the security claims are the whole point of the PR, the 9 load-bearing behaviors were
+  additionally **mutation-tested — every mutant caught**: dispatching console routes before
+  the auth gate, defaulting the console on, loosening the env check to any truthy value,
+  un-withholding `console.html`, ignoring `AllowFunnel`, failing *open* on an unreadable
+  Tailscale, skipping the port check, never consulting the gate at startup, and dropping
+  `TCPForward`. **Live browser pass** (headless Chromium, the `verify-responsive` precedent):
+  page renders, health check green, **no JS errors**; unauthenticated `/console` and
+  `/console/api/health` both 401, authed both 200. **Verification:** `make verify` **exit 0**
+  — ruff clean, **1287 passed**, dashboard builds; a clean `origin/main` worktree collects
+  1254, so the delta is exactly the **+33** added here. **ADR D17** records the console as a
+  second surface that is *not* covered by D4 (the family dashboard stays client-side and
+  self-contained) rather than leaving it a silent exception. **Deviation from the plan:** the
+  ADR is listed under step 6, but the decision it records is *made* in step 1 and the plan
+  asks that it be surfaced for the owner to rule on, so it is written now; step 6's README
+  section remains. **No data artifact committed** — the dirty `data/` files from the weekly
+  cron were left alone. **For the owner to rule on:** `make console` defaults to port 8765
+  and nothing publishes it yet — actually serving it needs a `tailscale serve` (tailnet-only,
+  *not* `funnel`) listener, which is a machine-config change outside this PR.
+
+### 2026-09-09 — infra — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/92
+- Source: plan:ready/0010 (all 6 steps; plan moved to `plans/done/`)
+- Summary: **`.epub` handler — one ebook is worth the entire 204-article corpus.** Stdlib
+  only (`zipfile` + `xml.etree` + `html.parser`), so the zero-dependency core is intact and
+  CI needs no install; the 2026-08-13 design had assigned `.epub` to an opt-in extra, and
+  that extra is still not needed. Reading order comes from the **spine**, proved against a
+  ZIP whose entries are deliberately shuffled — the failure mode here is silent, a book read
+  out of order looks fine and is worthless. Measured on a synthetic 770 KB, 24-spine-item
+  book: **20 chapters / 144,040 words / 1,220 paragraphs recovered, 4 non-prose items
+  dropped.** **Two bugs the tests found, not the plan:** (1) `<head><title>` text was being
+  emitted into the body, so every chapter began with its own title twice — caught by the
+  step-3 RED output, not by a test I set out to write; (2) confidence was computed as
+  `0.8 if warnings else 1.0`, and since *every* real book drops front matter, **every
+  well-formed book scored 0.8** — a number that can't distinguish a clean book from a
+  damaged one is worse than no number, so confidence now scores only what could not be
+  *recovered* (missing title/author/spine item), while correct drops are reported and not
+  scored. **`analysis.utils.clean_text` could not be reused as the plan directed** — it
+  collapses `\s+` to single spaces, which flattens paragraph structure, and paragraphs are
+  exactly what plan 0009's passage records are cut on. Applied per paragraph instead, so the
+  shared cleaner is still the only cleaner. **Found while verifying:** `ingest/` has been
+  **unlinted since its first commit** — `make verify`'s `LINT_PATHS` never included it. The
+  guard meant to prevent this (`tests/test_lint_scope.py`) hardcoded its package list, so a
+  package added after it was written could never trip it; it now **discovers** the packages,
+  which fails red on `ingest` and passes once `LINT_PATHS` and the pre-commit regex include
+  it. The widened gate immediately caught an E501 in this PR's own tests. **TDD'd:** +54
+  tests, all proved red first except the step-2 parser assertions, which passed on arrival
+  because step 1's integration tests had forced the parser to exist — those 12 assertions
+  were therefore **mutation-tested** and every mutant is caught (dropping script/style
+  suppression, the block-break insertion, per-paragraph cleaning, charref unescaping, the
+  first-heading rule, the href-stem fallback, unparseable-date handling, the author check,
+  the modality vocabulary, front-matter dropping, spine-position ordinals, and DRM
+  detection). **DRM is detected and refused at zero confidence, never circumvented**; a
+  corrupt ZIP, absent container, unparseable OPF and a spine item missing from the archive
+  all refuse or warn instead of raising, so one bad file cannot kill an ingest run — proved
+  end-to-end through `scan_inbox`. **Verification:** `make verify` exit 0 — ruff clean,
+  **1308 passed**, dashboard builds; a clean `origin/main` worktree collects 1254, so the
+  delta is exactly the **+54** added here. **Owner-run, not agent-run:** actually ingesting a
+  book needs a purchased DRM-free file, so no real book was ingested and **no training claim
+  is made** — per 0010's own sequencing note, the training payoff needs 0009 step 4 first.
+  **Deviation from the plan:** step 6 asks for an `ingest/README.md` section, but no such
+  file exists; the format table in `docs/architecture.md` was updated instead rather than
+  creating a second doc that would duplicate it.
+
+
 ### 2026-09-08 — training — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/91
 - Source: plan:ready/0009 (steps 1 and 3; step 2 turned out to be already shipped)

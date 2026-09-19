@@ -19,15 +19,21 @@ The daily agent runs pre-baked plans **oldest-first** before touching anything b
 queue is the deterministic, owner-chosen sequence. Each plan is sized to *deepen over 2–3 days*
 (review cadence is a few times a week).
 
-**Plans 0001–0008 are all complete** and live in `plans/done/`. The current queue is the
+**Plans 0001–0008 and 0010 are complete** and live in `plans/done/`. The current queue is the
 **Geo-LLM flywheel**: make the fine-tune work, widen what feeds it, then build the console that
 turns the crank.
 
-| Order | Plan | Roadmap items |
-|-------|------|---------------|
-| 1 | `plans/ready/0009-finetune-fair-test.md` | #39 → #40 (reshape training data, retrain, re-measure vs D15) |
-| 2 | `plans/ready/0010-epub-ingest-handler.md` | #35 (books — the highest-yield corpus source) |
-| 3 | `plans/ready/0011-operator-console.md` | #42 (upload → review → train → scoreboard) |
+*Status refreshed 2026-09-19 (PRs #91–#97 all merged).*
+
+| Order | Plan | Roadmap items | Status |
+|-------|------|---------------|--------|
+| 1 | `plans/ready/0009-finetune-fair-test.md` | #39 → #40 | **⏸ owner-blocked.** Steps 1–3 done (#91, #94); #39 is shipped. **Step 4 — retrain + `make voice-eval` — needs the owner** (local GPU hours + a paid T3 judge). A daily run should read the status block, see the gate, and pick other work. |
+| 2 | ~~`plans/ready/0010-epub-ingest-handler.md`~~ | #35 | **✅ done** (#92) — moved to `plans/done/`. |
+| 3 | `plans/ready/0011-operator-console.md` | #42 | **🔄 in progress.** Steps 1–3 done (#93 shell/gate, #96 upload validation core, #97 review decision core). **Next: the route wiring for steps 2–3** — thin callers of `stage_upload` / `queue_view` + `apply_decision`, now unblocked because #93 has merged — then steps 4–6 (job runner, scoreboard, docs+ADR). |
+
+**Do not restart 0011 from step 1.** Its status block is the source of truth for what exists;
+`ingest/upload.py` and `ingest/review.py`'s decision core are written and tested. The remaining
+work is wiring, not reimplementation.
 
 **Sequencing rationale** (design:
 [`superpowers/specs/2026-09-07-next-phase-design.md`](superpowers/specs/2026-09-07-next-phase-design.md)):
@@ -99,17 +105,22 @@ Every item is offline, pure, and unattended-safe. A handler is a pure
     *Sequenced after #35 and #34.*
 34. **P2 · M · ingest** — `.pdf` handler + no-text-layer detection (warn and defer to OCR).
     *Sequenced after #35.*
-35. **P1 · M · ingest** — `.epub` handler + chapter segmentation. **Unlocks the books —
+35. **P1 · M · ingest** *(done 2026-09-09 — PR #92; plan 0010 in `plans/done/`)* — `.epub`
+    handler + chapter segmentation. **Unlocks the books —
     ~80k words ≈ the entire current corpus, so one ebook roughly doubles the training set.**
-    Promoted to P1 and moved to the front of the ingest arc. Stdlib (`zipfile` + `html.parser`),
-    no new dependency. *(queued: ready/0010)*
+    Shipped stdlib-only (`zipfile` + `html.parser`) as designed — no new dependency, and the
+    `ingest` extra was not needed. Owner still needs to supply DRM-free ebooks to `data/inbox/`.
 36. **P2 · M · ingest** — image OCR handler with a confidence score.
 37. **P3 · L · ingest** — audio/video transcription (local Whisper) + timestamped segments.
     **Parked** — no source material in hand, and spoken register is not written register: see
     #41 before mixing transcripts into any voice fine-tune.
-38. **P2 · S · analysis** — modality-aware analysis defaults (`authorship: george`) and a
-    modality breakdown in the dashboard. Also lands the T3 private-document guard in
-    `analysis/conductor.py` and writes `data/raw/<id>.json` for ingested items.
+38. **P2 · S · analysis** *(PARTIAL — PR #95, 2026-09-12)* — modality-aware analysis defaults
+    (`authorship: george`) and a modality breakdown in the dashboard. Also lands the T3
+    private-document guard in `analysis/conductor.py` and writes `data/raw/<id>.json` for
+    ingested items.
+    **Shipped:** the T3 private-document guard, and the `load_articles` crash an accepted
+    ingest item would have caused. **Still open:** the dashboard modality breakdown and the
+    per-module `authorship: george` defaults. Re-scope the remainder before picking it up.
 
 ## analysis
 
@@ -197,7 +208,7 @@ rank) is superseded — the defect is example **shape**, not count.
 
 ## training / ML
 
-39. **P1 · S · training** — passage-level training records. Chunk article bodies on paragraph
+39. **P1 · S · training** *(done 2026-09-08/11 — PRs #91 + #94)* — passage-level training records. Chunk article bodies on paragraph
     boundaries into complete records that fit `max_seq_len`, with varied task shapes; keep the
     held-out split **article-level** so chunks cannot leak across it. ~800–1,200 examples from
     the 204 articles already in hand, using 100% of the corpus instead of 33%. No new source
@@ -213,7 +224,8 @@ rank) is superseded — the defect is example **shape**, not count.
 
 ## infra
 
-42. **P1 · L · infra** — operator console on `bin/serve_dashboard.py`: upload → review queue →
+42. **P1 · L · infra** *(in progress: plan 0011 — steps 1–3 done, PRs #93/#96/#97)* — operator
+    console on `bin/serve_dashboard.py`: upload → review queue →
     trigger rebuild/train/eval as a background job → **eval scoreboard** showing run-over-run
     deltas against D15's standing numbers. Stdlib only, no framework. **Must be served
     tailnet-only, not on the public Funnel** — it adds file upload and job execution to a
