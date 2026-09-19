@@ -1,31 +1,33 @@
 # Plan 0011 — Operator console: feed the corpus, turn the crank, keep score
 
-## Status (2026-09-14)
+## Status (refreshed 2026-09-19 — everything below is now **on `main`**)
 
-> PR #96 adds this same block covering steps 1–2. This version is the **union** — it carries
-> #96's text unchanged and appends step 3. On an add/add conflict, this side loses nothing.
+> Earlier revisions of this block said "done, unmerged" for steps 1–3. **PRs #93, #96 and #97
+> have all merged.** Nothing here is blocked on an unmerged branch any more.
 
-- **Step 1 — done, unmerged** (PR #93). Console shell, route gate, Funnel refusal.
-- **Step 2 — validation core done, unmerged** (PR #96). `ingest/upload.py` holds the
+- **Step 1 — done and merged** (PR #93). Console shell, `/console/api/*` dispatch in
+  `bin/serve_dashboard.py`, route gate, Funnel refusal.
+- **Step 2 — validation core done and merged** (PR #96). `ingest/upload.py` holds the
   sanitizer, the registry-derived extension allowlist, the size cap and the non-clobbering
-  writer, all tested. **The `POST /console/api/upload` route itself is NOT done** — it needs
-  step 1's dispatch in `bin/serve_dashboard.py`, which is still unmerged. Do that wiring once
-  #93 lands; it is a thin caller of `stage_upload`, not a reimplementation.
-- **Step 3 — decision core done, unmerged** (PR #97). This step assumed `ingest/review.py`
+  writer, all tested. **The `POST /console/api/upload` route itself is still NOT written** —
+  it was deferred only because #93's dispatch was unmerged at the time. **That blocker is
+  gone.** It is a thin caller of `stage_upload`, not a reimplementation.
+- **Step 3 — decision core done and merged** (PR #97). This step assumed `ingest/review.py`
   already had "existing decision functions" a console could call. **It did not.** Only
   `accept_item` was callable; reject and edit were inlined in `run_cli`'s prompt loop, wired
   to `input_fn`. So the core came first: `apply_decision` (one entry point for
   accept/edit/reject, persisting both the queue item and the manifest), plus `edit_item`,
   `reject_item`, `validate_field`, and `queue_view` / `item_view` for the listing payload.
   `run_cli` was rewired onto the same functions, so the CLI and a future route cannot
-  diverge. **The `GET /console/api/queue` and `POST /console/api/review` routes are NOT
-  done** — same reason as step 2: they need #93's dispatch.
+  diverge. **The `GET /console/api/queue` and `POST /console/api/review` routes are still NOT
+  written** — same reason as step 2, and the same blocker is now gone.
 - **Steps 4–6 — not started.**
 
-A daily run picking this plan up should start at the step-2 and step-3 **route wiring** (once
-#93 has merged), or at step 4. It should **not** rewrite `ingest/upload.py`, and should not
-re-decide anything in `ingest/review.py`. Both wirings are thin callers: `stage_upload` for
-upload; `queue_view` and `apply_decision` for the queue.
+**Next run should do the route wiring** — `POST /console/api/upload`, `GET /console/api/queue`,
+`POST /console/api/review` — on top of #93's dispatch, which is on `main`. All three are thin
+callers: `stage_upload` for upload; `queue_view` and `apply_decision` for the queue. Do **not**
+rewrite `ingest/upload.py`, and do **not** re-decide anything in `ingest/review.py`. Step 4 (job
+runner) is the alternative if the wiring is taken first by another run.
 
 **Rejects still live in the queue directory**, marked `status: rejected` with their reason.
 Step 3's `data/ingest/rejected/` move is deliberately **not** done: it changes the on-disk
