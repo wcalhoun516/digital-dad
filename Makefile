@@ -5,7 +5,7 @@ PYTHON := .venv/bin/python
 # package drops out of the gate. E501 is off for the source packages only (see pyproject).
 LINT_PATHS := analysis scraper viz training tools bin ingest tests
 
-.PHONY: scrape manifest-check manifest-dedup coverage-audit analyze training dashboard all serve share console search on-this-day send-on-this-day adjudicate backfill-verdicts entity-graph calhoun-isms reading-room contradictions rag-eval voice-eval voice-style voice-trials embedding-compare embedding-queries-check clean test lint fmt lint-json hooks verify verify-responsive
+.PHONY: voice-candidates scrape manifest-check manifest-dedup coverage-audit analyze training dashboard all serve share console search on-this-day send-on-this-day adjudicate backfill-verdicts entity-graph calhoun-isms reading-room contradictions rag-eval voice-eval voice-style voice-trials embedding-compare embedding-queries-check clean test lint fmt lint-json hooks verify verify-responsive
 
 scrape:
 	$(PYTHON) -m scraper $(ARGS)
@@ -212,6 +212,16 @@ voice-style:
 # article bodies and is gitignored. ARGS e.g. --limit 10 or --seed 42.
 voice-trials:
 	$(PYTHON) -m analysis.voice_trials $(ARGS)
+
+# Generate the voice eval's candidate answers for one or more arms, then write a
+# complete trial set (no paste-here placeholders). Picks the lowest-val-loss adapter
+# checkpoint from the newest logs/retrain_*.log — never the final one, which is the
+# overfit one. Arms: finetuned, base-3b (the un-tuned control), rag, prompted-12b
+# (tier 2 without retrieval). Needs the conductor for the conductor arms and mlx for
+# the local ones, so it is a deliberate/local target, not automation.
+#   make voice-candidates ARGS="--arms finetuned,base-3b,rag,prompted-12b"
+voice-candidates:
+	$(PYTHON) -m analysis.voice_candidates $(ARGS)
 
 # Preflight the local LLM conductor: exit 0 if it's reachable, 2 if not. The shared
 # health check that every owner-gated eval (rag-eval, voice-eval, backfill-verdicts) uses

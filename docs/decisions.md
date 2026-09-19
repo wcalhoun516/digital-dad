@@ -176,8 +176,12 @@ not more examples carved from the same material.** Chunking is necessary — a t
 is strictly worse — but it is not a substitute for corpus.
 
 **The failure mode also changed, for the worse.** D15's model over-used his vocabulary (~2×) and
-hallucinated specifics. This one **loops**: the 5-gram *"been trying to gain access"* appears 13
-times across 8 samples (real's most-repeated 5-gram appears once). Length-controlled type-token
+hallucinated specifics. This one **loops** — it degenerates into repetition and runs to the token
+cap. The worst case is *"been trying to gain access to American technology"*, repeated **13 times
+inside a single sample** (trial v04, the semiconductors prompt); other trials loop on different
+phrases ("was seen as a necessary step to restore market confidence…"). An earlier draft of this
+ADR said "13 times across 8 samples", which overstated how systemic it is — the collapse is real
+but localized. Length-controlled type-token
 ratio is 0.459 against real's 0.724 and RAG's 0.716.
 
 **Caveats, stated because they bound the claim.** Generation was capped at 400 tokens with no
@@ -187,14 +191,41 @@ number, and it is still far below both comparators. A rerun with a repetition pe
 length-matched generation is a cheap sanity check worth doing before anyone calls this final.
 n=8, one judge — matched to D15's protocol for comparability, not large.
 
+**⚠ The comparison is confounded, and the "corpus diversity" conclusion above overreaches.**
+Tier 2 resolves to **`gemma4:12b-it-qat`**. So the arms were:
+
+| arm | model | context at inference |
+|---|---|---|
+| `rag` | **Gemma 12B** | 8 retrieved passages from his corpus |
+| `finetuned` | **Qwen 3B** | none — working from weights alone |
+
+That is a ~4× parameter gap *plus* a retrieval advantage, so this run does not isolate
+fine-tuning. What it does establish is narrower and still decision-useful: **the fine-tune as
+configured does not beat the shipped Ask Dad path**, which is the product question. The claim
+that *corpus diversity* is the binding constraint is a hypothesis consistent with the val-loss
+curve bottoming at iter 100 in both runs — it is **not** demonstrated here.
+
+**Two controls are required before any further verdict.** Both are now reachable via
+`make voice-candidates` (`analysis/voice_candidates.py`):
+
+- **`base-3b`** — the same Qwen 3B, style prompt, *no adapter*. The single most important
+  missing arm: it says whether fine-tuning helped, did nothing, or actively hurt. Without it,
+  "the fine-tune lost" cannot be separated from "a 3B model lost".
+- **`prompted-12b`** — tier 2 with a style prompt and *no retrieval*. Says how much of RAG's
+  score comes from retrieval versus from simply being a 12B model.
+
+A fair fine-tune test would also put the adapter on a comparable base — QLoRA on the 12B at
+4-bit rank 8 is plausible on this hardware — so that it is fine-tune-vs-RAG on one model.
+
 **Implication.** Ask Dad (RAG) remains the shipped, trustworthy voice, now on stronger evidence:
 the judge ranked *real* above *RAG* 75/25 here, where D15 found them indistinguishable, so RAG is
 not perfect either — but it is second to the real thing and the fine-tune is not close. The
 adapter is **not** registered in the conductor and the dashboard toggle stays hidden.
 
 **What is NOT the next lever:** more iterations, higher LoRA rank, or more chunking on this same
-181-article corpus. That experiment has now been run twice and the constraint is not there.
-**What is:** more distinct material — the ingest arc (#33–#37) and source discovery (#49).
+181-article corpus — tried twice, no movement. **What comes first:** the two control arms above,
+which are cheap and decide whether fine-tuning is worth pursuing at all.
+**What is likely after that:** more distinct material — the ingest arc (#33–#37) and source discovery (#49).
 Re-run `make voice-eval` when the corpus has meaningfully grown, and record corpus size beside
 the score so the "how much is enough" curve accumulates.
 

@@ -218,6 +218,24 @@ rank) is superseded — the defect is example **shape**, not count.
     (fine-tune 0% win-rate / avg rank 2.88; RAG 1.50; real 1.63; TTR 0.35 vs 0.70). Record the
     result as an ADR **including a negative one** — a fair test that still loses is a real
     finding. Owner-interactive (local GPU hours + a paid T3 judge). *(queued: ready/0009)*
+50. **P1 · S · training — the two missing control arms.** ADR D17's run compared a Qwen **3B**
+    with no context against a Gemma **12B** holding 8 retrieved passages, so it cannot separate
+    "fine-tuning lost" from "a 3B model lost". `make voice-candidates` now generates both
+    controls; run them and record the numbers:
+    - **`base-3b`** — same base, style prompt, **no adapter**. Says whether the fine-tune helped,
+      did nothing, or hurt. The single most informative number not yet measured.
+    - **`prompted-12b`** — tier 2, style prompt, **no retrieval**. Says how much of RAG's score is
+      retrieval versus model size.
+    Cheap (one local run + one conductor pass) and it decides whether #51 is worth doing.
+51. **P2 · L · training — fine-tune a comparable base.** If #50 says the adapter adds real value,
+    re-run QLoRA on a base in the same weight class as tier 2 (`gemma4:12b-it-qat` at 4-bit,
+    rank 8 is plausible on 16GB) so the comparison is fine-tune-vs-RAG *on one model* instead of
+    across a 4× parameter gap. Gate this on #50 — do not start it first.
+52. **P3 · S · training — length-matched, repetition-penalized regeneration.** D17's generations
+    ran to a 400-token cap with no repetition penalty (357 words vs real's 134), which depressed
+    TTR and gave the model room to loop. `voice_candidates` now defaults to 220 tokens with a 1.1
+    penalty; re-run the D17 comparison under those settings so the style metrics are honest.
+
 41. **P1 · M · training** — modality-aware training + per-modality voice eval. Filter/condition
     on `provenance.modality` and `authorship: george`, and slice `voice_eval` by modality.
     Spoken register is not written register: talk transcripts mixed unlabelled into a

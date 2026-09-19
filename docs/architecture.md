@@ -338,6 +338,20 @@ paste-here placeholders. **Leakage-free by construction** (prompts come from the
 split). The output embeds real bodies, so it is git-ignored; the hand-authored
 `eval/voice_trials.example.json` template is committed.
 
+`voice_candidates.py` — fills the skeleton above; `make voice-candidates`. The step that was
+never automated, and the reason the Geo-LLM eval sat unrun for three months: somebody had to
+hand-produce two passages per trial. An **arm** is one thing being compared — `finetuned`
+(QLoRA adapter), `base-3b` (the *same* base with no adapter), `rag` (tier 2 + retrieval, the
+shipped Ask Dad path) and `prompted-12b` (tier 2, style prompt, no retrieval). The last two are
+the controls ADR **D17** lacked: without `base-3b` you cannot separate "the fine-tune lost" from
+"a 3B model lost", and without `prompted-12b` you cannot tell how much of RAG's score is
+retrieval rather than model size. It picks the **lowest-val-loss** checkpoint from the training
+log — never the final adapter, which is the overfit one — and **refuses to write a trial set**
+that still contains an empty or placeholder candidate. Generation defaults to 220 tokens with a
+repetition penalty, for length parity with the reference excerpts. Following
+`rag_eval`/`voice_eval`, everything networked or GPU-bound sits behind one injected
+`generate(arm, prompts)` seam, so selection and assembly are unit-tested offline.
+
 `geo_baseline.py` — freezes the pre-fine-tune numbers (plan 0008 step 26b). Reads the already
 written `rag_eval.json` and curates it into `geo_llm_baseline.json` plus a short markdown note,
 with a `voice` slot left pending for 26d. Makes **no** conductor calls of its own; if
