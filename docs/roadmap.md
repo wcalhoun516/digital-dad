@@ -218,7 +218,9 @@ rank) is superseded — the defect is example **shape**, not count.
     (fine-tune 0% win-rate / avg rank 2.88; RAG 1.50; real 1.63; TTR 0.35 vs 0.70). Record the
     result as an ADR **including a negative one** — a fair test that still loses is a real
     finding. Owner-interactive (local GPU hours + a paid T3 judge). *(queued: ready/0009)*
-50. **P1 · S · training — the two missing control arms.** ADR D17's run compared a Qwen **3B**
+50. **P1 · S · training — the two missing control arms.** *(done 2026-09-19 — ADR D19;
+    answer: fine-tuning is a NET NEGATIVE, beaten by its own un-tuned base 75% without
+    retrieval and 62% with.)* ADR D17's run compared a Qwen **3B**
     with no context against a Gemma **12B** holding 8 retrieved passages, so it cannot separate
     "fine-tuning lost" from "a 3B model lost". `make voice-candidates` now generates both
     controls; run them and record the numbers:
@@ -227,7 +229,11 @@ rank) is superseded — the defect is example **shape**, not count.
     - **`prompted-12b`** — tier 2, style prompt, **no retrieval**. Says how much of RAG's score is
       retrieval versus model size.
     Cheap (one local run + one conductor pass) and it decides whether #51 is worth doing.
-51. **P2 · L · training — fine-tune a comparable base.** If #50 says the adapter adds real value,
+51. **~~P2 · L · training — fine-tune a comparable base.~~ — DROPPED (2026-09-19).** D19
+    ran the 2x2 on one model and the adapter lost to its own base in *both* conditions, on a
+    second architecture and parameter scale. Scaling the base is not the missing ingredient.
+    Superseded by #53. *(original text below for history)*
+    **P2 · L · training — fine-tune a comparable base.** If #50 says the adapter adds real value,
     re-run QLoRA on a base in the same weight class as tier 2 (`gemma4:12b-it-qat` at 4-bit,
     rank 8 is plausible on 16GB) so the comparison is fine-tune-vs-RAG *on one model* instead of
     across a 4× parameter gap. Gate this on #50 — do not start it first.
@@ -250,6 +256,29 @@ rank) is superseded — the defect is example **shape**, not count.
     tailnet-only, not on the public Funnel** — it adds file upload and job execution to a
     surface that is currently read-only and internet-reachable behind one shared password.
     Needs its own ADR for the console-vs-D4 split. *(queued: ready/0011)*
+
+53. **P1 · M · training — many-shot in-context, the untested arm.** Gemma 4 carries a
+    **262,144-token context** and the whole corpus is **~453K tokens** — over half of everything
+    he wrote fits in one prompt. Twenty or thirty *complete* articles as exemplars, versus the 8
+    retrieved chunks RAG uses today. No training, and it cannot invent positions the way a
+    fine-tune does. On D19's evidence this is the highest-value unexplored direction; run it as
+    a `many-shot` arm through `make voice-candidates`.
+54. **P2 · M · training — DAPT instead of instruction pairs.** D19's diagnosis: instruction-pair
+    tuning on ~453K tokens optimizes the cheapest loss reduction available — reproducing surface
+    markers (hinge vocabulary up **3.5x**, lexical variety down two-thirds). Continued
+    pretraining on raw prose removes the format-mimicry incentive. Same tokens, different
+    objective.
+55. **P3 · M · training — synthetic preference pairs (DPO/ORPO).** His passage vs a blandly
+    rewritten one, train to prefer his. The one technique on the list that manufactures training
+    signal from the corpus already in hand rather than needing more of it.
+56. **P2 · M · analysis — better retrieval.** Reranking, hybrid BM25+dense, query expansion.
+    D19 showed plain+RAG lands very close to real on style (TTR 0.762 vs 0.709; distinctive
+    vocabulary 23.0/1k vs 28.1 — slightly *under*). Improving the arm that is winning beats
+    rescuing the one that is losing.
+57. **P2 · S · infra — retrain on new tokens.** Corpus fingerprinting (D3) already gates every
+    analysis module; gate training the same way. When the fingerprint moves: stage data →
+    preflight → train → eval → append a row recording **corpus size beside the score**. That
+    accumulating curve — how much text is enough — is the product's core claim (`goals.md`).
 
 ## analysis / family — the weekly column
 
