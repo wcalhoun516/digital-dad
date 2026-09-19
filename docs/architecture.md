@@ -66,6 +66,15 @@ than crashing.
   `META-INF/encryption.xml`, or unparseable XML) is **detected and refused** at zero
   confidence — there is no circumvention; the owner supplies a DRM-free copy.
 
+`upload.py` is the single gate for material arriving over the network rather than being
+copied into `data/inbox/` by hand. `sanitize_filename` **rejects** any name that is not a
+bare filename instead of repairing it, and rejecting every path separator is what makes
+traversal impossible — a name that cannot address a directory needs no `..` rule. The
+extension allowlist is read from the live `HANDLERS` registry, so registering a handler is
+the only edit needed to accept a new format. The size cap is applied to the payload, never
+to a client-supplied length, and a colliding upload is written alongside the existing file
+rather than over it.
+
 **Extraction never modifies the corpus** — only `ingest-review` does, and only on a human
 decision. Rejects move aside with a reason instead of being deleted.
 
