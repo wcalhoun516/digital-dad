@@ -16,7 +16,15 @@ import json
 import time
 from datetime import datetime, timezone
 
-from .utils import DATA_DIR, clean_text, load_articles, log, save_analysis
+from .conductor import assert_remote_allowed
+from .utils import (
+    DATA_DIR,
+    clean_text,
+    load_articles,
+    log,
+    provenance_for_slugs,
+    save_analysis,
+)
 
 CONDUCTOR_URL = "http://127.0.0.1:8080/v1"
 
@@ -81,9 +89,22 @@ def _get_client():
     return OpenAI(base_url=CONDUCTOR_URL, api_key="local")
 
 
-def _call(client, prompt: str, max_tokens: int = 4096, tier: int = 2) -> str:
+def _call(
+    client,
+    prompt: str,
+    max_tokens: int = 4096,
+    tier: int = 2,
+    sources: list[dict] | None = None,
+) -> str:
+    """Call the conductor. ``sources`` declares the corpus material inside ``prompt``.
+
+    Tier 3 is the only tier that leaves this machine, so it is the only one that has to
+    know what it is carrying: the guard runs before the retry loop and refuses outright
+    (see ``analysis.conductor.assert_remote_allowed``). Local tiers need no declaration.
+    """
     extra = {"tier": tier, "function": "text"}
     if tier >= 3:
+        assert_remote_allowed(sources)
         extra["allow_remote"] = True
     for attempt in range(3):
         try:
@@ -115,7 +136,7 @@ def _extract_predictions(client, article: dict, tier: int = 2) -> list[dict]:
         body=body,
     )
 
-    text = _call(client, prompt, max_tokens=2048, tier=tier)
+    text = _call(client, prompt, max_tokens=2048, tier=tier, sources=[article])
 
     try:
         start = text.index("[")
@@ -171,7 +192,13 @@ def _run_verdicts(client, predictions: list[dict], tier: int = 2) -> list[dict]:
             predictions=claims_text,
         )
 
-        text = _call(client, prompt, max_tokens=4096, tier=tier)
+        text = _call(
+            client,
+            prompt,
+            max_tokens=4096,
+            tier=tier,
+            sources=provenance_for_slugs(p.get("article_slug", "") for p in batch),
+        )
 
         try:
             arr_start = text.index("[")

@@ -3,9 +3,9 @@ PYTHON := .venv/bin/python
 # Every top-level directory holding Python we ship. Keep this in lockstep with the
 # pre-commit `files:` regex and with tests/test_lint_scope.py, which fails if a source
 # package drops out of the gate. E501 is off for the source packages only (see pyproject).
-LINT_PATHS := analysis scraper viz training tools bin tests
+LINT_PATHS := analysis scraper viz training tools bin ingest tests
 
-.PHONY: scrape manifest-check manifest-dedup coverage-audit analyze training dashboard all serve share search on-this-day send-on-this-day adjudicate backfill-verdicts entity-graph calhoun-isms reading-room contradictions rag-eval voice-eval voice-style voice-trials embedding-compare embedding-queries-check clean test lint fmt lint-json hooks verify verify-responsive
+.PHONY: scrape manifest-check manifest-dedup coverage-audit analyze training dashboard all serve share console search on-this-day send-on-this-day adjudicate backfill-verdicts entity-graph calhoun-isms reading-room contradictions rag-eval voice-eval voice-style voice-trials embedding-compare embedding-queries-check clean test lint fmt lint-json hooks verify verify-responsive
 
 scrape:
 	$(PYTHON) -m scraper $(ARGS)
@@ -49,14 +49,16 @@ training:
 # Stage mlx-lm's train.jsonl/valid.jsonl in data/finetune_run/ from 26a's leakage-free
 # split (plan 0008 step 26c). Offline + free; the actual QLoRA run lives in
 # notebooks/finetune_qlora.ipynb. Run `make training` first to produce the split.
+# Refuses (exit 1) if the preflight below fails — ARGS=--force to stage anyway.
 finetune-prep:
-	$(PYTHON) -m training.finetune_config
+	$(PYTHON) -m training.finetune_config $(ARGS)
 
 # Preflight 26a's split against the QLoRA config before the 26c training run:
 # chat-shape integrity, train/heldout disjointness, and sequence-length budget vs
-# max_seq_len. Report-only (exit 0); add --strict for a non-zero gate.
+# max_seq_len. Report-only (exit 0); ARGS=--strict for a non-zero gate. The gate is
+# enforced for real in `finetune-prep`, which is what writes the trainer's data.
 finetune-preflight:
-	$(PYTHON) -m training.finetune_preflight
+	$(PYTHON) -m training.finetune_preflight $(ARGS)
 
 dashboard:
 	$(PYTHON) viz/build_dashboard.py
@@ -72,6 +74,15 @@ serve: dashboard
 # service so it survives reboots. Re-run any time; --rotate-password to change pw.
 share: dashboard
 	bash scripts/launchd/install_dashboard.sh $(ARGS)
+
+# Operator console (plan 0011) — a WRITE surface, so it is opt-in and must never share a
+# port with the Funnel that `make share` publishes. It refuses to start on one; 8765 is a
+# tailnet-only default. Password still required.
+CONSOLE_PORT ?= 8765
+console: dashboard
+	@echo "Operator console → http://127.0.0.1:$(CONSOLE_PORT)/console"
+	DIGITAL_DAD_CONSOLE=1 DIGITAL_DAD_SHARE_PORT=$(CONSOLE_PORT) \
+		$(PYTHON) bin/serve_dashboard.py
 
 search:
 	$(PYTHON) -m analysis.semantic_search "$(QUERY)"

@@ -55,6 +55,16 @@ than crashing.
   through `strip_quoted_reply()`, which truncates at an `On … wrote:` attribution (Gmail
   hard-wraps these across lines), an `-----Original Message-----` block or a `--` signature,
   then drops `>` quoted lines — without it a thread counts the same sentence once per reply.
+- `handlers/epub.py` — `.epub` via stdlib `zipfile` + `xml.etree` + `html.parser`, no
+  dependency. One document per **spine** item (reading order comes from the spine, never from
+  ZIP entry order), `modality: book`, Dublin Core `<metadata>` → title/date. Front and back
+  matter — copyright pages, dedications, indexes, author bios, and anything under
+  `MIN_CHAPTER_CHARS` — is dropped so it cannot pollute a voice fine-tune, and **every drop is
+  a warning**; `ordinal` stays the spine position so the gap is visible. A book whose OPF
+  author is not Calhoun is filed `authorship: other` with a loud warning, because an ebook of
+  someone else's book must never enter as his voice. A DRM-protected file (an
+  `META-INF/encryption.xml`, or unparseable XML) is **detected and refused** at zero
+  confidence — there is no circumvention; the owner supplies a DRM-free copy.
 
 `upload.py` is the single gate for material arriving over the network rather than being
 copied into `data/inbox/` by hand. `sanitize_filename` **rejects** any name that is not a
@@ -357,6 +367,17 @@ GETs `/models` (cheap — no model load) and treats any connection error or non-
 T3 request. The network call sits behind an injectable `opener`, so callers test the gating
 offline. `make conductor-check` runs it standalone.
 
+**Privacy guard** (`analysis/conductor.assert_remote_allowed`, roadmap #38, ADR D18) — the
+preflight asks *can I call?*; this asks *am I allowed to send **this**?* T3 is the only tier
+that leaves the machine, so `predictions._call` — the single chokepoint that sets
+`allow_remote` — refuses a remote call carrying anything not provably `privacy: "public"`.
+It **fails closed**: a caller that declares no `sources` is refused, `sources=[]` is the
+explicit "no corpus material here", and an unreadable provenance block counts as private.
+This matters because `ingest/` defaults new documents to `privacy: private` — his letters,
+email and books are exactly what must never reach OpenRouter. Resolve slugs with
+`analysis.utils.provenance_for_slugs()`, or `corpus_provenance()` when the prompt could quote
+any article.
+
 > Full reference (exact signatures, return shapes, error/retry behavior, health check):
 > [`conductor-contract.md`](conductor-contract.md).
 
@@ -385,6 +406,29 @@ legitimately records http/https URL twins of one article (23 in the current corp
 naming the same raw file); `load_articles()` collapses them for the analysis pipeline, and
 the dashboard needs the same corpus view or it reports an inflated article count and draws a
 duplicate Raw Corpus row per twin.
+
+### Operator console (`dashboard/console.html`, served by `bin/serve_dashboard.py`)
+
+A **second, separate** surface from the family dashboard: it feeds the corpus, turns the
+flywheel crank, and keeps score (roadmap #42, plan 0011). It is server-bound by nature — it
+writes files and starts jobs — so it is explicitly *not* covered by D4, which keeps
+`index.html` client-side and self-contained. See **D17**.
+
+`bin/serve_dashboard.py` gained `/console` (the page) and `/console/api/*` (JSON), both behind
+the same Basic-Auth `_gate()` as everything else. Three structural rules, all tested in
+`tests/test_console_gate.py` and `tests/test_console_funnel_gate.py`:
+
+- **Off unless `DIGITAL_DAD_CONSOLE=1`.** Disabled means the routes 404 *and* the page is
+  withheld from the static handler, so `console.html` cannot be fetched out of the published
+  dashboard directory.
+- **Refuses a Funnel-exposed port.** On startup it reads `tailscale serve status --json` and
+  exits 1 if its own port is published to the internet. `make share` Funnels `:8443` →
+  `127.0.0.1:8000`, so 8000 is off-limits; `make console` uses 8765.
+- **Fails closed.** Tailscale present but unreadable ⇒ refuse. Tailscale absent ⇒ allow (no
+  Funnel can exist). There is no override flag, by design.
+
+The route table lives in one place (`CONSOLE_ROUTES`) and the gate test enumerates it, so a
+route added by a later step of the plan cannot silently skip the auth assertions.
 
 ### Email (`analysis/on_this_day.py` + `bin/create_gmail_draft.py`)
 

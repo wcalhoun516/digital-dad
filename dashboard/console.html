@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<!--
+  Operator console — plan 0011. Deliberately NOT part of the family dashboard.
+
+  index.html is a self-contained artifact that must open anywhere, forever (D4). This page is
+  the opposite: it only means anything while bin/serve_dashboard.py is running with
+  DIGITAL_DAD_CONSOLE=1, on a tailnet-only port. It is served at /console, and the server
+  withholds it entirely when the console is disabled.
+
+  Steps 2-5 of plan 0011 fill in the panels below (upload, review queue, job runner,
+  scoreboard). This is the shell and the route gate only.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>digital-dad — operator console</title>
+<style>
+:root {
+  --bg: #0a0a0a;
+  --bg-card: #141414;
+  --text: #e8e4df;
+  --text-muted: #8a8580;
+  --accent: #c9a84c;
+  --ok: #6fbf73;
+  --bad: #d2686a;
+  --border: #2a2a2a;
+  --mono: "SF Mono", "Fira Code", "Cascadia Code", monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--text); font-family: var(--sans);
+  font-size: 15px; line-height: 1.6; padding: 40px 20px;
+}
+main { max-width: 900px; margin: 0 auto; }
+h1 { font-size: 22px; font-weight: 600; letter-spacing: 0.02em; }
+h1 span { color: var(--accent); }
+.sub { color: var(--text-muted); font-size: 13px; margin-bottom: 28px; }
+.status {
+  display: inline-flex; align-items: center; gap: 8px; font-family: var(--mono);
+  font-size: 13px; padding: 6px 12px; border: 1px solid var(--border);
+  border-radius: 6px; background: var(--bg-card); margin-bottom: 28px;
+}
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted); }
+.dot.ok { background: var(--ok); }
+.dot.bad { background: var(--bad); }
+.panels { display: grid; gap: 14px; }
+.panel {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 8px; padding: 18px 20px;
+}
+.panel h2 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+.panel p { color: var(--text-muted); font-size: 13px; }
+.pending {
+  font-family: var(--mono); font-size: 11px; color: var(--accent);
+  text-transform: uppercase; letter-spacing: 0.08em;
+}
+footer { color: var(--text-muted); font-size: 12px; margin-top: 32px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>digital-dad <span>operator console</span></h1>
+  <p class="sub">Feed the corpus, turn the crank, keep score.</p>
+
+  <div class="status" id="status">
+    <span class="dot" id="dot"></span><span id="status-text">checking…</span>
+  </div>
+
+  <div class="panels">
+    <section class="panel">
+      <span class="pending">step 2</span>
+      <h2>Upload</h2>
+      <p>Drop books, papers and transcripts into the ingest inbox.</p>
+    </section>
+    <section class="panel">
+      <span class="pending">step 3</span>
+      <h2>Review queue</h2>
+      <p>Accept, edit or reject what was extracted — once per source, not per document.</p>
+    </section>
+    <section class="panel">
+      <span class="pending">step 4</span>
+      <h2>Job runner</h2>
+      <p>Run prep → preflight → train → eval, one job at a time, with a live log.</p>
+    </section>
+    <section class="panel">
+      <span class="pending">step 5</span>
+      <h2>Scoreboard</h2>
+      <p>Run-over-run deltas against D15's standing baseline. The dial on the flywheel.</p>
+    </section>
+  </div>
+
+  <footer>
+    Server-bound by design, and separate from the family dashboard: this page does nothing
+    without the console server behind it.
+  </footer>
+</main>
+<script>
+fetch("/console/api/health")
+  .then(function (r) {
+    if (!r.ok) { throw new Error("HTTP " + r.status); }
+    return r.json();
+  })
+  .then(function (data) {
+    document.getElementById("dot").className = "dot ok";
+    document.getElementById("status-text").textContent =
+      "console " + data.console + " — " + data.routes.length + " routes";
+  })
+  .catch(function (err) {
+    document.getElementById("dot").className = "dot bad";
+    document.getElementById("status-text").textContent = "console unreachable (" + err.message + ")";
+  });
+</script>
+</body>
+</html>

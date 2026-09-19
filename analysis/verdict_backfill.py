@@ -36,7 +36,7 @@ from pathlib import Path
 from typing import Callable
 
 from .conductor import require_conductor
-from .utils import DATA_DIR
+from .utils import DATA_DIR, corpus_provenance
 
 VALID_VERDICTS = ("vindicated", "wrong", "mixed", "unfalsifiable", "pending")
 VALID_CONFIDENCE = ("low", "medium", "high")
@@ -228,7 +228,9 @@ def _conductor_chat(tier: int = 3) -> Callable[[str], str]:
     client = _get_client()
 
     def chat(prompt: str) -> str:
-        return _call(client, prompt, max_tokens=1024, tier=tier)
+        # The seam takes only a prompt, and the prediction it was built from is no longer in
+        # hand here, so the declaration is the whole corpus rather than a guess.
+        return _call(client, prompt, max_tokens=1024, tier=tier, sources=corpus_provenance())
 
     return chat
 
