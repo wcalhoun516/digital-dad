@@ -55,6 +55,16 @@ than crashing.
   through `strip_quoted_reply()`, which truncates at an `On … wrote:` attribution (Gmail
   hard-wraps these across lines), an `-----Original Message-----` block or a `--` signature,
   then drops `>` quoted lines — without it a thread counts the same sentence once per reply.
+- `handlers/epub.py` — `.epub` via stdlib `zipfile` + `xml.etree` + `html.parser`, no
+  dependency. One document per **spine** item (reading order comes from the spine, never from
+  ZIP entry order), `modality: book`, Dublin Core `<metadata>` → title/date. Front and back
+  matter — copyright pages, dedications, indexes, author bios, and anything under
+  `MIN_CHAPTER_CHARS` — is dropped so it cannot pollute a voice fine-tune, and **every drop is
+  a warning**; `ordinal` stays the spine position so the gap is visible. A book whose OPF
+  author is not Calhoun is filed `authorship: other` with a loud warning, because an ebook of
+  someone else's book must never enter as his voice. A DRM-protected file (an
+  `META-INF/encryption.xml`, or unparseable XML) is **detected and refused** at zero
+  confidence — there is no circumvention; the owner supplies a DRM-free copy.
 
 **Extraction never modifies the corpus** — only `ingest-review` does, and only on a human
 decision. Rejects move aside with a reason instead of being deleted.
