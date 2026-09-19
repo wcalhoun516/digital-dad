@@ -1,6 +1,6 @@
 {
-  "last_updated": "2026-06-14T07:31:34.111481+00:00",
-  "total_articles": 199,
+  "last_updated": "2026-09-13T07:37:14.880407+00:00",
+  "total_articles": 204,
   "articles": [
     {
       "slug": "europes-hamiltonian-moment-what-is-it-really",
@@ -1823,6 +1823,56 @@
       "word_count": 2087,
       "file": "raw/who-won-the-xitrump-summit.json",
       "content_hash": "d930d1f8b68f9e7908dda35b13d4d423"
+    },
+    {
+      "slug": "the-oil-market-canceled-the-hormuz-crisis-before-the-ceasefire",
+      "title": "The Oil Market Canceled The Hormuz Crisis Before The Ceasefire",
+      "date": "2026-06-18",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2026/06/18/the-oil-market-canceled-the-hormuz-crisis--even-before-the-ceasefire/",
+      "tags": [],
+      "word_count": 1597,
+      "file": "raw/the-oil-market-canceled-the-hormuz-crisis-before-the-ceasefire.json",
+      "content_hash": "9a60c7c75027f4ec72f3d4ad865d4ef4"
+    },
+    {
+      "slug": "three-ways-in-which-greenspan-changed-forever-the-way-markets-work",
+      "title": "Three Ways In Which Greenspan Changed Forever The Way Markets Work",
+      "date": "2026-06-26",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2026/06/26/three-ways-in-which-greenspan-changed-forever-the-way-markets-work/",
+      "tags": [],
+      "word_count": 2303,
+      "file": "raw/three-ways-in-which-greenspan-changed-forever-the-way-markets-work.json",
+      "content_hash": "4ef97aa5af20bbbc930680dda9f2bc53"
+    },
+    {
+      "slug": "the-us-is-awash-in-oil-and-gasoline-so-why-are-pump-prices-so-high",
+      "title": "The U.S. Is Awash In Oil And Gasoline. So Why Are Pump Prices So High?",
+      "date": "2026-07-06",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2026/07/06/the-us-is-awash-in-oil-and-gasoline-so-why-are-pump-prices-so-high/",
+      "tags": [],
+      "word_count": 2003,
+      "file": "raw/the-us-is-awash-in-oil-and-gasoline-so-why-are-pump-prices-so-high.json",
+      "content_hash": "62ffaf8084cdd1c779ca4e81f2b7dc0e"
+    },
+    {
+      "slug": "is-the-us-gas-tank-running-on-empty-are-reported-shortages-real",
+      "title": "Is The U.S. ‘Gas Tank’ Running On Empty? Are Reported Shortages Real?",
+      "date": "2026-07-31",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2026/07/31/is-the-us-gas-tank-running-on-empty-are-reported-shortages-real/",
+      "tags": [],
+      "word_count": 2107,
+      "file": "raw/is-the-us-gas-tank-running-on-empty-are-reported-shortages-real.json",
+      "content_hash": "08ef7926b74aaa85d303f8315b66c415"
+    },
+    {
+      "slug": "the-feds-influence-over-interest-rates-is-weakening-as-it-should",
+      "title": "The Fed’s Influence Over Interest Rates Is Weakening – As It Should",
+      "date": "2026-09-02",
+      "url": "https://www.forbes.com/sites/georgecalhoun/2026/09/02/the-feds-influence-over-interest-rates-is-weakening--as-it-should/",
+      "tags": [],
+      "word_count": 1789,
+      "file": "raw/the-feds-influence-over-interest-rates-is-weakening-as-it-should.json",
+      "content_hash": "916baa24a83e1c459a4212965539f403"
     }
   ]
 }
