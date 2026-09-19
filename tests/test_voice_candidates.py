@@ -190,3 +190,94 @@ def test_write_trials_round_trips_through_voice_eval_shape(tmp_path):
     out = tmp_path / "t.json"
     vc.write_trials(trials, out)
     assert voice_eval.load_trials(out) == json.loads(out.read_text())["trials"]
+
+
+# --- in-context exemplar arms ----------------------------------------------------
+
+def test_registry_has_both_finetuned_incontext_arms():
+    assert {"gemma-ft-shot", "gemma-ft-shot-rag"} <= set(vc.ARM_REGISTRY)
+
+
+def test_incontext_arms_have_plain_controls():
+    """D19 showed the un-tuned base beats its own adapter. Testing exemplars only on
+    the fine-tune would repeat exactly the mistake that ADR corrected."""
+    assert {"gemma-plain-shot", "gemma-plain-shot-rag"} <= set(vc.ARM_REGISTRY)
+
+
+def test_only_the_rag_incontext_arm_retrieves():
+    assert vc.ARM_REGISTRY["gemma-ft-shot"].retrieve is False
+    assert vc.ARM_REGISTRY["gemma-ft-shot-rag"].retrieve is True
+
+
+def test_incontext_arms_request_exemplars_and_plain_2x2_arms_do_not():
+    assert vc.ARM_REGISTRY["gemma-ft-shot"].exemplars == 50
+    assert vc.ARM_REGISTRY["gemma-ft"].exemplars == 0
+
+
+def test_build_exemplar_block_includes_each_passage():
+    ex = [{"text": "Alpha passage."}, {"text": "Beta passage."}]
+    block = vc.build_exemplar_block(ex, 2)
+    assert "Alpha passage." in block and "Beta passage." in block
+    assert "PASSAGE 1" in block and "PASSAGE 2" in block
+
+
+def test_build_exemplar_block_respects_n():
+    ex = [{"text": f"p{i}"} for i in range(10)]
+    assert "PASSAGE 4" not in vc.build_exemplar_block(ex, 3)
+
+
+def test_build_exemplar_block_empty_when_no_exemplars():
+    assert vc.build_exemplar_block([], 50) == ""
+
+
+def test_exemplars_never_overlap_the_heldout_split():
+    """The leakage guard, pinned. Exemplars come from train; heldout drives the eval.
+    Any 8-gram shared between them means the in-context arms are being fed the answers."""
+    import re
+    from pathlib import Path
+    ex_path = Path("eval/voice_exemplars.json")
+    ho_path = Path("data/training/heldout.jsonl")
+    if not ex_path.exists() or not ho_path.exists():
+        import pytest as _p
+        _p.skip("corpus artifacts absent (gitignored)")
+    ex = vc.load_exemplars(ex_path)
+    assert ex, "exemplar file present but empty"
+    ho = "\n".join(
+        m["content"] for line in ho_path.read_text().splitlines() if line.strip()
+        for m in json.loads(line)["messages"]
+    )
+    def shingles(t, n=8):
+        w = re.findall(r"[a-z']+", t.lower())
+        return {" ".join(w[i:i + n]) for i in range(max(0, len(w) - n + 1))}
+    ho_sh = shingles(ho)
+    for e in ex:
+        assert not (shingles(e["text"]) & ho_sh), f"exemplar {e.get('rank')} leaks into heldout"
+
+
+# --- result history --------------------------------------------------------------
+
+def test_append_history_writes_one_json_line(tmp_path):
+    p = tmp_path / "h.jsonl"
+    vc.append_history({"date": "2026-09-19", "arm": "gemma-ft", "avg_rank": 2.75}, p)
+    vc.append_history({"date": "2026-09-20", "arm": "gemma-ft", "avg_rank": 2.10}, p)
+    assert len(p.read_text().strip().splitlines()) == 2
+
+
+def test_history_rows_round_trip_in_order(tmp_path):
+    p = tmp_path / "h.jsonl"
+    vc.append_history({"n": 1}, p)
+    vc.append_history({"n": 2}, p)
+    assert [r["n"] for r in vc.history_rows(p)] == [1, 2]
+
+
+def test_history_rows_skips_a_corrupt_line(tmp_path):
+    """A truncated write must not destroy the whole series."""
+    p = tmp_path / "h.jsonl"
+    vc.append_history({"n": 1}, p)
+    p.write_text(p.read_text() + "{not json\n")
+    vc.append_history({"n": 2}, p)
+    assert [r["n"] for r in vc.history_rows(p)] == [1, 2]
+
+
+def test_history_rows_empty_when_absent(tmp_path):
+    assert vc.history_rows(tmp_path / "nope.jsonl") == []

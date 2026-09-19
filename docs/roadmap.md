@@ -257,7 +257,8 @@ rank) is superseded — the defect is example **shape**, not count.
     surface that is currently read-only and internet-reachable behind one shared password.
     Needs its own ADR for the console-vs-D4 split. *(queued: ready/0011)*
 
-53. **P1 · M · training — many-shot in-context, the untested arm.** Gemma 4 carries a
+53. **P1 · M · training — many-shot in-context, the untested arm.** *(in progress
+    2026-09-19 — four arms wired; see #58)* Gemma 4 carries a
     **262,144-token context** and the whole corpus is **~453K tokens** — over half of everything
     he wrote fits in one prompt. Twenty or thirty *complete* articles as exemplars, versus the 8
     retrieved chunks RAG uses today. No training, and it cannot invent positions the way a
@@ -279,6 +280,29 @@ rank) is superseded — the defect is example **shape**, not count.
     analysis module; gate training the same way. When the fingerprint moves: stage data →
     preflight → train → eval → append a row recording **corpus size beside the score**. That
     accumulating curve — how much text is enough — is the product's core claim (`goals.md`).
+
+58. **P1 · S · training — the in-context exemplar arms.** 50 passages hand-picked by Opus for
+    voice-forward argument (contrarian framing, first-person presence, em-dash asides) over data
+    recitation, stored in `eval/voice_exemplars.json` (~24k tokens, comfortably inside e4b's
+    131k context). Four arms in `make voice-candidates`: `gemma-ft-shot`, `gemma-ft-shot-rag`,
+    and — as controls, because D19 showed the un-tuned base beats its own adapter —
+    `gemma-plain-shot`, `gemma-plain-shot-rag`. **Leakage guards:** exemplars come from the
+    train split only (article-level MD5(slug) split, so heldout is unreachable), with an 8-gram
+    check against heldout pinned by a test.
+59. **P1 · S · analysis — wire-service boilerplate pruning.** *(done 2026-09-19.)* 22% of
+    training passages carried stock-photo captions, agency credits and `[+]` truncation markers,
+    concentrated at passage *starts* — exactly where a model learns how to begin.
+    `analysis.utils.strip_wire_boilerplate` removes them at read time (no re-scrape), wired into
+    `clean_text` and `training/prepare.py`. Measured on the corpus: **443 → 0 markers, 1.52% of
+    characters, 123 → 0 affected passages.** Deliberately fail-closed — it leaves a caption in
+    rather than risk eating prose.
+60. **P1 · S · training — the grading framework is permanent.** `voice_eval`'s blind A/B/C plus
+    the deterministic style companion is now the standing yardstick, and
+    `voice_candidates.append_history()` records every run to
+    `data/analysis/voice_eval_history.jsonl` with **corpus size beside the score**. The series is
+    the deliverable: how the arms move as the corpus grows is the "how much text is enough"
+    curve `goals.md` says the product rests on. Next: surface it on the console scoreboard (#42
+    step 5) and trigger it from the D3 fingerprint (#57).
 
 ## analysis / family — the weekly column
 

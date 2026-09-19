@@ -32,7 +32,7 @@ import json
 import re
 from pathlib import Path
 
-from analysis.utils import chunk_text, dedupe_manifest_entries
+from analysis.utils import chunk_text, dedupe_manifest_entries, strip_wire_boilerplate
 from training.finetune_config import QLoRAConfig
 from training.finetune_preflight import DEFAULT_CHARS_PER_TOKEN
 
@@ -159,10 +159,22 @@ def boilerplate_paragraphs(bodies, min_articles: int = BOILERPLATE_MIN_ARTICLES)
     seen: dict[str, set[int]] = {}
     for i, body in enumerate(bodies):
         for para in _PARAGRAPH_SPLIT.split(body or ""):
-            para = para.strip()
-            if para:
-                seen.setdefault(para, set()).add(i)
+            key = _paragraph_key(para)
+            if key:
+                seen.setdefault(key, set()).add(i)
     return {para for para, articles in seen.items() if len(articles) >= min_articles}
+
+
+def _paragraph_key(para: str) -> str:
+    """Whitespace-normalized paragraph, used for boilerplate identity.
+
+    Matching on the raw string is brittle: wire-caption removal upstream
+    (``analysis.utils.strip_wire_boilerplate``) can leave a paragraph differing from
+    its twin by a space, and then his repeated bio stops being recognised as
+    boilerplate and leaks into *both* splits. The preflight's split-disjoint check
+    caught exactly that.
+    """
+    return re.sub(r"\s+", " ", (para or "").strip())
 
 
 def strip_boilerplate(body: str, boilerplate: set[str]) -> str:
@@ -170,7 +182,7 @@ def strip_boilerplate(body: str, boilerplate: set[str]) -> str:
     kept = [
         para.strip()
         for para in _PARAGRAPH_SPLIT.split(body or "")
-        if para.strip() and para.strip() not in boilerplate
+        if para.strip() and _paragraph_key(para) not in boilerplate
     ]
     return "\n\n".join(kept)
 
@@ -393,7 +405,7 @@ def run():
     jsonl_path = TRAINING_DIR / "finetune.jsonl"
     with open(jsonl_path, "w") as f:
         for entry, article in loaded:
-            body = article.get("body", "").strip()
+            body = strip_wire_boilerplate(article.get("body", ""))
             if body:
                 f.write(json.dumps({"text": body}, ensure_ascii=False) + "\n")
     print(f"  JSONL (raw): {jsonl_path}  ({len(loaded)} articles)")
@@ -410,7 +422,7 @@ def run():
     quality_records: dict[str, list[dict]] = {}
     with open(instruct_path, "w") as f:
         for entry, article in loaded:
-            body = article.get("body", "").strip()
+            body = strip_wire_boilerplate(article.get("body", ""))
             if not body:
                 continue
             if not _is_quality(entry, article):
@@ -451,7 +463,7 @@ def run():
         for entry, article in loaded:
             title = article.get("title", entry.get("title", "Untitled"))
             date = (article.get("date", "") or entry.get("date", ""))[:10]
-            body = article.get("body", "").strip()
+            body = strip_wire_boilerplate(article.get("body", ""))
             if body:
                 f.write(f"# {title}\n")
                 f.write(f"Date: {date}\n\n")
