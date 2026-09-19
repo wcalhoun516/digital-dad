@@ -3,6 +3,12 @@
 > **digital-dad** is an intellectual archive of Dr. George Calhoun's Forbes columns:
 > scrape his articles, analyze them, and make the corpus explorable and alive for his
 > family. Built by his son.
+>
+> **Longer term, it is a product.** Given enough text by one person, produce a model that
+> writes and reasons like them — grounded, citable, and *measured* rather than asserted. Dad
+> is the vehicle, not the ceiling. Practically: notice when you hard-code "George Calhoun"
+> (prompts, alias maps, distinctive-word lists, feeds) and leave a seam. See
+> [`docs/goals.md`](docs/goals.md) § *The longer-term goal: this is a product*.
 
 If you are a Claude session starting work here, **read [`docs/INDEX.md`](docs/INDEX.md) first** —
 it is the curated entry point and tells you what to read next.

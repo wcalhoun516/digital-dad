@@ -273,3 +273,63 @@ passages, but not what he *held to be true*.
 - **#37 audio/video — parked.** No source material in hand; blocked on #41 regardless.
 - **#5, #7, #9, #10 — done, and no successors planned.** The corpus produced 6 articles in 2026
   and is thinning; scraper and ops polish has hit diminishing returns.
+
+---
+
+# 🔎 Source discovery — find more of him (added 2026-09-19)
+
+The corpus is 181 Forbes columns. That is one slice of a long career, and the Geo-LLM's
+ceiling is set by how much of him we actually have — so *finding* material is now a first-class
+line of work, not a side effect of ingest.
+
+This is **C3** in the corpus-ingest design
+([`superpowers/specs/2026-08-13-corpus-ingest-design.md`](superpowers/specs/2026-08-13-corpus-ingest-design.md)),
+deferred until the review queue existed. It exists now (`make ingest` / `make ingest-review`,
+plus the `.txt`/`.md`, `.eml`/`.mbox` and `.epub` handlers), so C3 is unblocked.
+
+### The hard rule, before any of it
+
+A discovery run **proposes; it never acquires.** It records *what a thing is, where it was
+found, and why we believe it is his* — then stops. The owner reviews, decides, and obtains the
+material through legitimate means.
+
+**Never build, and never ask an agent to build:** scraping that violates a site's terms,
+bot-detection evasion, CAPTCHA solving, paywall circumvention, or automated downloading of
+copyrighted works. If a source needs one of those, the correct output is a **candidate with a
+note saying how the owner can legitimately obtain it** — not a workaround. This constraint is
+the product's posture as much as this archive's (see `goals.md` § *this is a product*): a tool
+that hoovers up a dead man's writing by force is not one you would hand to a stranger.
+
+49. **P2 · M · ingest — source-discovery agent.** Unattended, offline-safe sweep of *public*
+    surfaces that writes candidate records into a review queue mirroring the ingest one:
+    `{title, kind, url, evidence, confidence, how_to_obtain}`. Dedupes against the existing
+    manifest by URL and title so it stops re-proposing what we already have. Report-only;
+    `make discover` prints, `--json` for machine output. Sub-slices, each its own PR:
+    - **49a · S — published books.** Public catalogue metadata (title, ISBN, publisher, year)
+      for works authored by him. Proposes; **the owner buys DRM-free copies** and drops them in
+      `data/inbox/` for the `.epub` handler (#35). Highest yield per unit of effort — one book
+      ≈ the entire current corpus.
+    - **49b · S — academic and course material.** Faculty page, publicly posted syllabi and
+      lecture notes, SSRN / Google Scholar / institutional repository listings. Much of this is
+      openly published and directly in his voice.
+    - **49c · S — X / Twitter.** **Via his account's own archive export, not scraping.** X has
+      no free API and active bot detection, and the design already forbids evasion. The clean
+      path is an owner action (below); this slice is the **handler for the export's format**
+      plus a candidate record noting the export is the route. Do not write a scraper.
+    - **49d · M — talks, podcasts, interviews.** Public appearance listings → candidate
+      records with source URLs. Actual transcription is #37, which is parked (and see #41:
+      spoken register is not written register — do not mix transcripts into a written-voice
+      fine-tune without the modality split).
+    - **49e · S — Forbes completeness re-check.** The coverage audit (#9) already reports
+      missing date ranges; fold its output into the same candidate queue so every gap in the
+      archive is visible in one place.
+
+## Owner actions these depend on
+
+- **Ask Dad to export his X archive** (X → Settings → Your account → Download an archive). It
+  is the only clean route to the tweets, and only the account holder can do it. Everything in
+  49c waits on this.
+- **Buy DRM-free copies** of his books and drop them in `data/inbox/`.
+- **Ask him what else exists** — unpublished drafts, lecture decks, correspondence, a hard
+  drive. The highest-yield source in this whole list is very likely a conversation, not a
+  crawler. He is the one person who knows what he wrote.
