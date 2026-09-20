@@ -257,8 +257,10 @@ rank) is superseded — the defect is example **shape**, not count.
     surface that is currently read-only and internet-reachable behind one shared password.
     Needs its own ADR for the console-vs-D4 split. *(queued: ready/0011)*
 
-53. **P1 · M · training — many-shot in-context, the untested arm.** *(in progress
-    2026-09-19 — four arms wired; see #58)* Gemma 4 carries a
+53. **P1 · M · training — many-shot in-context.** *(done 2026-09-19 — ADR D20. **It wins.**
+    `gemma-plain-shot` at avg rank 2.12 is the best non-real arm measured, beating plain (2.50)
+    and plain+RAG (2.38). But it only works on the UN-TUNED model: `gemma-ft-shot` at 2.88 is
+    the worst arm measured.)* Gemma 4 carries a
     **262,144-token context** and the whole corpus is **~453K tokens** — over half of everything
     he wrote fits in one prompt. Twenty or thirty *complete* articles as exemplars, versus the 8
     retrieved chunks RAG uses today. No training, and it cannot invent positions the way a
@@ -281,7 +283,7 @@ rank) is superseded — the defect is example **shape**, not count.
     preflight → train → eval → append a row recording **corpus size beside the score**. That
     accumulating curve — how much text is enough — is the product's core claim (`goals.md`).
 
-58. **P1 · S · training — the in-context exemplar arms.** 50 passages hand-picked by Opus for
+58. **P1 · S · training — the in-context exemplar arms.** *(done 2026-09-19 — ADR D20)* 50 passages hand-picked by Opus for
     voice-forward argument (contrarian framing, first-person presence, em-dash asides) over data
     recitation, stored in `eval/voice_exemplars.json` (~24k tokens, comfortably inside e4b's
     131k context). Four arms in `make voice-candidates`: `gemma-ft-shot`, `gemma-ft-shot-rag`,
@@ -303,6 +305,23 @@ rank) is superseded — the defect is example **shape**, not count.
     the deliverable: how the arms move as the corpus grows is the "how much text is enough"
     curve `goals.md` says the product rests on. Next: surface it on the console scoreboard (#42
     step 5) and trigger it from the D3 fingerprint (#57).
+
+61. **P1 · M · training — scale up in-context, the lever that actually worked.** D20 measured 50
+    exemplars at ~24k tokens against a **262k** context — we used 9% of the window. Test 100,
+    200, and "as many complete articles as fit". This is the one direction with a measured win,
+    it needs no training, it cannot invent positions, and it *improves automatically as the
+    corpus grows*. Also test exemplar **selection**: D20 used one hand-picked set; compare
+    against retrieval-selected exemplars (nearest to the prompt) and against random, to find out
+    whether curation or sheer volume is doing the work.
+62. **P3 · S · training — retire the LoRA instruction-tuning track.** Measured three times
+    (D15, D19, D20) and it has never helped; D20 shows it actively fights the lever that does.
+    Keep the adapters and harness for reproducibility, but do not start another run on this
+    corpus. #54 (DAPT) and #55 (preference pairs) stay open as *different objectives*, not as
+    retries of this one.
+63. **P2 · S · infra — make unattended runs hang-proof.** A 35-minute stall was a hung
+    HuggingFace hub socket (`CLOSE_WAIT`) during model load. Set `HF_HUB_OFFLINE=1` where
+    weights are cached and put a timeout on hub calls, so the nightly agent cannot block
+    forever on a dead connection.
 
 ## analysis / family — the weekly column
 
