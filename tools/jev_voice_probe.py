@@ -38,15 +38,6 @@ import json
 import os
 import sys
 
-from jevclient import (
-    USD_PER_MILLION_INPUT_TOKENS,
-    Choice,
-    JevAuthError,
-    JevClient,
-    JevError,
-    Score,
-)
-
 from analysis.utils import DATA_DIR, load_articles, strip_wire_boilerplate
 from training.prepare import boilerplate_paragraphs
 from training.prepare import strip_boilerplate as drop_repeated_paragraphs
@@ -61,27 +52,34 @@ DEFAULT_STATE_CHARS = 6000
 # articles and would score as "boilerplate" for uninteresting reasons.
 MIN_WORDS = 250
 
-QUESTIONS = {
-    "voice": Choice(
-        "How would you characterize the writing voice of this article?",
-        {
-            "unique": "Distinctive, personal style with idiosyncratic phrasing, "
-                      "argument structure, or point of view",
-            "boilerplate": "Generic, formulaic, could have been written by anyone "
-                           "covering this topic",
-        },
-    ),
-    "distinctiveness": Score(
-        "How distinctive is this writing as the work of one particular author?",
-        [
-            "Interchangeable with any competent writer on the subject",
-            "Mostly conventional, with occasional personality",
-            "Recognizable habits of phrasing and argument",
-            "Strongly individual voice",
-            "Unmistakable — could not plausibly be anyone else",
-        ],
-    ),
-}
+# jevclient is an opt-in extra (`pip install -e .[jev]`), so it is imported inside the
+# functions that need it — the repo's convention for optional deps, and what keeps this
+# module importable in CI, which installs no extras. tests/test_lint_scope.py imports
+# every source module and caught the top-level version of this import.
+def build_questions() -> dict:
+    from jevclient import Choice, Score
+
+    return {
+        "voice": Choice(
+            "How would you characterize the writing voice of this article?",
+            {
+                "unique": "Distinctive, personal style with idiosyncratic phrasing, "
+                          "argument structure, or point of view",
+                "boilerplate": "Generic, formulaic, could have been written by anyone "
+                               "covering this topic",
+            },
+        ),
+        "distinctiveness": Score(
+            "How distinctive is this writing as the work of one particular author?",
+            [
+                "Interchangeable with any competent writer on the subject",
+                "Mostly conventional, with occasional personality",
+                "Recognizable habits of phrasing and argument",
+                "Strongly individual voice",
+                "Unmistakable — could not plausibly be anyone else",
+            ],
+        ),
+    }
 
 
 def clean_body(article: dict, repeated: set[str]) -> str:
@@ -111,6 +109,9 @@ def eligible(articles: list[dict], min_words: int, repeated: set[str]) -> list[d
 
 async def probe(articles: list[dict], api_key: str, max_chars: int,
                 repeated: set[str]) -> list[dict]:
+    from jevclient import JevAuthError, JevClient, JevError
+
+    questions = build_questions()
     rows: list[dict] = []
     async with JevClient(api_key) as jev:
         for i, a in enumerate(articles, 1):
@@ -124,7 +125,7 @@ async def probe(articles: list[dict], api_key: str, max_chars: int,
                 "snippet": " ".join(state.split())[:300],
             }
             try:
-                resp = await jev.ask(state, QUESTIONS)
+                resp = await jev.ask(state, questions)
             except JevAuthError:
                 print("\nJevAuthError — the key was rejected. Aborting; every later "
                       "call would fail the same way.", file=sys.stderr)
@@ -206,6 +207,8 @@ def main(argv: list[str] | None = None) -> int:
     if not articles:
         print("No eligible articles. Has `make scrape` run?")
         return 2
+
+    from jevclient import USD_PER_MILLION_INPUT_TOKENS
 
     # ~4 chars/token, plus the question text (the package documents ~38 tokens each).
     est_tokens = sum(len(build_state(a, args.state_chars, repeated)) // 4 + 80
