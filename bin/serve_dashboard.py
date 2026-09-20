@@ -36,9 +36,12 @@ import shutil
 import subprocess
 import sys
 import urllib.error
+import urllib.parse
 import urllib.request
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
+from types import SimpleNamespace
 
 PASSWORD = os.environ.get("DIGITAL_DAD_DASHBOARD_PASSWORD", "")
 PORT = int(os.environ.get("DIGITAL_DAD_SHARE_PORT", "8000"))
@@ -53,7 +56,24 @@ CONSOLE_ENABLED = os.environ.get("DIGITAL_DAD_CONSOLE") == "1"
 
 # Every console route, in one place. tests/test_console_gate.py enumerates this tuple to
 # assert each route 401s unauthenticated, so a route added here cannot skip the gate test.
-CONSOLE_ROUTES = ("/console", "/console/api/health")
+CONSOLE_ROUTES = (
+    "/console",
+    "/console/api/health",
+    "/console/api/upload",
+    "/console/api/queue",
+    "/console/api/review",
+)
+
+# Where the console reads and writes. None means "whatever the ingest modules default to",
+# so the on-disk layout stays defined in ingest/queue.py rather than restated here; tests
+# point these at a tmp dir.
+CONSOLE_INBOX_DIR = None
+CONSOLE_QUEUE_DIR = None
+CONSOLE_MANIFEST_PATH = None
+
+# A review decision is a handful of short strings. Anything larger is not one, and reading it
+# into memory before finding that out is the mistake.
+MAX_JSON_BYTES = 64 * 1024
 
 # The console's page is a plain file inside the directory this server publishes, so routing
 # /console is not by itself enough to keep it out of the family artifact — the static handler
@@ -159,6 +179,30 @@ def console_refusal_reason(listen_port: int, state: str, status: dict | None) ->
             "listen on a tailnet-only port (`tailscale serve`), not the Funnel."
         )
     return None
+
+
+def console_paths():
+    """The ingest modules the console calls, plus the paths it should call them with.
+
+    The import is **lazy on purpose**. The family dashboard is a read-only surface that has to
+    keep serving even if the ingest tree cannot be imported, so an ingest-side breakage must
+    not be able to stop this server from starting. `bin/` is also not a package, so the repo
+    root has to reach `sys.path` before `ingest` is importable at all.
+    """
+    if _REPO_ROOT not in sys.path:
+        sys.path.insert(0, _REPO_ROOT)
+    from ingest import queue as ingest_queue
+    from ingest import review as ingest_review
+    from ingest import upload as ingest_upload
+
+    return SimpleNamespace(
+        upload=ingest_upload,
+        queue=ingest_queue,
+        review=ingest_review,
+        inbox=Path(CONSOLE_INBOX_DIR or ingest_queue.INBOX_DIR),
+        queue_dir=Path(CONSOLE_QUEUE_DIR or ingest_queue.QUEUE_DIR),
+        manifest=Path(CONSOLE_MANIFEST_PATH or ingest_review.MANIFEST_PATH),
+    )
 
 
 class GatedHandler(SimpleHTTPRequestHandler):
@@ -269,23 +313,139 @@ class GatedHandler(SimpleHTTPRequestHandler):
         self.send_error(404, "Not Found")
         return True
 
+    def _send_json(self, status: int, payload) -> None:
+        body = (json.dumps(payload) + "\n").encode()
+        self._send_bytes(status, "application/json; charset=utf-8", body)
+
+    def _refuse(self, status: int, message: str) -> None:
+        """Answer with a reason the console page can show the operator verbatim."""
+        self._send_json(status, {"error": message})
+
+    def _console_page(self) -> None:
+        page = os.path.join(self.directory, "console.html")
+        if not os.path.isfile(page):
+            self.send_error(404, "console.html not found")
+            return
+        with open(page, "rb") as handle:
+            self._send_bytes(200, "text/html; charset=utf-8", handle.read())
+
+    def _console_health(self) -> None:
+        self._send_json(200, {"console": "enabled", "routes": list(CONSOLE_ROUTES)})
+
+    def _read_json_object(self) -> dict | None:
+        """The request body as a JSON object, or None once the refusal has been sent."""
+        length = int(self.headers.get("Content-Length", 0) or 0)
+        if length > MAX_JSON_BYTES:
+            self.close_connection = True  # the body was never read; this connection is spent
+            self._refuse(413, f"request body is over the {MAX_JSON_BYTES}-byte limit")
+            return None
+        try:
+            payload = json.loads(self.rfile.read(length) or b"")
+        except ValueError:
+            self._refuse(400, "body is not valid JSON")
+            return None
+        if not isinstance(payload, dict):
+            self._refuse(400, "body must be a JSON object")
+            return None
+        return payload
+
+    def _console_queue(self) -> None:
+        paths = console_paths()
+        self._send_json(200, paths.review.queue_view(paths.queue.load_queue(paths.queue_dir)))
+
+    def _console_review(self) -> None:
+        payload = self._read_json_object()
+        if payload is None:
+            return
+
+        item_id = payload.get("id", "")
+        if not isinstance(item_id, str) or not item_id:
+            self._refuse(400, "a review needs the item's 'id'")
+            return
+        decision = payload.get("decision", "")
+        if not isinstance(decision, str):
+            self._refuse(400, "'decision' must be a string")
+            return
+        reason = payload.get("reason", "")
+        if not isinstance(reason, str):
+            self._refuse(400, "'reason' must be a string")
+            return
+        fields = payload.get("fields") or {}
+        if not isinstance(fields, dict):
+            # edit_item() calls .items() on this. A string would raise AttributeError rather
+            # than ReviewError, which reaches the operator as a 500 and a traceback.
+            self._refuse(400, "'fields' must be a JSON object")
+            return
+
+        paths = console_paths()
+        try:
+            view = paths.review.apply_decision(
+                item_id,
+                decision,
+                fields=fields,
+                reason=reason,
+                queue_dir=paths.queue_dir,
+                manifest_path=paths.manifest,
+            )
+        except paths.review.UnknownItem as exc:
+            self._refuse(404, str(exc))
+            return
+        except paths.review.ReviewError as exc:
+            # Every other refusal — an unknown verb, an already-decided item, a value outside
+            # its vocabulary — happens before apply_decision writes anything.
+            self._refuse(400, str(exc))
+            return
+        self._send_json(200, view)
+
+    def _console_upload(self) -> None:
+        paths = console_paths()
+        query = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+        filename = (query.get("filename") or [""])[0]
+        if not filename:
+            self._refuse(400, "an upload needs a ?filename= parameter")
+            return
+
+        cap = paths.upload.MAX_UPLOAD_BYTES
+        declared = int(self.headers.get("Content-Length", 0) or 0)
+        if declared > cap:
+            # The module caps len(data), which is the rule that counts — a Content-Length is a
+            # claim and the payload is the fact. But that check can only speak once the bytes
+            # are already in memory, and this server shares a Mac mini with everything else,
+            # so an oversize *claim* is refused here before the body is read.
+            self.close_connection = True
+            self._refuse(413, f"upload declares {declared} bytes, over the {cap}-byte cap")
+            return
+
+        data = self.rfile.read(declared) if declared else b""
+        try:
+            written = paths.upload.stage_upload(filename, data, inbox=paths.inbox)
+        except paths.upload.UploadRejected as exc:
+            self._refuse(400, str(exc))
+            return
+        # The final name only, never the server path. A collision renames the file, and that
+        # rename is the one thing about the write the operator has to be told.
+        self._send_json(200, {"filename": written.name})
+
     def _console(self, route: str, method: str) -> None:
         if not CONSOLE_ENABLED:
             self.send_error(404, "Not Found")
             return
-        if route == "/console" and method == "GET":
-            page = os.path.join(self.directory, "console.html")
-            if not os.path.isfile(page):
-                self.send_error(404, "console.html not found")
-                return
-            with open(page, "rb") as handle:
-                self._send_bytes(200, "text/html; charset=utf-8", handle.read())
+        routes = {
+            "/console": {"GET": self._console_page},
+            "/console/api/health": {"GET": self._console_health},
+            "/console/api/queue": {"GET": self._console_queue},
+            "/console/api/review": {"POST": self._console_review},
+            "/console/api/upload": {"POST": self._console_upload},
+        }
+        by_method = routes.get(route)
+        if by_method is None:
+            self.send_error(404, "Not Found")
             return
-        if route == "/console/api/health" and method == "GET":
-            payload = json.dumps({"console": "enabled", "routes": list(CONSOLE_ROUTES)}).encode()
-            self._send_bytes(200, "application/json; charset=utf-8", payload)
+        handler = by_method.get(method)
+        if handler is None:
+            self.send_error(405, "Method Not Allowed")
             return
-        self.send_error(404, "Not Found")
+        handler()
 
     # --- HTTP verbs ---------------------------------------------------------
     def do_GET(self) -> None:
