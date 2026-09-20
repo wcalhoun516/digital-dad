@@ -7,8 +7,12 @@
   DIGITAL_DAD_CONSOLE=1, on a tailnet-only port. It is served at /console, and the server
   withholds it entirely when the console is disabled.
 
-  Steps 2-5 of plan 0011 fill in the panels below (upload, review queue, job runner,
-  scoreboard). This is the shell and the route gate only.
+  Steps 2 and 3 are wired: Upload posts raw bytes to /console/api/upload, and the review
+  queue reads /console/api/queue and posts decisions to /console/api/review. Steps 4-5 (job
+  runner, scoreboard) are still placeholders.
+
+  Uploading only fills data/inbox/. Extracting those files into the review queue is still
+  `make ingest` at a terminal — the console gets that button in step 4's job runner.
 -->
 <html lang="en">
 <head>
@@ -58,6 +62,37 @@ h1 span { color: var(--accent); }
   text-transform: uppercase; letter-spacing: 0.08em;
 }
 footer { color: var(--text-muted); font-size: 12px; margin-top: 32px; }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 14px 0 6px; }
+.note { color: var(--text-muted); font-size: 12px; }
+code { font-family: var(--mono); font-size: 12px; color: var(--accent); }
+button {
+  font-family: var(--sans); font-size: 13px; color: var(--text); cursor: pointer;
+  background: #1e1e1e; border: 1px solid var(--border); border-radius: 6px; padding: 6px 14px;
+}
+button:hover:not(:disabled) { border-color: var(--accent); }
+button:disabled { opacity: 0.5; cursor: default; }
+button.accept { border-color: #3c5a3e; }
+button.reject { border-color: #5a3c3d; }
+input[type=file] { font-family: var(--mono); font-size: 12px; color: var(--text-muted); }
+input[type=text] {
+  font-family: var(--mono); font-size: 12px; color: var(--text); background: #0f0f0f;
+  border: 1px solid var(--border); border-radius: 4px; padding: 4px 8px; min-width: 200px;
+}
+.results { list-style: none; font-family: var(--mono); font-size: 12px; }
+.results li.ok::before { content: "ok "; color: var(--ok); }
+.results li.bad::before { content: "refused "; color: var(--bad); }
+.item { border-top: 1px solid var(--border); padding: 14px 0; }
+.item:last-child { padding-bottom: 0; }
+.item-id { font-family: var(--mono); font-size: 12px; color: var(--text-muted); }
+.warn { color: var(--bad); font-size: 12px; }
+.fields { display: grid; grid-template-columns: max-content 1fr; gap: 6px 10px; margin: 10px 0; }
+.fields label { font-size: 12px; color: var(--text-muted); align-self: center; }
+.preview {
+  font-family: var(--mono); font-size: 11px; color: var(--text-muted); white-space: pre-wrap;
+  background: #0f0f0f; border: 1px solid var(--border); border-radius: 4px;
+  padding: 8px 10px; max-height: 120px; overflow: auto;
+}
+.empty { color: var(--text-muted); font-size: 13px; padding: 14px 0 0; }
 </style>
 </head>
 <body>
@@ -71,14 +106,26 @@ footer { color: var(--text-muted); font-size: 12px; margin-top: 32px; }
 
   <div class="panels">
     <section class="panel">
-      <span class="pending">step 2</span>
       <h2>Upload</h2>
       <p>Drop books, papers and transcripts into the ingest inbox.</p>
+      <div class="row">
+        <input type="file" id="files" multiple>
+        <button id="upload-btn" type="button">Upload</button>
+      </div>
+      <ul class="results" id="upload-results"></ul>
+      <p class="note">
+        Uploading fills <code>data/inbox/</code>. Extracting into the queue below is still
+        <code>make ingest</code> at a terminal until step 4 lands.
+      </p>
     </section>
     <section class="panel">
-      <span class="pending">step 3</span>
       <h2>Review queue</h2>
       <p>Accept, edit or reject what was extracted — once per source, not per document.</p>
+      <div class="row">
+        <button id="queue-refresh" type="button">Refresh</button>
+        <span class="note" id="queue-summary"></span>
+      </div>
+      <div id="queue"></div>
     </section>
     <section class="panel">
       <span class="pending">step 4</span>
@@ -98,20 +145,177 @@ footer { color: var(--text-muted); font-size: 12px; margin-top: 32px; }
   </footer>
 </main>
 <script>
-fetch("/console/api/health")
-  .then(function (r) {
-    if (!r.ok) { throw new Error("HTTP " + r.status); }
-    return r.json();
-  })
-  .then(function (data) {
-    document.getElementById("dot").className = "dot ok";
-    document.getElementById("status-text").textContent =
-      "console " + data.console + " — " + data.routes.length + " routes";
-  })
-  .catch(function (err) {
-    document.getElementById("dot").className = "dot bad";
-    document.getElementById("status-text").textContent = "console unreachable (" + err.message + ")";
+// Everything below builds DOM nodes and assigns textContent. Never innerHTML: titles,
+// warnings and previews are text recovered from whatever file was dropped in the inbox, so
+// treating them as markup would let an uploaded document run script in the operator's browser.
+
+// The fields ingest/review.py's EDITABLE_FIELDS allows a reviewer to correct.
+var EDITABLE = ["title", "date", "modality", "authorship", "privacy"];
+
+function el(tag, className, text) {
+  var node = document.createElement(tag);
+  if (className) { node.className = className; }
+  if (text !== undefined) { node.textContent = text; }
+  return node;
+}
+
+function call(path, options) {
+  // Always resolves: a refusal carries {"error": ...} and is a result, not an exception.
+  return fetch(path, options).then(function (response) {
+    return response.json().then(
+      function (data) { return { ok: response.ok, status: response.status, data: data }; },
+      function () { return { ok: response.ok, status: response.status, data: {} }; }
+    );
+  }, function (err) {
+    return { ok: false, status: 0, data: { error: String(err) } };
   });
+}
+
+function reason(res) {
+  return (res.data && res.data.error) || ("HTTP " + res.status);
+}
+
+// --- upload ---------------------------------------------------------------------------
+
+function uploadOne(file) {
+  var results = document.getElementById("upload-results");
+  return call("/console/api/upload?filename=" + encodeURIComponent(file.name), {
+    method: "POST",
+    body: file
+  }).then(function (res) {
+    var line = el("li", res.ok ? "ok" : "bad");
+    if (res.ok && res.data.filename !== file.name) {
+      // The inbox never overwrites, so a collision means the operator's file was renamed.
+      line.textContent = file.name + " → saved as " + res.data.filename;
+    } else {
+      line.textContent = res.ok ? file.name : file.name + " — " + reason(res);
+    }
+    results.appendChild(line);
+  });
+}
+
+function uploadSelected() {
+  var input = document.getElementById("files");
+  var button = document.getElementById("upload-btn");
+  var files = Array.prototype.slice.call(input.files || []);
+  if (!files.length) { return; }
+  button.disabled = true;
+  // One at a time: collision renaming is sequential, so parallel uploads of the same name
+  // would race for the suffix.
+  files.reduce(function (chain, file) {
+    return chain.then(function () { return uploadOne(file); });
+  }, Promise.resolve()).then(function () {
+    button.disabled = false;
+    input.value = "";
+  });
+}
+
+// --- review queue ---------------------------------------------------------------------
+
+function decide(item, decision, inputs, buttons) {
+  var fields = {};
+  EDITABLE.forEach(function (name) {
+    var original = (item.meta && item.meta[name]) || "";
+    // Only fields the operator actually changed travel with the decision. Resending an
+    // untouched date would still count as a correction, and edit_item() stamps every date it
+    // accepts as `approximate` — an Accept click would quietly downgrade a confident date.
+    if (inputs[name].value !== original) { fields[name] = inputs[name].value; }
+  });
+
+  var body = { id: item.id, decision: decision, fields: fields };
+  if (decision === "reject") {
+    var why = window.prompt("Why is " + item.id + " being rejected?\nKept with the item — nothing is deleted.");
+    if (!why) { return; }  // a reject needs a reason, and the route would refuse one without
+    body.reason = why;
+  }
+
+  buttons.forEach(function (b) { b.disabled = true; });
+  call("/console/api/review", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  }).then(function (res) {
+    if (!res.ok) {
+      buttons.forEach(function (b) { b.disabled = false; });
+      window.alert(item.id + " — " + reason(res));
+      return;
+    }
+    loadQueue();
+  });
+}
+
+function renderItem(item) {
+  var wrap = el("div", "item");
+  // Warnings first, then the guessed metadata, then the opening — the order the CLI uses.
+  (item.warnings || []).forEach(function (text) {
+    wrap.appendChild(el("div", "warn", "⚠ " + text));
+  });
+  wrap.appendChild(el(
+    "div", "item-id",
+    item.id + "  ·  confidence " + Number(item.confidence || 0).toFixed(2) +
+      "  ·  " + item.documents + " document(s)"
+  ));
+
+  var fields = el("div", "fields");
+  var inputs = {};
+  EDITABLE.forEach(function (name) {
+    fields.appendChild(el("label", null, name));
+    var input = document.createElement("input");
+    input.type = "text";
+    input.value = (item.meta && item.meta[name]) || "";
+    input.setAttribute("data-field", name);
+    inputs[name] = input;
+    fields.appendChild(input);
+  });
+  wrap.appendChild(fields);
+  wrap.appendChild(el("pre", "preview", item.preview || "(no text extracted)"));
+
+  var accept = el("button", "accept", "Accept");
+  var reject = el("button", "reject", "Reject");
+  var buttons = [accept, reject];
+  accept.addEventListener("click", function () { decide(item, "accept", inputs, buttons); });
+  reject.addEventListener("click", function () { decide(item, "reject", inputs, buttons); });
+  var row = el("div", "row");
+  row.appendChild(accept);
+  row.appendChild(reject);
+  wrap.appendChild(row);
+  return wrap;
+}
+
+function loadQueue() {
+  var container = document.getElementById("queue");
+  var summary = document.getElementById("queue-summary");
+  return call("/console/api/queue", {}).then(function (res) {
+    container.textContent = "";
+    if (!res.ok) {
+      summary.textContent = "";
+      container.appendChild(el("p", "empty", "queue unavailable — " + reason(res)));
+      return;
+    }
+    var counts = res.data.summary || {};
+    summary.textContent = counts.total + " item(s) — " + counts.pending + " pending, " +
+      counts.accepted + " accepted, " + counts.rejected + " rejected";
+    var items = res.data.items || [];
+    if (!items.length) {
+      container.appendChild(el("p", "empty", "Nothing pending."));
+      return;
+    }
+    items.forEach(function (item) { container.appendChild(renderItem(item)); });
+  });
+}
+
+// --- health + wiring ------------------------------------------------------------------
+
+call("/console/api/health", {}).then(function (res) {
+  document.getElementById("dot").className = res.ok ? "dot ok" : "dot bad";
+  document.getElementById("status-text").textContent = res.ok
+    ? "console " + res.data.console + " — " + res.data.routes.length + " routes"
+    : "console unreachable (" + reason(res) + ")";
+});
+
+document.getElementById("upload-btn").addEventListener("click", uploadSelected);
+document.getElementById("queue-refresh").addEventListener("click", loadQueue);
+loadQueue();
 </script>
 </body>
 </html>
