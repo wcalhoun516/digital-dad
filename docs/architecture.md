@@ -468,6 +468,56 @@ the same Basic-Auth `_gate()` as everything else. Three structural rules, all te
 The route table lives in one place (`CONSOLE_ROUTES`) and the gate test enumerates it, so a
 route added by a later step of the plan cannot silently skip the auth assertions.
 
+**The routes are thin callers, by design.** `ingest/upload.py` decides whether a
+client-supplied file may become a path on disk, and `ingest/review.py` decides what accepting
+an item means. The console is a second *front end* to both, never a second implementation — so
+a decision made in the browser and the same decision made in `python -m ingest.review` cannot
+drift apart:
+
+| Route | Calls | Refusals |
+|-------|-------|----------|
+| `POST /console/api/upload?filename=` | `stage_upload` | 400 `UploadRejected`, 413 over the cap |
+| `GET /console/api/queue` | `queue_view(load_queue(…))` | — |
+| `POST /console/api/review` | `apply_decision` | 404 `UnknownItem`, 400 any other `ReviewError` |
+
+What the HTTP layer adds on top of those cores is only what HTTP makes possible:
+
+- **The size cap is enforced twice, on purpose.** `stage_upload` caps `len(data)` — the payload
+  is the fact and a `Content-Length` is only a claim — but that check can only speak once the
+  bytes are in memory. The route therefore refuses an oversize *claim* first, before reading,
+  so a declared 4 GB upload is a 413 rather than a memory-exhaustion on the Mac mini.
+- **A body is JSON-capped too** (`MAX_JSON_BYTES`): a review decision is a handful of short
+  strings, and anything larger is not one.
+- **Client-supplied shapes are checked before they reach the cores.** `edit_item` calls
+  `.items()` on `fields`, so a `"fields": "title"` would surface as an `AttributeError` — a 500
+  and a traceback instead of a message the operator can act on.
+- **Uploads are raw-body, not multipart.** The filename travels in the query string and the
+  bytes are the body. A hand-rolled multipart parser (stdlib `cgi` is gone) in front of a
+  write-to-disk endpoint would be new attack surface in the one place this plan says a bug is a
+  real vulnerability.
+- **The response carries the final filename, never the server path.** The inbox never
+  overwrites, so a collision renames the file, and that rename is the thing the operator has to
+  be told.
+
+The ingest modules are imported **lazily**, inside the console handlers. The family dashboard
+is read-only and has to keep serving even if the ingest tree cannot be imported; `bin/` is also
+not a package, so the repo root reaches `sys.path` at that point rather than at module scope.
+`CONSOLE_INBOX_DIR` / `CONSOLE_QUEUE_DIR` / `CONSOLE_MANIFEST_PATH` default to `None`, meaning
+"whatever the ingest modules default to", which keeps the on-disk layout defined once in
+`ingest/queue.py`; tests point them at a tmp dir.
+
+The page (`dashboard/console.html`) builds DOM nodes and assigns `textContent` throughout.
+Titles, warnings and previews are text recovered from whatever file was dropped in the inbox,
+so rendering any of it as markup would let an uploaded document run script in the operator's
+browser — with the dashboard password already in the session.
+`tests/test_console_page.py` asserts that in a live Chromium pass against the real server, and
+also that only fields the operator *changed* travel with a decision: `edit_item` stamps every
+date it accepts as `approximate`, so resending an untouched date would quietly demote one the
+extractor was sure about.
+
+**Uploading only fills `data/inbox/`.** Extracting those files into the review queue is still
+`make ingest` at a terminal; the console gets that button with plan 0011's step 4 job runner.
+
 ### Email (`analysis/on_this_day.py` + `bin/create_gmail_draft.py`)
 
 On This Day writes an HTML email to disk; `create_gmail_draft.py` reads the latest one and
