@@ -300,6 +300,22 @@ class TestReviewRoute:
         status, _ = console.json_request("/console/api/review", {"decision": "accept"})
         assert status == 400
 
+    def test_an_oversize_body_is_refused_without_being_read(self, console):
+        """A decision is a handful of short strings. Anything larger is not one, and finding
+        that out only after reading it into memory is the mistake."""
+        console.stage(_item())
+        cap = console.mod.MAX_JSON_BYTES
+        status, payload = console.request(
+            "/console/api/review",
+            method="POST",
+            body=b'{"id": "a-1234abcd", "decision": "accept"}',
+            ctype="application/json",
+            headers={"Content-Length": str(cap + 1)},
+        )
+        assert status == 413
+        saved = json.loads((console.queue / "a-1234abcd.json").read_text())
+        assert saved["status"] == "pending", "the refused decision was applied anyway"
+
     def test_the_review_route_refuses_a_get(self, console):
         status, _ = console.request("/console/api/review", method="GET")
         assert status == 405
@@ -337,9 +353,19 @@ class TestUploadRoute:
         assert status == 400
         assert b"handler" in payload
 
-    def test_a_missing_filename_is_400(self, console):
-        status, _ = console.request("/console/api/upload", method="POST", body=b"x" * 32)
+    def test_a_missing_filename_names_the_parameter_it_wants(self, console):
+        """Omitting `?filename=` and sending a *blank* one are different client mistakes.
+
+        Both end in 400 either way — `sanitize_filename` refuses an empty name, so deleting
+        the route's own check would not change a single status code. What it would change is
+        the message: "empty filename: ''" describes a name, and the client never sent one.
+        This asserts the distinction, so the check is a tested line rather than a line that
+        merely looks load-bearing.
+        """
+        status, payload = console.json_request("/console/api/upload", None)
         assert status == 400
+        assert "filename" in payload["error"]
+        assert "?filename=" in payload["error"], "the reply should name the missing parameter"
 
     def test_an_empty_upload_is_refused(self, console):
         status, _ = console.request(
