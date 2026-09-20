@@ -24,6 +24,9 @@ eval/voice_exemplars.json
 # are the finding, and they are what a future run compares against.
 data/analysis/voice_eval*
 !data/analysis/voice_eval*.md
+# ...and the run history IS the deliverable (#60): scores + corpus size, zero prose
+# (longest string in it is a model id). It must persist in git to be a time series.
+!data/analysis/voice_eval_history.jsonl
 
 # Geo-LLM fine-tune registration marker (plan 0008 26e) — owner-produced, local;
 # mirrors what's registered in the sibling conductor's models.yaml.

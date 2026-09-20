@@ -131,6 +131,79 @@ then re-run `make voice-eval`. The adapter, trials, and eval report live under
 `data/finetune_run/` and `data/analysis/voice_eval.*` (all gitignored). Mild overfitting
 appeared by iter ~100 (val loss bottomed there), consistent with the tiny training set.
 
+### D20 — In-context exemplars beat fine-tuning, and the adapter fights them.
+**Date:** 2026-09-19. Closes roadmap **#53/#58**. Extends D19 with the owner's design:
+one model, four conditions, plain-vs-fine-tuned throughout.
+
+**Setup.** Gemma 4 e4b throughout. Long run on the boilerplate-pruned corpus (#59): 2000
+iters, best val **2.956 @ iter 400**, final 4.139, final train **1.211** — a 2.9 train/val gap,
+outright memorization. **The bottom arrives at 0.74 epochs, before the model has seen the
+corpus once.** Evaluated at iter 400, never the final adapter. 50 exemplars (~24k tokens,
+train-split only, 8-gram-checked against heldout). Length-matched generation. Four 3-way blind
+rankings, 8 held-out prompts, T3 judge.
+
+| experiment | fine-tuned | plain | ft beats plain |
+|---|---|---|---|
+| A — no retrieval | 2.50 | 2.50 | 50% |
+| B — + retrieval | 2.62 | **2.38** | 38% |
+| C — + 50 exemplars | **2.88** | **2.12** | **12%** |
+| D — exemplars + retrieval | 2.50 | 2.50 | 50% |
+
+`real` won **100% of every experiment** — no arm is close to passing for his actual prose.
+
+**Finding 1 — exemplars are the best lever measured, on the *plain* model.**
+`gemma-plain-shot` at **2.12** is the strongest non-real arm across every run to date, better
+than plain (2.50) and plain+RAG (2.38). Fifty well-chosen passages in context beat both
+fine-tuning and retrieval.
+
+**Finding 2 — the adapter actively fights the exemplars.** `gemma-ft-shot` at **2.88** is the
+*worst* arm measured, worse than the fine-tune without them (2.50). In condition C the plain
+model beats the fine-tuned one **88% of the time**. The fine-tune has overwritten the very
+behaviour the exemplars are trying to induce, so adding them makes it worse, not better.
+
+**This is why the plain-shot control existed.** Had we run only the two arms originally asked
+for (`ft-shot`, `ft-shot-rag`), C would have read "exemplars hurt" — exactly backwards. D19's
+lesson applied.
+
+**Finding 3 — exemplars and retrieval are not additive.** Condition D washes both back to 2.50.
+They compete for the same job: showing the model how to write. Stacking them buys nothing.
+
+**Style metrics, consistent across all four:**
+
+| arm | TTR | Δ distinctive/1k vs real |
+|---|---|---|
+| real | 0.692 | — |
+| gemma-plain | 0.743 | +0.6 |
+| gemma-plain-shot | 0.727 | −1.9 |
+| gemma-plain-rag | 0.689 | −7.5 |
+| gemma-ft | **0.353** | **+49.0** |
+| gemma-ft-shot | **0.314** | +24.0 |
+
+Every *plain* arm sits on top of real (TTR 0.69–0.78, distinctive vocabulary within ±8). Every
+*fine-tuned* arm halves lexical diversity and over-produces his topic vocabulary. Notably,
+exemplars **partially** repair the vocabulary damage (+49 → +24) but cannot restore diversity —
+the adapter's flattening is not recoverable in-context.
+
+`gemma-plain` is startlingly close to real on every style axis: TTR 0.743 vs 0.692, distinctive
++0.6, sentence length 25.3 vs 25.2. The style metrics cannot separate them; only the judge can.
+
+**Implication.** Stop fine-tuning on this corpus. The shipped voice stays RAG, and the most
+promising unexplored direction is **more and better in-context material** — which the 262k
+context makes cheap and which improves automatically as the corpus grows. Roadmap #54 (DAPT)
+and #55 (preference pairs) remain open as *different objectives*, but LoRA instruction-tuning at
+this corpus size is now measured three times and has never once helped.
+
+**Recorded to the series.** 12 rows in `data/analysis/voice_eval_history.jsonl`, each carrying
+corpus size (181 articles / 340,849 words / ~453k tokens) beside the score, per #60. Re-run
+`make voice-candidates` + `voice_eval` as the corpus grows; the curve is the product claim.
+
+**Two process notes, both mine.** A 35-minute stall was a hung HuggingFace hub socket in
+`CLOSE_WAIT` during model load — use `HF_HUB_OFFLINE=1` when weights are cached. And a complete
+8-arm generation run was discarded by the completeness guard tripping on vestigial placeholder
+keys *after* all work finished; the generator now persists after every arm.
+
+---
+
 ### D19 — Fine-tuning makes it *worse*. The control arm settles it.
 **Date:** 2026-09-19. Closes roadmap **#50**. Supersedes D17's open question; D15/D17's
 product verdict (RAG is the voice) stands and is now properly controlled.
