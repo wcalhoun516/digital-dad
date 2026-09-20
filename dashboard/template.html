@@ -669,6 +669,7 @@ footer {
   <button data-tab="calhoun-isms">Calhoun-isms</button>
   <button data-tab="contradictions">Second Thoughts</button>
   <button data-tab="stance">Stance</button>
+  <button data-tab="voice-probe">Voice Probe</button>
   <button data-tab="geollm">Geo-LLM</button>
 </nav>
 
@@ -933,6 +934,12 @@ footer {
 </div>
 
 <!-- Tab 12: Calhoun-isms -->
+<div class="tab-content" id="tab-voice-probe">
+  <h2>Voice Probe <span style="font-size:0.5em;color:var(--text-muted);font-family:var(--mono);vertical-align:middle">EXPERIMENT</span></h2>
+  <p class="section-desc">An outside model (TypeSafe <strong>Jev</strong>, a structured-decision model &mdash; it returns probabilities, not prose) was asked of every column: is this a <em>distinctive</em> voice, or could anyone have written it? Sorted by the model's confidence, so the clearest calls of <em>both</em> kinds sit at the top &mdash; which is the fastest way to judge whether it is measuring anything real. Photo captions and his repeated author bio are stripped before asking, or it would be grading the wire service.</p>
+  <div id="voice-probe-body"></div>
+</div>
+
 <div class="tab-content" id="tab-calhoun-isms">
   <h2>Calhoun-isms</h2>
   <p class="section-desc">His sharpest, most quotable lines — the aphorisms that land — pulled from the archive and grouped by theme. Click any line to find its column in the Raw Corpus.</p>
@@ -982,6 +989,7 @@ const INTELLECTUAL_ARC_DATA = /*__INTELLECTUAL_ARC_DATA__*/;
 const CALHOUN_ISMS_DATA = /*__CALHOUN_ISMS_DATA__*/;
 const CONTRADICTIONS_DATA = /*__CONTRADICTIONS_DATA__*/;
 const ENTITY_STANCE_DATA = /*__ENTITY_STANCE_DATA__*/;
+const JEV_VOICE_DATA = /*__JEV_VOICE_DATA__*/;
 </script>
 
 <script>
@@ -2687,6 +2695,45 @@ function renderStance() {
 // Reads the git-ignored calhoun_isms.json (built by `make calhoun-isms`); the artifact embeds
 // short body excerpts, so in CI / fresh clones CALHOUN_ISMS_DATA is the empty stub and the tab
 // shows a build prompt. Each quote deep-links to its column via the shared deepLinkToCorpus().
+// Exploratory: reads the git-ignored jev_voice.json from tools/jev_voice_probe.py.
+function renderVoiceProbe() {
+  const esc = t => (t || '').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  const data = JEV_VOICE_DATA || {};
+  const rows = data.articles || [];
+  const body = document.getElementById('voice-probe-body');
+  if (!rows.length) {
+    body.innerHTML = '<p class="section-desc">No probe results. Run <code>JEV_API_KEY=... .venv/bin/python -m tools.jev_voice_probe</code> then <code>make dashboard</code>.</p>';
+    return;
+  }
+  const m = data.meta || {}, c = m.counts || {};
+  const pill = (label, val) =>
+    `<div style="background:var(--bg-card);padding:12px 16px;border-radius:6px;min-width:120px">
+       <div style="font-size:1.5em;font-weight:600;color:var(--text)">${esc(String(val))}</div>
+       <div style="font-size:0.72em;color:var(--text-muted);font-family:var(--mono);text-transform:uppercase">${esc(label)}</div></div>`;
+  const row = r => {
+    const uniq = r.voice === 'unique';
+    const col = uniq ? 'var(--accent)' : 'var(--text-muted)';
+    return `<tr>
+      <td style="white-space:nowrap"><span style="color:${col};font-weight:600">${esc(r.voice || '—')}</span></td>
+      <td style="font-family:var(--mono)">${r.voice_probability ?? '—'}</td>
+      <td style="font-family:var(--mono)">${r.confidence ?? '—'}</td>
+      <td style="font-family:var(--mono)">${r.distinctiveness ?? '—'}</td>
+      <td>${esc(r.title)}<div style="font-size:0.75em;color:var(--text-muted)">${esc(r.date)}</div></td>
+      <td style="font-size:0.8em;color:var(--text-muted)">${esc((r.snippet || '').slice(0, 160))}&hellip;</td></tr>`;
+  };
+  body.innerHTML =
+    `<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px">
+       ${pill('scored', m.scored ?? rows.length)}
+       ${pill('unique', c.unique ?? 0)}
+       ${pill('boilerplate', c.boilerplate ?? 0)}
+       ${pill('mean 1-5', m.mean_distinctiveness ?? '—')}
+       ${pill('errors', m.errors ?? 0)}
+     </div>
+     <div style="overflow-x:auto"><table>
+       <thead><tr><th>Call</th><th>P</th><th>Conf.</th><th>1&ndash;5</th><th>Article</th><th>Snippet</th></tr></thead>
+       <tbody>${rows.map(row).join('')}</tbody></table></div>`;
+}
+
 function renderCalhounIsms() {
   const esc = s => (s || '').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
   const data = CALHOUN_ISMS_DATA || {};
@@ -3025,6 +3072,7 @@ function renderTab(name) {
   rendered[name] = true;
   switch(name) {
     case 'reading-room': renderReadingRoom(); break;
+    case 'voice-probe': renderVoiceProbe(); break;
     case 'calhoun-isms': renderCalhounIsms(); break;
     case 'contradictions': renderContradictions(); break;
     case 'stance': renderStance(); break;

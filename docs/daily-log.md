@@ -1069,3 +1069,47 @@ Format:
   **Verification:** `make verify` exit 0 — ruff clean, **1293 passed**, dashboard builds; a
   clean `origin/main` worktree collects **1253 passed, 1 skipped**, so the delta is exactly
   the **+40** added here (`test_ingest_review.py` goes 9 → 49).
+
+### 2026-09-20 — infra — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/109
+- Source: plan:ready/0011 (steps 2+3 — the routes both merged cores were built for)
+- Summary: **The two cores were finished and waiting; the routes they were built for had never
+  been written.** PR #96 shipped `ingest/upload.py` and PR #97 shipped `apply_decision`, each
+  deferring its HTTP route because step 1's `/console/api/*` dispatch was unmerged at the time
+  — the add/add trap §3 exists to prevent. #93 is on `main` now, so this PR writes all three:
+  `POST /console/api/upload`, `GET /console/api/queue`, `POST /console/api/review`, as the thin
+  callers they were designed to be. **Nothing in `ingest/` was re-decided**, which is the whole
+  point: the CLI and the console cannot drift into different answers to "what does accepting
+  mean". **Five things worth review:** (1) **The size cap is now enforced twice on purpose.**
+  `stage_upload` caps `len(data)` — the payload is the fact, a `Content-Length` is only a claim
+  — but that check can only speak once the bytes are in memory, so a declared 4 GB upload
+  would have been a memory-exhaustion on the Mac mini before the module got a say; the route
+  refuses the *claim* first, and a test proves it refuses without reading. (2) **Uploads are
+  raw-body, not multipart** — filename in the query string, bytes as the body. Stdlib `cgi` is
+  gone in 3.13, and a hand-rolled multipart parser in front of the one endpoint that writes
+  attacker-named files to disk is new attack surface exactly where the plan says a bug is a
+  real vulnerability rather than a defect. (3) **`'fields'` is type-checked at the route**:
+  `edit_item` calls `.items()` on it, so `"fields": "title"` would have been an `AttributeError`
+  — a 500 and a traceback instead of something an operator can act on. (4) **The response
+  carries the final filename, never the server path**; the inbox never overwrites, so a
+  collision renames, and the rename is the one thing the operator must be told. (5) **The
+  ingest import is lazy**, inside the handlers: the family dashboard is read-only and must keep
+  serving even if the ingest tree cannot be imported. **One bug caught before it shipped:**
+  `edit_item` stamps every date it accepts as `approximate`, so a page that resent all five
+  metadata fields would have quietly demoted a confident date on a plain Accept click. Only
+  fields the operator *changed* now travel with the decision, and a live-browser test pins it.
+  **Mutation-tested — 17 mutants, 2 real gaps found.** Nothing covered `MAX_JSON_BYTES`, so
+  deleting the body cap stayed green. And `if not filename` survived deletion because
+  `sanitize_filename` already refuses an empty name — identical status code either way.
+  **Resolved differently from #96's `..` rule**: that one was unreachable and was deleted,
+  this one is reachable and changes the *message* ("empty filename: ''" describes a name the
+  client never sent), so the test now asserts the reply names the missing parameter. Re-run:
+  **17/17 caught, zero survivors.** **Verification:** `make verify` **exit 0** — ruff clean,
+  **1599 passed**, dashboard builds; an ID-level diff against a clean `origin/main` worktree
+  shows **+42 added, zero removed** (1556 → 1598 collected at the time of the diff, plus the
+  one mutation-driven test added after), all in the two new test files. **12 of those run in
+  live headless Chromium** against the real server — a file chosen in a file input lands on
+  disk, an Accept click lands in the manifest, and hostile markup in an extracted title renders
+  as text. **Plan 0011 stays in `ready/`:** steps 4–6 remain, and its status block now points
+  the next run at the job runner, including the trap that uploading only fills `data/inbox/` —
+  staging into the queue is still `make ingest` until step 4 lands.

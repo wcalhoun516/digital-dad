@@ -4,8 +4,14 @@
     {
       "name": "Dashboard Preview",
       "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "8000", "-d", "dashboard"],
-      "port": 8000
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8011",
+        "-d",
+        "dashboard"
+      ],
+      "port": 8011
     }
   ]
 }

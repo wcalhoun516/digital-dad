@@ -1,33 +1,34 @@
 # Plan 0011 — Operator console: feed the corpus, turn the crank, keep score
 
-## Status (refreshed 2026-09-19 — everything below is now **on `main`**)
-
-> Earlier revisions of this block said "done, unmerged" for steps 1–3. **PRs #93, #96 and #97
-> have all merged.** Nothing here is blocked on an unmerged branch any more.
+## Status (refreshed 2026-09-20 — **steps 1–3 are complete, routes included**)
 
 - **Step 1 — done and merged** (PR #93). Console shell, `/console/api/*` dispatch in
   `bin/serve_dashboard.py`, route gate, Funnel refusal.
-- **Step 2 — validation core done and merged** (PR #96). `ingest/upload.py` holds the
-  sanitizer, the registry-derived extension allowlist, the size cap and the non-clobbering
-  writer, all tested. **The `POST /console/api/upload` route itself is still NOT written** —
-  it was deferred only because #93's dispatch was unmerged at the time. **That blocker is
-  gone.** It is a thin caller of `stage_upload`, not a reimplementation.
-- **Step 3 — decision core done and merged** (PR #97). This step assumed `ingest/review.py`
-  already had "existing decision functions" a console could call. **It did not.** Only
-  `accept_item` was callable; reject and edit were inlined in `run_cli`'s prompt loop, wired
-  to `input_fn`. So the core came first: `apply_decision` (one entry point for
-  accept/edit/reject, persisting both the queue item and the manifest), plus `edit_item`,
-  `reject_item`, `validate_field`, and `queue_view` / `item_view` for the listing payload.
-  `run_cli` was rewired onto the same functions, so the CLI and a future route cannot
-  diverge. **The `GET /console/api/queue` and `POST /console/api/review` routes are still NOT
-  written** — same reason as step 2, and the same blocker is now gone.
+- **Step 2 — done.** Validation core merged in PR #96 (`ingest/upload.py`: the sanitizer, the
+  registry-derived extension allowlist, the size cap, the non-clobbering writer).
+  **`POST /console/api/upload` written in PR #109** as the thin caller of `stage_upload` it was
+  always meant to be, plus the one thing the module cannot do: refuse an oversize
+  `Content-Length` *before* the body is read.
+- **Step 3 — done.** Decision core merged in PR #97 (`apply_decision`, `edit_item`,
+  `reject_item`, `validate_field`, `queue_view` / `item_view`, with `run_cli` rewired onto the
+  same functions). **`GET /console/api/queue` and `POST /console/api/review` written in PR
+  #109**, with `UnknownItem` → 404 and every other `ReviewError` → 400.
+- **The page is wired for steps 2–3** (PR #109): upload picker and review queue with
+  accept/edit/reject, verified in a live headless-Chromium pass against the real server.
 - **Steps 4–6 — not started.**
 
-**Next run should do the route wiring** — `POST /console/api/upload`, `GET /console/api/queue`,
-`POST /console/api/review` — on top of #93's dispatch, which is on `main`. All three are thin
-callers: `stage_upload` for upload; `queue_view` and `apply_decision` for the queue. Do **not**
-rewrite `ingest/upload.py`, and do **not** re-decide anything in `ingest/review.py`. Step 4 (job
-runner) is the alternative if the wiring is taken first by another run.
+**Next run should do step 4, the job runner.** It is the only remaining piece with no
+dependency on anything unmerged. Two things it must respect that are easy to get wrong:
+
+- **Uploading only fills `data/inbox/`.** Nothing stages those files into the review queue yet
+  — `scan_inbox` still runs from `make ingest` at a terminal. `finetune-prep` is *not* that
+  step. The console's ingest button belongs to this step; the page currently says so in plain
+  text, and that note should be replaced by the button rather than left to rot.
+- The routes added in #109 are **thin callers** of `ingest/upload.py` and `ingest/review.py`.
+  Do not re-decide anything in either module; the whole point is that the CLI and the console
+  reach the same answer.
+
+Step 5 (scoreboard) is the alternative if the job runner is taken first by another run.
 
 **Rejects still live in the queue directory**, marked `status: rejected` with their reason.
 Step 3's `data/ingest/rejected/` move is deliberately **not** done: it changes the on-disk
