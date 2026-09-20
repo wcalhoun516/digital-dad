@@ -5,7 +5,7 @@ PYTHON := .venv/bin/python
 # package drops out of the gate. E501 is off for the source packages only (see pyproject).
 LINT_PATHS := analysis scraper viz training tools bin ingest tests
 
-.PHONY: voice-candidates scrape manifest-check manifest-dedup coverage-audit analyze training dashboard all serve share console search on-this-day send-on-this-day adjudicate backfill-verdicts entity-graph calhoun-isms reading-room contradictions rag-eval voice-eval voice-style voice-trials embedding-compare embedding-queries-check clean test lint fmt lint-json hooks verify verify-responsive
+.PHONY: retrain-check retrain voice-candidates scrape manifest-check manifest-dedup coverage-audit analyze training dashboard all serve share console search on-this-day send-on-this-day adjudicate backfill-verdicts entity-graph calhoun-isms reading-room contradictions rag-eval voice-eval voice-style voice-trials embedding-compare embedding-queries-check clean test lint fmt lint-json hooks verify verify-responsive
 
 scrape:
 	$(PYTHON) -m scraper $(ARGS)
@@ -59,6 +59,20 @@ finetune-prep:
 # enforced for real in `finetune-prep`, which is what writes the trainer's data.
 finetune-preflight:
 	$(PYTHON) -m training.finetune_preflight $(ARGS)
+
+# Is a LoRA retrain warranted? Compares the live corpus fingerprint + token count
+# against the last recorded training run. Report-only: exit 1 means "due", so a cron
+# or the weekly job can gate on it. Costs nothing and touches nothing.
+retrain-check:
+	-$(PYTHON) -m training.retrain_watch $(ARGS)
+
+# Execute the retrain when due: prepare -> preflight(--strict) -> train. Hours of local
+# GPU, so it is a deliberate target, not automation. --force runs anyway; --evaluate
+# also generates candidates and judges (paid T3 calls).
+#   make retrain ARGS="--run"
+#   make retrain ARGS="--run --evaluate"
+retrain:
+	$(PYTHON) -m training.retrain_watch --run $(ARGS)
 
 dashboard:
 	$(PYTHON) viz/build_dashboard.py

@@ -278,7 +278,8 @@ rank) is superseded — the defect is example **shape**, not count.
     D19 showed plain+RAG lands very close to real on style (TTR 0.762 vs 0.709; distinctive
     vocabulary 23.0/1k vs 28.1 — slightly *under*). Improving the arm that is winning beats
     rescuing the one that is losing.
-57. **P2 · S · infra — retrain on new tokens.** Corpus fingerprinting (D3) already gates every
+57. **P2 · S · infra — retrain on new tokens.** *(done 2026-09-19 —
+    `training/retrain_watch.py`, `make retrain-check` / `make retrain`.)* Corpus fingerprinting (D3) already gates every
     analysis module; gate training the same way. When the fingerprint moves: stage data →
     preflight → train → eval → append a row recording **corpus size beside the score**. That
     accumulating curve — how much text is enough — is the product's core claim (`goals.md`).
@@ -306,18 +307,23 @@ rank) is superseded — the defect is example **shape**, not count.
     curve `goals.md` says the product rests on. Next: surface it on the console scoreboard (#42
     step 5) and trigger it from the D3 fingerprint (#57).
 
-61. **P1 · M · training — scale up in-context, the lever that actually worked.** D20 measured 50
+61. **P3 · M · training — scale up in-context.** *(parked 2026-09-19 at the owner's call —
+    the exemplar arms stay wired in `make voice-candidates` and keep running as part of the
+    standing comparison, but scaling them up is not the current priority.)* D20 measured 50
     exemplars at ~24k tokens against a **262k** context — we used 9% of the window. Test 100,
     200, and "as many complete articles as fit". This is the one direction with a measured win,
     it needs no training, it cannot invent positions, and it *improves automatically as the
     corpus grows*. Also test exemplar **selection**: D20 used one hand-picked set; compare
     against retrieval-selected exemplars (nearest to the prompt) and against random, to find out
     whether curation or sheer volume is doing the work.
-62. **P3 · S · training — retire the LoRA instruction-tuning track.** Measured three times
-    (D15, D19, D20) and it has never helped; D20 shows it actively fights the lever that does.
-    Keep the adapters and harness for reproducibility, but do not start another run on this
-    corpus. #54 (DAPT) and #55 (preference pairs) stay open as *different objectives*, not as
-    retries of this one.
+62. **P1 · M · training — LoRA continues, gated on corpus growth.** *(owner's call
+    2026-09-19; supersedes the earlier "retire" framing.)* D15/D19/D20 measured LoRA three
+    times at ~453k tokens and it never helped — but every one of those runs was **token-starved**
+    (the bottom arrives at 0.74 epochs, before the model reads the corpus once). The hypothesis
+    under test is now *corpus size*, not hyperparameters, so the track stays open and re-runs as
+    the corpus grows rather than being retried on the same text. **Do not spend another run on
+    hyperparameter search at the current size**; spend it on tokens. #54 (DAPT), #55 (preference
+    pairs) and DoRA are separate objectives in the owner's own experiment list.
 63. **P2 · S · infra — make unattended runs hang-proof.** A 35-minute stall was a hung
     HuggingFace hub socket (`CLOSE_WAIT`) during model load. Set `HF_HUB_OFFLINE=1` where
     weights are cached and put a timeout on hub calls, so the nightly agent cannot block

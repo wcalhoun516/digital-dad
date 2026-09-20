@@ -338,6 +338,21 @@ paste-here placeholders. **Leakage-free by construction** (prompts come from the
 split). The output embeds real bodies, so it is git-ignored; the hand-authored
 `eval/voice_trials.example.json` template is committed.
 
+`training/retrain_watch.py` — **retrain LoRA when the corpus actually grows**;
+`make retrain-check` (report-only, exit 1 = due) and `make retrain ARGS="--run"`.
+D15/D19/D20 measured LoRA three times at ~453k tokens and it never beat the plain model, but
+every run was **token-starved** — val loss bottoms at **0.74 epochs**, before the model reads
+the corpus once. The open question is corpus *size*, so the thing worth automating is
+"re-measure when there is meaningfully more text", not "search harder on the same text".
+Decides on the **D3 fingerprint** (authority on *whether* the corpus changed) plus a token
+delta (whether it changed *enough* — default 25k, ~5.5% of the corpus, so one ingested book
+clears it and a routine weekly scrape does not). Executes prepare → preflight(`--strict`) →
+train → optionally evaluate, stopping at the first failure; the preflight gate is not
+forceable from here because a forced run produces numbers comparable to nothing. Evaluation is
+opt-in (paid T3 judge). State lives in `data/training/retrain_state.json`; every completed run
+records corpus size so the "how much text is enough" curve accumulates (#60). The subprocess
+work sits behind one injected `step` seam, so no test starts a real training run.
+
 `voice_candidates.py` — fills the skeleton above; `make voice-candidates`. The step that was
 never automated, and the reason the Geo-LLM eval sat unrun for three months: somebody had to
 hand-produce two passages per trial. An **arm** is one thing being compared — `finetuned`
