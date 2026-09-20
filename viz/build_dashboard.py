@@ -33,6 +33,7 @@ PLACEHOLDERS = {
     "/*__CALHOUN_ISMS_DATA__*/": DATA_DIR / "analysis" / "calhoun_isms.json",
     "/*__CONTRADICTIONS_DATA__*/": DATA_DIR / "analysis" / "contradictions.json",
     "/*__ENTITY_STANCE_DATA__*/": DATA_DIR / "analysis" / "entity_stance.json",
+    "/*__JEV_VOICE_DATA__*/": DATA_DIR / "analysis" / "jev_voice.json",
 }
 
 # When an embeddings export is missing, inline an empty stub so the dashboard
@@ -63,6 +64,9 @@ _EMPTY_DEFAULTS = {
     # entity_stance.json is text-free (names/years/scores) but may not exist before the first
     # `make entity-stance` — inline an empty graph so the tab shows a build prompt, not a blank.
     "/*__ENTITY_STANCE_DATA__*/": '{"meta":{},"entities":[],"warming":[],"cooling":[]}',
+    # Jev voice probe (exploratory, tools/jev_voice_probe.py). Git-ignored: the artifact
+    # embeds article snippets. Fresh clones inline an empty probe and see a run prompt.
+    "/*__JEV_VOICE_DATA__*/": '{"meta":{},"articles":[]}',
 }
 
 

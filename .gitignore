@@ -19,6 +19,11 @@ eval/voice_trials*.json
 # selection is reproducible from the recorded record_index + sha1 in the file.
 eval/voice_exemplars.json
 
+# Jev voice probe (exploratory, tools/jev_voice_probe.py) — both outputs embed article
+# snippets for sanity-checking, so same licensing rule as the other excerpt artifacts.
+data/analysis/jev_voice.csv
+data/analysis/jev_voice.json
+
 # Voice-eval raw reports — the JSON carries the prompts (which quote article
 # fragments). The rendered .md reports are tables only and ARE committed: they
 # are the finding, and they are what a future run compares against.
