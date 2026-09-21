@@ -173,7 +173,7 @@ def start_job(
     state_path: Path | None = None,
     python: str | None = None,
     cwd: Path | None = None,
-    spawn=subprocess.Popen,
+    spawn=None,
     alive=_pid_alive,
 ) -> tuple[dict, threading.Thread]:
     """Launch `name` and return (its state, the thread watching it).
@@ -194,16 +194,19 @@ def start_job(
         handle, log_name = _open_log(state_path, name, stamp)
         argv = [python or sys.executable, *spec.argv]
         try:
-            proc = spawn(
+            proc = (spawn or subprocess.Popen)(
                 argv,
                 cwd=str(cwd or ROOT),
                 stdout=handle,
                 stderr=subprocess.STDOUT,
                 stdin=subprocess.DEVNULL,
             )
-        except Exception:
+        except OSError as exc:
+            # No process, so no state is written: a start that never happened must not wedge
+            # the runner, and its empty log is noise in a directory the operator reads.
             handle.close()
-            raise
+            Path(handle.name).unlink(missing_ok=True)
+            raise JobError(f"could not start {name}: {exc}") from exc
 
         state = {
             "job": name,

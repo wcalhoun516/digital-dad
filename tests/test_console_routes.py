@@ -564,6 +564,18 @@ class TestJobRoutes:
         status, _ = console.request("/console/api/job/log", method="POST", body=b"{}")
         assert status == 405
 
+    def test_a_job_that_cannot_be_spawned_is_reported_rather_than_traced(self, console,
+                                                                         monkeypatch):
+        """An exec failure is rare and real (a broken .venv). It must not close the socket
+        on the operator with a traceback on the server's stderr as the only evidence."""
+        def boom(*_args, **_kwargs):
+            raise OSError(8, "Exec format error")
+
+        monkeypatch.setattr(jobs.subprocess, "Popen", boom)
+        status, payload = console.json_request("/console/api/job", {"job": "ingest"})
+        assert status == 500
+        assert "Exec format error" in payload["error"]
+
     def test_the_job_routes_are_listed_so_the_gate_test_covers_them(self, console):
         assert "/console/api/job" in console.mod.CONSOLE_ROUTES
         assert "/console/api/job/log" in console.mod.CONSOLE_ROUTES

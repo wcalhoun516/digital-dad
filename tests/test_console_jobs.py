@@ -272,3 +272,40 @@ def test_a_missing_log_file_is_empty_rather_than_an_error(spawned, state_path):
     _start(spawned, state_path)
     (state_path.parent / "logs" / jobs.job_state(state_path)["log"]).unlink()
     assert jobs.tail_log(state_path)["text"] == ""
+
+
+# --- a start that cannot happen --------------------------------------------------------
+
+
+def test_a_spawn_that_fails_is_a_job_error_not_an_oserror(state_path):
+    """A missing interpreter or an exhausted process table must arrive as a refusal.
+
+    The route turns `JobError` into a message the operator can read. An `OSError` escaping
+    this far reaches them as a 500 and a traceback instead.
+    """
+    def boom(*_args, **_kwargs):
+        raise OSError(8, "Exec format error")
+
+    with pytest.raises(jobs.JobError) as caught:
+        jobs.start_job("ingest", state_path=state_path, spawn=boom)
+    assert "Exec format error" in str(caught.value)
+
+
+def test_a_failed_start_leaves_no_running_record_behind(state_path):
+    """Otherwise the runner would be wedged by a job that never existed."""
+    def boom(*_args, **_kwargs):
+        raise OSError("no")
+
+    with pytest.raises(jobs.JobError):
+        jobs.start_job("ingest", state_path=state_path, spawn=boom)
+    assert jobs.job_state(state_path)["state"] == "idle"
+
+
+def test_a_failed_start_does_not_litter_an_empty_log(state_path):
+    """The log is opened before the spawn, so a refused start has to clean it up."""
+    def boom(*_args, **_kwargs):
+        raise OSError("no")
+
+    with pytest.raises(jobs.JobError):
+        jobs.start_job("ingest", state_path=state_path, spawn=boom)
+    assert list((state_path.parent / "logs").glob("*.log")) == []

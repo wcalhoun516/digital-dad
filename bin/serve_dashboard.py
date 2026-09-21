@@ -462,6 +462,11 @@ class GatedHandler(SimpleHTTPRequestHandler):
             # operator who is not told their click did nothing will click again.
             self._refuse(409, str(exc))
             return
+        except paths.jobs.JobError as exc:
+            # A broken .venv or an exhausted process table. Rare, but it has to reach the
+            # operator as a sentence on the page rather than as a closed socket.
+            self._refuse(500, str(exc))
+            return
         # The handler returns now; the job outlives this request in its own process.
         self._send_json(200, state)
 
