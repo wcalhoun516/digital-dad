@@ -233,6 +233,70 @@ def test_an_interrupted_job_does_not_block_the_next_one_forever(spawned, state_p
     assert state["state"] == "running"
 
 
+def test_a_poll_that_beats_the_watcher_does_not_call_a_finished_job_interrupted(
+    spawned, state_path
+):
+    """The child exits; the watcher has not written the outcome yet; the page polls.
+
+    `interrupted` has to mean "nobody is coming to write the real answer". While this
+    process still holds a watcher for the run, someone is — and calling it interrupted
+    would freeze that word on the page for a job that in fact succeeded, because the page
+    stops polling the moment it sees a terminal state.
+    """
+    _, watcher = _start(spawned, state_path)
+    assert jobs.job_state(state_path, alive=lambda pid: False)["state"] == "running"
+    _finish(spawned.procs[0], watcher)
+    assert jobs.job_state(state_path, alive=lambda pid: False)["state"] == "succeeded"
+
+
+@pytest.mark.filterwarnings("ignore::pytest.PytestUnhandledThreadExceptionWarning")
+def test_a_watcher_that_cannot_write_still_lets_the_run_be_reconciled(
+    spawned, state_path, monkeypatch
+):
+    """The watcher's own write can fail — a full disk, a removed directory.
+
+    Its failure must not also cost the fallback. If the run stayed claimed by a watcher
+    that is gone, nothing would ever reconcile the `running` record it left behind, and
+    the console would refuse every future job until someone restarted the server: the
+    exact stale lock this module exists to prevent.
+    """
+    _, watcher = _start(spawned, state_path)
+
+    def full_disk(*_args, **_kwargs):
+        raise OSError(28, "No space left on device")
+
+    monkeypatch.setattr(jobs, "_write", full_disk)
+    spawned.procs[0].release()
+    watcher.join(5)
+    monkeypatch.undo()
+    assert jobs.job_state(state_path, alive=lambda pid: False)["state"] == "interrupted"
+
+
+def test_concurrent_writers_do_not_collide_on_one_temp_file(state_path):
+    """Handler threads poll while the watcher finishes: several writers, one state file.
+
+    A temp name shared by every writer means the first `replace` moves the file out from
+    under the second, which loses that write entirely — and the write being lost is the
+    job's final outcome.
+    """
+    errors = []
+
+    def hammer(n):
+        try:
+            for i in range(50):
+                jobs._write(state_path, {"job": "x", "state": "running", "n": [n, i]})
+        except Exception as exc:  # noqa: BLE001 - the failure itself is the result
+            errors.append(exc)
+
+    threads = [threading.Thread(target=hammer, args=(n,)) for n in range(8)]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join(10)
+    assert errors == []
+    assert json.loads(state_path.read_text())["job"] == "x"
+
+
 def test_a_live_process_is_still_running(spawned, state_path):
     _start(spawned, state_path)
     assert jobs.job_state(state_path, alive=lambda pid: True)["state"] == "running"

@@ -81,6 +81,12 @@ JOBS: dict[str, JobSpec] = {
 # claim that follows it have to be one step. Single server process, so a lock is enough.
 _START_LOCK = threading.Lock()
 
+# Runs this process still has a watcher for, by log name. `interrupted` means "nobody is
+# coming to write the real outcome", and between the child's exit and the watcher's write
+# that is false — so a poll in that window must not claim it.
+_WATCHED: set[str] = set()
+_WATCH_LOCK = threading.Lock()
+
 
 class JobError(Exception):
     """Anything the operator asked for that cannot be done."""
@@ -131,7 +137,10 @@ def _read(state_path: Path) -> dict | None:
 def _write(state_path: Path, state: dict) -> None:
     path = Path(state_path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_suffix(".json.tmp")
+    # The temp name is per-thread: a watcher writing the final outcome while two handler
+    # threads poll is three writers on one path, and a shared temp name means the first
+    # `replace` moves the file out from under the second, losing that write.
+    tmp = path.with_name(f"{path.name}.{os.getpid()}.{threading.get_ident()}.tmp")
     tmp.write_text(json.dumps(state, indent=2) + "\n", encoding="utf-8")
     tmp.replace(path)  # atomic: a poll never sees half a record
 
@@ -150,6 +159,11 @@ def _open_log(state_path: Path, name: str, stamp: str):
     raise JobError("could not open a log file for this run")
 
 
+def _watched(log_name) -> bool:
+    with _WATCH_LOCK:
+        return log_name in _WATCHED
+
+
 def job_state(state_path: Path | None = None, *, alive=_pid_alive) -> dict:
     """The current job, reconciled against reality.
 
@@ -160,7 +174,9 @@ def job_state(state_path: Path | None = None, *, alive=_pid_alive) -> dict:
     state = _read(state_path)
     if state is None:
         return {"state": "idle"}
-    if state.get("state") == "running" and not alive(state.get("pid") or -1):
+    if state.get("state") == "running" and not _watched(state.get("log")) and not alive(
+        state.get("pid") or -1
+    ):
         state["state"] = "interrupted"
         state["finished_at"] = state.get("finished_at") or _now()
         _write(state_path, state)
@@ -218,6 +234,8 @@ def start_job(
             "finished_at": None,
             "exit_code": None,
         }
+        with _WATCH_LOCK:
+            _WATCHED.add(log_name)
         _write(state_path, state)
 
     watcher = threading.Thread(
@@ -262,12 +280,18 @@ def tail_log(
 
 def _watch(proc, handle, state_path: Path, state: dict) -> None:
     try:
-        code = proc.wait()
+        try:
+            code = proc.wait()
+        finally:
+            handle.close()
+        state["exit_code"] = code
+        state["state"] = "succeeded" if code == 0 else "failed"
+        state["finished_at"] = _now()
+        _write(state_path, state)
     finally:
-        handle.close()
-    state["exit_code"] = code
-    state["state"] = "succeeded" if code == 0 else "failed"
-    state["finished_at"] = _now()
-    _write(state_path, state)
+        # Released last, and even if the write above failed: a run left in the watched set
+        # would never be reconciled, which is the stale lock this module exists to avoid.
+        with _WATCH_LOCK:
+            _WATCHED.discard(state["log"])
 
 
