@@ -1,6 +1,6 @@
 # Plan 0011 — Operator console: feed the corpus, turn the crank, keep score
 
-## Status (refreshed 2026-09-20 — **steps 1–3 are complete, routes included**)
+## Status (refreshed 2026-09-21 — **steps 1–4 are complete, routes and page included**)
 
 - **Step 1 — done and merged** (PR #93). Console shell, `/console/api/*` dispatch in
   `bin/serve_dashboard.py`, route gate, Funnel refusal.
@@ -13,22 +13,39 @@
   `reject_item`, `validate_field`, `queue_view` / `item_view`, with `run_cli` rewired onto the
   same functions). **`GET /console/api/queue` and `POST /console/api/review` written in PR
   #109**, with `UnknownItem` → 404 and every other `ReviewError` → 400.
-- **The page is wired for steps 2–3** (PR #109): upload picker and review queue with
-  accept/edit/reject, verified in a live headless-Chromium pass against the real server.
-- **Steps 4–6 — not started.**
+- **Step 4 — done** (PR #111). New top-level `console/` package: `console/jobs.py` is the
+  one-job-at-a-time state machine, `POST`/`GET /console/api/job` and `GET
+  /console/api/job/log` are the routes, and the page's step-4 placeholder is now a job panel
+  with a live log. **The inbox note is gone** — uploading now points at the `ingest` button
+  instead of at a terminal.
+- **The page is wired for steps 2–4** (PRs #109, #111): upload picker, review queue with
+  accept/edit/reject, and the job runner, each verified in a live headless-Chromium pass
+  against the real server.
+- **Steps 5–6 — not started.**
 
-**Next run should do step 4, the job runner.** It is the only remaining piece with no
-dependency on anything unmerged. Two things it must respect that are easy to get wrong:
+**Next run should do step 5, the scoreboard.** It is the point of the whole plan (see *Goal*
+below) and now has everything it depends on: step 4 gives it the runs to score. Three things
+it should know:
 
-- **Uploading only fills `data/inbox/`.** Nothing stages those files into the review queue yet
-  — `scan_inbox` still runs from `make ingest` at a terminal. `finetune-prep` is *not* that
-  step. The console's ingest button belongs to this step; the page currently says so in plain
-  text, and that note should be replaced by the button rather than left to rot.
-- The routes added in #109 are **thin callers** of `ingest/upload.py` and `ingest/review.py`.
-  Do not re-decide anything in either module; the whole point is that the CLI and the console
-  reach the same answer.
+- **Read the run record, do not re-derive it.** `console/jobs.py` already persists every run
+  to `data/console/job.json` with its job name, exit code, and timestamps. The scoreboard's
+  "did this run beat the last one?" needs eval *results*, not job bookkeeping — resist the
+  urge to grow the job record into a results store.
+- **The eval numbers already exist.** `analysis/voice_eval.py` writes them; the scoreboard is
+  a reader and a differ, not a new measurement.
+- **`train` and `voice-eval` are `costly=True`** in the job registry and the page confirms
+  before starting them. Anything the scoreboard adds that spends GPU hours or T3 dollars
+  should carry the same flag rather than inventing a second mechanism.
 
-Step 5 (scoreboard) is the alternative if the job runner is taken first by another run.
+**Two things step 4 decided that later steps inherit:**
+
+- **The log is polled by byte offset, not streamed over SSE** (this plan's step-4 text
+  suggested reusing `_proxy`'s SSE). An SSE tail holds one handler thread per viewer for the
+  length of a training run and still needs tearing down when the job ends; a poll that says
+  "I have the first N bytes" delivers each line exactly once, costs a stat and a seek, and
+  survives a closed laptop. Step 5 should poll too.
+- **Job liveness is re-derived from the pid on every read**, never trusted from the file. The
+  state file outlives the server; the process does not.
 
 **Rejects still live in the queue directory**, marked `status: rejected` with their reason.
 Step 3's `data/ingest/rejected/` move is deliberately **not** done: it changes the on-disk
@@ -112,6 +129,9 @@ logic are all pure and testable offline; no test may start a real training run.
    starts, `GET /console/api/job` returns state, `GET /console/api/job/log` tails the log
    (reuse the existing SSE streaming pattern from `_proxy`). TDD the state machine with a fake
    subprocess; **no test starts a real job**.
+   *Done in PR #111, with one deviation: the log tail polls by byte offset instead of SSE —
+   see the Status block for why. `ingest` was added to the registry as the button that
+   replaces "run `make ingest` at a terminal".*
 5. **Scoreboard (M).** `GET /console/api/scores` reads the `voice_eval` / `rag_eval` report
    JSONs plus a small append-only run history and renders run-over-run deltas: win-rate, avg
    rank, TTR, hinge-word rate, and the preflight's over-budget percentage. **Show D15's numbers
