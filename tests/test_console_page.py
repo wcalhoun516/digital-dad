@@ -104,6 +104,7 @@ def live(tmp_path):
     module.CONSOLE_INBOX_DIR = inbox
     module.CONSOLE_QUEUE_DIR = queue_dir
     module.CONSOLE_MANIFEST_PATH = manifest
+    module.CONSOLE_STATE_PATH = tmp_path / "console" / "job.json"
 
     handler = partial(module.GatedHandler, directory=str(CONSOLE_HTML.parent))
     server = ThreadingHTTPServer(("127.0.0.1", 0), handler)
@@ -115,6 +116,7 @@ def live(tmp_path):
         inbox_dir = inbox
         queue = queue_dir
         manifest_path = manifest
+        state_path = module.CONSOLE_STATE_PATH
 
         def stage(self, item):
             save_item(item, queue_dir)
@@ -244,3 +246,73 @@ class TestLiveConsole:
         assert page.query_selector("#queue img") is None
         assert hostile in page.text_content("#queue")
         assert page.input_value("#queue input[data-field=title]") == hostile
+
+
+# --- the job runner panel (step 4) -------------------------------------------------------
+
+
+class TestJobPanelStructure:
+    def test_the_page_calls_the_job_routes(self):
+        source = CONSOLE_HTML.read_text(encoding="utf-8")
+        assert "/console/api/job" in source
+        assert "/console/api/job/log" in source
+
+    def test_the_page_no_longer_tells_the_operator_to_go_to_a_terminal(self):
+        """Step 4 *is* that button. A note pointing at `make ingest` would now be a lie."""
+        source = CONSOLE_HTML.read_text(encoding="utf-8")
+        assert "until step 4 lands" not in source
+        assert "at a terminal" not in source
+
+
+@pytest.fixture
+def zen(monkeypatch):
+    """A throwaway job that prints and exits, so no registered pipeline step is ever run."""
+    from console import jobs
+
+    monkeypatch.setitem(jobs.JOBS, "zen", jobs.JobSpec(("-m", "this"), "prints the Zen"))
+    return jobs
+
+
+class TestLiveJobPanel:
+    def test_the_panel_lists_the_registered_jobs_with_their_summaries(self, page, live):
+        _open(page, live)
+        assert page.query_selector("#jobs button[data-job=ingest]") is not None
+        assert "review queue" in page.text_content("#jobs")
+        assert page.errors == []
+
+    def test_running_a_job_streams_its_log_and_reports_success(self, page, live, zen):
+        _open(page, live)
+        page.click("#jobs button[data-job=zen]")
+        page.wait_for_function(
+            "document.querySelector('#job-state').textContent.includes('succeeded')",
+            timeout=15000,
+        )
+        assert "Beautiful is better than ugly" in page.text_content("#job-log")
+        assert page.errors == []
+
+    def test_an_expensive_job_is_not_started_until_the_operator_confirms(self, page, live,
+                                                                        monkeypatch):
+        """Dismissing the prompt must mean nothing ran — an hour of GPU is not an undo."""
+        from console import jobs
+
+        monkeypatch.setitem(
+            jobs.JOBS, "pricey", jobs.JobSpec(("-m", "this"), "costs something", costly=True)
+        )
+        _open(page, live)
+        page.on("dialog", lambda dialog: dialog.dismiss())
+        page.click("#jobs button[data-job=pricey]")
+        page.wait_for_timeout(500)
+        assert "idle" in page.text_content("#job-state")
+
+    def test_a_busy_runner_says_what_is_holding_it(self, page, live):
+        import os
+
+        state_path = live.state_path
+        state_path.parent.mkdir(parents=True, exist_ok=True)
+        state_path.write_text(json.dumps({
+            "job": "train", "state": "running", "pid": os.getpid(), "exit_code": None,
+            "started_at": "2026-09-21T00:00:00+00:00", "finished_at": None, "log": "x.log",
+        }), encoding="utf-8")
+        _open(page, live)
+        assert "train" in page.text_content("#job-state")
+        assert "running" in page.text_content("#job-state")
