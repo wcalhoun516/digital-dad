@@ -423,10 +423,11 @@ class TestUploadRoute:
 
 
 class TestRoutesAreGoverned:
-    def test_all_three_routes_are_declared_in_the_route_table(self, console):
+    def test_every_route_this_file_exercises_is_declared_in_the_route_table(self, console):
         """`CONSOLE_ROUTES` is what `test_console_gate.py` enumerates to prove every route
         401s unauthenticated. A route missing from it silently skips the auth tests."""
-        for route in ("/console/api/upload", "/console/api/queue", "/console/api/review"):
+        for route in ("/console/api/upload", "/console/api/queue", "/console/api/review",
+                      "/console/api/job", "/console/api/job/log"):
             assert route in console.mod.CONSOLE_ROUTES, f"{route} is not in CONSOLE_ROUTES"
 
     def test_the_write_routes_401_without_the_password(self, console):
@@ -434,10 +435,18 @@ class TestRoutesAreGoverned:
             ("/console/api/queue", "GET", None),
             ("/console/api/review", "POST", b"{}"),
             ("/console/api/upload?filename=letter.md", "POST", b"x" * 32),
+            ("/console/api/job", "GET", None),
+            ("/console/api/job/log", "GET", None),
+            # The one that matters most: an unauthenticated POST has to be refused before
+            # it can spend an afternoon of GPU.
+            ("/console/api/job", "POST", b'{"job": "train"}'),
         )
         for path, method, body in cases:
             status, _ = console.request(path, method=method, body=body, password=None)
             assert status == 401, f"{path} served without auth"
+        assert console.mod.console_paths().jobs.job_state(
+            console.mod.CONSOLE_STATE_PATH
+        )["state"] == "idle", "an unauthenticated POST started a job"
 
     def test_the_write_routes_404_when_the_console_is_disabled(self, console):
         console.mod.CONSOLE_ENABLED = False
@@ -445,6 +454,9 @@ class TestRoutesAreGoverned:
             ("/console/api/queue", "GET", None),
             ("/console/api/review", "POST", b"{}"),
             ("/console/api/upload?filename=letter.md", "POST", b"x" * 32),
+            ("/console/api/job", "GET", None),
+            ("/console/api/job/log", "GET", None),
+            ("/console/api/job", "POST", b'{"job": "train"}'),
         )
         for path, method, body in cases:
             status, _ = console.request(path, method=method, body=body)
@@ -575,7 +587,3 @@ class TestJobRoutes:
         status, payload = console.json_request("/console/api/job", {"job": "ingest"})
         assert status == 500
         assert "Exec format error" in payload["error"]
-
-    def test_the_job_routes_are_listed_so_the_gate_test_covers_them(self, console):
-        assert "/console/api/job" in console.mod.CONSOLE_ROUTES
-        assert "/console/api/job/log" in console.mod.CONSOLE_ROUTES
