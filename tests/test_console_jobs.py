@@ -49,7 +49,12 @@ class FakeProc:
 
 @pytest.fixture
 def spawned():
-    """A spawn hook that records every launch and hands back a FakeProc."""
+    """A spawn hook that records every launch and hands back a FakeProc.
+
+    Anything still held at teardown is released. A watcher thread left waiting on a job that
+    never ends outlives its test and surfaces minutes later as an unexplained warning
+    against whichever test happened to be running when it finally gave up.
+    """
     procs = []
 
     def spawn(argv, **kwargs):
@@ -58,7 +63,12 @@ def spawned():
         return proc
 
     spawn.procs = procs
-    return spawn
+    spawn.watchers = []
+    yield spawn
+    for proc in procs:
+        proc.release()
+    for watcher in spawn.watchers:
+        watcher.join(5)
 
 
 @pytest.fixture
@@ -68,9 +78,11 @@ def state_path(tmp_path):
 
 
 def _start(spawn, state_path, name="ingest", **kwargs):
-    return jobs.start_job(
+    state, watcher = jobs.start_job(
         name, state_path=state_path, spawn=spawn, python="/fake/python", **kwargs
     )
+    spawn.watchers.append(watcher)
+    return state, watcher
 
 
 # --- the registry ---------------------------------------------------------------------
