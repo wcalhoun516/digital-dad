@@ -13,6 +13,8 @@ every read, and that is what most of these tests are about.
 
 import json
 import os
+import subprocess
+import sys
 import threading
 
 import pytest
@@ -27,6 +29,8 @@ class FakeProc:
         self.args = list(argv)
         self.cwd = cwd
         self.stdout_handle = stdout
+        self.stderr = stderr
+        self.stdin = stdin
         # A real child is alive between spawn and exit, and the runner re-derives that from
         # the pid. Borrowing the test process's own pid makes the fake honest about it
         # without inventing a number the OS would report as dead.
@@ -132,6 +136,20 @@ def test_start_records_a_running_job(spawned, state_path):
     assert jobs.job_state(state_path)["state"] == "running"
 
 
+def test_the_child_is_wired_so_nothing_it_says_is_lost_and_nothing_can_block_it(
+    spawned, state_path
+):
+    """stderr into the log, stdin closed.
+
+    A traceback on the *server's* stderr is invisible to an operator who only has a
+    browser, and a child that stops on an input prompt would hold the single job slot
+    until someone found it with a terminal — the exact situation the console removes.
+    """
+    _start(spawned, state_path)
+    assert spawned.procs[0].stderr is subprocess.STDOUT
+    assert spawned.procs[0].stdin is subprocess.DEVNULL
+
+
 def test_the_state_file_names_the_log_but_never_its_path(spawned, state_path):
     """Same rule as the upload route: the operator gets a filename, not a server path."""
     state, _ = _start(spawned, state_path)
@@ -220,6 +238,26 @@ def test_a_live_process_is_still_running(spawned, state_path):
     assert jobs.job_state(state_path, alive=lambda pid: True)["state"] == "running"
 
 
+def test_a_process_that_has_exited_is_not_alive():
+    """The one test that exercises the real liveness check rather than an injected one.
+
+    Everything above passes `alive=`, so a `_pid_alive` that always answered True would
+    go unnoticed here and wedge the runner on the first crashed server.
+    """
+    proc = subprocess.Popen([sys.executable, "-c", ""])
+    proc.wait()
+    assert jobs._pid_alive(proc.pid) is False
+
+
+def test_a_process_we_are_not_allowed_to_signal_is_still_alive():
+    """pid 1 is not ours. `os.kill` says EPERM, which means "there, but not yours".
+
+    Reading that as dead would let the console start a second job on top of a live one
+    whenever the runner and the child belong to different users.
+    """
+    assert jobs._pid_alive(1) is True
+
+
 def test_an_unreadable_state_file_reads_as_idle_rather_than_raising(state_path):
     """A truncated write must not take the whole console down with it."""
     state_path.parent.mkdir(parents=True, exist_ok=True)
@@ -228,6 +266,22 @@ def test_an_unreadable_state_file_reads_as_idle_rather_than_raising(state_path):
 
 
 # --- the log ---------------------------------------------------------------------------
+
+
+def test_two_runs_in_the_same_second_do_not_share_a_log(state_path):
+    """The stamp has one-second resolution and a finished job can be restarted at once.
+
+    Appending onto the previous run's file would hand the operator a single log claiming
+    to be two runs, with no boundary between them and the earlier run's failure buried in
+    the middle of the later one.
+    """
+    first, first_name = jobs._open_log(state_path, "ingest", "20260921T000000")
+    first.write("run one\n")
+    first.close()
+    second, second_name = jobs._open_log(state_path, "ingest", "20260921T000000")
+    second.close()
+    assert second_name != first_name
+    assert (state_path.parent / "logs" / second_name).read_text() == ""
 
 
 def test_the_tail_carries_what_the_job_wrote(spawned, state_path):
