@@ -339,6 +339,186 @@ class TestBaseline:
         assert scoreboard.BASELINE["adr"] == "D15"
 
 
+class TestStyleTarget:
+    """What 'his real prose' scores at is measured fresh, not remembered."""
+
+    def test_the_target_is_the_real_source_in_the_current_report(self):
+        scores = scoreboard.voice_scores(voice_report(real_ttr=0.66))
+        assert scoreboard.style_target(scores, "type_token_ratio") == 0.66
+
+    def test_it_falls_back_to_the_baselines_real_corpus_when_unmeasured(self):
+        """A style-less run still has D15's recorded real numbers to aim at."""
+        assert scoreboard.style_target({}, "type_token_ratio") == 0.70
+        assert scoreboard.style_target({}, "fingerprint_hits_per_1k") == 46.0
+
+    def test_an_unknown_style_metric_has_no_target(self):
+        assert scoreboard.style_target({}, "word_count") is None
+
+
+class TestVsBaseline:
+    """Every run is read against the record it has to beat."""
+
+    def test_a_finetune_that_now_wins_a_quarter_of_trials_beats_d15(self):
+        scores = scoreboard.voice_scores(voice_report(ft_win_rate=0.25))
+        against = scoreboard.vs_baseline(scores)
+        assert against["finetune"]["win_rate"]["verdict"] == "better"
+        assert against["finetune"]["win_rate"]["previous"] == 0.0
+
+    def test_a_finetune_still_ranking_last_has_not_moved(self):
+        against = scoreboard.vs_baseline(scoreboard.voice_scores(voice_report()))
+        assert against["finetune"]["avg_rank"]["verdict"] == "flat"
+
+    def test_closing_the_lexical_diversity_gap_reads_as_better(self):
+        """D15: the fine-tune's TTR was half the real corpus. Catching up is the win."""
+        scores = scoreboard.voice_scores(voice_report(ft_ttr=0.60))
+        against = scoreboard.vs_baseline(scores)
+        assert against["finetune"]["type_token_ratio"]["verdict"] == "better"
+
+    def test_calming_the_hinge_word_overuse_reads_as_better(self):
+        scores = scoreboard.voice_scores(voice_report(ft_hinge=55.0))
+        against = scoreboard.vs_baseline(scores)
+        assert against["finetune"]["fingerprint_hits_per_1k"]["verdict"] == "better"
+
+    def test_a_source_d15_never_scored_is_reported_as_unknown(self):
+        report = voice_report()
+        report["summary"]["sources"]["gemma-shot"] = {"win_rate": 0.5, "avg_rank": 1.2}
+        against = scoreboard.vs_baseline(scoreboard.voice_scores(report))
+        assert against["gemma-shot"]["win_rate"]["verdict"] == "unknown"
+
+
+class TestScoreboard:
+    """The assembled payload a console route will hand straight to the page."""
+
+    def test_reports_every_section_even_when_nothing_has_been_run(self, tmp_path):
+        board = scoreboard.scoreboard(
+            voice_path=tmp_path / "none.json",
+            rag_path=tmp_path / "none.json",
+            history=[],
+        )
+        assert board["voice"]["sources"] == {}
+        assert board["rag"] == {}
+        assert board["runs"] == []
+        assert board["baseline"]["adr"] == "D15"
+
+    def test_carries_the_current_and_previous_run_and_their_deltas(self, tmp_path):
+        history = [
+            history_row("gemma-ft", date="2026-09-01", win_rate=0.0),
+            history_row("gemma-ft", date="2026-09-19", win_rate=0.25),
+        ]
+        board = scoreboard.scoreboard(
+            voice_path=tmp_path / "none.json",
+            rag_path=tmp_path / "none.json",
+            history=history,
+        )
+        assert board["current_run"]["date"] == "2026-09-19"
+        assert board["previous_run"]["date"] == "2026-09-01"
+        assert board["run_deltas"]["gemma-ft"]["win_rate"]["verdict"] == "better"
+
+    def test_the_previous_run_is_the_last_one_of_the_same_experiment(self, tmp_path):
+        """The history interleaves conditions, so "the row before" is the wrong run.
+
+        D20 recorded a 2x2 on a single day: A_plain, B_rag, C_shot, D_shot_rag. The
+        run before D_shot_rag is C_shot — a different condition with differently named
+        arms. Comparing them would read as "every arm is new", or worse, as a delta
+        between two things that were never alternatives.
+        """
+        history = [
+            history_row("gemma-ft", date="2026-09-01", experiment="A_plain", win_rate=0.0),
+            history_row("gemma-ft", date="2026-09-19", experiment="B_rag", win_rate=0.9),
+            history_row("gemma-ft", date="2026-09-22", experiment="A_plain", win_rate=0.25),
+        ]
+        board = scoreboard.scoreboard(
+            voice_path=tmp_path / "none.json",
+            rag_path=tmp_path / "none.json",
+            history=history,
+        )
+        assert board["current_run"]["experiment"] == "A_plain"
+        assert board["previous_run"]["date"] == "2026-09-01"
+        assert board["run_deltas"]["gemma-ft"]["win_rate"]["verdict"] == "better"
+
+    def test_the_newest_run_of_an_experiment_never_seen_before_has_no_previous(
+        self, tmp_path
+    ):
+        history = [
+            history_row("gemma-ft", date="2026-09-01", experiment="A_plain"),
+            history_row("gemma-ft", date="2026-09-22", experiment="D_shot_rag"),
+        ]
+        board = scoreboard.scoreboard(
+            voice_path=tmp_path / "none.json",
+            rag_path=tmp_path / "none.json",
+            history=history,
+        )
+        assert board["current_run"]["experiment"] == "D_shot_rag"
+        assert board["previous_run"] is None
+
+    def test_an_experiment_can_be_named_to_score_a_series_directly(self, tmp_path):
+        history = [
+            history_row("gemma-ft", date="2026-09-01", experiment="A_plain", win_rate=0.0),
+            history_row("gemma-ft", date="2026-09-02", experiment="A_plain", win_rate=0.4),
+            history_row("gemma-ft", date="2026-09-22", experiment="D_shot_rag"),
+        ]
+        board = scoreboard.scoreboard(
+            voice_path=tmp_path / "none.json",
+            rag_path=tmp_path / "none.json",
+            history=history,
+            experiment="A_plain",
+        )
+        assert board["current_run"]["date"] == "2026-09-02"
+        assert board["previous_run"]["date"] == "2026-09-01"
+
+    def test_a_single_run_has_no_previous_to_compare_against(self, tmp_path):
+        board = scoreboard.scoreboard(
+            voice_path=tmp_path / "none.json",
+            rag_path=tmp_path / "none.json",
+            history=[history_row("real")],
+        )
+        assert board["previous_run"] is None
+        assert board["run_deltas"]["real"]["win_rate"]["verdict"] == "unknown"
+
+    def test_reads_the_reports_from_disk(self, tmp_path):
+        write_json(tmp_path / "voice_eval.json", voice_report(ft_win_rate=0.5))
+        write_json(
+            tmp_path / "rag_eval.json",
+            {"summary": {"grounding_rate": 0.9, "n_questions": 20}},
+        )
+        board = scoreboard.scoreboard(
+            voice_path=tmp_path / "voice_eval.json",
+            rag_path=tmp_path / "rag_eval.json",
+            history=[],
+        )
+        assert board["voice"]["sources"]["finetune"]["win_rate"] == 0.5
+        assert board["voice"]["vs_baseline"]["finetune"]["win_rate"]["verdict"] == "better"
+        assert board["rag"]["grounding_rate"] == 0.9
+
+    def test_a_preflight_report_contributes_its_over_budget_percentage(self, tmp_path):
+        board = scoreboard.scoreboard(
+            voice_path=tmp_path / "none.json",
+            rag_path=tmp_path / "none.json",
+            history=[],
+            preflight={"checks": {"length_budget": {"pct_over": 12.5, "n_over": 7}}},
+        )
+        assert board["preflight"]["pct_over"] == 12.5
+
+
+class TestCli:
+    def test_prints_a_json_payload(self, tmp_path, capsys):
+        write_json(tmp_path / "voice_eval.json", voice_report(ft_win_rate=0.5))
+        code = scoreboard.main(
+            [
+                "--voice-report",
+                str(tmp_path / "voice_eval.json"),
+                "--rag-report",
+                str(tmp_path / "absent.json"),
+                "--history",
+                str(tmp_path / "absent.jsonl"),
+            ]
+        )
+        assert code == 0
+        payload = json.loads(capsys.readouterr().out)
+        assert payload["voice"]["sources"]["finetune"]["win_rate"] == 0.5
+        assert payload["baseline"]["adr"] == "D15"
+
+
 class TestPreflightScores:
     def test_pulls_the_over_budget_percentage(self):
         report = {

@@ -256,17 +256,123 @@ def run_deltas(current: dict, previous: dict | None) -> dict:
     return deltas
 
 
+def style_target(scores: dict, metric: str):
+    """What his real prose scores at for *metric* — the value a arm should aim at.
+
+    Measured from the current report's ``real`` source when it is there, because the
+    corpus grows and its diversity is re-measured every run. D15's recorded numbers
+    are the fallback, not the first choice.
+    """
+    measured = (scores.get("real") or {}).get(metric)
+    if measured is not None:
+        return measured
+    return BASELINE["voice"]["real"].get(metric)
+
+
+def vs_baseline(scores: dict) -> dict:
+    """Score each source against D15 — the record every later run has to beat."""
+    against: dict[str, dict] = {}
+    for source, row in scores.items():
+        recorded = BASELINE["voice"].get(source) or {}
+        against[source] = {
+            metric: compare(
+                metric,
+                row.get(metric),
+                recorded.get(metric),
+                target=style_target(scores, metric),
+            )
+            for metric in ("win_rate", "avg_rank", *_STYLE_KEYS)
+            if metric in row or metric in recorded
+        }
+    return against
+
+
+def pick_runs(runs: list[dict], experiment: str | None = None) -> tuple:
+    """The run to score and the run it should be scored against.
+
+    The previous run is the last earlier run of the **same experiment**, not simply
+    the row group before it. The history interleaves conditions — D20 recorded a 2x2
+    (A_plain, B_rag, C_shot, D_shot_rag) on a single day — so "the run before
+    D_shot_rag" is C_shot, a different condition whose arms are differently named and
+    were never alternatives to it. Comparing those two would manufacture a delta
+    between things that do not compete.
+    """
+    if experiment is not None:
+        runs = [r for r in runs if r.get("experiment") == experiment]
+    if not runs:
+        return None, None
+    current = runs[-1]
+    previous = next(
+        (r for r in reversed(runs[:-1]) if r.get("experiment") == current.get("experiment")),
+        None,
+    )
+    return current, previous
+
+
+def scoreboard(
+    *,
+    voice_path=VOICE_REPORT_PATH,
+    rag_path=RAG_REPORT_PATH,
+    history: list[dict] | None = None,
+    preflight: dict | None = None,
+    experiment: str | None = None,
+) -> dict:
+    """The whole dial, in one payload a console route can hand straight to a page.
+
+    *history* defaults to the live ``voice_eval_history.jsonl``; pass a list to score
+    a series that isn't on disk. *experiment* narrows the series to one condition.
+    """
+    if history is None:
+        from .voice_candidates import history_rows
+
+        history = history_rows()
+
+    scores = voice_scores(read_report(voice_path))
+    runs = group_runs(history)
+    current, previous = pick_runs(runs, experiment)
+
+    return {
+        "baseline": BASELINE,
+        "voice": {"sources": scores, "vs_baseline": vs_baseline(scores)},
+        "rag": rag_scores(read_report(rag_path)),
+        "preflight": preflight_scores(preflight),
+        "runs": runs,
+        "current_run": current,
+        "previous_run": previous,
+        "run_deltas": run_deltas(current, previous) if current else {},
+    }
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--voice-report", type=Path, default=VOICE_REPORT_PATH)
     parser.add_argument("--rag-report", type=Path, default=RAG_REPORT_PATH)
+    parser.add_argument(
+        "--history", type=Path, default=None, help="voice_eval_history.jsonl"
+    )
+    parser.add_argument(
+        "--experiment", default=None, help="score one experiment's series only"
+    )
     args = parser.parse_args(argv)
 
-    payload = {
-        "voice": voice_scores(read_report(args.voice_report)),
-        "rag": rag_scores(read_report(args.rag_report)),
-    }
-    print(json.dumps(payload, indent=2, sort_keys=True))
+    history = None
+    if args.history is not None:
+        from .voice_candidates import history_rows
+
+        history = history_rows(args.history)
+
+    print(
+        json.dumps(
+            scoreboard(
+                voice_path=args.voice_report,
+                rag_path=args.rag_report,
+                history=history,
+                experiment=args.experiment,
+            ),
+            indent=2,
+            sort_keys=True,
+        )
+    )
     return 0
 
 
