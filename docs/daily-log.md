@@ -1113,3 +1113,40 @@ Format:
   as text. **Plan 0011 stays in `ready/`:** steps 4–6 remain, and its status block now points
   the next run at the job runner, including the trap that uploading only fills `data/inbox/` —
   staging into the queue is still `make ingest` until step 4 lands.
+
+### 2026-09-22 — analysis — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/112
+- Source: plan:ready/0011 (step 5 — the scoreboard)
+- Summary: **The dial the flywheel was missing, minus its face.** Geo-LLM stalled because a
+  failed one-shot got shelved by an ADR and nobody could see whether a later change helped;
+  `analysis/scoreboard.py` is the arithmetic that answers "did this run beat the last one?"
+  It computes nothing of its own — it reads what the harnesses already write (`voice_eval.json`
+  win-rate / avg-rank and the style block's TTR and hinge-word rate, `rag_eval.json`'s grounding
+  and citation numbers, a preflight report's `checks.length_budget.pct_over`) and the run series
+  `voice_candidates.append_history` already appends. **Shipped as the core without the route,
+  deliberately**, following the same split the plan's own steps 2 and 3 took: the validation core
+  (#96) and decision core (#97) merged before PR #109 added their routes as thin callers, and the
+  plan says outright that the console is "a second *front end*, not a second implementation".
+  So the module sits in `analysis/` beside the harnesses it reads, and `GET /console/api/scores`
+  is left for the next run. That also keeps it clear of step 4 (PR #111, still open), which
+  creates `console/` and edits the `Makefile`, `.pre-commit-config.yaml`, `serve_dashboard.py`
+  and `console.html` — four shared files an add/add conflict could have been resolved wrongly in,
+  which is the exact failure that left `main` red for four weeks (#73). **The design judgement
+  worth reviewing is that direction is a property of the metric, not of the renderer.** Every
+  delta carries `better`/`worse`/`flat`, because a bare signed number is misread on two of these:
+  `avg_rank` improves by *falling*, and TTR and hinge-word rate are **toward-a-target** metrics
+  rather than more-is-better ones — D15's fine-tune over-used his distinctive vocabulary at ~2×
+  the natural rate (101 vs 46 per 1k), so scoring that "lower is better" would have rewarded a
+  model that had lost his voice entirely. The target is the current report's own `real` source,
+  re-measured as the corpus grows, falling back to D15's recorded numbers. **One bug the real
+  data caught that no unit test would have:** running the CLI over the committed history showed
+  `D_shot_rag` being scored against `C_shot` — D20 recorded a 2×2 in a single day, so "the run
+  before" is a different *condition* whose arms are differently named and were never
+  alternatives. The previous run is now the last earlier run of the **same experiment**, which
+  makes the dial honestly read `unknown` until a second run of one condition lands. D15 is
+  carried as the standing `BASELINE` so every run is read against the record it has to beat.
+  **Verification:** `make verify` — ruff clean, **1661 passed**, dashboard builds; 59 new tests,
+  each watched fail first; `__pycache__` cleared before the red→green proofs. The repo's own
+  doc-coverage gate went red until `docs/architecture.md` described the new module — working as
+  intended. **Plan 0011 stays in `ready/`:** steps 5's route and step 6 remain, and the status
+  block now records the plan correction that its "small append-only run history" already exists.

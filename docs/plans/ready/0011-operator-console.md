@@ -15,20 +15,52 @@
   #109**, with `UnknownItem` → 404 and every other `ReviewError` → 400.
 - **The page is wired for steps 2–3** (PR #109): upload picker and review queue with
   accept/edit/reject, verified in a live headless-Chromium pass against the real server.
-- **Steps 4–6 — not started.**
+- **Step 4 — written in PR #111**, open and unmerged as of 2026-09-22: the new `console/`
+  package with the job state machine, `POST`/`GET /console/api/job`, `GET /console/api/job/log`,
+  and the job panel. One deviation recorded there — the log tail polls by byte offset rather
+  than reusing `_proxy`'s SSE.
+- **Step 5 — the scoring core is done** (`analysis/scoreboard.py`, PR #112). **The route is
+  not.** `GET /console/api/scores` and the page panel remain.
+- **Step 6 — not started.**
 
-**Next run should do step 4, the job runner.** It is the only remaining piece with no
-dependency on anything unmerged. Two things it must respect that are easy to get wrong:
+**Next run should finish step 5: the `/console/api/scores` route and the scoreboard panel.**
+The arithmetic is written and tested; what remains is the thin caller and the markup.
+
+Three things the core settled that the route should not re-decide:
+
+- **It lives in `analysis/`, not `console/`** — the same split as `ingest/upload.py` and
+  `ingest/review.py`, for the same reason: the console is a second *front end*, not a second
+  implementation. The route calls `scoreboard.scoreboard()` and serializes it. There is
+  nothing left to compute.
+- **Direction is data, not presentation.** Every metric carries a `better`/`worse`/`flat`
+  verdict, and `type_token_ratio` / `fingerprint_hits_per_1k` are *toward*-a-target metrics
+  rather than more-is-better ones — D15's fine-tune over-used his vocabulary at ~2× the natural
+  rate, so "lower is better" there would reward a model that had lost his voice altogether. The
+  page renders the verdict; it must not re-derive one from the sign of the delta.
+- **The previous run is the last earlier run of the *same experiment*.** The history interleaves
+  conditions — D20 recorded a 2×2 in a single day — so the adjacent row group is usually a
+  different condition whose arms were never alternatives to each other.
+
+**Expect the dial to read `unknown` at first, and leave it saying so.** The recorded history
+holds one run per experiment, so there is genuinely nothing to compare against until a second
+run of the same condition lands. That is the honest reading, not a bug to paper over.
+
+Two things step 4's follow-up must still respect:
 
 - **Uploading only fills `data/inbox/`.** Nothing stages those files into the review queue yet
   — `scan_inbox` still runs from `make ingest` at a terminal. `finetune-prep` is *not* that
-  step. The console's ingest button belongs to this step; the page currently says so in plain
+  step. The console's ingest button belongs to step 4; the page currently says so in plain
   text, and that note should be replaced by the button rather than left to rot.
 - The routes added in #109 are **thin callers** of `ingest/upload.py` and `ingest/review.py`.
   Do not re-decide anything in either module; the whole point is that the CLI and the console
   reach the same answer.
 
-Step 5 (scoreboard) is the alternative if the job runner is taken first by another run.
+**A correction to step 5 as written.** It asks for "a small append-only run history" as though
+one needed building. It already exists: `data/analysis/voice_eval_history.jsonl`, appended by
+`append_history()` and read by `history_rows()` in `analysis/voice_candidates.py`, one row per
+*arm* per run, each carrying corpus size beside the score. A second history would be exactly
+the duplicate implementation this plan warns against everywhere else, so the core reads that
+one and groups its rows into runs.
 
 **Rejects still live in the queue directory**, marked `status: rejected` with their reason.
 Step 3's `data/ingest/rejected/` move is deliberately **not** done: it changes the on-disk
