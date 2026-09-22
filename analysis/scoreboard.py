@@ -53,6 +53,96 @@ _RAG_KEYS = (
 )
 _PREFLIGHT_KEYS = ("pct_over", "n_over", "n", "max_seq_len", "ok")
 
+# Which way is better is a property of the metric. Without this the scoreboard can
+# only show a signed number, and two of these numbers mean the opposite of what a
+# reader would assume:
+#
+# ``toward`` metrics have a right answer rather than a direction. D15's finding was
+# that the fine-tune used his distinctive vocabulary at ~2x the natural rate (101 vs
+# 46 hits/1k) — scoring that "lower is better" would reward a model that had lost his
+# vocabulary altogether, and scoring it "higher is better" would reward the parody.
+# The target is the real corpus, and the move that counts is closing the gap.
+DIRECTIONS = {
+    "win_rate": "higher",
+    "avg_rank": "lower",
+    "type_token_ratio": "toward",
+    "fingerprint_hits_per_1k": "toward",
+    "avg_sentence_len": "toward",
+    "grounding_rate": "higher",
+    "hallucination_rate": "lower",
+    "abstention_accuracy": "higher",
+    "false_abstention_rate": "lower",
+    "citation_coverage": "higher",
+    "pct_over": "lower",
+}
+
+# The standing baseline: D15's blind voice-fidelity eval, the record every later run
+# is read against. See docs/decisions.md § D15.
+BASELINE = {
+    "adr": "D15",
+    "note": (
+        "8 held-out prompts, T3 judge: the fine-tune placed last in every trial while "
+        "RAG and the real excerpts tied at the top."
+    ),
+    "voice": {
+        "finetune": {
+            "win_rate": 0.0,
+            "avg_rank": 2.88,
+            "type_token_ratio": 0.35,
+            "fingerprint_hits_per_1k": 101.0,
+        },
+        "rag": {"avg_rank": 1.50},
+        "real": {
+            "avg_rank": 1.63,
+            "type_token_ratio": 0.70,
+            "fingerprint_hits_per_1k": 46.0,
+        },
+    },
+}
+
+
+def compare(metric: str, current, previous, target=None) -> dict:
+    """Score one metric's move, labelled ``better``/``worse``/``flat``.
+
+    ``unknown`` means there is nothing to compare against yet; ``unscored`` means the
+    move is real but this module will not claim a direction for it — an unrecognised
+    metric, or a ``toward`` metric with no target to aim at. Both are reported rather
+    than hidden, because a silently dropped metric reads as a metric that did not move.
+    """
+    result = {
+        "metric": metric,
+        "current": current,
+        "previous": previous,
+        "delta": None,
+        "verdict": "unknown",
+    }
+    direction = DIRECTIONS.get(metric)
+    if direction == "toward":
+        result["target"] = target
+        if target is not None and current is not None:
+            result["gap"] = abs(current - target)
+    if current is None or previous is None:
+        return result
+    result["delta"] = round(current - previous, 6)
+
+    if direction == "toward":
+        if target is None:
+            result["verdict"] = "unscored"
+            return result
+        moved = round(abs(current - target) - abs(previous - target), 6)
+        result["verdict"] = "flat" if moved == 0 else ("better" if moved < 0 else "worse")
+        return result
+
+    if direction is None:
+        result["verdict"] = "unscored"
+        return result
+    if result["delta"] == 0:
+        result["verdict"] = "flat"
+        return result
+    rose = result["delta"] > 0
+    result["verdict"] = "better" if rose == (direction == "higher") else "worse"
+    return result
+
 
 def read_report(path) -> dict | None:
     """A ``{generated_at, summary, records}`` report, or ``None`` if there isn't one.

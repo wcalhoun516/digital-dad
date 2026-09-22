@@ -145,6 +145,102 @@ class TestRagScores:
         assert scoreboard.rag_scores(None) == {}
 
 
+class TestDirections:
+    """Which way is better is a property of the metric, not of the reader."""
+
+    def test_every_metric_the_readers_surface_declares_a_direction(self):
+        """A metric with no direction would render as an unlabelled signed number."""
+        surfaced = set(scoreboard._RANK_KEYS + scoreboard._STYLE_KEYS + scoreboard._RAG_KEYS)
+        surfaced |= set(scoreboard._PREFLIGHT_KEYS)
+        scored = {m for m in surfaced if m in scoreboard.DIRECTIONS}
+        assert scored, "no metric has a direction"
+        for metric in scored:
+            assert scoreboard.DIRECTIONS[metric] in {"higher", "lower", "toward"}
+
+
+class TestCompare:
+    def test_a_rise_in_win_rate_is_better(self):
+        result = scoreboard.compare("win_rate", 0.25, 0.0)
+        assert result["verdict"] == "better"
+        assert result["delta"] == pytest.approx(0.25)
+
+    def test_a_rise_in_avg_rank_is_worse_because_rank_one_wins(self):
+        assert scoreboard.compare("avg_rank", 2.5, 2.0)["verdict"] == "worse"
+
+    def test_a_fall_in_avg_rank_is_better(self):
+        assert scoreboard.compare("avg_rank", 1.4, 2.88)["verdict"] == "better"
+
+    def test_a_fall_in_hallucination_rate_is_better(self):
+        assert scoreboard.compare("hallucination_rate", 0.05, 0.2)["verdict"] == "better"
+
+    def test_no_change_is_flat(self):
+        assert scoreboard.compare("win_rate", 0.5, 0.5)["verdict"] == "flat"
+
+    def test_nothing_to_compare_against_is_unknown(self):
+        result = scoreboard.compare("win_rate", 0.5, None)
+        assert result["verdict"] == "unknown"
+        assert result["delta"] is None
+
+    def test_an_unknown_metric_is_unscored_rather_than_guessed(self):
+        assert scoreboard.compare("word_count", 900, 300)["verdict"] == "unscored"
+
+
+class TestCompareTowardATarget:
+    """TTR and hinge-word rate are not 'more is better' — they have a right answer.
+
+    D15's finding was that the fine-tune used his distinctive vocabulary at ~2x the
+    natural rate. A scoreboard that scored that metric 'lower is better' would reward
+    a model that had lost his vocabulary altogether, which is the opposite of the goal.
+    """
+
+    def test_closing_the_gap_to_the_target_is_better(self):
+        result = scoreboard.compare(
+            "type_token_ratio", 0.55, 0.35, target=0.70
+        )
+        assert result["verdict"] == "better"
+
+    def test_overshooting_the_target_is_worse_even_though_the_number_rose(self):
+        result = scoreboard.compare("type_token_ratio", 0.80, 0.65, target=0.70)
+        assert result["verdict"] == "worse"
+
+    def test_falling_toward_the_target_from_above_is_better(self):
+        """Hinge-word over-use at 101 vs a natural 46: coming down is the fix."""
+        result = scoreboard.compare(
+            "fingerprint_hits_per_1k", 60.0, 101.0, target=46.0
+        )
+        assert result["verdict"] == "better"
+        assert result["gap"] == pytest.approx(14.0)
+
+    def test_a_toward_metric_without_a_target_is_unscored(self):
+        result = scoreboard.compare("type_token_ratio", 0.55, 0.35)
+        assert result["verdict"] == "unscored"
+
+    def test_an_equal_gap_on_the_other_side_is_flat(self):
+        result = scoreboard.compare("type_token_ratio", 0.75, 0.65, target=0.70)
+        assert result["verdict"] == "flat"
+
+
+class TestBaseline:
+    """D15's numbers are the record every future run has to beat."""
+
+    def test_records_the_finetunes_standing_defeat(self):
+        finetune = scoreboard.BASELINE["voice"]["finetune"]
+        assert finetune["win_rate"] == 0.0
+        assert finetune["avg_rank"] == 2.88
+
+    def test_records_the_rag_and_real_ranks_that_tied_at_the_top(self):
+        assert scoreboard.BASELINE["voice"]["rag"]["avg_rank"] == 1.50
+        assert scoreboard.BASELINE["voice"]["real"]["avg_rank"] == 1.63
+
+    def test_records_the_style_gap_that_explained_the_loss(self):
+        voice = scoreboard.BASELINE["voice"]
+        assert voice["finetune"]["type_token_ratio"] == 0.35
+        assert voice["real"]["type_token_ratio"] == 0.70
+
+    def test_names_the_adr_it_came_from(self):
+        assert scoreboard.BASELINE["adr"] == "D15"
+
+
 class TestPreflightScores:
     def test_pulls_the_over_budget_percentage(self):
         report = {
