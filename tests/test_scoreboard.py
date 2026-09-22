@@ -145,6 +145,104 @@ class TestRagScores:
         assert scoreboard.rag_scores(None) == {}
 
 
+def history_row(arm, *, date="2026-09-19", experiment="A_plain", win_rate=0.0, avg_rank=2.5):
+    """One row of `voice_eval_history.jsonl` — one arm within one run."""
+    return {
+        "adr": "D20",
+        "arm": arm,
+        "avg_rank": avg_rank,
+        "condition": "no-retrieval",
+        "corpus": {"articles": 181, "approx_tokens": 453000, "train_records": 540},
+        "date": date,
+        "experiment": experiment,
+        "judge_tier": 3,
+        "n_trials": 8,
+        "training": None,
+        "win_rate": win_rate,
+    }
+
+
+class TestGroupRuns:
+    """The history is one row per *arm*; a run is the group of arms judged together."""
+
+    def test_rows_sharing_a_date_experiment_and_condition_are_one_run(self):
+        rows = [history_row("real"), history_row("gemma-ft"), history_row("gemma-plain")]
+        runs = scoreboard.group_runs(rows)
+        assert len(runs) == 1
+        assert sorted(runs[0]["arms"]) == ["gemma-ft", "gemma-plain", "real"]
+
+    def test_a_different_experiment_is_a_different_run(self):
+        rows = [history_row("real"), history_row("real", experiment="B_rag")]
+        assert len(scoreboard.group_runs(rows)) == 2
+
+    def test_each_arm_keeps_its_scores(self):
+        rows = [history_row("real", win_rate=1.0, avg_rank=1.0)]
+        arm = scoreboard.group_runs(rows)[0]["arms"]["real"]
+        assert arm["win_rate"] == 1.0
+        assert arm["avg_rank"] == 1.0
+
+    def test_a_run_carries_the_corpus_size_it_was_scored_at(self):
+        """'How much text is enough' is the question the series exists to answer."""
+        run = scoreboard.group_runs([history_row("real")])[0]
+        assert run["corpus"]["articles"] == 181
+
+    def test_runs_come_back_oldest_first(self):
+        rows = [
+            history_row("real", date="2026-09-01"),
+            history_row("real", date="2026-09-19"),
+        ]
+        assert [r["date"] for r in scoreboard.group_runs(rows)] == [
+            "2026-09-01",
+            "2026-09-19",
+        ]
+
+    def test_an_empty_history_is_no_runs(self):
+        assert scoreboard.group_runs([]) == []
+
+    def test_a_row_without_an_arm_is_skipped_rather_than_grouped_under_none(self):
+        runs = scoreboard.group_runs([{"date": "2026-09-19"}, history_row("real")])
+        assert len(runs) == 1
+        assert list(runs[0]["arms"]) == ["real"]
+
+    def test_the_real_history_file_groups_into_its_four_experiments(self):
+        """Pinned against the committed series so a shape change here is loud."""
+        rows = [
+            history_row("real", experiment=name)
+            for name in ("A_plain", "B_rag", "C_shot", "D_shot_rag")
+        ]
+        assert [r["experiment"] for r in scoreboard.group_runs(rows)] == [
+            "A_plain",
+            "B_rag",
+            "C_shot",
+            "D_shot_rag",
+        ]
+
+
+class TestRunDeltas:
+    """Arm-by-arm, did this run beat the previous one?"""
+
+    def test_scores_each_arm_against_its_own_previous_result(self):
+        previous = scoreboard.group_runs([history_row("gemma-ft", win_rate=0.0)])[0]
+        current = scoreboard.group_runs(
+            [history_row("gemma-ft", win_rate=0.25, date="2026-09-22")]
+        )[0]
+        deltas = scoreboard.run_deltas(current, previous)
+        assert deltas["gemma-ft"]["win_rate"]["verdict"] == "better"
+
+    def test_an_arm_that_is_new_this_run_has_nothing_to_beat(self):
+        previous = scoreboard.group_runs([history_row("real")])[0]
+        current = scoreboard.group_runs(
+            [history_row("real"), history_row("gemma-ft", date="2026-09-19")]
+        )[0]
+        deltas = scoreboard.run_deltas(current, previous)
+        assert deltas["gemma-ft"]["win_rate"]["verdict"] == "unknown"
+
+    def test_with_no_previous_run_every_arm_is_unknown(self):
+        current = scoreboard.group_runs([history_row("real")])[0]
+        deltas = scoreboard.run_deltas(current, None)
+        assert deltas["real"]["avg_rank"]["verdict"] == "unknown"
+
+
 class TestDirections:
     """Which way is better is a property of the metric, not of the reader."""
 

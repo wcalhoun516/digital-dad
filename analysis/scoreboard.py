@@ -207,6 +207,55 @@ def preflight_scores(report: dict | None) -> dict:
     return {k: budget[k] for k in _PREFLIGHT_KEYS if k in budget}
 
 
+def group_runs(rows: list[dict]) -> list[dict]:
+    """Collapse ``voice_eval_history.jsonl`` rows into runs, oldest first.
+
+    The history stores one row per *arm*; the unit an operator compares is the run —
+    the set of arms judged together under one condition. Rows are grouped by date,
+    experiment and condition, and first-seen order is preserved because the file is
+    append-only and therefore already chronological.
+    """
+    runs: dict[tuple, dict] = {}
+    for row in rows:
+        arm = row.get("arm")
+        if not arm:
+            continue
+        key = (row.get("date"), row.get("experiment"), row.get("condition"))
+        run = runs.get(key)
+        if run is None:
+            run = runs[key] = {
+                "date": row.get("date"),
+                "experiment": row.get("experiment"),
+                "condition": row.get("condition"),
+                "adr": row.get("adr"),
+                "judge_tier": row.get("judge_tier"),
+                "n_trials": row.get("n_trials"),
+                "corpus": row.get("corpus") or {},
+                "arms": {},
+            }
+        run["arms"][arm] = {
+            k: row[k] for k in ("win_rate", "avg_rank", "training") if k in row
+        }
+    return list(runs.values())
+
+
+def run_deltas(current: dict, previous: dict | None) -> dict:
+    """Score every arm of *current* against the same arm in *previous*.
+
+    An arm that is new this run has nothing to beat, which is reported as ``unknown``
+    rather than as a flattering zero.
+    """
+    previous_arms = (previous or {}).get("arms") or {}
+    deltas: dict[str, dict] = {}
+    for arm, scores in (current.get("arms") or {}).items():
+        was = previous_arms.get(arm) or {}
+        deltas[arm] = {
+            metric: compare(metric, scores.get(metric), was.get(metric))
+            for metric in ("win_rate", "avg_rank")
+        }
+    return deltas
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--voice-report", type=Path, default=VOICE_REPORT_PATH)
