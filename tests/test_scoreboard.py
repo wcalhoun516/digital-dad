@@ -309,6 +309,22 @@ class TestCompareTowardATarget:
         assert result["verdict"] == "better"
         assert result["gap"] == pytest.approx(14.0)
 
+    def test_collapsing_away_from_the_target_is_worse_not_better(self):
+        """Both sides of the gap are distances, so falling short counts as falling short.
+
+        Lexical diversity sliding 0.65 → 0.40 against a real corpus at 0.70 is the
+        fine-tune's original failure getting worse. Measuring the current gap signed
+        while measuring the previous one absolute would score this collapse `better`.
+        """
+        result = scoreboard.compare("type_token_ratio", 0.40, 0.65, target=0.70)
+        assert result["verdict"] == "worse"
+
+    def test_crossing_the_target_and_overshooting_further_is_worse(self):
+        result = scoreboard.compare(
+            "fingerprint_hits_per_1k", 10.0, 40.0, target=46.0
+        )
+        assert result["verdict"] == "worse"
+
     def test_a_toward_metric_without_a_target_is_unscored(self):
         result = scoreboard.compare("type_token_ratio", 0.55, 0.35)
         assert result["verdict"] == "unscored"
@@ -435,6 +451,23 @@ class TestScoreboard:
         assert board["current_run"]["experiment"] == "A_plain"
         assert board["previous_run"]["date"] == "2026-09-01"
         assert board["run_deltas"]["gemma-ft"]["win_rate"]["verdict"] == "better"
+
+    def test_previous_is_the_most_recent_earlier_run_not_the_first_one(self, tmp_path):
+        """Run-over-run means the run before, not the run the series started at."""
+        history = [
+            history_row("gemma-ft", date="2026-09-01", win_rate=0.0),
+            history_row("gemma-ft", date="2026-09-10", win_rate=0.5),
+            history_row("gemma-ft", date="2026-09-22", win_rate=0.25),
+        ]
+        board = scoreboard.scoreboard(
+            voice_path=tmp_path / "none.json",
+            rag_path=tmp_path / "none.json",
+            history=history,
+        )
+        assert board["previous_run"]["date"] == "2026-09-10"
+        # Against 2026-09-10's 0.5 this is a regression; against the 0.0 the series
+        # opened at it would read as a win.
+        assert board["run_deltas"]["gemma-ft"]["win_rate"]["verdict"] == "worse"
 
     def test_the_newest_run_of_an_experiment_never_seen_before_has_no_previous(
         self, tmp_path
