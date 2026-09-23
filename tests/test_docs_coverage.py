@@ -4,6 +4,7 @@ docs/INDEX.md sends every new session to architecture.md as "the repo map ... re
 before touching any module". Nothing enforced that, so modules landed without an entry.
 """
 
+import importlib.util
 import re
 from pathlib import Path
 
@@ -11,6 +12,7 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 ARCHITECTURE = REPO_ROOT / "docs" / "architecture.md"
+README = REPO_ROOT / "README.md"
 
 # Dunder files are packaging/CLI plumbing, documented as a package rather than per-file.
 EXCLUDED = {"__init__.py", "__main__.py"}
@@ -36,6 +38,31 @@ def is_documented(doc: str, package: str, filename: str) -> bool:
 @pytest.fixture(scope="module")
 def architecture_doc() -> str:
     return ARCHITECTURE.read_text(encoding="utf-8")
+
+
+@pytest.fixture(scope="module")
+def readme() -> str:
+    return README.read_text(encoding="utf-8")
+
+
+def console_routes() -> tuple[str, ...]:
+    """The console route table, read from the server rather than restated here."""
+    spec = importlib.util.spec_from_file_location(
+        "_serve_dashboard_for_docs", REPO_ROOT / "bin" / "serve_dashboard.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return tuple(module.CONSOLE_ROUTES)
+
+
+def is_route_documented(doc: str, route: str) -> bool:
+    """True when the doc names the route exactly, inside a code span or fenced block.
+
+    The negative lookahead stops `/console/api/job/log` from vacuously documenting
+    `/console/api/job` — a reader who needs the shorter one learns nothing from the longer.
+    """
+    pattern = re.escape(route) + r"(?![\w/-])"
+    return any(re.search(pattern, literal) for literal in code_literals(doc))
 
 
 # --- `make <target>` references -------------------------------------------------------
@@ -118,6 +145,52 @@ class TestReferencedMakeTargets:
 
     def test_ignores_make_with_arguments_after_the_target(self):
         assert referenced_make_targets('`make anthology ARGS="--year 2024"`') == {"anthology"}
+
+
+class TestConsoleRouteDocCoverage:
+    """Guard: the README documents every console route the server actually answers.
+
+    The console is a write surface reached by a human typing a URL, not by another program
+    reading a schema — so the route list in `bin/serve_dashboard.py` and the route list a
+    reader can find are the same list, or the second one is wrong. Read from
+    `CONSOLE_ROUTES` rather than restated here, so a route added by a later step of plan
+    0011 joins this test on its own.
+    """
+
+    @pytest.mark.parametrize("route", console_routes())
+    def test_route_is_documented_in_readme(self, readme, route):
+        assert is_route_documented(readme, route), (
+            f"{route} is served by bin/serve_dashboard.py but appears nowhere in README.md. "
+            f"The console is operated by hand; an undocumented route is an unreachable one."
+        )
+
+    def test_discovery_finds_the_real_route_table(self):
+        routes = console_routes()
+        assert "/console" in routes
+        assert all(r.startswith("/console") for r in routes)
+
+
+class TestIsRouteDocumented:
+    def test_accepts_route_in_code_span(self):
+        assert is_route_documented("`GET /console/api/queue` lists items", "/console/api/queue")
+
+    def test_accepts_route_in_fenced_block(self):
+        assert is_route_documented("```\ncurl /console/api/queue\n```", "/console/api/queue")
+
+    def test_rejects_unbackticked_mention(self):
+        assert not is_route_documented("visit /console/api/queue in a browser",
+                                       "/console/api/queue")
+
+    def test_rejects_absent_route(self):
+        assert not is_route_documented("`/console/api/queue`", "/console/api/upload")
+
+    def test_does_not_credit_a_longer_route_for_its_prefix(self):
+        """`/console/api/job/log` documented must not silently document `/console/api/job`."""
+        assert not is_route_documented("`GET /console/api/job/log`", "/console/api/job")
+
+    def test_prefix_route_is_documented_when_named_exactly(self):
+        assert is_route_documented("`GET /console/api/job/log` and `GET /console/api/job`",
+                                   "/console/api/job")
 
 
 class TestIsDocumented:
