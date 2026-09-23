@@ -1113,3 +1113,47 @@ Format:
   as text. **Plan 0011 stays in `ready/`:** steps 4–6 remain, and its status block now points
   the next run at the job runner, including the trap that uploading only fills `data/inbox/` —
   staging into the queue is still `make ingest` until step 4 lands.
+
+### 2026-09-23 — docs — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/113
+- Source: plan:ready/0011 (step 6 — docs + ADR)
+- Summary: **The console's two unwritten decisions, written down — and a gate so the writing
+  can't rot.** Plan 0011's security section says outright: "Raise it in the PR body explicitly
+  so the owner rules on it." A PR body scrolls away, so this is **ADR D21** instead. It records
+  two things. First, the console is a **second surface, not an exception to D4** — D4 makes the
+  family dashboard fully client-side so one `index.html` opens anywhere forever, and the console
+  wants the opposite (it writes `data/inbox/`, mutates the manifest, will spawn subprocesses);
+  bolting it onto the artifact would quietly turn the archive into software someone has to keep
+  running. D4 stands unamended. Second, the **three fail-closed gates**: off unless
+  `DIGITAL_DAD_CONSOLE` is exactly `1` (with `/console.html` withheld from the static handler
+  too, since routing `/console` alone would not stop anyone holding the dashboard password from
+  asking for the page by name); a startup refusal if the listen port is Funnel-exposed; and a
+  refusal *also* when Tailscale is installed but its state cannot be read — an unanswered "is
+  this port public?" is not a no. The escalation being guarded is real and worth naming: before
+  the console, a leaked dashboard password meant a stranger read Forbes columns that were
+  already public; after it, a stranger writes files and starts processes on the Mac mini.
+  **The README had no mention of the console, the inbox, or the env var** that enables any of
+  it, so the section was written too — enable line, the refusal, the five live routes, and what
+  upload validation actually rejects. **The part worth reviewing is the gate, not the prose.**
+  `tests/test_docs_coverage.py` now reads `CONSOLE_ROUTES` from the server, the extension
+  allowlist from the ingest handler registry (**both** directions: a registered format must be
+  listed, and a listed one must be registered, so the README can't promise a `.pdf` upload the
+  console would refuse), and the default port from the Makefile's `CONSOLE_PORT`. When step 4's
+  `/console/api/job` and step 5's `/console/api/scores` land, the suite goes red until the
+  README names them. **Mutation-checked rather than trusted**: these guards passed on their
+  first run, which proves nothing, so six mutants were run — drop `.mbox` from the list, claim
+  `.pdf`, change the port, undocument a route, remove the prefix lookahead that stops
+  `/console/api/job/log` from vacuously documenting `/console/api/job`, and break the section
+  splitter. **6/6 caught**, files restored byte-identical.
+  **Why step 6 and not step 5's route, which the plan asked for:** `analysis/scoreboard.py` is
+  not on `main` — it is in PR #112, still open — and step 4's `console/` package is only in
+  #111. The route had nothing to call. The alternatives were stacking on another `daily/*`
+  branch or re-implementing the scoring core, and the plan warns against the second in three
+  separate places. **Every remaining piece of plan 0011 is now blocked on a merge, not on an
+  implementation**, which is worth knowing before tomorrow picks it up.
+  **Note on this file:** the entry above this one is 2026-09-21. The 2026-09-22 entry is real
+  but lives in unmerged PR #112, so a §5b tally of "the last 7" will read short until #112
+  lands — a merge-order artifact, not the 2026-09-19 deletion recurring.
+  **Verification:** `make verify` **exit 0** — ruff clean, **1628 passed**, dashboard builds;
+  `__pycache__` cleared before the red→green proof. The five route-coverage tests were watched
+  fail first, naming each undocumented route.
