@@ -55,6 +55,35 @@ def console_routes() -> tuple[str, ...]:
     return tuple(module.CONSOLE_ROUTES)
 
 
+def section(doc: str, heading: str) -> str:
+    """One `## heading` section of a markdown doc, up to the next `## `.
+
+    Claims are checked against the section that makes them, not the whole file — a `.pdf`
+    mentioned in some unrelated section is not the console promising to accept one.
+    """
+    pattern = rf"^## {re.escape(heading)}$(.*?)(?=^## |\Z)"
+    found = re.search(pattern, doc, re.MULTILINE | re.DOTALL)
+    return found.group(1) if found else ""
+
+
+def handler_extensions() -> tuple[str, ...]:
+    """The ingest handler registry's extensions — the console's real upload allowlist."""
+    import sys
+
+    if str(REPO_ROOT) not in sys.path:
+        sys.path.insert(0, str(REPO_ROOT))
+    from ingest.extract import HANDLERS
+
+    return tuple(sorted(HANDLERS))
+
+
+def makefile_variable_default(name: str) -> str | None:
+    """The `NAME ?= value` default from the Makefile, or None."""
+    text = (REPO_ROOT / "Makefile").read_text(encoding="utf-8")
+    found = re.search(rf"^{re.escape(name)}\s*\?=\s*(\S+)", text, re.MULTILINE)
+    return found.group(1) if found else None
+
+
 def is_route_documented(doc: str, route: str) -> bool:
     """True when the doc names the route exactly, inside a code span or fenced block.
 
@@ -168,6 +197,67 @@ class TestConsoleRouteDocCoverage:
         routes = console_routes()
         assert "/console" in routes
         assert all(r.startswith("/console") for r in routes)
+
+
+CONSOLE_HEADING = "The Operator Console"
+
+
+class TestConsoleReadmeClaims:
+    """Guard: the console section's *values* come from the code, not from transcription.
+
+    A route list that stays current while the numbers beside it rot is a worse document than
+    no document — the reader has no way to tell which half aged. Each claim below is read
+    from the thing that defines it.
+    """
+
+    @pytest.fixture(scope="class")
+    def console_section(self, readme) -> str:
+        return section(readme, CONSOLE_HEADING)
+
+    def test_the_section_exists(self, console_section):
+        assert console_section.strip(), (
+            f"README.md has no '## {CONSOLE_HEADING}' section for the other claims to live in."
+        )
+
+    @pytest.mark.parametrize("extension", handler_extensions())
+    def test_registered_extension_is_listed(self, console_section, extension):
+        assert f"`{extension}`" in console_section, (
+            f"{extension} has a registered ingest handler, so the console accepts an upload "
+            f"named with it, but README's console section does not list it."
+        )
+
+    def test_lists_no_extension_the_console_would_reject(self, console_section):
+        claimed = set(re.findall(r"`(\.[a-z0-9]+)`", console_section))
+        unregistered = sorted(claimed - set(handler_extensions()))
+        assert not unregistered, (
+            f"README's console section tells the operator they can upload {unregistered}, "
+            f"but no ingest handler is registered for them — the upload would be refused."
+        )
+
+    def test_shows_the_real_default_console_port(self, console_section):
+        port = makefile_variable_default("CONSOLE_PORT")
+        assert port, "Makefile no longer defines a CONSOLE_PORT default"
+        assert port in console_section, (
+            f"`make console` listens on {port} by default, which README's console section "
+            f"never mentions."
+        )
+
+
+class TestSection:
+    def test_extracts_only_the_named_section(self):
+        doc = "## One\nalpha\n\n## Two\nbeta\n"
+        assert "alpha" in section(doc, "One")
+        assert "beta" not in section(doc, "One")
+
+    def test_reads_to_end_of_file_for_the_last_section(self):
+        assert "omega" in section("## One\nalpha\n\n## Two\nomega\n", "Two")
+
+    def test_absent_section_is_empty(self):
+        assert section("## One\nalpha\n", "Missing") == ""
+
+    def test_a_deeper_heading_does_not_end_the_section(self):
+        doc = "## One\nalpha\n### Sub\nnested\n## Two\nbeta\n"
+        assert "nested" in section(doc, "One")
 
 
 class TestIsRouteDocumented:
