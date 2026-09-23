@@ -485,7 +485,13 @@ DIGITAL_DAD_DASHBOARD_PASSWORD=... make console     # → http://127.0.0.1:8765/
 
 **It is off unless you ask for it.** `DIGITAL_DAD_CONSOLE=1` is the only thing that enables
 it; anything else leaves every route below returning 404, and `/console.html` is withheld
-from the static file handler too, so the page cannot be reached by guessing its filename.
+from the static file handler too, so the page cannot be reached by asking for the file
+directly. The withhold compares *which file* the request resolves to, not how the URL was
+spelled, so `/console%2Ehtml` and `/CONSOLE.HTML` are refused along with it.
+
+**It will not run without a password.** `DIGITAL_DAD_ALLOW_OPEN=1` serves the read-only
+dashboard with no password for trusted local use; the console does not get that bargain and
+refuses to start without `DIGITAL_DAD_DASHBOARD_PASSWORD`.
 
 **It refuses to start on a public port.** `make share` publishes the dashboard to the
 internet through Tailscale Funnel. The console must not ride along: at startup it reads

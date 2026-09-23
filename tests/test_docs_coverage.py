@@ -188,7 +188,9 @@ class TestConsoleRouteDocCoverage:
 
     @pytest.mark.parametrize("route", console_routes())
     def test_route_is_documented_in_readme(self, readme, route):
-        assert is_route_documented(readme, route), (
+        # Scoped to the console section, not the whole README: a route named in some other
+        # section would otherwise satisfy this while the console section listed none.
+        assert is_route_documented(section(readme, CONSOLE_HEADING), route), (
             f"{route} is served by bin/serve_dashboard.py but appears nowhere in README.md. "
             f"The console is operated by hand; an undocumented route is an unreachable one."
         )
@@ -227,7 +229,14 @@ class TestConsoleReadmeClaims:
         )
 
     def test_lists_no_extension_the_console_would_reject(self, console_section):
-        claimed = set(re.findall(r"`(\.[a-z0-9]+)`", console_section))
+        """Case-insensitive: `validate_upload` lowercases the suffix, so a README claiming
+        `.PDF` promises the same refused upload that `.pdf` would.
+
+        Known limit: this reads backticked tokens only. Prose ("PDFs are accepted") is not
+        covered, and deliberately so — matching format names in English would fire on the
+        word "markdown" in a sentence that promises nothing.
+        """
+        claimed = {e.lower() for e in re.findall(r"`(\.[A-Za-z0-9]+)`", console_section)}
         unregistered = sorted(claimed - set(handler_extensions()))
         assert not unregistered, (
             f"README's console section tells the operator they can upload {unregistered}, "
@@ -235,11 +244,17 @@ class TestConsoleReadmeClaims:
         )
 
     def test_shows_the_real_default_console_port(self, console_section):
+        """Asserts the *URL*, not the bare number.
+
+        A bare-number check was vacuous: the section already says "keeps it off the
+        dashboard's 8000", so if CONSOLE_PORT were ever changed to 8000 — the exact Funnel
+        collision D21 exists to prevent — the guard would have stayed green.
+        """
         port = makefile_variable_default("CONSOLE_PORT")
         assert port, "Makefile no longer defines a CONSOLE_PORT default"
-        assert port in console_section, (
-            f"`make console` listens on {port} by default, which README's console section "
-            f"never mentions."
+        assert f":{port}/console" in console_section, (
+            f"`make console` serves http://127.0.0.1:{port}/console by default, and README's "
+            f"console section does not show that URL."
         )
 
 

@@ -459,7 +459,7 @@ surface on the same listener changes the worst case to "a stranger writes files 
 starts processes on the Mac mini". That is a categorical escalation, and the existing password
 is not sufficient authorization for it.
 
-**Implication:** three gates, each failing closed, and they compose.
+**Implication:** four gates, each failing closed, and they compose.
 
 1. **Off unless asked.** `CONSOLE_ENABLED` is `os.environ.get("DIGITAL_DAD_CONSOLE") == "1"`
    — an exact match, so `true`, `yes` and `0` all leave it off. With it off, every route in
@@ -468,13 +468,25 @@ is not sufficient authorization for it.
    the directory this server publishes: routing `/console` is not by itself enough to keep the
    page out of the family artifact, since anyone with the dashboard password could otherwise
    ask for the file by name.
-2. **Never on a Funnel-exposed port.** At startup, `console_refusal_reason()` reads
+
+   **The withhold compares file identity, not URL spelling** — `os.path.samefile` against the
+   path `translate_path` resolves to. Written as a literal string comparison first, it blocked
+   `/console.html` and served `/console%2Ehtml` and `/CONSOLE.HTML`, because the static handler
+   percent-decodes after the check ran and macOS matches filenames case-insensitively. Three
+   spellings, one file, one of them refused. A guard on the spelling of a name is not a guard
+   on the thing the name reaches.
+2. **Never without a password.** `DIGITAL_DAD_ALLOW_OPEN=1` lets the *dashboard* serve with no
+   password for trusted local use, and `_authed()` returns `True` whenever `PASSWORD` is empty.
+   That bargain was struck for a read-only surface and does not transfer: with the console on
+   and no password set, the server refuses to start. The escape hatch still covers the
+   dashboard — only the console loses it.
+3. **Never on a Funnel-exposed port.** At startup, `console_refusal_reason()` reads
    `tailscale serve status --json` and refuses if the listen port is reachable from the public
    internet. Only ports flagged in `AllowFunnel` count — a plain `tailscale serve` is
    tailnet-only, which is the mode the console is meant to run behind. The refusal is a
    non-zero exit with a printed reason, not a warning: a console that starts anyway after
    saying it should not have is worse than one that never started.
-3. **Silence is not consent.** If Tailscale is installed but `serve status` cannot be read,
+4. **Silence is not consent.** If Tailscale is installed but `serve status` cannot be read,
    the console refuses too. The question "is this port public?" is then unanswered, and an
    unanswered question is not a no. If Tailscale is *absent* the probe returns `absent` and the
    console may start — there is no Funnel on a machine with no Tailscale, so there is nothing
@@ -488,5 +500,12 @@ have to catch.
 Auth gate as the dashboard — `tests/test_console_gate.py` enumerates `CONSOLE_ROUTES` to prove
 every route passes through `_gate()`, so a route added by a later step cannot skip it — and a
 second factor for write operations is a separate decision, not one this ADR makes. What is
-settled here is only that the shared password is not sufficient *on its own*, which is why
-gates 1–3 exist alongside it.
+settled here is only that one shared password is not sufficient *on its own*, which is why
+gates 1–4 exist alongside it.
+
+**How gates 1 and 2 were found is the part worth keeping.** Both were written into this ADR as
+claims *before* they were true, and both were caught by reviewing the ADR against the source
+rather than by reviewing the source on its own — a documented security property is a testable
+one, and writing it down is what made the gap legible. That is an argument for ADRs like this
+one, and also a caution: an unverified claim in this file is worse than an absent one, because
+the next session will build on it.
