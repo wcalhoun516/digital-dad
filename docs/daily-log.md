@@ -1154,6 +1154,32 @@ Format:
   **Note on this file:** the entry above this one is 2026-09-21. The 2026-09-22 entry is real
   but lives in unmerged PR #112, so a §5b tally of "the last 7" will read short until #112
   lands — a merge-order artifact, not the 2026-09-19 deletion recurring.
-  **Verification:** `make verify` **exit 0** — ruff clean, **1628 passed**, dashboard builds;
-  `__pycache__` cleared before the red→green proof. The five route-coverage tests were watched
-  fail first, naming each undocumented route.
+  **The ADR found two real security gaps, and that is the result worth reading.** A
+  fresh-context review was asked to check every claim in D21 against the source rather than to
+  review the prose, and two claims turned out to be aspirations. (1) The withhold that keeps
+  `/console.html` out of the family artifact compared the **raw request path** against a
+  literal string. `translate_path` percent-decodes *after* that check runs, and macOS matches
+  filenames case-insensitively — so with the console disabled, `/console%2Ehtml` and
+  `/CONSOLE.HTML` both served the console page. Reproduced live against a real server before
+  fixing: three spellings, one file, only one of them refused. It now compares **file identity**
+  (`os.path.samefile`) rather than spelling. (2) `DIGITAL_DAD_ALLOW_OPEN=1` let the console run
+  with **no password at all** — `_authed()` returns `True` whenever `PASSWORD` is empty. That
+  bargain was struck when the worst case was a stranger reading columns that were already
+  public; it does not transfer to a surface that writes files and starts processes, so the
+  console now refuses to start without a password. The dashboard keeps the escape hatch. Both
+  were caught by reviewing the *ADR* against the code, which is the argument for writing the
+  ADR — and the caution that an unverified claim in `decisions.md` is worse than an absent one,
+  because the next session builds on it.
+  **The review also showed the new guard was satisfiable without being true**, in three ways
+  now closed: routes were matched anywhere in the README rather than within the console
+  section; the port check was a bare-substring match, so `CONSOLE_PORT=8000` — the exact Funnel
+  collision D21 exists to prevent — would have passed green against the prose "keeps it off the
+  dashboard's 8000"; and the extension check was lowercase-only, so a promised `.PDF` upload
+  satisfied both directions. Three more mutants, all three now caught. Prose claims ("PDFs are
+  accepted") stay uncovered on purpose — matching format names in English fires on the word
+  "markdown" in a sentence that promises nothing.
+  **Verification:** `make verify` **exit 0** — ruff clean, **1638 passed**, dashboard builds;
+  `__pycache__` cleared before the red→green proofs. Every test was watched fail first: the
+  five route-coverage tests naming each undocumented route, and the five path spellings each
+  serving the page before the fix. Nine mutants across the two rounds, nine caught, files
+  restored byte-identical.
