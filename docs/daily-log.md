@@ -1113,3 +1113,46 @@ Format:
   as text. **Plan 0011 stays in `ready/`:** steps 4–6 remain, and its status block now points
   the next run at the job runner, including the trap that uploading only fills `data/inbox/` —
   staging into the queue is still `make ingest` until step 4 lands.
+
+### 2026-09-24 — analysis — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/114
+- Source: plan:ready/0011 (step 3's deferred slice — the `data/ingest/rejected/` move)
+- Summary: **Rejects now leave the queue directory, and the four places that counted them
+  followed.** Plan 0011's numbered steps are all blocked on a merge — step 4 is PR #111, step
+  5 is #112, step 6 is #113, none landed — so the route that remains
+  (`GET /console/api/scores`) had nothing on `main` to import. Rather than stack on another
+  `daily/*` branch (§11) or re-implement the scoring core (the plan warns against that in
+  three separate places), this run took the one piece the plan had already carved out and set
+  aside in writing: *"Step 3's `data/ingest/rejected/` move is deliberately not done: it
+  changes the on-disk layout and makes `queue_summary`'s rejected count read from a second
+  place, which deserves its own slice."*
+  **Why it was worth doing rather than cosmetic:** a reject is never deleted, so its extracted
+  documents — a book is tens of thousands of words — were re-read on every single queue
+  listing, forever, and the pile only grows. `quarantine()` moves the item to
+  `data/ingest/rejected/`, paired to the queue by `rejected_dir_for()` rather than configured
+  separately, so no caller can point one somewhere the other is not; there is deliberately no
+  `CONSOLE_REJECTED_DIR` for the same reason. The write happens **before** the queue copy is
+  dropped, so an interrupted move leaves a duplicate rather than nothing — a rejected
+  extraction may be the only copy of the material.
+  **The plan's "second place" warning was the whole difficulty, and it was worse than one
+  place.** Four read sites had to change. The two obvious ones matter most: `GET
+  /console/api/queue`'s totals, and — the one that would have been a genuine regression —
+  **dedup**, because `data/inbox/` is never emptied, so without reading the quarantine every
+  `make ingest` would have re-queued every file a human already rejected. The two *non*-obvious
+  ones were found only by watching tests fail: the CLI's closing report announced
+  `0 rejected` in the same breath as `✓ rejected`, and its opening line then disagreed with its
+  own closing line about the same queue (`Loaded 1 item(s)` vs `Queue: 2 item(s)`).
+  **One error-contract detail held deliberately:** `apply_decision` searches the quarantine as
+  well, so a second reject is still a 400 (*already decided*) and not a 404 (*never heard of
+  it*). Moving the file must not change what the console tells the operator. No migration shim
+  was written — `data/ingest/` does not exist on the owner's machine, so there is no legacy
+  reject to migrate, and a shim for an impossible case is just a second code path.
+  **Verification:** `make verify` **exit 0** — ruff clean, **1614 passed**, dashboard builds;
+  `__pycache__` cleared first (stale `.pyc` on this external volume has faked a green proof
+  before). Every behaviour change was watched red first — 5 failures on the first run, then 2
+  more for the counting bugs, each re-run individually. **6 mutants, 6 caught**, `git diff`
+  byte-clean afterwards (restored from in-process copies, never `git stash`).
+  **Note on this file:** the entry above this one is 2026-09-20. The 09-21, 09-22 and 09-23
+  entries are real but live in unmerged PRs #111, #112 and #113 — a merge-order artifact, not
+  the 2026-09-19 deletion recurring. A §5b tally of "the last 7" will read short until those
+  land, and should say so rather than tally a file it knows is incomplete.

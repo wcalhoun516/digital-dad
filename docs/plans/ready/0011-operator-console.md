@@ -147,3 +147,40 @@ logic are all pure and testable offline; no test may start a real training run.
   should not start because a cron fired.
 - Deleting source material. Rejects move aside with a reason; nothing is destroyed from the
   console.
+
+## Progress note — 2026-09-24 (step 3's deferred slice, PR #114)
+
+*Appended at the end on purpose.* The Status block above is rewritten by PRs #111, #112 and
+#113, all open and unmerged; a fourth rewrite of the same lines is how the add/add conflict
+that left `main` red for four weeks (PR #73) got made. This note is additive instead.
+
+**Why this and not a numbered step.** Step 4 is written (#111), step 5's scoring core is
+written (#112), step 6 is written (#113) — none merged. What remains is
+`GET /console/api/scores`, which imports `analysis/scoreboard.py` (only on #112's branch) and
+sits beside `console/` (only on #111's). Every *numbered* step is blocked on a merge rather
+than on an implementation. The work taken instead is the one piece this plan had already
+carved out and set aside, in the paragraph above the Goal:
+
+> Step 3's `data/ingest/rejected/` move is deliberately **not** done: it changes the on-disk
+> layout and makes `queue_summary`'s rejected count read from a second place, which deserves
+> its own slice rather than riding along on the decision core.
+
+**That slice is now done.** `quarantine()` moves a rejected item to `data/ingest/rejected/`,
+paired to the queue by `rejected_dir_for()` rather than configured separately, so no caller
+can point one somewhere the other is not.
+
+**The "second place" warning was the real difficulty.** Four read sites had to change, and the
+two that were *not* obvious were found by watching tests fail rather than by reading code: the
+CLI's closing report said `0 rejected` immediately after the operator rejected something, and
+its opening line then disagreed with its own closing line about the same queue. The two that
+were obvious matter most — `GET /console/api/queue`'s totals, and the dedup set. Dedup must
+read the quarantine because `data/inbox/` is **never emptied**, so without it every
+`make ingest` would re-queue every file a human had already rejected.
+
+**Scope held deliberately.** `apply_decision` searches the quarantine too, so a second reject
+stays a 400 rather than becoming a 404 — the console's error contract did not move with the
+files. No migration shim was written: `data/ingest/` does not exist on the owner's machine, so
+there is no legacy reject in a queue directory to migrate.
+
+This slice touched only `ingest/queue.py`, `ingest/review.py`, the one console route already
+on `main`, and their tests — none of which #111, #112 or #113 edits.

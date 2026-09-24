@@ -41,6 +41,7 @@ materials, letters, email, talks):
 
 ```
 data/inbox/ → make ingest → data/ingest/queue/ → make ingest-review → manifest
+                                                                  ↘ data/ingest/rejected/
 ```
 
 Handlers are pure `(Path) -> ExtractResult` functions registered by extension in
@@ -76,7 +77,16 @@ to a client-supplied length, and a colliding upload is written alongside the exi
 rather than over it.
 
 **Extraction never modifies the corpus** — only `ingest-review` does, and only on a human
-decision. Rejects keep their reason instead of being deleted.
+decision. Rejects keep their reason instead of being deleted, but they do not keep their
+place: `quarantine` moves them to `data/ingest/rejected/`, a sibling of the queue directory
+derived from it by `rejected_dir_for` rather than configured separately, so pointing anything
+at a different queue moves its quarantine with it. Two things had to survive that move, and
+both are load-bearing. **Dedup still reads the quarantine** — `data/inbox/` is never emptied,
+so without it every `make ingest` would re-queue every file a human already rejected. And
+**`apply_decision` still searches it**, so a second decision on a rejected item is reported as
+the already-decided item it is (400) rather than as an id nobody has ever seen (404). Anything
+that reports a *count* therefore reads `load_all`, not `load_queue`: the rejected total moved
+directories, it did not stop existing.
 
 `review.apply_decision(item_id, "accept" | "edit" | "reject")` is the **only** way a decision
 reaches disk. It validates first and writes afterwards, so a refused decision leaves both the
@@ -477,7 +487,7 @@ drift apart:
 | Route | Calls | Refusals |
 |-------|-------|----------|
 | `POST /console/api/upload?filename=` | `stage_upload` | 400 `UploadRejected`, 413 over the cap |
-| `GET /console/api/queue` | `queue_view(load_queue(…))` | — |
+| `GET /console/api/queue` | `queue_view(load_all(…))` | — |
 | `POST /console/api/review` | `apply_decision` | 404 `UnknownItem`, 400 any other `ReviewError` |
 
 What the HTTP layer adds on top of those cores is only what HTTP makes possible:
@@ -504,7 +514,9 @@ is read-only and has to keep serving even if the ingest tree cannot be imported;
 not a package, so the repo root reaches `sys.path` at that point rather than at module scope.
 `CONSOLE_INBOX_DIR` / `CONSOLE_QUEUE_DIR` / `CONSOLE_MANIFEST_PATH` default to `None`, meaning
 "whatever the ingest modules default to", which keeps the on-disk layout defined once in
-`ingest/queue.py`; tests point them at a tmp dir.
+`ingest/queue.py`; tests point them at a tmp dir. There is deliberately no
+`CONSOLE_REJECTED_DIR` — the quarantine is derived from whichever queue is configured, so it
+cannot be pointed somewhere the queue is not.
 
 The page (`dashboard/console.html`) builds DOM nodes and assigns `textContent` throughout.
 Titles, warnings and previews are text recovered from whatever file was dropped in the inbox,
