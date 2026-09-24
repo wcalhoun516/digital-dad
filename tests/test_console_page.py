@@ -21,7 +21,7 @@ from pathlib import Path
 
 import pytest
 
-from ingest.queue import save_item
+from ingest.queue import rejected_dir_for, save_item
 
 ROOT = Path(__file__).resolve().parent.parent
 CONSOLE_HTML = ROOT / "dashboard" / "console.html"
@@ -114,6 +114,7 @@ def live(tmp_path):
         base = f"http://127.0.0.1:{server.server_port}"
         inbox_dir = inbox
         queue = queue_dir
+        rejected = rejected_dir_for(queue_dir)
         manifest_path = manifest
 
         def stage(self, item):
@@ -226,7 +227,7 @@ class TestLiveConsole:
         page.on("dialog", lambda dialog: dialog.accept("OCR garbage"))
         page.click("#queue button.reject")
         page.wait_for_function("document.querySelector('#queue').textContent.includes('Nothing')")
-        saved = json.loads((live.queue / "letter-1234abcd.json").read_text())
+        saved = json.loads((live.rejected / "letter-1234abcd.json").read_text())
         assert saved["status"] == "rejected"
         assert saved["reject_reason"] == "OCR garbage"
 

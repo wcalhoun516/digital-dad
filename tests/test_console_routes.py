@@ -29,7 +29,7 @@ from pathlib import Path
 
 import pytest
 
-from ingest.queue import save_item
+from ingest.queue import rejected_dir_for, save_item
 from ingest.review import PREVIEW_CHARS
 from ingest.upload import MAX_UPLOAD_BYTES
 
@@ -109,6 +109,7 @@ def console(tmp_path):
         mod = module
         inbox_dir = inbox
         queue = queue_dir
+        rejected = rejected_dir_for(queue_dir)
         manifest_path = manifest
 
         def request(self, path, *, method="GET", body=None, ctype=None, password=PASSWORD,
@@ -227,7 +228,32 @@ class TestReviewRoute:
         assert status == 200
         assert payload["status"] == "rejected"
         assert payload["reject_reason"] == "OCR garbage"
-        assert (console.queue / "a-1234abcd.json").is_file(), "a reject is never deleted"
+        assert (console.rejected / "a-1234abcd.json").is_file(), "a reject is never deleted"
+        assert not (console.queue / "a-1234abcd.json").exists()
+
+    def test_the_queue_still_reports_a_quarantined_reject_in_its_totals(self, console):
+        """The operator's rejected count must not drop to zero because the file moved."""
+        console.stage(_item())
+        console.json_request(
+            "/console/api/review",
+            {"id": "a-1234abcd", "decision": "reject", "reason": "OCR garbage"},
+        )
+
+        status, payload = console.json_request("/console/api/queue", None, method="GET")
+
+        assert status == 200
+        assert payload["summary"] == {"total": 1, "pending": 0, "accepted": 0, "rejected": 1}
+        assert payload["items"] == []
+
+    def test_rejecting_the_same_item_twice_is_400_not_404(self, console):
+        """Quarantining the file must not turn an already-decided item into a missing one."""
+        console.stage(_item())
+        body = {"id": "a-1234abcd", "decision": "reject", "reason": "OCR garbage"}
+        console.json_request("/console/api/review", body)
+
+        status, _ = console.json_request("/console/api/review", body)
+
+        assert status == 400
 
     def test_an_unknown_id_is_404(self, console):
         status, payload = console.json_request(

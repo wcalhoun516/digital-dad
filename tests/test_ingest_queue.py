@@ -112,7 +112,8 @@ class TestQuarantineAwareDedup:
     """Dedup must see quarantined rejects, or `make ingest` re-queues them every run."""
 
     def _quarantine(self, item, queue):
-        save_item({**item, "status": "rejected", "reject_reason": "bad scan"}, rejected_dir_for(queue))
+        rejected = {**item, "status": "rejected", "reject_reason": "bad scan"}
+        save_item(rejected, rejected_dir_for(queue))
         (queue / f"{item['id']}.json").unlink()
 
     def test_a_rejected_item_still_suppresses_a_re_drop(self, tmp_path):
