@@ -1,6 +1,13 @@
 """Tests for ingest queue staging (roadmap #30)."""
 
-from ingest.queue import load_queue, scan_inbox, stage_file
+from ingest.queue import (
+    load_all,
+    load_queue,
+    rejected_dir_for,
+    save_item,
+    scan_inbox,
+    stage_file,
+)
 
 
 def _inbox_with(tmp_path, name: str, text: str):
@@ -78,3 +85,48 @@ class TestLoadQueue:
 
     def test_empty_queue_dir_returns_empty_list(self, tmp_path):
         assert load_queue(tmp_path / "queue") == []
+
+
+class TestRejectedDirFor:
+    def test_the_quarantine_is_a_sibling_of_the_queue_it_serves(self, tmp_path):
+        queue = tmp_path / "somewhere" / "queue"
+        assert rejected_dir_for(queue) == tmp_path / "somewhere" / "rejected"
+
+
+class TestLoadAll:
+    def test_reads_both_directories_sorted_by_id(self, tmp_path):
+        queue = tmp_path / "queue"
+        save_item({"id": "b-2", "status": "pending"}, queue)
+        save_item({"id": "a-1", "status": "rejected"}, rejected_dir_for(queue))
+
+        assert [item["id"] for item in load_all(queue)] == ["a-1", "b-2"]
+
+    def test_a_queue_with_no_quarantine_yet_is_not_an_error(self, tmp_path):
+        queue = tmp_path / "queue"
+        save_item({"id": "a-1", "status": "pending"}, queue)
+
+        assert [item["id"] for item in load_all(queue)] == ["a-1"]
+
+
+class TestQuarantineAwareDedup:
+    """Dedup must see quarantined rejects, or `make ingest` re-queues them every run."""
+
+    def _quarantine(self, item, queue):
+        save_item({**item, "status": "rejected", "reject_reason": "bad scan"}, rejected_dir_for(queue))
+        (queue / f"{item['id']}.json").unlink()
+
+    def test_a_rejected_item_still_suppresses_a_re_drop(self, tmp_path):
+        """The inbox is never emptied, so the rejected file is still there on the next scan."""
+        inbox = _inbox_with(tmp_path, "a.txt", "body")
+        queue = tmp_path / "queue"
+        self._quarantine(stage_file(inbox / "a.txt", queue), queue)
+
+        assert stage_file(inbox / "a.txt", queue) is None
+        assert not list(queue.glob("*.json"))
+
+    def test_scan_inbox_counts_a_rejected_file_as_a_duplicate_not_a_new_item(self, tmp_path):
+        inbox = _inbox_with(tmp_path, "a.txt", "body")
+        queue = tmp_path / "queue"
+        self._quarantine(stage_file(inbox / "a.txt", queue), queue)
+
+        assert scan_inbox(inbox, queue) == {"staged": 0, "skipped": 0, "duplicates": 1}
