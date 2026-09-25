@@ -5,7 +5,7 @@ PYTHON := .venv/bin/python
 # package drops out of the gate. E501 is off for the source packages only (see pyproject).
 LINT_PATHS := analysis scraper viz training tools bin ingest tests
 
-.PHONY: retrain-check retrain voice-candidates scrape manifest-check manifest-dedup coverage-audit analyze training dashboard all serve share console search on-this-day send-on-this-day adjudicate backfill-verdicts entity-graph calhoun-isms reading-room contradictions rag-eval voice-eval voice-style voice-trials embedding-compare embedding-queries-check clean test lint fmt lint-json hooks verify verify-responsive
+.PHONY: retrain-check retrain voice-candidates scrape manifest-check manifest-dedup coverage-audit analyze training dashboard all serve share console search on-this-day send-on-this-day send-year-in-review adjudicate backfill-verdicts entity-graph calhoun-isms reading-room contradictions rag-eval voice-eval voice-style voice-trials embedding-compare embedding-queries-check clean test lint fmt lint-json hooks verify verify-responsive
 
 scrape:
 	$(PYTHON) -m scraper $(ARGS)
@@ -116,6 +116,12 @@ send-on-this-day:
 # if you want human rulings reflected. ARGS e.g. --year 2024 or --dry-run. Draft via Gmail MCP.
 year-in-review:
 	$(PYTHON) -m analysis.year_in_review $(ARGS)
+
+# Approval gate for the annual digest, mirroring `send-on-this-day` (roadmap #48): prints who
+# the latest year-in-review would go to and sends nothing. Run `make year-in-review` first —
+# the subject is read back from the log record that the render appends.
+send-year-in-review:
+	$(PYTHON) bin/create_gmail_draft.py --kind year-in-review --dry-run
 
 # Printable "best of" anthology keepsake (roadmap #24). Deterministic + offline (no conductor,
 # no network): builds from data/analysis/{themes,predictions}.json and writes the print-ready
