@@ -9,15 +9,35 @@ through the Gmail MCP in a Claude session, not from here.
 """
 
 import json
+from dataclasses import dataclass
 from pathlib import Path
 
 from .utils import DATA_DIR
 
-EMAIL_DIR = DATA_DIR / "cron" / "emails"
-LOG_PATH = DATA_DIR / "cron" / "on_this_day.jsonl"
-RECIPIENTS_PATH = DATA_DIR / "cron" / "recipients.txt"
+CRON_DIR = DATA_DIR / "cron"
+EMAIL_DIR = CRON_DIR / "emails"
+LOG_PATH = CRON_DIR / "on_this_day.jsonl"
+RECIPIENTS_PATH = CRON_DIR / "recipients.txt"
 
 DEFAULT_SUBJECT = "From the archive"
+
+
+@dataclass(frozen=True)
+class EmailKind:
+    """One deliverable keepsake: how to find its newest render, and how to describe it."""
+
+    label: str
+    pattern: str
+
+
+# Every kind renders into the same EMAIL_DIR, so each pattern must match only its own
+# files. A single `*.html` glob would let the annual digest be drafted as the weekly note.
+EMAIL_KINDS: dict[str, EmailKind] = {
+    "on-this-day": EmailKind(label="On This Day", pattern="on_this_day_*.html"),
+    "year-in-review": EmailKind(label="Year in Review", pattern="year_in_review_*.html"),
+}
+
+DEFAULT_KIND = "on-this-day"
 
 
 def _looks_like_email(value: str) -> bool:
@@ -73,26 +93,31 @@ def latest_email_payload(
     email_dir: Path = EMAIL_DIR,
     log_path: Path = LOG_PATH,
     recipients_path: Path = RECIPIENTS_PATH,
+    *,
+    kind: str = DEFAULT_KIND,
 ) -> dict | None:
-    """Assemble the Gmail-MCP payload for the most recent On This Day email.
+    """Assemble the Gmail-MCP payload for the most recent email of ``kind``.
 
-    Returns {to, subject, html_body, headline, matched_article} or None if no
-    rendered email exists yet. This is the single source the draft helper and the
-    send trigger both consume — no second recipient mechanism.
+    Returns {kind, to, subject, html_body, email_file, headline, matched_article} or
+    None if that kind has nothing rendered yet. This is the single source the draft
+    helper and the send trigger both consume — no second recipient mechanism.
     """
+    spec = EMAIL_KINDS[kind]
     email_dir = Path(email_dir)
     if not email_dir.exists():
         return None
-    emails = sorted(email_dir.glob("on_this_day_*.html"), reverse=True)
+    emails = sorted(email_dir.glob(spec.pattern), reverse=True)
     if not emails:
         return None
 
     html = emails[0].read_text()
     meta = _latest_meta(log_path) or {}
     return {
+        "kind": kind,
         "to": read_recipients(recipients_path),
         "subject": meta.get("subject", DEFAULT_SUBJECT),
         "html_body": html,
+        "email_file": emails[0].name,
         "headline": meta.get("headline", ""),
         "matched_article": meta.get("matched_article", ""),
     }

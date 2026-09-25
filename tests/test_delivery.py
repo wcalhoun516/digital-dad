@@ -95,6 +95,60 @@ class TestLatestEmailPayload:
         assert payload["subject"] == "From the archive"
 
 
+class TestEmailKindIsolation:
+    """Two keepsake kinds share data/cron/emails/; neither may pick up the other's file.
+
+    The narrow `on_this_day_*.html` glob was a deliberate guard (see the 2026-09-07
+    daily-log entry). Roadmap #48 says "generalize the glob" — these pin that the
+    generalization is per-kind, not a widening to `*.html`.
+    """
+
+    def _both_kinds(self, tmp_path):
+        email_dir = tmp_path / "emails"
+        email_dir.mkdir()
+        (email_dir / "on_this_day_2026-06-03.html").write_text("<html>weekly</html>")
+        (email_dir / "year_in_review_2025.html").write_text("<html>annual</html>")
+        recipients_path = tmp_path / "recipients.txt"
+        recipients_path.write_text("you@example.com\n")
+        return email_dir, tmp_path / "missing.jsonl", recipients_path
+
+    def test_on_this_day_ignores_a_year_in_review_file(self, tmp_path):
+        email_dir, log_path, recipients_path = self._both_kinds(tmp_path)
+        payload = latest_email_payload(email_dir, log_path, recipients_path, kind="on-this-day")
+        assert payload["html_body"] == "<html>weekly</html>"
+
+    def test_year_in_review_ignores_an_on_this_day_file(self, tmp_path):
+        email_dir, log_path, recipients_path = self._both_kinds(tmp_path)
+        payload = latest_email_payload(email_dir, log_path, recipients_path, kind="year-in-review")
+        assert payload["html_body"] == "<html>annual</html>"
+
+    def test_payload_names_the_file_it_chose(self, tmp_path):
+        email_dir, log_path, recipients_path = self._both_kinds(tmp_path)
+        payload = latest_email_payload(email_dir, log_path, recipients_path, kind="year-in-review")
+        assert payload["email_file"] == "year_in_review_2025.html"
+
+    def test_year_in_review_picks_the_latest_year(self, tmp_path):
+        email_dir = tmp_path / "emails"
+        email_dir.mkdir()
+        (email_dir / "year_in_review_2024.html").write_text("<html>2024</html>")
+        (email_dir / "year_in_review_2025.html").write_text("<html>2025</html>")
+        payload = latest_email_payload(
+            email_dir, tmp_path / "missing.jsonl", tmp_path / "r.txt", kind="year-in-review"
+        )
+        assert payload["html_body"] == "<html>2025</html>"
+
+    def test_none_when_that_kind_has_no_email_yet(self, tmp_path):
+        email_dir = tmp_path / "emails"
+        email_dir.mkdir()
+        (email_dir / "on_this_day_2026-06-03.html").write_text("<html>weekly</html>")
+        assert (
+            latest_email_payload(
+                email_dir, tmp_path / "missing.jsonl", tmp_path / "r.txt", kind="year-in-review"
+            )
+            is None
+        )
+
+
 class TestFormatDryRun:
     def test_lists_recipients_and_sends_nothing_note(self):
         payload = {
