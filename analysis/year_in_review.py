@@ -25,6 +25,7 @@ from collections import Counter
 from pathlib import Path
 
 from .adjudicate import effective_verdict
+from .delivery import log_path_for
 from .utils import ANALYSIS_DIR, DATA_DIR
 
 EMAIL_DIR = DATA_DIR / "cron" / "emails"
@@ -366,7 +367,9 @@ def run(
 
     Deterministic and offline: reads ``themes.json`` + ``predictions.json`` (or the injected
     lists) and writes an HTML email to ``email_dir``. Makes no conductor/network/LLM calls.
-    Delivery stays human-in-the-loop via the Gmail-MCP draft path (D9).
+    Delivery stays human-in-the-loop via the Gmail-MCP draft path (D9) — ``make
+    send-year-in-review`` — which reads the subject back from the appended log record, so
+    the render also logs.
     """
     if year is None:
         year = default_year()
@@ -387,15 +390,22 @@ def run(
         email_file = email_dir / f"year_in_review_{year}.html"
         email_file.write_text(html_body)
 
-    return {
+    record = {
         "year": year,
         "subject": subject,
         "article_count": digest["article_count"],
         "total_words": digest["total_words"],
-        "html_body": html_body,
-        "markdown": markdown,
         "email_file": str(email_file) if email_file else None,
     }
+
+    if write:
+        # Derived from email_dir rather than taken as its own argument, so a caller who
+        # redirects the render cannot leave the log pointing at the live cron directory.
+        log_path = log_path_for("year-in-review", email_dir.parent)
+        with log_path.open("a") as f:
+            f.write(json.dumps(record) + "\n")
+
+    return {**record, "html_body": html_body, "markdown": markdown}
 
 
 def main(argv: list[str] | None = None) -> int:

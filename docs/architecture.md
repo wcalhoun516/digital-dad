@@ -306,11 +306,21 @@ it embeds **full article text** it is **git-ignored** — regenerate on demand. 
 themes that dominated, and his most notable calls. **No conductor, network, or LLM** — safe
 unattended. Delivery stays human-in-the-loop through the same Gmail-MCP draft path.
 
-`delivery.py` — the reusable, side-effect-free half of On This Day delivery (plan 0003 /
+`delivery.py` — the reusable, side-effect-free half of keepsake delivery (plan 0003 /
 decision **D9**): parses the git-ignored recipient list and assembles a dry-run summary that
-**sends nothing**. `bin/create_gmail_draft.py` is built on it, and `make send-on-this-day` is
-the owner's approval gate. Actual draft creation happens through the Gmail MCP in a Claude
-session, never from here — so no mail credentials are ever stored.
+**sends nothing**. `bin/create_gmail_draft.py` is built on it; `make send-on-this-day` and
+`make send-year-in-review` are the owner's approval gates. Actual draft creation happens
+through the Gmail MCP in a Claude session, never from here — so no mail credentials are ever
+stored.
+
+It is keyed on an **email kind** (`EMAIL_KINDS`, roadmap #48). Both keepsakes render into the
+same `data/cron/emails/`, so each kind owns a filename pattern that matches only its own
+files, the metadata log it reads the subject back from, and the fields the dry run reports. A
+single `*.html` glob would let the annual digest be drafted as the weekly note — adding a kind
+means adding a registry entry, never widening a pattern — and an unknown kind is refused by
+name rather than falling back to the weekly note. `year_in_review.run()` derives its log path
+from the email directory it was given rather than taking it as a separate argument, so a
+caller that redirects the render cannot still append to the live cron log.
 
 ### Evaluation harnesses & the Geo-LLM ladder
 
@@ -520,8 +530,9 @@ extractor was sure about.
 
 ### Email (`analysis/on_this_day.py` + `bin/create_gmail_draft.py`)
 
-On This Day writes an HTML email to disk; `create_gmail_draft.py` reads the latest one and
-emits it for Claude Code's **Gmail MCP** to turn into a draft (no SMTP, no auto-send today).
+On This Day and Year in Review each write an HTML email to disk; `create_gmail_draft.py
+--kind <kind>` reads the latest one of that kind and emits it for Claude Code's **Gmail MCP**
+to turn into a draft (no SMTP, no auto-send today).
 
 ## 5. Training (`training/prepare.py`)
 
@@ -543,6 +554,7 @@ data/
   cron/
     weekly.log weekly_summary.jsonl launchd.{out,err}
     emails/on_this_day_*.html  on_this_day.jsonl
+    emails/year_in_review_*.html  year_in_review.jsonl
 ```
 
 ## 7. Automation & scheduling (macOS launchd)

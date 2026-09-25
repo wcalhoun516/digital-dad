@@ -21,6 +21,7 @@ from urllib.request import Request, urlopen
 
 import numpy as np
 
+from .delivery import log_path_for
 from .semantic_search import (
     CONDUCTOR_BASE_URL,
     _embed_one,
@@ -374,8 +375,9 @@ def run(
         "email_file": str(email_path),
     }
 
-    # Append to on_this_day log
-    log_path = DATA_DIR / "cron" / "on_this_day.jsonl"
+    # Append to on_this_day log. The path comes from delivery's kind registry so the
+    # writer here and the reader in latest_email_payload cannot drift apart.
+    log_path = log_path_for("on-this-day")
     with open(log_path, "a") as f:
         f.write(json.dumps(result) + "\n")
 

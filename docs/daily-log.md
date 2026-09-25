@@ -1113,3 +1113,54 @@ Format:
   as text. **Plan 0011 stays in `ready/`:** steps 4–6 remain, and its status block now points
   the next run at the job runner, including the trap that uploading only fills `data/inbox/` —
   staging into the queue is still `make ingest` until step 4 lands.
+
+### 2026-09-25 — family — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/115
+- Source: roadmap:family (#48 — deliver the year-in-review digest)
+- Summary: **Roadmap #48 says "generalize the glob." Doing literally that would have undone a
+  guard this log installed on purpose.** The 2026-09-13 entry records it: `latest_email_payload`
+  globs `on_this_day_*.html` *specifically* so a year-in-review file sharing `data/cron/emails/`
+  cannot be drafted as the weekly note. Widening to `*.html` would have made the newest file of
+  either kind win — the exact bug the narrow glob prevents. So the glob was not widened; delivery
+  learned about **kinds** instead. A frozen `EmailKind` registry (`label`, `pattern`, `log_name`,
+  `detail_fields`) gives each keepsake its own pattern, and adding a kind is a registry entry,
+  never a looser pattern. **The glob was only one of three hard-codings.** Fixing it alone would
+  have produced a dry run reading "On This Day / From the archive / Headline: N/A" for an annual
+  digest: the log path and the dry-run's field labels were hard-coded too. All three now derive
+  from the kind, so the annual digest reports Year/Articles/Words under its own heading. The old
+  flat `headline`/`matched_article` payload keys were **removed rather than kept alongside**
+  `details` — two mechanisms for one job is how they drift. **The digest had no log at all**, so
+  even a correct reader had no subject to find; `year_in_review.run()` now appends a record, and
+  `on_this_day.py`'s hard-coded log path was re-pointed at `log_path_for("on-this-day")` so
+  writer and reader cannot disagree about where the weekly log lives. **A footgun caught by its
+  own test, mid-implementation.** `run()` first took `log_path` as its own argument defaulting to
+  the live cron log — and a *pre-existing* test that passed only `email_dir=tmp_path` promptly
+  appended a pytest temp path to the real `data/cron/year_in_review.jsonl`, which `make
+  send-year-in-review` reads. It would have reported a subject for a file that does not exist.
+  The parameter was **deleted**, not defaulted more carefully: the log path is now derived from
+  `email_dir.parent`, so redirecting the render necessarily redirects the log. Same
+  "paired, not separately configured" shape as `rejected_dir_for()` in #114. The regression test
+  was written first and watched fail. **Mutation-tested — 14 mutants, 14 caught, zero survivors**
+  (glob widening, unknown-kind silently defaulting, kind-ignoring log path, reversed sort,
+  truncate-instead-of-append, log-written-on-a-dry-run, dropped subject). This mattered more than
+  usual because every new symbol can only fail as an `ImportError` first, which proves nothing
+  about the assertions. **The trap that nearly made this a false green — read this one.** After
+  the harness ran, `make verify` passed **1623/1623** while the *live* `make send-year-in-review`
+  printed a full path where the source plainly said `emails[0].name`. Mutant M9 was
+  `emails[0].name` → `str(emails[0])`: **same byte length**, so at this volume's mtime
+  granularity Python kept the mutated `.pyc` after a byte-correct restore. The known
+  `__pycache__` hazard, but with a new and worse symptom — **stale bytecode does not always show
+  up as a red test.** A green suite was not evidence the bytecode was current; only running the
+  real command was. Cleared and re-verified. Two other loose ends were chased rather than waved
+  off: seven tmp-path records in the live log turned out to be mutant M12 (the one that breaks
+  the pairing) doing exactly what it was written to do, not a leak in the shipped code — the full
+  suite leaves the live log untouched, confirmed by deleting it and re-running. And a +23 test
+  delta against a +22 hand-count reconciled to `test_makefile_targets.py`, which auto-derives a
+  parametrized case per documented target, so documenting `make send-year-in-review` generated
+  its own test. **Verification:** `make verify` **exit 0** — ruff clean, **1623 passed**, dashboard
+  builds; ID-level diff against a clean `origin/main` worktree shows **+23 added, zero removed**
+  (1600 → 1623). Both kinds confirmed live: the digest reports "2024 — A Year in the Archive",
+  12 articles, 24,775 words, and `make send-on-this-day` is byte-for-byte unchanged in behaviour.
+  **A documented refusal:** the anthology is deliberately *not* a kind, because mailing it needs
+  a PDF attachment the Gmail-MCP `html_body` payload cannot carry — recorded in the README so the
+  next run does not mistake the omission for an oversight. Nothing here sends mail; D9 holds.

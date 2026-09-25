@@ -13,6 +13,7 @@ from pathlib import Path
 import pytest
 
 from analysis.adjudicate import effective_verdict
+from analysis.delivery import latest_email_payload
 from analysis.year_in_review import (
     _VERDICT_LABEL,
     _VERDICT_RANK,
@@ -343,17 +344,18 @@ class TestDefaultYear:
 
 class TestRun:
     def test_writes_html_and_returns_payload(self, tmp_path):
+        emails = tmp_path / "emails"
         result = run(
             2024,
             theme_articles=THEME_ARTICLES,
             predictions=PREDICTIONS,
-            email_dir=tmp_path,
+            email_dir=emails,
         )
         assert result["year"] == 2024
         assert result["article_count"] == 3
         assert "2024" in result["subject"]
         assert "<html" in result["html_body"].lower()
-        written = list(tmp_path.glob("year_in_review_2024.html"))
+        written = list(emails.glob("year_in_review_2024.html"))
         assert len(written) == 1
         assert written[0].read_text() == result["html_body"]
 
@@ -376,6 +378,66 @@ class TestRun:
             write=False,
         )
         assert result["year"] == default_year()
+
+
+class TestRunLogsForDelivery:
+    """Roadmap #48: the digest's subject has to outlive the process that rendered it.
+
+    `latest_email_payload` reads the subject from a log record, so without one the
+    annual digest would be drafted under the weekly note's "From the archive".
+    """
+
+    def _run(self, tmp_path, **over):
+        kwargs = dict(
+            theme_articles=THEME_ARTICLES,
+            predictions=PREDICTIONS,
+            email_dir=tmp_path / "emails",
+        )
+        kwargs.update(over)
+        return run(2024, **kwargs)
+
+    def test_log_is_paired_to_the_email_dir_not_configured_separately(self, tmp_path):
+        """A caller who redirects the emails must not still write to the live cron log.
+
+        Regression: the log path was resolved from the module-level default, so a test
+        passing only `email_dir` appended a record — naming a temp file — to the real
+        data/cron/year_in_review.jsonl, which `make send-year-in-review` then reads.
+        """
+        self._run(tmp_path, email_dir=tmp_path / "emails")
+        assert (tmp_path / "year_in_review.jsonl").exists()
+
+    def test_appends_a_record_carrying_the_subject(self, tmp_path):
+        self._run(tmp_path)
+        record = json.loads((tmp_path / "year_in_review.jsonl").read_text().splitlines()[-1])
+        assert record["subject"] == "2024 — A Year in the Archive"
+
+    def test_record_carries_the_numbers_the_dry_run_reports(self, tmp_path):
+        self._run(tmp_path)
+        record = json.loads((tmp_path / "year_in_review.jsonl").read_text().splitlines()[-1])
+        assert record["year"] == 2024
+        assert record["article_count"] == 3
+        assert record["email_file"].endswith("year_in_review_2024.html")
+
+    def test_rerendering_appends_rather_than_replaces(self, tmp_path):
+        self._run(tmp_path)
+        self._run(tmp_path)
+        assert len((tmp_path / "year_in_review.jsonl").read_text().splitlines()) == 2
+
+    def test_dry_run_logs_nothing(self, tmp_path):
+        self._run(tmp_path, write=False)
+        assert not (tmp_path / "year_in_review.jsonl").exists()
+
+    def test_the_rendered_digest_is_deliverable(self, tmp_path):
+        """End to end: render, then prepare it for the Gmail MCP as its own kind."""
+        self._run(tmp_path)
+        payload = latest_email_payload(
+            tmp_path / "emails",
+            tmp_path / "year_in_review.jsonl",
+            tmp_path / "recipients.txt",
+            kind="year-in-review",
+        )
+        assert payload["subject"] == "2024 — A Year in the Archive"
+        assert payload["details"] == {"Year": "2024", "Articles": "3", "Words": "3200"}
 
 
 class TestAgainstTheRealCorpus:
