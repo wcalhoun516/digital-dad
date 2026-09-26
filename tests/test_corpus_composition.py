@@ -165,6 +165,26 @@ class TestWhatThePipelineCanActuallyRead:
         assert result["unreadable"] == {"items": 0, "words": 0}
 
 
+class TestTheHttpsTwins:
+    """The scraper historically upserted on URL, so 23 of today's 204 manifest entries are
+    http/https twins naming the *same* raw file. `load_articles` dedupes them; a panel that
+    did not would over-report the corpus by 23 items and 37,728 words — 11% — which is the
+    wrong direction to be wrong about "how much text is enough"."""
+
+    def test_two_entries_naming_the_same_raw_file_count_once(self):
+        twin = {**LEGACY_COLUMN, "slug": "europes-hamiltonian-moment-2"}
+        result = compose(
+            _manifest(LEGACY_COLUMN, twin), readable_slugs={LEGACY_COLUMN["slug"]}
+        )
+        assert result["total"]["items"] == 1
+        assert result["total"]["words"] == 1804
+
+    def test_two_ingested_entries_with_no_raw_file_are_both_kept(self):
+        """They share the empty `file` field but are genuinely different documents."""
+        result = compose(_manifest(INGESTED_BOOK, INGESTED_THREAD), readable_slugs=set())
+        assert result["total"]["items"] == 2
+
+
 class TestEdges:
     def test_an_empty_manifest_does_not_divide_by_zero(self):
         result = compose(_manifest(), readable_slugs=set())
