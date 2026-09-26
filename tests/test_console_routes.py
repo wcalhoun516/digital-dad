@@ -31,6 +31,7 @@ from pathlib import Path
 
 import pytest
 
+from console import jobs
 from ingest.queue import rejected_dir_for, save_item
 from ingest.review import PREVIEW_CHARS
 from ingest.upload import MAX_UPLOAD_BYTES
