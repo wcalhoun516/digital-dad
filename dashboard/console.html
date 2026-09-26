@@ -7,12 +7,10 @@
   DIGITAL_DAD_CONSOLE=1, on a tailnet-only port. It is served at /console, and the server
   withholds it entirely when the console is disabled.
 
-  Steps 2 and 3 are wired: Upload posts raw bytes to /console/api/upload, and the review
-  queue reads /console/api/queue and posts decisions to /console/api/review. Steps 4-5 (job
-  runner, scoreboard) are still placeholders.
-
-  Uploading only fills data/inbox/. Extracting those files into the review queue is still
-  `make ingest` at a terminal — the console gets that button in step 4's job runner.
+  Steps 2-4 are wired: Upload posts raw bytes to /console/api/upload, the review queue reads
+  /console/api/queue and posts decisions to /console/api/review, and the job runner starts
+  pipeline steps through /console/api/job while tailing /console/api/job/log. Step 5 (the
+  scoreboard) is still a placeholder.
 -->
 <html lang="en">
 <head>
@@ -93,6 +91,10 @@ input[type=text] {
   padding: 8px 10px; max-height: 120px; overflow: auto;
 }
 .empty { color: var(--text-muted); font-size: 13px; padding: 14px 0 0; }
+#jobs .row { margin: 8px 0; }
+#jobs button { min-width: 150px; }
+button.costly { border-color: #5a4a3c; }
+#job-log { max-height: 220px; margin-top: 4px; }
 </style>
 </head>
 <body>
@@ -114,8 +116,8 @@ input[type=text] {
       </div>
       <ul class="results" id="upload-results"></ul>
       <p class="note">
-        Uploading fills <code>data/inbox/</code>. Extracting into the queue below is still
-        <code>make ingest</code> at a terminal until step 4 lands.
+        Uploading fills <code>data/inbox/</code>. Run <code>ingest</code> below to extract
+        those files into the review queue.
       </p>
     </section>
     <section class="panel">
@@ -128,9 +130,11 @@ input[type=text] {
       <div id="queue"></div>
     </section>
     <section class="panel">
-      <span class="pending">step 4</span>
       <h2>Job runner</h2>
-      <p>Run prep → preflight → train → eval, one job at a time, with a live log.</p>
+      <p>One job at a time. A second start is refused, not queued.</p>
+      <div id="jobs"></div>
+      <div class="row"><span class="note" id="job-state">checking…</span></div>
+      <pre class="preview" id="job-log"></pre>
     </section>
     <section class="panel">
       <span class="pending">step 5</span>
@@ -304,6 +308,89 @@ function loadQueue() {
   });
 }
 
+// --- job runner -----------------------------------------------------------------------
+
+// Byte offset of the log already on screen, so each poll appends only what is new.
+var logOffset = 0;
+var jobButtons = null;
+
+function renderJobs(specs) {
+  var box = document.getElementById("jobs");
+  jobButtons = [];
+  (specs || []).forEach(function (spec) {
+    var row = el("div", "row");
+    var button = el("button", spec.costly ? "costly" : null, spec.name);
+    button.setAttribute("data-job", spec.name);
+    button.addEventListener("click", function () { startJob(spec); });
+    jobButtons.push(button);
+    row.appendChild(button);
+    row.appendChild(el("span", "note", spec.summary));
+    box.appendChild(row);
+  });
+}
+
+function showJobState(state) {
+  var running = state.state === "running";
+  var text = state.state === "idle"
+    ? "idle — nothing has run yet"
+    : state.job + " — " + state.state +
+      (state.exit_code === null || state.exit_code === undefined
+        ? "" : " (exit " + state.exit_code + ")");
+  document.getElementById("job-state").textContent = text;
+  // Disabled while one runs: the server would answer 409 anyway, and a button that looks
+  // live but always refuses is worse than one that says so.
+  (jobButtons || []).forEach(function (button) { button.disabled = running; });
+}
+
+function appendLog() {
+  return call("/console/api/job/log?offset=" + logOffset, {}).then(function (res) {
+    if (!res.ok || !res.data) { return; }
+    logOffset = res.data.offset;
+    if (res.data.text) {
+      var log = document.getElementById("job-log");
+      log.textContent += res.data.text;
+      log.scrollTop = log.scrollHeight;
+    }
+  });
+}
+
+function pollJob() {
+  return call("/console/api/job", {}).then(function (res) {
+    if (!res.ok) {
+      document.getElementById("job-state").textContent = "job state unavailable — " + reason(res);
+      return;
+    }
+    if (jobButtons === null) { renderJobs(res.data.jobs); }
+    showJobState(res.data);
+    // The log is read after the state, so a poll that sees "succeeded" still collects
+    // everything the job wrote before exiting.
+    return appendLog().then(function () {
+      if (res.data.state === "running") { window.setTimeout(pollJob, 1000); }
+    });
+  });
+}
+
+function startJob(spec) {
+  if (spec.costly &&
+      !window.confirm(spec.name + " — " + spec.summary + "\n\nStart it?")) {
+    return;
+  }
+  call("/console/api/job", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ job: spec.name })
+  }).then(function (res) {
+    if (!res.ok) {
+      window.alert(spec.name + " — " + reason(res));
+      pollJob();
+      return;
+    }
+    logOffset = 0;
+    document.getElementById("job-log").textContent = "";
+    pollJob();
+  });
+}
+
 // --- health + wiring ------------------------------------------------------------------
 
 call("/console/api/health", {}).then(function (res) {
@@ -316,6 +403,7 @@ call("/console/api/health", {}).then(function (res) {
 document.getElementById("upload-btn").addEventListener("click", uploadSelected);
 document.getElementById("queue-refresh").addEventListener("click", loadQueue);
 loadQueue();
+pollJob();
 </script>
 </body>
 </html>
