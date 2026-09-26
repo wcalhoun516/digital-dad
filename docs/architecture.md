@@ -341,6 +341,23 @@ seeded, reproducible shuffle, ranked by a judge model on how much they read like
 un-blinded into win-rates, average ranks and a `finetuned_over_rag` head-to-head. Also computes
 offline **style metrics** against his distinctive words (`--style-only` needs no judge).
 
+`scoreboard.py` — **did this run beat the last one?**; `python -m analysis.scoreboard`. The
+arithmetic behind plan 0011's console scoreboard, kept here beside the harnesses whose reports
+it reads (`voice_eval.json`, `rag_eval.json`, a `finetune_preflight` report's
+`checks.length_budget.pct_over`) and the run series `voice_candidates.append_history` already
+appends to `voice_eval_history.jsonl`. It computes nothing itself and writes nothing: every
+reader is total, so a report the operator has never generated is an absence rather than a
+traceback. Two judgements are the substance. **Direction is a property of the metric** —
+`avg_rank` improves by falling, and `type_token_ratio` / `fingerprint_hits_per_1k` are *toward*
+metrics with a target rather than a direction, because D15's finding was vocabulary over-use at
+~2× the natural rate and scoring that "lower is better" would reward a model that had lost his
+voice entirely. The target is the current report's own `real` source, measured fresh as the
+corpus grows, falling back to D15's recorded numbers. **The previous run is the last earlier run
+of the same experiment**, not the previous row group: the history interleaves conditions (D20
+recorded a 2×2 in one day), so the adjacent group is usually a different condition with
+differently-named arms that were never alternatives. D15 is carried as the standing `BASELINE`
+so every run is read against the record it has to beat.
+
 `voice_trials.py` — deterministic input builder for the above; `make voice-trials`. Turns 26a's
 held-out split (`data/training/heldout.jsonl`) into a real `eval/voice_trials.json` skeleton —
 each trial's prompt plus a length-balanced genuine excerpt, with `rag`/`finetuned` left as

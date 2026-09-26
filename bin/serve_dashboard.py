@@ -62,6 +62,8 @@ CONSOLE_ROUTES = (
     "/console/api/upload",
     "/console/api/queue",
     "/console/api/review",
+    "/console/api/job",
+    "/console/api/job/log",
 )
 
 # Where the console reads and writes. None means "whatever the ingest modules default to",
@@ -70,6 +72,7 @@ CONSOLE_ROUTES = (
 CONSOLE_INBOX_DIR = None
 CONSOLE_QUEUE_DIR = None
 CONSOLE_MANIFEST_PATH = None
+CONSOLE_STATE_PATH = None
 
 # A review decision is a handful of short strings. Anything larger is not one, and reading it
 # into memory before finding that out is the mistake.
@@ -191,6 +194,7 @@ def console_paths():
     """
     if _REPO_ROOT not in sys.path:
         sys.path.insert(0, _REPO_ROOT)
+    from console import jobs as console_jobs
     from ingest import queue as ingest_queue
     from ingest import review as ingest_review
     from ingest import upload as ingest_upload
@@ -199,9 +203,11 @@ def console_paths():
         upload=ingest_upload,
         queue=ingest_queue,
         review=ingest_review,
+        jobs=console_jobs,
         inbox=Path(CONSOLE_INBOX_DIR or ingest_queue.INBOX_DIR),
         queue_dir=Path(CONSOLE_QUEUE_DIR or ingest_queue.QUEUE_DIR),
         manifest=Path(CONSOLE_MANIFEST_PATH or ingest_review.MANIFEST_PATH),
+        job_state=Path(CONSOLE_STATE_PATH or console_jobs.STATE_PATH),
     )
 
 
@@ -305,13 +311,29 @@ class GatedHandler(SimpleHTTPRequestHandler):
             self.wfile.write(payload)
 
     def _console_static_withheld(self) -> bool:
-        """True when the request is for a console asset the disabled console must not expose."""
+        """True when the request resolves to an asset the disabled console must not expose.
+
+        Compared by **file identity, not URL spelling.** The check used to match the raw
+        request path against the literal "/console.html", but `translate_path` percent-decodes
+        before it resolves and macOS matches filenames case-insensitively, so `/console%2Ehtml`
+        and `/CONSOLE.HTML` both reached the file the check had just refused. `samefile`
+        answers the question actually being asked — "is the file about to be served the console
+        page?" — in whatever spelling the client used.
+        """
         if CONSOLE_ENABLED:
             return False
-        if self.path.split("?", 1)[0] not in CONSOLE_STATIC_PATHS:
-            return False
-        self.send_error(404, "Not Found")
-        return True
+        target = self.translate_path(self.path)
+        for name in CONSOLE_STATIC_PATHS:
+            withheld = os.path.join(self.directory, name.lstrip("/"))
+            try:
+                if os.path.samefile(target, withheld):
+                    self.send_error(404, "Not Found")
+                    return True
+            except OSError:
+                # Either path may not exist (a 404 the static handler will produce anyway, or
+                # a console asset absent from this install). Neither is a match.
+                continue
+        return False
 
     def _send_json(self, status: int, payload) -> None:
         body = (json.dumps(payload) + "\n").encode()
@@ -428,6 +450,53 @@ class GatedHandler(SimpleHTTPRequestHandler):
         # rename is the one thing about the write the operator has to be told.
         self._send_json(200, {"filename": written.name})
 
+    def _console_job(self) -> None:
+        """The current job plus the menu of them, so the page builds its buttons from truth."""
+        paths = console_paths()
+        state = dict(paths.jobs.job_state(paths.job_state))
+        state["jobs"] = [
+            {"name": name, "summary": spec.summary, "costly": spec.costly}
+            for name, spec in paths.jobs.JOBS.items()
+        ]
+        self._send_json(200, state)
+
+    def _console_job_start(self) -> None:
+        payload = self._read_json_object()
+        if payload is None:
+            return
+        name = payload.get("job", "")
+        if not isinstance(name, str) or not name:
+            self._refuse(400, "starting a run needs the 'job' name")
+            return
+
+        paths = console_paths()
+        try:
+            state, _watcher = paths.jobs.start_job(name, state_path=paths.job_state)
+        except paths.jobs.UnknownJob as exc:
+            self._refuse(400, str(exc))
+            return
+        except paths.jobs.JobBusy as exc:
+            # 409, never a silent queue: two trainers on one GPU is a corrupt result, and an
+            # operator who is not told their click did nothing will click again.
+            self._refuse(409, str(exc))
+            return
+        except paths.jobs.JobError as exc:
+            # A broken .venv or an exhausted process table. Rare, but it has to reach the
+            # operator as a sentence on the page rather than as a closed socket.
+            self._refuse(500, str(exc))
+            return
+        # The handler returns now; the job outlives this request in its own process.
+        self._send_json(200, state)
+
+    def _console_job_log(self) -> None:
+        query = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+        raw = (query.get("offset") or ["0"])[0]
+        if not raw.isdigit():
+            self._refuse(400, f"'offset' must be a byte count, not {raw!r}")
+            return
+        paths = console_paths()
+        self._send_json(200, paths.jobs.tail_log(paths.job_state, offset=int(raw)))
+
     def _console(self, route: str, method: str) -> None:
         if not CONSOLE_ENABLED:
             self.send_error(404, "Not Found")
@@ -438,6 +507,8 @@ class GatedHandler(SimpleHTTPRequestHandler):
             "/console/api/queue": {"GET": self._console_queue},
             "/console/api/review": {"POST": self._console_review},
             "/console/api/upload": {"POST": self._console_upload},
+            "/console/api/job": {"GET": self._console_job, "POST": self._console_job_start},
+            "/console/api/job/log": {"GET": self._console_job_log},
         }
         by_method = routes.get(route)
         if by_method is None:
@@ -505,6 +576,17 @@ def main() -> int:
         )
         return 1
     if CONSOLE_ENABLED:
+        if not PASSWORD:
+            # DIGITAL_DAD_ALLOW_OPEN was a bargain struck for a read-only surface: the worst
+            # case of no password was a stranger reading columns that were already public.
+            # The console writes files and starts processes, so it does not get that bargain.
+            sys.stderr.write(
+                "REFUSING TO START: the console is enabled but no password is set. "
+                "DIGITAL_DAD_ALLOW_OPEN covers the read-only dashboard; it does not cover a "
+                "surface that writes files and starts processes. Set "
+                "DIGITAL_DAD_DASHBOARD_PASSWORD, or unset DIGITAL_DAD_CONSOLE.\n"
+            )
+            return 1
         refusal = console_refusal_reason(PORT, *probe_funnel())
         if refusal:
             sys.stderr.write(f"REFUSING TO START: {refusal}\n")
