@@ -1113,3 +1113,52 @@ Format:
   as text. **Plan 0011 stays in `ready/`:** steps 4–6 remain, and its status block now points
   the next run at the job runner, including the trap that uploading only fills `data/inbox/` —
   staging into the queue is still `make ingest` until step 4 lands.
+
+### 2026-09-21 — infra — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/111
+- Source: plan:ready/0011 (step 4 — the job runner)
+- Summary: **The console can turn the crank.** Uploading filled `data/inbox/` and then the page
+  told the operator to go run `make ingest` at a terminal; that note is now the button it was
+  apologising for. New top-level `console/` package: `console/jobs.py` is the state machine,
+  `POST`/`GET /console/api/job` and `GET /console/api/job/log` are the routes, and the page's
+  step-4 placeholder is a job panel with a live log. Six registered jobs — `ingest`,
+  `finetune-prep`, `finetune-preflight`, `voice-style`, `train`, `voice-eval` — as argv lists of
+  `python -m module`, never shell strings, from a closed registry: an operator picks a name,
+  never a command. Three rules: **never in the request handler** (a training run in a handler
+  thread is a hung tab and a leaked thread on this stdlib server); **one job at a time, refused
+  with a 409 rather than queued** (two trainers on one GPU is a corrupt result, not a slow one);
+  and **liveness re-derived from the pid on every read**, because the state file survives a
+  crash and the process does not — a `running` record with nothing behind it would otherwise
+  refuse every future job forever. **One deliberate deviation from the plan:** step 4 says to
+  reuse `_proxy`'s SSE for the log tail; it polls by byte offset instead, because SSE holds a
+  handler thread per viewer for the length of a training run and still needs tearing down at
+  job end, while an offset poll delivers each line exactly once, costs a stat and a seek, and
+  survives a closed laptop. Recorded in the plan's status block so a later step doesn't read
+  the original instruction and undo it — flagged in the PR for the human to overrule.
+  **A race the live browser test caught while every unit test was green and wrong:** running a
+  job in a real browser intermittently reported `interrupted` for a job that had *succeeded*.
+  Two races, one symptom — a poll landing between the child's exit and the watcher's write
+  reconciled a `running` record with a dead pid, but `interrupted` has to mean *nobody is coming
+  to write the real answer*, and the page stops polling on a terminal state so the wrong word
+  was permanent; and both writers then collided on a single `job.json.tmp`, where the first
+  `replace` moved the file out from under the second and the lost write was the job's final
+  outcome. Runs are now tracked by log name while watched, and the temp name is per-thread.
+  **Mutation-tested — 29 mutants, 28 caught; the first pass found five survivors that were four
+  real gaps.** Nothing exercised the real `_pid_alive` (every other test injects `alive=`, so a
+  check that always answered `True` would have wedged the runner on the first crashed server),
+  nothing pinned the non-clobbering log open (two runs in the same second would have merged into
+  one file), nothing asserted the child's stderr reaches the operator's log rather than the
+  server's, and nothing covered the `finally` that releases a run whose watcher died mid-write.
+  The lone survivor swaps the atomic `replace` for a direct write — no deterministic test can
+  observe a torn read. **Verification:** `make verify` — ruff clean across the widened
+  `LINT_PATHS`, **1650 passed**, zero warnings, dashboard builds; `__pycache__` cleared before
+  every red→green proof. **No test starts a real pipeline job:** the state machine runs on a
+  fake spawn, the route and page tests register a throwaway `python -m this`, and the two tests
+  naming `ingest` never spawn it (one gets a 409 from a pre-written busy record, the other has
+  `Popen` patched to fail). The job panel is exercised in **live headless Chromium** against the
+  real server through the Basic-Auth gate. **Security posture unchanged but worth more:** the
+  console is still tailnet-only and refuses to start under Funnel, and the new POST is in the
+  401 table with an assertion that an unauthenticated start leaves the runner `idle` — refused
+  before it can spend an afternoon of GPU. **Plan 0011 stays in `ready/`:** steps 5–6 remain,
+  and its status block now points the next run at **step 5, the scoreboard**, which is the point
+  of the whole plan and finally has the runs to score.
