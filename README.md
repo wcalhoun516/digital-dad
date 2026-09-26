@@ -470,6 +470,59 @@ calls to the same model stay hot with no reload penalty. Heavy batch jobs
 (like full prediction extraction) should still be run separately from Ask Dad
 to avoid concurrent memory pressure.
 
+## The Operator Console
+
+A second, separate web surface for *running* the project: drop files in, review what was
+extracted from them, and accept them into the corpus — without a terminal. The family
+dashboard above is read-only and opens anywhere; the console writes files and is
+server-bound. They are deliberately two surfaces (see **D21** in
+[`docs/decisions.md`](docs/decisions.md)).
+
+```bash
+# Starts the same server with the console switched on, on a tailnet-only port.
+DIGITAL_DAD_DASHBOARD_PASSWORD=... make console     # → http://127.0.0.1:8765/console
+```
+
+**It is off unless you ask for it.** `DIGITAL_DAD_CONSOLE=1` is the only thing that enables
+it; anything else leaves every route below returning 404, and `/console.html` is withheld
+from the static file handler too, so the page cannot be reached by asking for the file
+directly. The withhold compares *which file* the request resolves to, not how the URL was
+spelled, so `/console%2Ehtml` and `/CONSOLE.HTML` are refused along with it.
+
+**It will not run without a password.** `DIGITAL_DAD_ALLOW_OPEN=1` serves the read-only
+dashboard with no password for trusted local use; the console does not get that bargain and
+refuses to start without `DIGITAL_DAD_DASHBOARD_PASSWORD`.
+
+**It refuses to start on a public port.** `make share` publishes the dashboard to the
+internet through Tailscale Funnel. The console must not ride along: at startup it reads
+`tailscale serve status --json`, and if its own listen port is Funnel-exposed it prints
+`REFUSING TO START` and exits 1. If Tailscale is installed but its state cannot be read, it
+also refuses — an unanswered "is this port public?" is not a yes. `CONSOLE_PORT` (default
+8765) keeps it off the dashboard's 8000.
+
+| Route | Method | What it does |
+|---|---|---|
+| `/console` | GET | The console page (`dashboard/console.html`) |
+| `/console/api/health` | GET | Confirms the console is enabled; lists the live route table |
+| `/console/api/upload` | POST | Writes one file into `data/inbox/`; `?filename=` names it, the raw body is the bytes |
+| `/console/api/queue` | GET | The pending review queue, per source rather than per document |
+| `/console/api/review` | POST | Applies one accept / edit / reject decision |
+
+Uploads are validated before anything touches disk: the name must be a bare filename (no
+path separators, no leading dot, no control characters), the extension must belong to a
+registered ingest handler (`.eml`, `.epub`, `.mbox`, `.md`, `.txt`), and the file must be
+under 25 MB. A name that looks like a path is **rejected, never repaired**. Nothing uploaded
+is ever executed.
+
+Every route is behind the same Basic Auth gate as the dashboard, and
+`tests/test_console_gate.py` enumerates the route table to prove it — a route added later
+cannot skip the gate. Upload and review are thin callers of `ingest/upload.py` and
+`ingest/review.py`, the same modules `make ingest` and `make ingest-review` use, so the
+console and the CLI reach the same decision.
+
+> Uploading fills `data/inbox/` only. Staging those files into the review queue is still
+> `make ingest` at a terminal until plan 0011's job runner lands.
+
 ## Conductor Dependency
 
 All LLM and embedding calls route through the

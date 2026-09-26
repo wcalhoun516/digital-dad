@@ -439,3 +439,73 @@ before the retry loop, and refuses outright. Three choices are load-bearing:
 (`dashboard/template.html` sets `allow_remote` client-side). That is the owner's own browser
 talking to his own conductor, outside this Python path — it needs its own gate, tracked as
 follow-up work, and this ADR does not claim to have closed it.
+
+---
+
+### D21 — The operator console is a second surface, off by default, and refuses the Funnel
+**Why:** D4 says the dashboard is fully client-side so one `index.html` opens anywhere,
+forever — that is what makes it a durable family artifact rather than software someone has to
+keep running. Plan 0011's console wants the opposite properties: it writes files into
+`data/inbox/`, mutates the manifest through `ingest/review.py`, and will start subprocesses.
+None of that can happen in a static file, and bolting it onto `dashboard/index.html` would
+quietly convert the archive into something that only works while a server is up. So this is
+recorded as a **second surface**, not as an exception to D4. D4 stands unamended.
+
+The security half is the sharper one. `bin/serve_dashboard.py` is published to the public
+internet by Tailscale Funnel (the `dashboard-remote-sharing` setup), protected by one shared
+password. Everything it served before the console was **read-only**, so the worst case of a
+leaked password was "a stranger reads Forbes columns that were already public". A write
+surface on the same listener changes the worst case to "a stranger writes files to disk and
+starts processes on the Mac mini". That is a categorical escalation, and the existing password
+is not sufficient authorization for it.
+
+**Implication:** four gates, each failing closed, and they compose.
+
+1. **Off unless asked.** `CONSOLE_ENABLED` is `os.environ.get("DIGITAL_DAD_CONSOLE") == "1"`
+   — an exact match, so `true`, `yes` and `0` all leave it off. With it off, every route in
+   `CONSOLE_ROUTES` 404s *and* `/console.html` is withheld from the static handler
+   (`CONSOLE_STATIC_PATHS`). The second half matters because the console's page lives inside
+   the directory this server publishes: routing `/console` is not by itself enough to keep the
+   page out of the family artifact, since anyone with the dashboard password could otherwise
+   ask for the file by name.
+
+   **The withhold compares file identity, not URL spelling** — `os.path.samefile` against the
+   path `translate_path` resolves to. Written as a literal string comparison first, it blocked
+   `/console.html` and served `/console%2Ehtml` and `/CONSOLE.HTML`, because the static handler
+   percent-decodes after the check ran and macOS matches filenames case-insensitively. Three
+   spellings, one file, one of them refused. A guard on the spelling of a name is not a guard
+   on the thing the name reaches.
+2. **Never without a password.** `DIGITAL_DAD_ALLOW_OPEN=1` lets the *dashboard* serve with no
+   password for trusted local use, and `_authed()` returns `True` whenever `PASSWORD` is empty.
+   That bargain was struck for a read-only surface and does not transfer: with the console on
+   and no password set, the server refuses to start. The escape hatch still covers the
+   dashboard — only the console loses it.
+3. **Never on a Funnel-exposed port.** At startup, `console_refusal_reason()` reads
+   `tailscale serve status --json` and refuses if the listen port is reachable from the public
+   internet. Only ports flagged in `AllowFunnel` count — a plain `tailscale serve` is
+   tailnet-only, which is the mode the console is meant to run behind. The refusal is a
+   non-zero exit with a printed reason, not a warning: a console that starts anyway after
+   saying it should not have is worse than one that never started.
+4. **Silence is not consent.** If Tailscale is installed but `serve status` cannot be read,
+   the console refuses too. The question "is this port public?" is then unanswered, and an
+   unanswered question is not a no. If Tailscale is *absent* the probe returns `absent` and the
+   console may start — there is no Funnel on a machine with no Tailscale, so there is nothing
+   to be exposed by.
+
+`make console` puts these together: `CONSOLE_PORT` defaults to **8765**, deliberately not the
+8000 that `make share` publishes, so the default configuration is one the refusal does not
+have to catch.
+
+**Deliberately not covered:** authentication rework. The console sits behind the *same* Basic
+Auth gate as the dashboard — `tests/test_console_gate.py` enumerates `CONSOLE_ROUTES` to prove
+every route passes through `_gate()`, so a route added by a later step cannot skip it — and a
+second factor for write operations is a separate decision, not one this ADR makes. What is
+settled here is only that one shared password is not sufficient *on its own*, which is why
+gates 1–4 exist alongside it.
+
+**How gates 1 and 2 were found is the part worth keeping.** Both were written into this ADR as
+claims *before* they were true, and both were caught by reviewing the ADR against the source
+rather than by reviewing the source on its own — a documented security property is a testable
+one, and writing it down is what made the gap legible. That is an argument for ADRs like this
+one, and also a caution: an unverified claim in this file is worse than an absent one, because
+the next session will build on it.

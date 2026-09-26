@@ -182,3 +182,26 @@ logic are all pure and testable offline; no test may start a real training run.
   should not start because a cron fired.
 - Deleting source material. Rejects move aside with a reason; nothing is destroyed from the
   console.
+
+## Progress note — 2026-09-23 (step 6 written, PR #113)
+
+*Appended at the end of the file on purpose.* The Status block above is rewritten by **both**
+PR #111 and PR #112, which are open and unmerged; a third rewrite of the same lines is how the
+add/add conflict that left `main` red for four weeks got made. This note is additive instead.
+
+**Step 6 is written** — ADR **D21** in `docs/decisions.md` (the console-as-second-surface split
+from D4, and the three fail-closed gates behind the tailnet-only refusal), the README's
+*Operator Console* section, and a doc-coverage gate in `tests/test_docs_coverage.py` that reads
+`CONSOLE_ROUTES`, the ingest handler registry and the Makefile's `CONSOLE_PORT`, so a route or
+an upload format added by step 4 or 5 turns the suite red until the README names it. The
+security section's "raise it in the PR body so the owner rules on it" is now discharged by an
+ADR rather than by a PR body that scrolls away.
+
+**The Status block above is stale**, and the shape of the staleness matters more than the
+detail: it says "next run should do step 4" and "steps 4–6 not started". Step 4 is written
+(#111), step 5's scoring core is written (#112), step 6 is this PR. What remains —
+`GET /console/api/scores` and its panel — imports `analysis/scoreboard.py`, which exists only
+on #112's branch, and sits beside `console/`, which exists only on #111's. **Every remaining
+piece of this plan is now blocked on a merge rather than on an implementation.** A run that
+picks this plan up should check whether #111 and #112 have landed *first*, and if they have
+not, either take work elsewhere or expect to stack.
