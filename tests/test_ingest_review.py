@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from ingest.queue import load_queue, save_item, scan_inbox
+from ingest.queue import load_all, load_queue, rejected_dir_for, save_item, scan_inbox
 from ingest.review import (
     InvalidDecision,
     InvalidEdit,
@@ -221,6 +221,15 @@ class TestApplyDecision:
         save_item(item or _item(), queue)
         return queue, _empty_manifest(tmp_path)
 
+    def _reject(self, queue, manifest_path, reason="bad scan"):
+        return apply_decision(
+            "a-1234abcd",
+            "reject",
+            reason=reason,
+            queue_dir=queue,
+            manifest_path=manifest_path,
+        )
+
     def test_accept_appends_to_the_manifest_and_persists_the_item(self, tmp_path):
         queue, manifest_path = self._queue(tmp_path)
 
@@ -243,7 +252,7 @@ class TestApplyDecision:
             manifest_path=manifest_path,
         )
 
-        stored = json.loads((queue / "a-1234abcd.json").read_text())
+        stored = json.loads((rejected_dir_for(queue) / "a-1234abcd.json").read_text())
         assert stored["status"] == "rejected"
         assert stored["reject_reason"] == "bad scan"
         assert json.loads(manifest_path.read_text())["articles"] == []
@@ -293,6 +302,56 @@ class TestApplyDecision:
             )
 
         assert len(json.loads(manifest_path.read_text())["articles"]) == 1
+
+    def test_the_rejected_item_is_written_to_the_quarantine(self, tmp_path):
+        queue, manifest_path = self._queue(tmp_path)
+
+        self._reject(queue, manifest_path)
+
+        stored = json.loads((rejected_dir_for(queue) / "a-1234abcd.json").read_text())
+        assert stored["status"] == "rejected"
+        assert stored["reject_reason"] == "bad scan"
+
+    def test_the_rejected_item_no_longer_occupies_the_queue(self, tmp_path):
+        """A reject is never deleted, so its body would otherwise be re-read forever."""
+        queue, manifest_path = self._queue(tmp_path)
+
+        self._reject(queue, manifest_path)
+
+        assert not (queue / "a-1234abcd.json").exists()
+        assert load_queue(queue) == []
+
+    def test_a_second_reject_is_refused_as_a_decision_not_as_a_stranger(self, tmp_path):
+        """400, not 404: the console maps UnknownItem to 404 and every other error to 400.
+
+        Quarantining the file must not turn an already-decided item into a missing one.
+        """
+        queue, manifest_path = self._queue(tmp_path)
+        self._reject(queue, manifest_path)
+
+        with pytest.raises(InvalidDecision):
+            self._reject(queue, manifest_path)
+
+    def test_a_genuinely_unknown_id_is_still_an_unknown_item(self, tmp_path):
+        queue, manifest_path = self._queue(tmp_path)
+
+        with pytest.raises(UnknownItem):
+            apply_decision(
+                "never-staged", "reject", reason="x", queue_dir=queue, manifest_path=manifest_path
+            )
+
+    def test_the_summary_still_counts_a_quarantined_reject(self, tmp_path):
+        """The count moved directories; it did not stop existing."""
+        queue, manifest_path = self._queue(tmp_path)
+
+        self._reject(queue, manifest_path)
+
+        assert queue_summary(load_all(queue)) == {
+            "total": 1,
+            "pending": 0,
+            "accepted": 0,
+            "rejected": 1,
+        }
 
     def test_an_unknown_id_is_distinguishable_from_a_bad_decision(self, tmp_path):
         """A route answers 404 for one and 400 for the other; one exception cannot say both."""
@@ -453,10 +512,38 @@ class TestRunCli:
             input_fn=_scripted(["r", "bad scan"]),
         )
 
-        item = json.loads((queue / "a-1234abcd.json").read_text())
+        item = json.loads((rejected_dir_for(queue) / "a-1234abcd.json").read_text())
         assert item["status"] == "rejected"
         assert item["reject_reason"] == "bad scan"
         assert json.loads(manifest_path.read_text())["articles"] == []
+
+    def test_the_closing_report_still_counts_what_was_just_rejected(self, tmp_path, capsys):
+        """The reject left the queue directory; a report that only reads that directory
+        tells the operator their decision vanished."""
+        queue = tmp_path / "queue"
+        save_item(_item(), queue)
+        manifest_path = _empty_manifest(tmp_path)
+
+        run_cli(
+            queue_dir=queue,
+            manifest_path=manifest_path,
+            input_fn=_scripted(["r", "bad scan"]),
+        )
+
+        assert "1 item(s) — 0 pending, 0 accepted, 1 rejected" in capsys.readouterr().out
+
+    def test_the_opening_line_counts_rejects_decided_in_an_earlier_session(
+        self, tmp_path, capsys
+    ):
+        """Otherwise the same queue reports two different totals either side of a reject."""
+        queue = tmp_path / "queue"
+        save_item(_item(), queue)
+        save_item(_item("old-1", status="rejected"), rejected_dir_for(queue))
+        manifest_path = _empty_manifest(tmp_path)
+
+        run_cli(queue_dir=queue, manifest_path=manifest_path, input_fn=_scripted(["q"]))
+
+        assert "Loaded 2 item(s) — 1 pending." in capsys.readouterr().out
 
     def test_quitting_leaves_the_item_pending(self, tmp_path):
         queue = tmp_path / "queue"

@@ -19,7 +19,7 @@ from ingest.provenance import (
     PRIVACIES,
     default_provenance,
 )
-from ingest.queue import QUEUE_DIR, load_queue, save_item
+from ingest.queue import QUEUE_DIR, load_all, load_queue, quarantine, save_item
 
 MANIFEST_PATH = Path(__file__).resolve().parent.parent / "data" / "manifest.json"
 
@@ -212,7 +212,9 @@ def apply_decision(
         raise InvalidDecision(f"{decision!r} is not a decision — expected accept, edit or reject")
 
     queue_dir, manifest_path = Path(queue_dir), Path(manifest_path)
-    item = next((i for i in load_queue(queue_dir) if i.get("id") == item_id), None)
+    # Quarantined rejects are searched too, so a second decision on one is reported as the
+    # already-decided item it is (400) rather than as an id nobody has ever seen (404).
+    item = next((i for i in load_all(queue_dir) if i.get("id") == item_id), None)
     if item is None:
         raise UnknownItem(f"no queue item with id {item_id!r}")
     if item.get("status") != "pending":
@@ -223,7 +225,10 @@ def apply_decision(
     edit_item(item, fields or {})
     if decision == "reject":
         reject_item(item, reason)
-    elif decision == "accept":
+        quarantine(item, queue_dir)
+        return item_view(item)
+
+    if decision == "accept":
         manifest = json.loads(manifest_path.read_text())
         accept_item(item, manifest)
         manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
@@ -284,7 +289,7 @@ def run_cli(
         print("Queue is empty. Drop files in data/inbox/ and run `make ingest`.")
         return 0
 
-    summary = queue_summary(items)
+    summary = queue_summary(load_all(queue_dir))
     print(f"Loaded {summary['total']} item(s) — {summary['pending']} pending.")
 
     done = 0
@@ -340,7 +345,7 @@ def run_cli(
             done += 1
 
     print(f"\nDone. {done} decision(s) this session.")
-    print_report(load_queue(queue_dir))
+    print_report(load_all(queue_dir))
     return 0
 
 
@@ -360,7 +365,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     if args.report:
-        print_report(load_queue(args.queue))
+        print_report(load_all(args.queue))
         return 0
     return run_cli(queue_dir=args.queue, manifest_path=args.manifest, limit=args.limit)
 

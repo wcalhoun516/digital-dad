@@ -1114,72 +1114,45 @@ Format:
   the next run at the job runner, including the trap that uploading only fills `data/inbox/` —
   staging into the queue is still `make ingest` until step 4 lands.
 
-### 2026-09-23 — docs — ready-for-review
-- PR: https://github.com/wcalhoun516/digital-dad/pull/113
-- Source: plan:ready/0011 (step 6 — docs + ADR)
-- Summary: **The console's two unwritten decisions, written down — and a gate so the writing
-  can't rot.** Plan 0011's security section says outright: "Raise it in the PR body explicitly
-  so the owner rules on it." A PR body scrolls away, so this is **ADR D21** instead. It records
-  two things. First, the console is a **second surface, not an exception to D4** — D4 makes the
-  family dashboard fully client-side so one `index.html` opens anywhere forever, and the console
-  wants the opposite (it writes `data/inbox/`, mutates the manifest, will spawn subprocesses);
-  bolting it onto the artifact would quietly turn the archive into software someone has to keep
-  running. D4 stands unamended. Second, the **three fail-closed gates**: off unless
-  `DIGITAL_DAD_CONSOLE` is exactly `1` (with `/console.html` withheld from the static handler
-  too, since routing `/console` alone would not stop anyone holding the dashboard password from
-  asking for the page by name); a startup refusal if the listen port is Funnel-exposed; and a
-  refusal *also* when Tailscale is installed but its state cannot be read — an unanswered "is
-  this port public?" is not a no. The escalation being guarded is real and worth naming: before
-  the console, a leaked dashboard password meant a stranger read Forbes columns that were
-  already public; after it, a stranger writes files and starts processes on the Mac mini.
-  **The README had no mention of the console, the inbox, or the env var** that enables any of
-  it, so the section was written too — enable line, the refusal, the five live routes, and what
-  upload validation actually rejects. **The part worth reviewing is the gate, not the prose.**
-  `tests/test_docs_coverage.py` now reads `CONSOLE_ROUTES` from the server, the extension
-  allowlist from the ingest handler registry (**both** directions: a registered format must be
-  listed, and a listed one must be registered, so the README can't promise a `.pdf` upload the
-  console would refuse), and the default port from the Makefile's `CONSOLE_PORT`. When step 4's
-  `/console/api/job` and step 5's `/console/api/scores` land, the suite goes red until the
-  README names them. **Mutation-checked rather than trusted**: these guards passed on their
-  first run, which proves nothing, so six mutants were run — drop `.mbox` from the list, claim
-  `.pdf`, change the port, undocument a route, remove the prefix lookahead that stops
-  `/console/api/job/log` from vacuously documenting `/console/api/job`, and break the section
-  splitter. **6/6 caught**, files restored byte-identical.
-  **Why step 6 and not step 5's route, which the plan asked for:** `analysis/scoreboard.py` is
-  not on `main` — it is in PR #112, still open — and step 4's `console/` package is only in
-  #111. The route had nothing to call. The alternatives were stacking on another `daily/*`
-  branch or re-implementing the scoring core, and the plan warns against the second in three
-  separate places. **Every remaining piece of plan 0011 is now blocked on a merge, not on an
-  implementation**, which is worth knowing before tomorrow picks it up.
-  **Note on this file:** the entry above this one is 2026-09-21. The 2026-09-22 entry is real
-  but lives in unmerged PR #112, so a §5b tally of "the last 7" will read short until #112
-  lands — a merge-order artifact, not the 2026-09-19 deletion recurring.
-  **The ADR found two real security gaps, and that is the result worth reading.** A
-  fresh-context review was asked to check every claim in D21 against the source rather than to
-  review the prose, and two claims turned out to be aspirations. (1) The withhold that keeps
-  `/console.html` out of the family artifact compared the **raw request path** against a
-  literal string. `translate_path` percent-decodes *after* that check runs, and macOS matches
-  filenames case-insensitively — so with the console disabled, `/console%2Ehtml` and
-  `/CONSOLE.HTML` both served the console page. Reproduced live against a real server before
-  fixing: three spellings, one file, only one of them refused. It now compares **file identity**
-  (`os.path.samefile`) rather than spelling. (2) `DIGITAL_DAD_ALLOW_OPEN=1` let the console run
-  with **no password at all** — `_authed()` returns `True` whenever `PASSWORD` is empty. That
-  bargain was struck when the worst case was a stranger reading columns that were already
-  public; it does not transfer to a surface that writes files and starts processes, so the
-  console now refuses to start without a password. The dashboard keeps the escape hatch. Both
-  were caught by reviewing the *ADR* against the code, which is the argument for writing the
-  ADR — and the caution that an unverified claim in `decisions.md` is worse than an absent one,
-  because the next session builds on it.
-  **The review also showed the new guard was satisfiable without being true**, in three ways
-  now closed: routes were matched anywhere in the README rather than within the console
-  section; the port check was a bare-substring match, so `CONSOLE_PORT=8000` — the exact Funnel
-  collision D21 exists to prevent — would have passed green against the prose "keeps it off the
-  dashboard's 8000"; and the extension check was lowercase-only, so a promised `.PDF` upload
-  satisfied both directions. Three more mutants, all three now caught. Prose claims ("PDFs are
-  accepted") stay uncovered on purpose — matching format names in English fires on the word
-  "markdown" in a sentence that promises nothing.
-  **Verification:** `make verify` **exit 0** — ruff clean, **1638 passed**, dashboard builds;
-  `__pycache__` cleared before the red→green proofs. Every test was watched fail first: the
-  five route-coverage tests naming each undocumented route, and the five path spellings each
-  serving the page before the fix. Nine mutants across the two rounds, nine caught, files
-  restored byte-identical.
+### 2026-09-24 — analysis — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/114
+- Source: plan:ready/0011 (step 3's deferred slice — the `data/ingest/rejected/` move)
+- Summary: **Rejects now leave the queue directory, and the four places that counted them
+  followed.** Plan 0011's numbered steps are all blocked on a merge — step 4 is PR #111, step
+  5 is #112, step 6 is #113, none landed — so the route that remains
+  (`GET /console/api/scores`) had nothing on `main` to import. Rather than stack on another
+  `daily/*` branch (§11) or re-implement the scoring core (the plan warns against that in
+  three separate places), this run took the one piece the plan had already carved out and set
+  aside in writing: *"Step 3's `data/ingest/rejected/` move is deliberately not done: it
+  changes the on-disk layout and makes `queue_summary`'s rejected count read from a second
+  place, which deserves its own slice."*
+  **Why it was worth doing rather than cosmetic:** a reject is never deleted, so its extracted
+  documents — a book is tens of thousands of words — were re-read on every single queue
+  listing, forever, and the pile only grows. `quarantine()` moves the item to
+  `data/ingest/rejected/`, paired to the queue by `rejected_dir_for()` rather than configured
+  separately, so no caller can point one somewhere the other is not; there is deliberately no
+  `CONSOLE_REJECTED_DIR` for the same reason. The write happens **before** the queue copy is
+  dropped, so an interrupted move leaves a duplicate rather than nothing — a rejected
+  extraction may be the only copy of the material.
+  **The plan's "second place" warning was the whole difficulty, and it was worse than one
+  place.** Four read sites had to change. The two obvious ones matter most: `GET
+  /console/api/queue`'s totals, and — the one that would have been a genuine regression —
+  **dedup**, because `data/inbox/` is never emptied, so without reading the quarantine every
+  `make ingest` would have re-queued every file a human already rejected. The two *non*-obvious
+  ones were found only by watching tests fail: the CLI's closing report announced
+  `0 rejected` in the same breath as `✓ rejected`, and its opening line then disagreed with its
+  own closing line about the same queue (`Loaded 1 item(s)` vs `Queue: 2 item(s)`).
+  **One error-contract detail held deliberately:** `apply_decision` searches the quarantine as
+  well, so a second reject is still a 400 (*already decided*) and not a 404 (*never heard of
+  it*). Moving the file must not change what the console tells the operator. No migration shim
+  was written — `data/ingest/` does not exist on the owner's machine, so there is no legacy
+  reject to migrate, and a shim for an impossible case is just a second code path.
+  **Verification:** `make verify` **exit 0** — ruff clean, **1614 passed**, dashboard builds;
+  `__pycache__` cleared first (stale `.pyc` on this external volume has faked a green proof
+  before). Every behaviour change was watched red first — 5 failures on the first run, then 2
+  more for the counting bugs, each re-run individually. **6 mutants, 6 caught**, `git diff`
+  byte-clean afterwards (restored from in-process copies, never `git stash`).
+  **Note on this file:** the entry above this one is 2026-09-20. The 09-21, 09-22 and 09-23
+  entries are real but live in unmerged PRs #111, #112 and #113 — a merge-order artifact, not
+  the 2026-09-19 deletion recurring. A §5b tally of "the last 7" will read short until those
+  land, and should say so rather than tally a file it knows is incomplete.

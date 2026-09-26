@@ -373,7 +373,9 @@ class GatedHandler(SimpleHTTPRequestHandler):
 
     def _console_queue(self) -> None:
         paths = console_paths()
-        self._send_json(200, paths.review.queue_view(paths.queue.load_queue(paths.queue_dir)))
+        # load_all, not load_queue: rejects live in the quarantine beside the queue, and the
+        # operator's rejected count must not drop to zero because a decision moved a file.
+        self._send_json(200, paths.review.queue_view(paths.queue.load_all(paths.queue_dir)))
 
     def _console_review(self) -> None:
         payload = self._read_json_object()
