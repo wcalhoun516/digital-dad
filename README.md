@@ -507,6 +507,9 @@ also refuses — an unanswered "is this port public?" is not a yes. `CONSOLE_POR
 | `/console/api/upload` | POST | Writes one file into `data/inbox/`; `?filename=` names it, the raw body is the bytes |
 | `/console/api/queue` | GET | The pending review queue, per source rather than per document |
 | `/console/api/review` | POST | Applies one accept / edit / reject decision |
+| `/console/api/job` | POST | Starts one named job from the closed registry |
+| `/console/api/job` | GET | The current job's state — name, status, pid, exit code |
+| `/console/api/job/log` | GET | Tails that job's output; `?offset=` is a byte count to resume from |
 
 Uploads are validated before anything touches disk: the name must be a bare filename (no
 path separators, no leading dot, no control characters), the extension must belong to a
@@ -520,8 +523,23 @@ cannot skip the gate. Upload and review are thin callers of `ingest/upload.py` a
 `ingest/review.py`, the same modules `make ingest` and `make ingest-review` use, so the
 console and the CLI reach the same decision.
 
-> Uploading fills `data/inbox/` only. Staging those files into the review queue is still
-> `make ingest` at a terminal until plan 0011's job runner lands.
+**Jobs run as subprocesses, never in the request handler.** A `make ingest` takes minutes and
+a training run takes hours, so `/console/api/job` spawns the child and returns immediately;
+a watcher thread records how it ended. The registry is closed — an operator picks a *name*,
+never a command, and the commands are argv lists rather than shell strings:
+
+```
+ingest · finetune-prep · finetune-preflight · voice-style     (cheap)
+train · voice-eval                                            (costly — GPU hours or paid calls)
+```
+
+**One at a time, refused rather than queued.** A second start returns **409**, because two
+trainers on one GPU is a corrupt result rather than a slow one, and an operator who isn't
+told their click did nothing will click again. An unknown job name is a 400.
+
+**Liveness is re-derived, never trusted.** The state file outlives the process, so a record
+still claiming `running` with nothing behind it would refuse every future job forever; each
+read checks the pid and rewrites a dead `running` as `interrupted`.
 
 ## Conductor Dependency
 
