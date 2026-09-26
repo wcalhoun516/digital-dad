@@ -1,6 +1,6 @@
 # Plan 0011 — Operator console: feed the corpus, turn the crank, keep score
 
-## Status (refreshed 2026-09-20 — **steps 1–3 are complete, routes included**)
+## Status (refreshed 2026-09-21 — **steps 1–4 are complete, routes and page included**)
 
 - **Step 1 — done and merged** (PR #93). Console shell, `/console/api/*` dispatch in
   `bin/serve_dashboard.py`, route gate, Funnel refusal.
@@ -144,6 +144,9 @@ logic are all pure and testable offline; no test may start a real training run.
    starts, `GET /console/api/job` returns state, `GET /console/api/job/log` tails the log
    (reuse the existing SSE streaming pattern from `_proxy`). TDD the state machine with a fake
    subprocess; **no test starts a real job**.
+   *Done in PR #111, with one deviation: the log tail polls by byte offset instead of SSE —
+   see the Status block for why. `ingest` was added to the registry as the button that
+   replaces "run `make ingest` at a terminal".*
 5. **Scoreboard (M).** `GET /console/api/scores` reads the `voice_eval` / `rag_eval` report
    JSONs plus a small append-only run history and renders run-over-run deltas: win-rate, avg
    rank, TTR, hinge-word rate, and the preflight's over-budget percentage. **Show D15's numbers

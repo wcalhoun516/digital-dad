@@ -20,7 +20,9 @@ dispatch, and dispatch is half of what is being added.
 import base64
 import importlib.util
 import json
+import os
 import threading
+import time
 import urllib.error
 import urllib.request
 from functools import partial
@@ -29,6 +31,7 @@ from pathlib import Path
 
 import pytest
 
+from console import jobs
 from ingest.queue import save_item
 from ingest.review import PREVIEW_CHARS
 from ingest.upload import MAX_UPLOAD_BYTES
@@ -98,6 +101,7 @@ def console(tmp_path):
     module.CONSOLE_INBOX_DIR = inbox
     module.CONSOLE_QUEUE_DIR = queue_dir
     module.CONSOLE_MANIFEST_PATH = manifest
+    module.CONSOLE_STATE_PATH = tmp_path / "console" / "job.json"
 
     handler = partial(module.GatedHandler, directory=str(dashboard_dir))
     server = ThreadingHTTPServer(("127.0.0.1", 0), handler)
@@ -419,10 +423,11 @@ class TestUploadRoute:
 
 
 class TestRoutesAreGoverned:
-    def test_all_three_routes_are_declared_in_the_route_table(self, console):
+    def test_every_route_this_file_exercises_is_declared_in_the_route_table(self, console):
         """`CONSOLE_ROUTES` is what `test_console_gate.py` enumerates to prove every route
         401s unauthenticated. A route missing from it silently skips the auth tests."""
-        for route in ("/console/api/upload", "/console/api/queue", "/console/api/review"):
+        for route in ("/console/api/upload", "/console/api/queue", "/console/api/review",
+                      "/console/api/job", "/console/api/job/log"):
             assert route in console.mod.CONSOLE_ROUTES, f"{route} is not in CONSOLE_ROUTES"
 
     def test_the_write_routes_401_without_the_password(self, console):
@@ -430,10 +435,18 @@ class TestRoutesAreGoverned:
             ("/console/api/queue", "GET", None),
             ("/console/api/review", "POST", b"{}"),
             ("/console/api/upload?filename=letter.md", "POST", b"x" * 32),
+            ("/console/api/job", "GET", None),
+            ("/console/api/job/log", "GET", None),
+            # The one that matters most: an unauthenticated POST has to be refused before
+            # it can spend an afternoon of GPU.
+            ("/console/api/job", "POST", b'{"job": "train"}'),
         )
         for path, method, body in cases:
             status, _ = console.request(path, method=method, body=body, password=None)
             assert status == 401, f"{path} served without auth"
+        assert console.mod.console_paths().jobs.job_state(
+            console.mod.CONSOLE_STATE_PATH
+        )["state"] == "idle", "an unauthenticated POST started a job"
 
     def test_the_write_routes_404_when_the_console_is_disabled(self, console):
         console.mod.CONSOLE_ENABLED = False
@@ -441,7 +454,136 @@ class TestRoutesAreGoverned:
             ("/console/api/queue", "GET", None),
             ("/console/api/review", "POST", b"{}"),
             ("/console/api/upload?filename=letter.md", "POST", b"x" * 32),
+            ("/console/api/job", "GET", None),
+            ("/console/api/job/log", "GET", None),
+            ("/console/api/job", "POST", b'{"job": "train"}'),
         )
         for path, method, body in cases:
             status, _ = console.request(path, method=method, body=body)
             assert status == 404, f"{path} responded while the console was disabled"
+
+
+# --- the job runner: POST/GET /console/api/job, GET /console/api/job/log ----------------
+
+
+class TestJobRoutes:
+    """Step 4's routes.
+
+    **No registered pipeline job is ever started here.** Two of the six cost hours of GPU or
+    real money. Where a test needs a process to actually run, it registers a throwaway job
+    that runs a harmless stdlib module, so the spawn → log → exit-code path is proved for
+    real without the console's own registry being touched.
+    """
+
+    @staticmethod
+    def _wait_for_finish(console, timeout=15):
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            status, payload = console.json_request("/console/api/job", None, method="GET")
+            assert status == 200
+            if payload["state"] not in ("running",):
+                return payload
+            time.sleep(0.05)
+        raise AssertionError("the job never finished")
+
+    def test_the_route_offers_the_registry_so_the_page_can_build_its_buttons(self, console):
+        status, payload = console.json_request("/console/api/job", None, method="GET")
+        assert status == 200
+        assert payload["state"] == "idle"
+        listed = {job["name"]: job for job in payload["jobs"]}
+        assert "ingest" in listed
+        assert listed["ingest"]["costly"] is False
+        assert listed["ingest"]["summary"]
+
+    def test_the_costly_flag_reaches_the_page(self, console):
+        """The page asks twice before an hour of GPU; it can only do that if it is told."""
+        _, payload = console.json_request("/console/api/job", None, method="GET")
+        costly = {job["name"] for job in payload["jobs"] if job["costly"]}
+        assert costly == {"train", "voice-eval"}
+
+    def test_starting_a_job_spawns_it_and_records_how_it_went(self, console, monkeypatch):
+        monkeypatch.setitem(jobs.JOBS, "zen", jobs.JobSpec(("-m", "this"), "prints the Zen"))
+        status, payload = console.json_request("/console/api/job", {"job": "zen"})
+        assert status == 200
+        assert payload["job"] == "zen"
+        assert payload["state"] == "running"
+
+        finished = self._wait_for_finish(console)
+        assert finished["state"] == "succeeded"
+        assert finished["exit_code"] == 0
+
+        _, log = console.json_request("/console/api/job/log", None, method="GET")
+        assert "Beautiful is better than ugly" in log["text"]
+
+    def test_a_job_that_exits_nonzero_is_reported_as_failed(self, console, monkeypatch):
+        monkeypatch.setitem(
+            jobs.JOBS, "boom", jobs.JobSpec(("-m", "json.tool", "/no/such/file"), "fails")
+        )
+        status, _ = console.json_request("/console/api/job", {"job": "boom"})
+        assert status == 200
+        finished = self._wait_for_finish(console)
+        assert finished["state"] == "failed"
+        assert finished["exit_code"] != 0
+
+    def test_an_unknown_job_name_is_a_400_not_a_500(self, console):
+        status, payload = console.json_request("/console/api/job", {"job": "rm -rf /"})
+        assert status == 400
+        assert "rm -rf /" in payload["error"]
+
+    def test_a_missing_job_name_names_the_missing_parameter(self, console):
+        status, payload = console.json_request("/console/api/job", {})
+        assert status == 400
+        assert "job" in payload["error"]
+
+    def test_a_non_string_job_name_is_refused_before_the_runner_sees_it(self, console):
+        status, payload = console.json_request("/console/api/job", {"job": ["ingest"]})
+        assert status == 400
+        assert "job" in payload["error"]
+
+    def test_a_second_job_while_one_runs_is_a_409(self, console):
+        """Refused, not queued — and the reply names what is holding the runner."""
+        console.mod.CONSOLE_STATE_PATH.parent.mkdir(parents=True, exist_ok=True)
+        console.mod.CONSOLE_STATE_PATH.write_text(json.dumps({
+            # This process is unquestionably alive, which is the whole point: the runner
+            # re-derives liveness from the pid, so a fabricated one would read as finished.
+            "job": "train", "state": "running", "pid": os.getpid(), "exit_code": None,
+            "started_at": "2026-09-21T00:00:00+00:00", "finished_at": None, "log": "x.log",
+        }), encoding="utf-8")
+        status, payload = console.json_request("/console/api/job", {"job": "ingest"})
+        assert status == 409
+        assert "train" in payload["error"]
+
+    def test_the_log_route_resumes_from_an_offset(self, console, monkeypatch):
+        monkeypatch.setitem(jobs.JOBS, "zen", jobs.JobSpec(("-m", "this"), "prints the Zen"))
+        console.json_request("/console/api/job", {"job": "zen"})
+        self._wait_for_finish(console)
+        _, whole = console.json_request("/console/api/job/log", None, method="GET")
+        _, rest = console.json_request(
+            f"/console/api/job/log?offset={whole['offset']}", None, method="GET"
+        )
+        assert whole["text"]
+        assert rest["text"] == ""
+        assert rest["offset"] == whole["offset"]
+
+    def test_a_junk_offset_is_refused_rather_than_crashing_the_poll(self, console):
+        status, payload = console.json_request(
+            "/console/api/job/log?offset=nonsense", None, method="GET"
+        )
+        assert status == 400
+        assert "offset" in payload["error"]
+
+    def test_the_log_route_refuses_a_post(self, console):
+        status, _ = console.request("/console/api/job/log", method="POST", body=b"{}")
+        assert status == 405
+
+    def test_a_job_that_cannot_be_spawned_is_reported_rather_than_traced(self, console,
+                                                                         monkeypatch):
+        """An exec failure is rare and real (a broken .venv). It must not close the socket
+        on the operator with a traceback on the server's stderr as the only evidence."""
+        def boom(*_args, **_kwargs):
+            raise OSError(8, "Exec format error")
+
+        monkeypatch.setattr(jobs.subprocess, "Popen", boom)
+        status, payload = console.json_request("/console/api/job", {"job": "ingest"})
+        assert status == 500
+        assert "Exec format error" in payload["error"]
