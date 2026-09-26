@@ -1162,3 +1162,49 @@ Format:
   before it can spend an afternoon of GPU. **Plan 0011 stays in `ready/`:** steps 5–6 remain,
   and its status block now points the next run at **step 5, the scoreboard**, which is the point
   of the whole plan and finally has the runs to score.
+
+### 2026-09-26 — dashboard — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/116
+- Source: roadmap:#38 (the PARTIAL dashboard remainder)
+- Summary: **The archive now says what it is made of, and the honest answer is uncomfortable:
+  181 items, 340,720 words, 100% `article`, 100% `george`.** Roadmap #62 keeps the LoRA track
+  open on the hypothesis that every run so far was token-starved, and #38's remainder asked for
+  a corpus-composition panel — but nothing in the repo answered the prior question of what the
+  corpus actually contains. New `analysis/corpus_composition.py` + a panel at the top of the
+  Raw Corpus tab, which is where it belongs: beside the corpus it describes, not as an 18th nav
+  tab. **Three obvious implementations would each have produced a dial that lies, and all three
+  were caught by reading real data rather than by reasoning.** (1) Tallying `load_articles()`
+  would report "0 books" forever: `ingest.review.accept_item` appends a manifest entry with no
+  `file` key, `load_articles` skips exactly those, and nothing in `ingest/` ever writes
+  `data/raw/<id>.json` — so **every accepted ingest item is currently invisible to the entire
+  analysis pipeline**. The module therefore reads the *manifest*, and reports unreadable
+  material as its own line rather than dropping it, so the gap is visible instead of silent.
+  (2) Counting documents would describe a different archive than the one a model reads — one
+  ebook is ~80k words, roughly today's whole corpus — so shares are **word** shares, and the
+  panel says so on screen. (3) Tallying raw manifest entries would over-report by 23 items and
+  37,728 words (11%), because the manifest carries http/https twins of the same file; it reuses
+  the loader's own `dedupe_manifest_entries` so the repo collapses twins in one place, not two.
+  **A fingerprint-skip trap, avoided deliberately and pinned with two tests:** the corpus
+  fingerprint hashes what `load_articles` returns, so the arrival of a book leaves it unchanged
+  — gating this module on `_should_run` would have pinned the panel at "100% article" through
+  the very event it exists to report. It reads only the manifest, so running it every time is
+  free. **Mutation-tested — 11 mutants, 11 caught, no survivors**, which was the point: every
+  new symbol's first failure is an `ImportError`, and that proves nothing about the assertions.
+  The mutants worth naming are the two that exist because a green suite lied here before: adding
+  a field to `compose`'s return without updating `_EMPTY_DEFAULTS` (a fresh clone would render
+  `undefined` while every string assertion stayed green), and rendering row cells with
+  `.innerHTML`. **The panel is exercised in live headless Chromium**, not only as a grep over
+  `template.html`, because a string match cannot tell whether the thing renders: the XSS test
+  feeds a modality name of `<img src=x onerror=...>` — provenance an operator controls — and
+  asserts `window.__pwned` stays undefined, and the unreadable-material test asserts the note is
+  *visible*, since it is built hidden and rendering 80,900 un-analyzable words into a `hidden`
+  element would be this panel's worst failure. That live pass also cost an hour to a
+  non-bug: tab renders are deferred 50ms after the click so `display:block` lands before D3
+  measures widths, so the first fresh-clone assertion raced the render. Waiting on the render
+  rather than on a duration; noted in the test so the next person doesn't read it as flakiness.
+  **Verification:** `make verify` — ruff clean, **1682 passed**, zero warnings, dashboard builds;
+  `__pycache__` cleared before every red→green proof and before each mutant. Test delta measured
+  against a clean `origin/main` worktree rather than estimated: **1650 → 1682 collected** (30 new
+  tests in two files, plus 2 auto-parametrized cases the repo's own coverage gates added on their
+  own). Both dashboard paths exercised end to end: the real injection (181 / 340,720) and the
+  fresh-clone stub fallback, by moving the artifact aside and restoring it.

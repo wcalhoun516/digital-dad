@@ -1,0 +1,30 @@
+{
+  "total": {
+    "items": 181,
+    "words": 340720
+  },
+  "readable": {
+    "items": 181,
+    "words": 340720
+  },
+  "unreadable": {
+    "items": 0,
+    "words": 0
+  },
+  "by_modality": [
+    {
+      "name": "article",
+      "items": 181,
+      "words": 340720,
+      "share": 1.0
+    }
+  ],
+  "by_authorship": [
+    {
+      "name": "george",
+      "items": 181,
+      "words": 340720,
+      "share": 1.0
+    }
+  ]
+}

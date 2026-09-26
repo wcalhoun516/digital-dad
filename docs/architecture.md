@@ -120,6 +120,26 @@ ran against; on the next run a module is **skipped if the fingerprint is unchang
 | `psychoprofile.py` | `psychoprofile.json` + `.md` | Map-reduce LLM analysis → narrative profile + 8 personality dimension scores. Logs cost to `runs.jsonl`. |
 | `semantic_search.py` | `embeddings.npy`, `embeddings_meta.json`, `embeddings.json` | sbert-mpnet-v2 (384-dim) embedding index; cached + corpus-hash busted; flattened export with snippets for the dashboard. |
 | `predictions.py` | `predictions.json` | Two-pass: extract falsifiable claims per article, then optional batched LLM verdict (pending/vindicated/wrong/mixed/unfalsifiable). Saves incrementally every 10 articles; resumable. |
+| `corpus_composition.py` | `corpus_composition.json` | What the corpus is made of: items **and words** per `provenance.modality` and per `authorship`, plus how much of it the pipeline can actually read. Reads the *manifest*, not article bodies. Committed and text-free. |
+
+**`corpus_composition.py` is the one module in the chain deliberately *not* fingerprint-skipped.**
+The fingerprint is an MD5 over what `load_articles()` returns, and that skips manifest entries
+naming no raw file — which is exactly what `ingest.review.accept_item` writes. So accepting a
+book leaves the fingerprint unchanged, and gating this module on it would pin the panel at
+"100% article" through the very change it exists to report. It reads only the manifest, so
+running it every time is free. `tests/test_corpus_composition.py` pins the reasoning.
+
+Two measurement choices are load-bearing, because the obvious version of each misleads:
+
+- **Words, not documents.** One ingested ebook is ~80k words — roughly the whole current
+  corpus (roadmap #35) — so a document count would report an archive of columns while the
+  tokens a model reads were mostly book. Items are shown; *shares* are word shares.
+- **Manifest entries are deduped** via `dedupe_manifest_entries`, like the loader does. 23 of
+  today's 204 entries are http/https twins naming the same raw file; counting them raw
+  over-reports the corpus by 23 items and 37,728 words (11%).
+
+The artifact carries no titles and no body text — only vocabulary names and counts — so it can
+describe private letters without disclosing them, and is safe to commit.
 
 **Sentence splitting (`linguistic.py`).** Everything the Linguistic Fingerprint reports —
 `sentence_count`, average sentence length, Flesch-Kincaid, Gunning Fog and the histogram —
