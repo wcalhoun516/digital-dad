@@ -34,6 +34,7 @@ PLACEHOLDERS = {
     "/*__CONTRADICTIONS_DATA__*/": DATA_DIR / "analysis" / "contradictions.json",
     "/*__ENTITY_STANCE_DATA__*/": DATA_DIR / "analysis" / "entity_stance.json",
     "/*__JEV_VOICE_DATA__*/": DATA_DIR / "analysis" / "jev_voice.json",
+    "/*__CORPUS_COMPOSITION_DATA__*/": DATA_DIR / "analysis" / "corpus_composition.json",
 }
 
 # When an embeddings export is missing, inline an empty stub so the dashboard
@@ -67,6 +68,13 @@ _EMPTY_DEFAULTS = {
     # Jev voice probe (exploratory, tools/jev_voice_probe.py). Git-ignored: the artifact
     # embeds article snippets. Fresh clones inline an empty probe and see a run prompt.
     "/*__JEV_VOICE_DATA__*/": '{"meta":{},"articles":[]}',
+    # Corpus composition (#38). Committed and text-free — counts and vocabulary names only,
+    # never a title or a body, so it can describe private letters without disclosing them.
+    # A fresh clone that hasn't run `make analyze` inlines an empty breakdown.
+    "/*__CORPUS_COMPOSITION_DATA__*/": (
+        '{"total":{"items":0,"words":0},"readable":{"items":0,"words":0},'
+        '"unreadable":{"items":0,"words":0},"by_modality":[],"by_authorship":[]}'
+    ),
 }
 
 

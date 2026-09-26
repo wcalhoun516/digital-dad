@@ -21,7 +21,8 @@ import sys
 from .utils import DATA_DIR, load_articles, log
 
 RUNS_LOG = DATA_DIR / "analysis" / "runs.jsonl"
-ALL_MODULES = ["linguistic", "themes", "entities", "psychoprofile", "semantic_search", "predictions"]
+ALL_MODULES = ["linguistic", "themes", "entities", "psychoprofile", "semantic_search",
+               "predictions", "corpus_composition"]
 
 
 def _corpus_fingerprint(articles: list[dict]) -> str:
@@ -164,6 +165,16 @@ def main():
             from .predictions import run as run_predictions
             run_predictions(articles, router=router)
             _log_run("predictions", fingerprint)
+
+    # Deliberately NOT behind _should_run. The fingerprint hashes what load_articles returns,
+    # which skips manifest entries naming no raw file — exactly what an accepted ingest item
+    # is. So the arrival of a book leaves the fingerprint unchanged, and gating this module on
+    # it would pin the panel at "100% article" through the very change it exists to report.
+    # It reads only the manifest, so running it every time costs nothing.
+    if "corpus_composition" in modules:
+        log.info("=== CORPUS COMPOSITION — what the corpus is made of ===")
+        from .corpus_composition import run as run_corpus_composition
+        run_corpus_composition(articles)
 
     log.info("Analysis complete.")
 

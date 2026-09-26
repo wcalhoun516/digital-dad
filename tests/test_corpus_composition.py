@@ -18,7 +18,9 @@ to measure. The words the pipeline cannot yet read are counted and reported *sep
 rather than dropped.
 """
 
+from analysis.__main__ import _corpus_fingerprint
 from analysis.corpus_composition import compose
+from analysis.utils import dedupe_manifest_entries
 
 # No provenance block: every entry in today's real manifest looks like this, because roadmap
 # #29's one-time data migration is still pending.
@@ -183,6 +185,34 @@ class TestTheHttpsTwins:
         """They share the empty `file` field but are genuinely different documents."""
         result = compose(_manifest(INGESTED_BOOK, INGESTED_THREAD), readable_slugs=set())
         assert result["total"]["items"] == 2
+
+
+class TestWhyThisModuleIsNotFingerprintSkipped:
+    """Every other module in `make analyze` is gated on the corpus fingerprint, which is an
+    MD5 over what `load_articles` returns. This one must not be, and here is the reason."""
+
+    @staticmethod
+    def _loadable(manifest):
+        """What `load_articles` would hand the fingerprint: deduped, and only entries that
+        name a raw file."""
+        return [e for e in dedupe_manifest_entries(manifest["articles"]) if e.get("file")]
+
+    def test_accepting_a_book_leaves_the_corpus_fingerprint_unchanged(self):
+        """The arrival of 80k words of new material — the exact event this module exists to
+        report — is invisible to the fingerprint, because the accepted entry names no raw
+        file. Gating this module on it would pin the panel at "100% article" forever."""
+        before = _manifest(LEGACY_COLUMN)
+        after = _manifest(LEGACY_COLUMN, INGESTED_BOOK)
+        assert _corpus_fingerprint(self._loadable(before)) == _corpus_fingerprint(
+            self._loadable(after)
+        )
+
+    def test_but_the_composition_itself_does_change(self):
+        """So the module has real work to do on a run the fingerprint would have skipped."""
+        readable = {LEGACY_COLUMN["slug"]}
+        before = compose(_manifest(LEGACY_COLUMN), readable_slugs=readable)
+        after = compose(_manifest(LEGACY_COLUMN, INGESTED_BOOK), readable_slugs=readable)
+        assert before["by_modality"] != after["by_modality"]
 
 
 class TestEdges:
