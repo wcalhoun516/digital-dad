@@ -13,39 +13,54 @@
   `reject_item`, `validate_field`, `queue_view` / `item_view`, with `run_cli` rewired onto the
   same functions). **`GET /console/api/queue` and `POST /console/api/review` written in PR
   #109**, with `UnknownItem` → 404 and every other `ReviewError` → 400.
-- **Step 4 — done** (PR #111). New top-level `console/` package: `console/jobs.py` is the
-  one-job-at-a-time state machine, `POST`/`GET /console/api/job` and `GET
-  /console/api/job/log` are the routes, and the page's step-4 placeholder is now a job panel
-  with a live log. **The inbox note is gone** — uploading now points at the `ingest` button
-  instead of at a terminal.
-- **The page is wired for steps 2–4** (PRs #109, #111): upload picker, review queue with
-  accept/edit/reject, and the job runner, each verified in a live headless-Chromium pass
-  against the real server.
-- **Steps 5–6 — not started.**
+- **The page is wired for steps 2–3** (PR #109): upload picker and review queue with
+  accept/edit/reject, verified in a live headless-Chromium pass against the real server.
+- **Step 4 — written in PR #111**, open and unmerged as of 2026-09-22: the new `console/`
+  package with the job state machine, `POST`/`GET /console/api/job`, `GET /console/api/job/log`,
+  and the job panel. One deviation recorded there — the log tail polls by byte offset rather
+  than reusing `_proxy`'s SSE.
+- **Step 5 — the scoring core is done** (`analysis/scoreboard.py`, PR #112). **The route is
+  not.** `GET /console/api/scores` and the page panel remain.
+- **Step 6 — not started.**
 
-**Next run should do step 5, the scoreboard.** It is the point of the whole plan (see *Goal*
-below) and now has everything it depends on: step 4 gives it the runs to score. Three things
-it should know:
+**Next run should finish step 5: the `/console/api/scores` route and the scoreboard panel.**
+The arithmetic is written and tested; what remains is the thin caller and the markup.
 
-- **Read the run record, do not re-derive it.** `console/jobs.py` already persists every run
-  to `data/console/job.json` with its job name, exit code, and timestamps. The scoreboard's
-  "did this run beat the last one?" needs eval *results*, not job bookkeeping — resist the
-  urge to grow the job record into a results store.
-- **The eval numbers already exist.** `analysis/voice_eval.py` writes them; the scoreboard is
-  a reader and a differ, not a new measurement.
-- **`train` and `voice-eval` are `costly=True`** in the job registry and the page confirms
-  before starting them. Anything the scoreboard adds that spends GPU hours or T3 dollars
-  should carry the same flag rather than inventing a second mechanism.
+Three things the core settled that the route should not re-decide:
 
-**Two things step 4 decided that later steps inherit:**
+- **It lives in `analysis/`, not `console/`** — the same split as `ingest/upload.py` and
+  `ingest/review.py`, for the same reason: the console is a second *front end*, not a second
+  implementation. The route calls `scoreboard.scoreboard()` and serializes it. There is
+  nothing left to compute.
+- **Direction is data, not presentation.** Every metric carries a `better`/`worse`/`flat`
+  verdict, and `type_token_ratio` / `fingerprint_hits_per_1k` are *toward*-a-target metrics
+  rather than more-is-better ones — D15's fine-tune over-used his vocabulary at ~2× the natural
+  rate, so "lower is better" there would reward a model that had lost his voice altogether. The
+  page renders the verdict; it must not re-derive one from the sign of the delta.
+- **The previous run is the last earlier run of the *same experiment*.** The history interleaves
+  conditions — D20 recorded a 2×2 in a single day — so the adjacent row group is usually a
+  different condition whose arms were never alternatives to each other.
 
-- **The log is polled by byte offset, not streamed over SSE** (this plan's step-4 text
-  suggested reusing `_proxy`'s SSE). An SSE tail holds one handler thread per viewer for the
-  length of a training run and still needs tearing down when the job ends; a poll that says
-  "I have the first N bytes" delivers each line exactly once, costs a stat and a seek, and
-  survives a closed laptop. Step 5 should poll too.
-- **Job liveness is re-derived from the pid on every read**, never trusted from the file. The
-  state file outlives the server; the process does not.
+**Expect the dial to read `unknown` at first, and leave it saying so.** The recorded history
+holds one run per experiment, so there is genuinely nothing to compare against until a second
+run of the same condition lands. That is the honest reading, not a bug to paper over.
+
+Two things step 4's follow-up must still respect:
+
+- **Uploading only fills `data/inbox/`.** Nothing stages those files into the review queue yet
+  — `scan_inbox` still runs from `make ingest` at a terminal. `finetune-prep` is *not* that
+  step. The console's ingest button belongs to step 4; the page currently says so in plain
+  text, and that note should be replaced by the button rather than left to rot.
+- The routes added in #109 are **thin callers** of `ingest/upload.py` and `ingest/review.py`.
+  Do not re-decide anything in either module; the whole point is that the CLI and the console
+  reach the same answer.
+
+**A correction to step 5 as written.** It asks for "a small append-only run history" as though
+one needed building. It already exists: `data/analysis/voice_eval_history.jsonl`, appended by
+`append_history()` and read by `history_rows()` in `analysis/voice_candidates.py`, one row per
+*arm* per run, each carrying corpus size beside the score. A second history would be exactly
+the duplicate implementation this plan warns against everywhere else, so the core reads that
+one and groups its rows into runs.
 
 **Rejects still live in the queue directory**, marked `status: rejected` with their reason.
 Step 3's `data/ingest/rejected/` move is deliberately **not** done: it changes the on-disk
