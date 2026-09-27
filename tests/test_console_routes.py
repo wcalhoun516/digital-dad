@@ -102,6 +102,12 @@ def console(tmp_path):
     module.CONSOLE_QUEUE_DIR = queue_dir
     module.CONSOLE_MANIFEST_PATH = manifest
     module.CONSOLE_STATE_PATH = tmp_path / "console" / "job.json"
+    # The scoreboard's inputs. Every one points somewhere empty, so the dial reads the tmp
+    # dir rather than whatever eval history happens to be on the machine running the tests.
+    module.CONSOLE_VOICE_REPORT_PATH = tmp_path / "analysis" / "voice_eval.json"
+    module.CONSOLE_RAG_REPORT_PATH = tmp_path / "analysis" / "rag_eval.json"
+    module.CONSOLE_HISTORY_PATH = tmp_path / "analysis" / "voice_eval_history.jsonl"
+    module.CONSOLE_TRAINING_DIR = tmp_path / "training"
 
     handler = partial(module.GatedHandler, directory=str(dashboard_dir))
     server = ThreadingHTTPServer(("127.0.0.1", 0), handler)
@@ -115,6 +121,10 @@ def console(tmp_path):
         queue = queue_dir
         rejected = rejected_dir_for(queue_dir)
         manifest_path = manifest
+        voice_report = module.CONSOLE_VOICE_REPORT_PATH
+        rag_report = module.CONSOLE_RAG_REPORT_PATH
+        history = module.CONSOLE_HISTORY_PATH
+        training_dir = module.CONSOLE_TRAINING_DIR
 
         def request(self, path, *, method="GET", body=None, ctype=None, password=PASSWORD,
                     headers=None):
@@ -453,7 +463,7 @@ class TestRoutesAreGoverned:
         """`CONSOLE_ROUTES` is what `test_console_gate.py` enumerates to prove every route
         401s unauthenticated. A route missing from it silently skips the auth tests."""
         for route in ("/console/api/upload", "/console/api/queue", "/console/api/review",
-                      "/console/api/job", "/console/api/job/log"):
+                      "/console/api/job", "/console/api/job/log", "/console/api/scores"):
             assert route in console.mod.CONSOLE_ROUTES, f"{route} is not in CONSOLE_ROUTES"
 
     def test_the_write_routes_401_without_the_password(self, console):
@@ -463,6 +473,7 @@ class TestRoutesAreGoverned:
             ("/console/api/upload?filename=letter.md", "POST", b"x" * 32),
             ("/console/api/job", "GET", None),
             ("/console/api/job/log", "GET", None),
+            ("/console/api/scores", "GET", None),
             # The one that matters most: an unauthenticated POST has to be refused before
             # it can spend an afternoon of GPU.
             ("/console/api/job", "POST", b'{"job": "train"}'),
@@ -482,6 +493,7 @@ class TestRoutesAreGoverned:
             ("/console/api/upload?filename=letter.md", "POST", b"x" * 32),
             ("/console/api/job", "GET", None),
             ("/console/api/job/log", "GET", None),
+            ("/console/api/scores", "GET", None),
             ("/console/api/job", "POST", b'{"job": "train"}'),
         )
         for path, method, body in cases:
@@ -613,3 +625,106 @@ class TestJobRoutes:
         status, payload = console.json_request("/console/api/job", {"job": "ingest"})
         assert status == 500
         assert "Exec format error" in payload["error"]
+
+
+# --- the scoreboard: GET /console/api/scores ---------------------------------------------
+
+
+def _history_row(arm, *, experiment="A_plain", date="2026-09-19", win_rate=0.0, avg_rank=2.5):
+    """One arm of one run, in `voice_eval_history.jsonl`'s real shape."""
+    return {
+        "adr": "D20", "arm": arm, "avg_rank": avg_rank, "condition": "no-retrieval",
+        "corpus": {"articles": 181, "train_records": 540}, "date": date,
+        "experiment": experiment, "judge_tier": 3, "n_trials": 8, "training": None,
+        "win_rate": win_rate,
+    }
+
+
+def _write(path, text):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8")
+
+
+class TestScoresRoute:
+    """Step 5's route: a thin caller of `analysis.scoreboard.scoreboard()`.
+
+    The arithmetic — directions, targets, which run counts as "the previous one" — is
+    `tests/test_scoreboard.py`'s to prove. What this class proves is that the route hands
+    the core the console's paths rather than the real ones, and that the payload survives
+    the trip to the browser intact.
+    """
+
+    def _scores(self, console, query=""):
+        status, payload = console.json_request("/console/api/scores" + query, None,
+                                               method="GET")
+        assert status == 200, payload
+        return payload
+
+    def test_a_machine_where_nothing_has_run_still_gets_a_readable_dial(self, console):
+        payload = self._scores(console)
+        # The baseline is the one number that is always there: it is the record to beat.
+        assert payload["baseline"]["adr"] == "D15"
+        assert payload["voice"]["sources"] == {}
+        assert payload["rag"] == {}
+        assert payload["preflight"] == {}
+        # And it reads the tmp history, not the real one — which holds four runs.
+        assert payload["runs"] == []
+        assert payload["current_run"] is None
+
+    def test_a_voice_report_is_scored_against_d15(self, console):
+        report = {
+            "generated_at": "2026-09-27T00:00:00+00:00",
+            "summary": {"sources": {"finetune": {"win_rate": 0.25, "avg_rank": 2.1}}},
+            "records": [],
+        }
+        _write(console.voice_report, json.dumps(report))
+        payload = self._scores(console)
+        assert payload["voice"]["sources"]["finetune"]["win_rate"] == 0.25
+        verdict = payload["voice"]["vs_baseline"]["finetune"]["win_rate"]["verdict"]
+        assert verdict == "better"
+
+    def test_a_second_run_of_the_same_experiment_is_compared_with_the_first(self, console):
+        rows = [
+            _history_row("gemma-ft", date="2026-09-19", win_rate=0.0),
+            _history_row("gemma-ft", date="2026-09-27", win_rate=0.25),
+        ]
+        _write(console.history, "".join(json.dumps(r) + "\n" for r in rows))
+        payload = self._scores(console)
+        assert payload["previous_run"]["date"] == "2026-09-19"
+        assert payload["run_deltas"]["gemma-ft"]["win_rate"]["verdict"] == "better"
+
+    def test_the_experiment_parameter_narrows_the_series(self, console):
+        rows = [
+            _history_row("gemma-ft", experiment="A_plain"),
+            _history_row("gemma-ft", experiment="B_rag"),
+        ]
+        _write(console.history, "".join(json.dumps(r) + "\n" for r in rows))
+        assert self._scores(console)["current_run"]["experiment"] == "B_rag"
+        narrowed = self._scores(console, "?experiment=A_plain")
+        assert narrowed["current_run"]["experiment"] == "A_plain"
+
+    def test_an_empty_experiment_parameter_means_every_experiment(self, console):
+        _write(console.history, json.dumps(_history_row("gemma-ft", experiment="B_rag")) + "\n")
+        assert self._scores(console, "?experiment=")["current_run"]["experiment"] == "B_rag"
+
+    def test_the_preflight_is_read_from_the_training_split(self, console):
+        record = {"messages": [
+            {"role": "system", "content": "s"},
+            {"role": "user", "content": "u"},
+            {"role": "assistant", "content": "a"},
+        ]}
+        _write(console.training_dir / "train.jsonl", json.dumps(record) + "\n")
+        _write(console.training_dir / "heldout.jsonl", json.dumps(record) + "\n")
+        assert self._scores(console)["preflight"]["pct_over"] == 0.0
+
+    def test_a_half_written_report_is_an_absence_not_a_500(self, console):
+        _write(console.voice_report, '{"summary": {"sources": ')
+        _write(console.rag_report, "not json")
+        payload = self._scores(console)
+        assert payload["voice"]["sources"] == {}
+        assert payload["rag"] == {}
+
+    def test_the_scores_route_refuses_a_post(self, console):
+        status, _ = console.request("/console/api/scores", method="POST", body=b"{}",
+                                    ctype="application/json")
+        assert status == 405

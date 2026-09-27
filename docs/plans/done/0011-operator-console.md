@@ -2,6 +2,10 @@
 
 ## Status (refreshed 2026-09-21 — **steps 1–4 are complete, routes and page included**)
 
+> **2026-09-27: all six steps are complete** (PR #119 finished step 5's route and panel).
+> The plan moved to `plans/done/`. The block below is the 09-21 snapshot, kept as written;
+> the closing note at the end of the file records how step 5 was finished.
+
 - **Step 1 — done and merged** (PR #93). Console shell, `/console/api/*` dispatch in
   `bin/serve_dashboard.py`, route gate, Funnel refusal.
 - **Step 2 — done.** Validation core merged in PR #96 (`ingest/upload.py`: the sanitizer, the
@@ -219,3 +223,31 @@ there is no legacy reject in a queue directory to migrate.
 
 This slice touched only `ingest/queue.py`, `ingest/review.py`, the one console route already
 on `main`, and their tests — none of which #111, #112 or #113 edits.
+
+## Closing note — 2026-09-27 (step 5's route and panel, PR #119)
+
+*Appended, like the 09-24 note, rather than rewriting the Status block.*
+
+#111, #112, #113 and #114 all merged on 2026-09-26, which unblocked the one piece left:
+`GET /console/api/scores` and the scoreboard panel. With them, every numbered step is done.
+
+**The route is the thin caller the Status block asked for.** It resolves four paths, forwards
+`?experiment=`, and serializes `scoreboard.scoreboard()`. Nothing is decided in
+`bin/serve_dashboard.py`.
+
+**One thing did have to be added to the core: `preflight_report()`.** `scoreboard()` accepted
+a preflight report as a parameter because the preflight writes no file, so something had to
+run it. That belongs beside `preflight_scores()` in `analysis/scoreboard.py` rather than in the
+route, so `python -m analysis.scoreboard --training-dir …` and the console report the same
+number. It costs ~16 ms on the real 667-record split: a character-count estimate, not a model.
+
+**The page prints verdicts; it never computes them.** A live Chromium test pins the case that
+makes this matter: a fine-tune whose type-token ratio *rises* from D15's 0.35 to 1.20 has moved
+further from his real 0.70, and the panel must say `worse`.
+
+**As predicted, the dial reads `unknown` on the owner's machine.** The history holds one run
+per experiment (D20's 2×2, all on 2026-09-19), so there is nothing to compare against yet. The
+"Against D15" table shows only the recorded baseline, because D20's runs wrote their reports
+with `--output` to named files (`voice_eval_D_shot_rag`, …) rather than to the default
+`voice_eval.json` the scoreboard reads. The console's own `voice-eval` job writes the default,
+so the next run started from the console will populate it.

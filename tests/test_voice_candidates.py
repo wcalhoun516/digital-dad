@@ -279,5 +279,15 @@ def test_history_rows_skips_a_corrupt_line(tmp_path):
     assert [r["n"] for r in vc.history_rows(p)] == [1, 2]
 
 
+def test_history_rows_skips_a_line_that_is_json_but_not_a_row(tmp_path):
+    """`5` and `[]` parse, but they are not rows — every reader downstream calls `.get()`,
+    so letting one through turns the console scoreboard into a 500."""
+    p = tmp_path / "h.jsonl"
+    vc.append_history({"n": 1}, p)
+    p.write_text(p.read_text() + "5\n[]\nnull\n")
+    vc.append_history({"n": 2}, p)
+    assert [r["n"] for r in vc.history_rows(p)] == [1, 2]
+
+
 def test_history_rows_empty_when_absent(tmp_path):
     assert vc.history_rows(tmp_path / "nope.jsonl") == []

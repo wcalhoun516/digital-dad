@@ -534,6 +534,7 @@ also refuses — an unanswered "is this port public?" is not a yes. `CONSOLE_POR
 | `/console/api/job` | POST | Starts one named job from the closed registry |
 | `/console/api/job` | GET | The current job's state — name, status, pid, exit code |
 | `/console/api/job/log` | GET | Tails that job's output; `?offset=` is a byte count to resume from |
+| `/console/api/scores` | GET | The scoreboard: the latest eval run against the previous one and D15; `?experiment=` narrows it |
 
 Uploads are validated before anything touches disk: the name must be a bare filename (no
 path separators, no leading dot, no control characters), the extension must belong to a
@@ -564,6 +565,16 @@ told their click did nothing will click again. An unknown job name is a 400.
 **Liveness is re-derived, never trusted.** The state file outlives the process, so a record
 still claiming `running` with nothing behind it would refuse every future job forever; each
 read checks the pid and rewrites a dead `running` as `interrupted`.
+
+**The scoreboard is the dial on the flywheel.** It reads what the pipeline already wrote —
+`voice_eval.json`, `rag_eval.json`, the append-only `voice_eval_history.jsonl`, and a live
+preflight over the training split — through `analysis/scoreboard.py`, the same core
+`python -m analysis.scoreboard` prints. Each run is compared with the last earlier run *of the
+same experiment*, never simply the row above it, and with **D15's standing baseline** (the
+fine-tune placed last in every trial: 0% win-rate, average rank 2.88). Style metrics such as
+type-token ratio are scored by distance to his real prose, not by which way they moved. On a
+machine with one run per experiment, every run-over-run verdict reads `unknown`, because there
+is nothing yet to beat.
 
 ## Conductor Dependency
 

@@ -7,10 +7,11 @@
   DIGITAL_DAD_CONSOLE=1, on a tailnet-only port. It is served at /console, and the server
   withholds it entirely when the console is disabled.
 
-  Steps 2-4 are wired: Upload posts raw bytes to /console/api/upload, the review queue reads
-  /console/api/queue and posts decisions to /console/api/review, and the job runner starts
-  pipeline steps through /console/api/job while tailing /console/api/job/log. Step 5 (the
-  scoreboard) is still a placeholder.
+  Every step is wired: Upload posts raw bytes to /console/api/upload, the review queue reads
+  /console/api/queue and posts decisions to /console/api/review, the job runner starts
+  pipeline steps through /console/api/job while tailing /console/api/job/log, and the
+  scoreboard renders /console/api/scores — verdicts as the server computed them, never
+  re-derived here from the sign of a delta.
 -->
 <html lang="en">
 <head>
@@ -95,6 +96,34 @@ input[type=text] {
 #jobs button { min-width: 150px; }
 button.costly { border-color: #5a4a3c; }
 #job-log { max-height: 220px; margin-top: 4px; }
+select {
+  font-family: var(--mono); font-size: 12px; color: var(--text); background: #0f0f0f;
+  border: 1px solid var(--border); border-radius: 4px; padding: 4px 8px;
+}
+.scores h3 {
+  font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;
+  letter-spacing: 0.06em; margin: 16px 0 6px;
+}
+.scores table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.scores th {
+  text-align: left; font-weight: 500; color: var(--text-muted);
+  border-bottom: 1px solid var(--border); padding: 4px 8px 4px 0;
+}
+.scores td {
+  font-family: var(--mono); padding: 5px 8px 5px 0; border-bottom: 1px solid #1c1c1c;
+  vertical-align: top;
+}
+.scores td.name { font-family: var(--sans); }
+/* A verdict is status: a glyph and a word carry it, the colour only reinforces. */
+.verdict {
+  font-family: var(--sans); font-size: 11px; margin-left: 6px; color: var(--text-muted);
+  white-space: nowrap;
+}
+.verdict::before { margin-right: 3px; }
+.verdict.better::before { content: "\2713"; color: var(--ok); }
+.verdict.worse::before { content: "\2717"; color: var(--bad); }
+.verdict.flat::before { content: "="; }
+.verdict.unknown::before, .verdict.unscored::before { content: "?"; }
 </style>
 </head>
 <body>
@@ -136,10 +165,22 @@ button.costly { border-color: #5a4a3c; }
       <div class="row"><span class="note" id="job-state">checking…</span></div>
       <pre class="preview" id="job-log"></pre>
     </section>
-    <section class="panel">
-      <span class="pending">step 5</span>
+    <section class="panel scores" id="scores">
       <h2>Scoreboard</h2>
-      <p>Run-over-run deltas against D15's standing baseline. The dial on the flywheel.</p>
+      <p>Did this run beat the last one? Each run is read against the previous run of the same
+        experiment, and against D15 — the record every run has to beat.</p>
+      <div class="row">
+        <select id="scores-experiment"><option value="">latest run, any experiment</option></select>
+        <button id="scores-refresh" type="button">Refresh</button>
+      </div>
+      <p class="note" id="scores-summary"></p>
+      <h3>This run vs the last</h3>
+      <div id="scores-runs"></div>
+      <h3>Against D15</h3>
+      <div id="scores-baseline"></div>
+      <h3>Grounding &amp; training data</h3>
+      <p class="note" id="scores-rag"></p>
+      <p class="note" id="scores-preflight"></p>
     </section>
   </div>
 
@@ -391,6 +432,163 @@ function startJob(spec) {
   });
 }
 
+// --- scoreboard -----------------------------------------------------------------------
+
+// Rates are shares of trials; everything else is a plain measurement.
+var PERCENT = { win_rate: true, grounding_rate: true, hallucination_rate: true,
+  abstention_accuracy: true, false_abstention_rate: true, citation_coverage: true };
+var LABELS = {
+  win_rate: "win-rate", avg_rank: "avg rank", type_token_ratio: "type-token ratio",
+  fingerprint_hits_per_1k: "hinge words / 1k", avg_sentence_len: "sentence length",
+  word_count: "words"
+};
+
+function fmt(metric, value) {
+  if (value === null || value === undefined) { return "—"; }
+  if (PERCENT[metric]) { return Math.round(value * 1000) / 10 + "%"; }
+  return Number(value).toFixed(2);
+}
+
+function verdictTag(result) {
+  // The server's word, verbatim. "toward" metrics make the sign of a delta meaningless, so
+  // nothing here may decide better or worse for itself.
+  var verdict = (result && result.verdict) || "unknown";
+  return el("span", "verdict " + verdict, verdict);
+}
+
+function table(headings) {
+  var t = el("table");
+  var head = el("tr");
+  headings.forEach(function (h) { head.appendChild(el("th", null, h)); });
+  t.appendChild(head);
+  return t;
+}
+
+function renderRuns(data) {
+  var box = document.getElementById("scores-runs");
+  box.textContent = "";
+  var current = data.current_run;
+  if (!current) { return; }
+  var t = table(["arm", "win-rate", "avg rank"]);
+  Object.keys(current.arms || {}).sort().forEach(function (arm) {
+    var deltas = (data.run_deltas || {})[arm] || {};
+    var tr = el("tr");
+    tr.setAttribute("data-arm", arm);
+    tr.appendChild(el("td", "name", arm));
+    ["win_rate", "avg_rank"].forEach(function (metric) {
+      var td = el("td", null, fmt(metric, current.arms[arm][metric]));
+      td.setAttribute("data-metric", metric);
+      var result = deltas[metric];
+      if (result && result.previous !== null && result.previous !== undefined) {
+        td.appendChild(el("span", "note", " was " + fmt(metric, result.previous)));
+      }
+      td.appendChild(verdictTag(result));
+      tr.appendChild(td);
+    });
+    t.appendChild(tr);
+  });
+  box.appendChild(t);
+}
+
+function renderBaseline(data) {
+  var box = document.getElementById("scores-baseline");
+  box.textContent = "";
+  var baseline = data.baseline || {};
+  box.appendChild(el("p", "note", (baseline.adr || "") + " — " + (baseline.note || "")));
+  var against = (data.voice && data.voice.vs_baseline) || {};
+  var sources = Object.keys(against).sort();
+  var t = table(["source", "metric", "now", baseline.adr || "baseline"]);
+  if (sources.length) {
+    sources.forEach(function (source) {
+      Object.keys(against[source]).sort().forEach(function (metric) {
+        var result = against[source][metric];
+        var tr = el("tr");
+        tr.setAttribute("data-source", source);
+        tr.setAttribute("data-metric", metric);
+        tr.appendChild(el("td", "name", source));
+        tr.appendChild(el("td", "name", LABELS[metric] || metric));
+        var now = el("td", null, fmt(metric, result.current));
+        now.appendChild(verdictTag(result));
+        tr.appendChild(now);
+        tr.appendChild(el("td", null, fmt(metric, result.previous)));
+        t.appendChild(tr);
+      });
+    });
+  } else {
+    // No voice_eval.json yet: the record still stands, so show it rather than an empty box.
+    var recorded = (baseline.voice) || {};
+    Object.keys(recorded).sort().forEach(function (source) {
+      Object.keys(recorded[source]).sort().forEach(function (metric) {
+        var tr = el("tr");
+        tr.appendChild(el("td", "name", source));
+        tr.appendChild(el("td", "name", LABELS[metric] || metric));
+        tr.appendChild(el("td", null, "—"));
+        tr.appendChild(el("td", null, fmt(metric, recorded[source][metric])));
+        t.appendChild(tr);
+      });
+    });
+  }
+  box.appendChild(t);
+}
+
+function renderExperiments(data, chosen) {
+  var select = document.getElementById("scores-experiment");
+  var seen = {};
+  (data.runs || []).forEach(function (run) { if (run.experiment) { seen[run.experiment] = true; } });
+  while (select.options.length > 1) { select.remove(1); }
+  Object.keys(seen).sort().forEach(function (name) {
+    var option = el("option", null, name);
+    option.value = name;
+    select.appendChild(option);
+  });
+  select.value = chosen;
+}
+
+function renderScores(data, chosen) {
+  var current = data.current_run;
+  var summary = document.getElementById("scores-summary");
+  if (current) {
+    var corpus = current.corpus || {};
+    summary.textContent = "Latest run: " + current.experiment + " · " +
+      (current.condition || "—") + " · " + current.date +
+      (corpus.articles ? " · " + corpus.articles + " articles" : "") +
+      (data.previous_run
+        ? " — compared with " + data.previous_run.date
+        : " — the first run of this experiment, so there is nothing to beat yet");
+  } else {
+    summary.textContent = "No eval run recorded yet. Run voice-eval to put one on the board.";
+  }
+  renderExperiments(data, chosen);
+  renderRuns(data);
+  renderBaseline(data);
+
+  var rag = data.rag || {};
+  document.getElementById("scores-rag").textContent = rag.grounding_rate === undefined
+    ? "RAG faithfulness: no rag_eval.json yet."
+    : "RAG faithfulness: grounding " + fmt("grounding_rate", rag.grounding_rate) +
+      ", hallucination " + fmt("hallucination_rate", rag.hallucination_rate) +
+      ", citation coverage " + fmt("citation_coverage", rag.citation_coverage) +
+      (rag.n_questions ? " over " + rag.n_questions + " questions" : "");
+  var pre = data.preflight || {};
+  document.getElementById("scores-preflight").textContent = pre.pct_over === undefined
+    ? "Training split: none built yet."
+    : "Training split: " + pre.pct_over.toFixed(1) + "% of " + pre.n +
+      " records over the " + pre.max_seq_len + "-token budget.";
+}
+
+function loadScores() {
+  var chosen = document.getElementById("scores-experiment").value;
+  var query = chosen ? "?experiment=" + encodeURIComponent(chosen) : "";
+  return call("/console/api/scores" + query, {}).then(function (res) {
+    if (!res.ok) {
+      document.getElementById("scores-summary").textContent =
+        "scoreboard unavailable — " + reason(res);
+      return;
+    }
+    renderScores(res.data, chosen);
+  });
+}
+
 // --- health + wiring ------------------------------------------------------------------
 
 call("/console/api/health", {}).then(function (res) {
@@ -402,8 +600,11 @@ call("/console/api/health", {}).then(function (res) {
 
 document.getElementById("upload-btn").addEventListener("click", uploadSelected);
 document.getElementById("queue-refresh").addEventListener("click", loadQueue);
+document.getElementById("scores-refresh").addEventListener("click", loadScores);
+document.getElementById("scores-experiment").addEventListener("change", loadScores);
 loadQueue();
 pollJob();
+loadScores();
 </script>
 </body>
 </html>

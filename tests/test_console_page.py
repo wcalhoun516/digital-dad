@@ -105,6 +105,12 @@ def live(tmp_path):
     module.CONSOLE_QUEUE_DIR = queue_dir
     module.CONSOLE_MANIFEST_PATH = manifest
     module.CONSOLE_STATE_PATH = tmp_path / "console" / "job.json"
+    # The scoreboard reads tmp paths too — otherwise every page test would render whatever
+    # eval history is on the machine running it.
+    module.CONSOLE_VOICE_REPORT_PATH = tmp_path / "analysis" / "voice_eval.json"
+    module.CONSOLE_RAG_REPORT_PATH = tmp_path / "analysis" / "rag_eval.json"
+    module.CONSOLE_HISTORY_PATH = tmp_path / "analysis" / "voice_eval_history.jsonl"
+    module.CONSOLE_TRAINING_DIR = tmp_path / "training"
 
     handler = partial(module.GatedHandler, directory=str(CONSOLE_HTML.parent))
     server = ThreadingHTTPServer(("127.0.0.1", 0), handler)
@@ -118,6 +124,9 @@ def live(tmp_path):
         rejected = rejected_dir_for(queue_dir)
         manifest_path = manifest
         state_path = module.CONSOLE_STATE_PATH
+        voice_report = module.CONSOLE_VOICE_REPORT_PATH
+        history = module.CONSOLE_HISTORY_PATH
+        training_dir = module.CONSOLE_TRAINING_DIR
 
         def stage(self, item):
             save_item(item, queue_dir)
@@ -317,3 +326,132 @@ class TestLiveJobPanel:
         _open(page, live)
         assert "train" in page.text_content("#job-state")
         assert "running" in page.text_content("#job-state")
+
+
+# --- the scoreboard panel (step 5) -------------------------------------------------------
+
+
+def _write(path, text):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8")
+
+
+def _history(live, *rows):
+    _write(live.history, "".join(json.dumps(r) + "\n" for r in rows))
+
+
+def _row(arm, *, experiment="A_plain", date="2026-09-19", win_rate=0.0, avg_rank=2.5):
+    return {
+        "adr": "D20", "arm": arm, "avg_rank": avg_rank, "condition": "no-retrieval",
+        "corpus": {"articles": 181, "train_records": 540}, "date": date,
+        "experiment": experiment, "judge_tier": 3, "n_trials": 8, "training": None,
+        "win_rate": win_rate,
+    }
+
+
+def _scores_loaded(page):
+    page.wait_for_function(
+        "document.querySelector('#scores-summary').textContent.length > 0", timeout=10000
+    )
+
+
+class TestScoreboardStructure:
+    def test_the_page_calls_the_scores_route(self):
+        assert "/console/api/scores" in CONSOLE_HTML.read_text(encoding="utf-8")
+
+    def test_the_scoreboard_is_no_longer_a_placeholder(self):
+        source = CONSOLE_HTML.read_text(encoding="utf-8")
+        assert '<span class="pending">step 5</span>' not in source
+        assert "is still a placeholder" not in source
+
+
+class TestLiveScoreboard:
+    def test_with_nothing_run_it_says_so_and_shows_the_record_to_beat(self, page, live):
+        _open(page, live)
+        _scores_loaded(page)
+        assert "No eval run recorded" in page.text_content("#scores-summary")
+        baseline = page.text_content("#scores-baseline")
+        assert "D15" in baseline
+        assert "2.88" in baseline
+        assert page.errors == []
+
+    def test_a_second_run_of_the_same_experiment_shows_its_verdict(self, page, live):
+        _history(
+            live,
+            _row("gemma-ft", date="2026-09-19", win_rate=0.0),
+            _row("gemma-ft", date="2026-09-27", win_rate=0.25),
+        )
+        _open(page, live)
+        _scores_loaded(page)
+        cell = page.text_content(
+            "#scores-runs tr[data-arm='gemma-ft'] td[data-metric='win_rate']"
+        )
+        assert "25%" in cell
+        assert "better" in cell
+
+    def test_a_run_with_nothing_before_it_reads_unknown(self, page, live):
+        _history(live, _row("gemma-ft"))
+        _open(page, live)
+        _scores_loaded(page)
+        cell = page.text_content(
+            "#scores-runs tr[data-arm='gemma-ft'] td[data-metric='win_rate']"
+        )
+        assert "unknown" in cell
+
+    def test_the_verdict_is_the_servers_not_the_sign_of_the_change(self, page, live):
+        """Type-token ratio is scored by distance to his real prose. A fine-tune whose TTR
+        jumps from D15's 0.35 to 1.20 went *up* and still moved further from 0.70 — a page
+        that coloured rises green would call that an improvement."""
+        report = {
+            "generated_at": "2026-09-27T00:00:00+00:00",
+            "summary": {"sources": {}, "style": {"sources": {
+                "finetune": {"mean": {"type_token_ratio": 1.2}},
+                "real": {"mean": {"type_token_ratio": 0.7}},
+            }}},
+            "records": [],
+        }
+        _write(live.voice_report, json.dumps(report))
+        _open(page, live)
+        _scores_loaded(page)
+        cell = page.text_content(
+            "#scores-baseline tr[data-source='finetune'][data-metric='type_token_ratio']"
+        )
+        assert "1.20" in cell
+        assert "worse" in cell
+
+    def test_choosing_an_experiment_narrows_the_dial(self, page, live):
+        _history(live, _row("gemma-ft", experiment="A_plain"),
+                 _row("gemma-ft", experiment="B_rag"))
+        _open(page, live)
+        _scores_loaded(page)
+        assert "B_rag" in page.text_content("#scores-summary")
+        page.select_option("#scores-experiment", "A_plain")
+        page.wait_for_function(
+            "document.querySelector('#scores-summary').textContent.includes('A_plain')",
+            timeout=10000,
+        )
+        assert page.errors == []
+
+    def test_the_preflight_over_budget_share_is_shown(self, page, live):
+        record = {"messages": [
+            {"role": "system", "content": "s"},
+            {"role": "user", "content": "u"},
+            {"role": "assistant", "content": "a"},
+        ]}
+        _write(live.training_dir / "train.jsonl", json.dumps(record) + "\n")
+        _write(live.training_dir / "heldout.jsonl", json.dumps(record) + "\n")
+        _open(page, live)
+        _scores_loaded(page)
+        assert "0.0%" in page.text_content("#scores-preflight")
+
+    def test_a_hostile_arm_name_renders_as_text(self, page, live):
+        """Arm names come from a file the eval harness wrote from its registry — but the
+        history is a plain file on disk, and the page must not trust it as markup."""
+        hostile = '<img src=x onerror="window.__pwned=1">'
+        _history(live, _row(hostile, experiment='<b id="bold">x</b>'))
+        _open(page, live)
+        _scores_loaded(page)
+        assert hostile in page.text_content("#scores-runs")
+        assert page.query_selector("#scores img") is None
+        assert page.query_selector("#bold") is None
+        assert page.evaluate("window.__pwned") is None
