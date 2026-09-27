@@ -64,6 +64,7 @@ CONSOLE_ROUTES = (
     "/console/api/review",
     "/console/api/job",
     "/console/api/job/log",
+    "/console/api/scores",
 )
 
 # Where the console reads and writes. None means "whatever the ingest modules default to",
@@ -73,6 +74,10 @@ CONSOLE_INBOX_DIR = None
 CONSOLE_QUEUE_DIR = None
 CONSOLE_MANIFEST_PATH = None
 CONSOLE_STATE_PATH = None
+CONSOLE_VOICE_REPORT_PATH = None
+CONSOLE_RAG_REPORT_PATH = None
+CONSOLE_HISTORY_PATH = None
+CONSOLE_TRAINING_DIR = None
 
 # A review decision is a handful of short strings. Anything larger is not one, and reading it
 # into memory before finding that out is the mistake.
@@ -194,6 +199,7 @@ def console_paths():
     """
     if _REPO_ROOT not in sys.path:
         sys.path.insert(0, _REPO_ROOT)
+    from analysis import scoreboard, voice_candidates
     from console import jobs as console_jobs
     from ingest import queue as ingest_queue
     from ingest import review as ingest_review
@@ -204,10 +210,17 @@ def console_paths():
         queue=ingest_queue,
         review=ingest_review,
         jobs=console_jobs,
+        scoreboard=scoreboard,
+        history_rows=voice_candidates.history_rows,
         inbox=Path(CONSOLE_INBOX_DIR or ingest_queue.INBOX_DIR),
         queue_dir=Path(CONSOLE_QUEUE_DIR or ingest_queue.QUEUE_DIR),
         manifest=Path(CONSOLE_MANIFEST_PATH or ingest_review.MANIFEST_PATH),
         job_state=Path(CONSOLE_STATE_PATH or console_jobs.STATE_PATH),
+        voice_report=Path(CONSOLE_VOICE_REPORT_PATH or scoreboard.VOICE_REPORT_PATH),
+        rag_report=Path(CONSOLE_RAG_REPORT_PATH or scoreboard.RAG_REPORT_PATH),
+        history=Path(CONSOLE_HISTORY_PATH or voice_candidates.HISTORY_PATH),
+        # None is the preflight's own default; unlike the others it names a directory.
+        training_dir=CONSOLE_TRAINING_DIR,
     )
 
 
@@ -497,6 +510,23 @@ class GatedHandler(SimpleHTTPRequestHandler):
         paths = console_paths()
         self._send_json(200, paths.jobs.tail_log(paths.job_state, offset=int(raw)))
 
+    def _console_scores(self) -> None:
+        """The dial, computed by `analysis/scoreboard.py` and handed over as-is.
+
+        Nothing is decided here. Verdicts, targets and which run counts as the previous one
+        are the core's, so the console and `python -m analysis.scoreboard` cannot disagree.
+        """
+        query = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+        experiment = (query.get("experiment") or [""])[0] or None
+        paths = console_paths()
+        self._send_json(200, paths.scoreboard.scoreboard(
+            voice_path=paths.voice_report,
+            rag_path=paths.rag_report,
+            history=paths.history_rows(paths.history),
+            preflight=paths.scoreboard.preflight_report(paths.training_dir),
+            experiment=experiment,
+        ))
+
     def _console(self, route: str, method: str) -> None:
         if not CONSOLE_ENABLED:
             self.send_error(404, "Not Found")
@@ -509,6 +539,7 @@ class GatedHandler(SimpleHTTPRequestHandler):
             "/console/api/upload": {"POST": self._console_upload},
             "/console/api/job": {"GET": self._console_job, "POST": self._console_job_start},
             "/console/api/job/log": {"GET": self._console_job_log},
+            "/console/api/scores": {"GET": self._console_scores},
         }
         by_method = routes.get(route)
         if by_method is None:
