@@ -130,6 +130,26 @@ ran against; on the next run a module is **skipped if the fingerprint is unchang
 | `psychoprofile.py` | `psychoprofile.json` + `.md` | Map-reduce LLM analysis → narrative profile + 8 personality dimension scores. Logs cost to `runs.jsonl`. |
 | `semantic_search.py` | `embeddings.npy`, `embeddings_meta.json`, `embeddings.json` | sbert-mpnet-v2 (384-dim) embedding index; cached + corpus-hash busted; flattened export with snippets for the dashboard. |
 | `predictions.py` | `predictions.json` | Two-pass: extract falsifiable claims per article, then optional batched LLM verdict (pending/vindicated/wrong/mixed/unfalsifiable). Saves incrementally every 10 articles; resumable. |
+| `corpus_composition.py` | `corpus_composition.json` | What the corpus is made of: items **and words** per `provenance.modality` and per `authorship`, plus how much of it the pipeline can actually read. Reads the *manifest*, not article bodies. Committed and text-free. |
+
+**`corpus_composition.py` is the one module in the chain deliberately *not* fingerprint-skipped.**
+The fingerprint is an MD5 over what `load_articles()` returns, and that skips manifest entries
+naming no raw file — which is exactly what `ingest.review.accept_item` writes. So accepting a
+book leaves the fingerprint unchanged, and gating this module on it would pin the panel at
+"100% article" through the very change it exists to report. It reads only the manifest, so
+running it every time is free. `tests/test_corpus_composition.py` pins the reasoning.
+
+Two measurement choices are load-bearing, because the obvious version of each misleads:
+
+- **Words, not documents.** One ingested ebook is ~80k words — roughly the whole current
+  corpus (roadmap #35) — so a document count would report an archive of columns while the
+  tokens a model reads were mostly book. Items are shown; *shares* are word shares.
+- **Manifest entries are deduped** via `dedupe_manifest_entries`, like the loader does. 23 of
+  today's 204 entries are http/https twins naming the same raw file; counting them raw
+  over-reports the corpus by 23 items and 37,728 words (11%).
+
+The artifact carries no titles and no body text — only vocabulary names and counts — so it can
+describe private letters without disclosing them, and is safe to commit.
 
 **Sentence splitting (`linguistic.py`).** Everything the Linguistic Fingerprint reports —
 `sentence_count`, average sentence length, Flesch-Kincaid, Gunning Fog and the histogram —
@@ -316,11 +336,21 @@ it embeds **full article text** it is **git-ignored** — regenerate on demand. 
 themes that dominated, and his most notable calls. **No conductor, network, or LLM** — safe
 unattended. Delivery stays human-in-the-loop through the same Gmail-MCP draft path.
 
-`delivery.py` — the reusable, side-effect-free half of On This Day delivery (plan 0003 /
+`delivery.py` — the reusable, side-effect-free half of keepsake delivery (plan 0003 /
 decision **D9**): parses the git-ignored recipient list and assembles a dry-run summary that
-**sends nothing**. `bin/create_gmail_draft.py` is built on it, and `make send-on-this-day` is
-the owner's approval gate. Actual draft creation happens through the Gmail MCP in a Claude
-session, never from here — so no mail credentials are ever stored.
+**sends nothing**. `bin/create_gmail_draft.py` is built on it; `make send-on-this-day` and
+`make send-year-in-review` are the owner's approval gates. Actual draft creation happens
+through the Gmail MCP in a Claude session, never from here — so no mail credentials are ever
+stored.
+
+It is keyed on an **email kind** (`EMAIL_KINDS`, roadmap #48). Both keepsakes render into the
+same `data/cron/emails/`, so each kind owns a filename pattern that matches only its own
+files, the metadata log it reads the subject back from, and the fields the dry run reports. A
+single `*.html` glob would let the annual digest be drafted as the weekly note — adding a kind
+means adding a registry entry, never widening a pattern — and an unknown kind is refused by
+name rather than falling back to the weekly note. `year_in_review.run()` derives its log path
+from the email directory it was given rather than taking it as a separate argument, so a
+caller that redirects the render cannot still append to the live cron log.
 
 ### Evaluation harnesses & the Geo-LLM ladder
 
@@ -558,8 +588,9 @@ same `None`-means-default seams as the ingest paths (`CONSOLE_VOICE_REPORT_PATH`
 
 ### Email (`analysis/on_this_day.py` + `bin/create_gmail_draft.py`)
 
-On This Day writes an HTML email to disk; `create_gmail_draft.py` reads the latest one and
-emits it for Claude Code's **Gmail MCP** to turn into a draft (no SMTP, no auto-send today).
+On This Day and Year in Review each write an HTML email to disk; `create_gmail_draft.py
+--kind <kind>` reads the latest one of that kind and emits it for Claude Code's **Gmail MCP**
+to turn into a draft (no SMTP, no auto-send today).
 
 ## 5. Training (`training/prepare.py`)
 
@@ -581,6 +612,7 @@ data/
   cron/
     weekly.log weekly_summary.jsonl launchd.{out,err}
     emails/on_this_day_*.html  on_this_day.jsonl
+    emails/year_in_review_*.html  year_in_review.jsonl
 ```
 
 ## 7. Automation & scheduling (macOS launchd)
