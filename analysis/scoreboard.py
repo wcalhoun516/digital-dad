@@ -207,6 +207,24 @@ def preflight_scores(report: dict | None) -> dict:
     return {k: budget[k] for k in _PREFLIGHT_KEYS if k in budget}
 
 
+def preflight_report(training_dir=None) -> dict | None:
+    """Run the fine-tune preflight over 26a's split, or ``None`` if there is no split.
+
+    The preflight writes no report file, so a caller that wants its number has to run it.
+    That is cheap — a character-count estimate over two JSONL files, no model, no network.
+    A split that was never built and one that is half-written are both an absence, the
+    same rule ``read_report`` applies to the eval reports.
+    """
+    from training.finetune_config import TRAINING_DIR, QLoRAConfig
+    from training.finetune_preflight import load_split, preflight
+
+    try:
+        train, valid = load_split(TRAINING_DIR if training_dir is None else training_dir)
+    except (OSError, ValueError):
+        return None
+    return preflight(train, valid, QLoRAConfig())
+
+
 def group_runs(rows: list[dict]) -> list[dict]:
     """Collapse ``voice_eval_history.jsonl`` rows into runs, oldest first.
 
@@ -353,6 +371,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--experiment", default=None, help="score one experiment's series only"
     )
+    parser.add_argument(
+        "--training-dir", type=Path, default=None, help="26a's split, for the preflight"
+    )
     args = parser.parse_args(argv)
 
     history = None
@@ -367,6 +388,7 @@ def main(argv: list[str] | None = None) -> int:
                 voice_path=args.voice_report,
                 rag_path=args.rag_report,
                 history=history,
+                preflight=preflight_report(args.training_dir),
                 experiment=args.experiment,
             ),
             indent=2,

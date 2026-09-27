@@ -576,3 +576,71 @@ class TestPreflightScores:
 
     def test_no_report_is_an_empty_mapping(self):
         assert scoreboard.preflight_scores(None) == {}
+
+
+def chat_record(user="Write about banks.", reply="Banks are fragile."):
+    """One record in the chat shape 26a's split is written in."""
+    return {
+        "messages": [
+            {"role": "system", "content": "You write like George."},
+            {"role": "user", "content": user},
+            {"role": "assistant", "content": reply},
+        ]
+    }
+
+
+def write_split(training_dir, train, heldout):
+    training_dir.mkdir(parents=True, exist_ok=True)
+    for name, records in (("train.jsonl", train), ("heldout.jsonl", heldout)):
+        (training_dir / name).write_text("".join(json.dumps(r) + "\n" for r in records))
+    return training_dir
+
+
+class TestPreflightReport:
+    """The preflight writes no file of its own, so the scoreboard runs it to get a number.
+
+    It is a read of the training split, not a run of anything expensive: the length check
+    estimates tokens from character counts, offline.
+    """
+
+    def test_runs_the_preflight_over_the_split_it_finds(self, tmp_path):
+        split = write_split(
+            tmp_path / "training",
+            train=[chat_record(reply="short"), chat_record(reply="x" * 40_000)],
+            heldout=[chat_record(user="Held out.", reply="also short")],
+        )
+        report = scoreboard.preflight_report(split)
+        budget = report["checks"]["length_budget"]
+        # One of three records is ~10k estimated tokens, over any max_seq_len the config uses.
+        assert budget["n"] == 3
+        assert budget["n_over"] == 1
+
+    def test_its_report_is_what_preflight_scores_reads(self, tmp_path):
+        split = write_split(
+            tmp_path / "training", train=[chat_record()], heldout=[chat_record(reply="b")]
+        )
+        scores = scoreboard.preflight_scores(scoreboard.preflight_report(split))
+        assert scores["pct_over"] == 0.0
+
+    def test_a_missing_split_is_none(self, tmp_path):
+        assert scoreboard.preflight_report(tmp_path / "never-built") is None
+
+    def test_a_half_written_split_is_none_not_a_traceback(self, tmp_path):
+        split = write_split(tmp_path / "training", train=[chat_record()], heldout=[])
+        (split / "heldout.jsonl").write_text('{"messages": [')
+        assert scoreboard.preflight_report(split) is None
+
+    def test_the_cli_reports_the_same_preflight_the_console_does(self, tmp_path, capsys):
+        split = write_split(
+            tmp_path / "training", train=[chat_record()], heldout=[chat_record(reply="b")]
+        )
+        code = scoreboard.main(
+            [
+                "--voice-report", str(tmp_path / "absent.json"),
+                "--rag-report", str(tmp_path / "absent.json"),
+                "--history", str(tmp_path / "absent.jsonl"),
+                "--training-dir", str(split),
+            ]
+        )
+        assert code == 0
+        assert json.loads(capsys.readouterr().out)["preflight"]["n"] == 2
