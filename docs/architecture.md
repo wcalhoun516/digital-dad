@@ -343,8 +343,9 @@ offline **style metrics** against his distinctive words (`--style-only` needs no
 
 `scoreboard.py` — **did this run beat the last one?**; `python -m analysis.scoreboard`. The
 arithmetic behind plan 0011's console scoreboard, kept here beside the harnesses whose reports
-it reads (`voice_eval.json`, `rag_eval.json`, a `finetune_preflight` report's
-`checks.length_budget.pct_over`) and the run series `voice_candidates.append_history` already
+it reads (`voice_eval.json`, `rag_eval.json`, and the `finetune_preflight` report's
+`checks.length_budget.pct_over`, which `preflight_report()` runs because the preflight writes no
+file) and the run series `voice_candidates.append_history` already
 appends to `voice_eval_history.jsonl`. It computes nothing itself and writes nothing: every
 reader is total, so a report the operator has never generated is an absence rather than a
 traceback. Two judgements are the substance. **Direction is a property of the metric** —
@@ -477,7 +478,7 @@ duplicate Raw Corpus row per twin.
 A **second, separate** surface from the family dashboard: it feeds the corpus, turns the
 flywheel crank, and keeps score (roadmap #42, plan 0011). It is server-bound by nature — it
 writes files and starts jobs — so it is explicitly *not* covered by D4, which keeps
-`index.html` client-side and self-contained. See **D17**.
+`index.html` client-side and self-contained. See **D21**.
 
 `bin/serve_dashboard.py` gained `/console` (the page) and `/console/api/*` (JSON), both behind
 the same Basic-Auth `_gate()` as everything else. Three structural rules, all tested in
@@ -506,6 +507,7 @@ drift apart:
 | `POST /console/api/upload?filename=` | `stage_upload` | 400 `UploadRejected`, 413 over the cap |
 | `GET /console/api/queue` | `queue_view(load_all(…))` | — |
 | `POST /console/api/review` | `apply_decision` | 404 `UnknownItem`, 400 any other `ReviewError` |
+| `GET /console/api/scores?experiment=` | `scoreboard(…)`, fed `history_rows` and `preflight_report` | — (every reader is total) |
 
 What the HTTP layer adds on top of those cores is only what HTTP makes possible:
 
@@ -544,8 +546,15 @@ also that only fields the operator *changed* travel with a decision: `edit_item`
 date it accepts as `approximate`, so resending an untouched date would quietly demote one the
 extractor was sure about.
 
-**Uploading only fills `data/inbox/`.** Extracting those files into the review queue is still
-`make ingest` at a terminal; the console gets that button with plan 0011's step 4 job runner.
+**Uploading only fills `data/inbox/`.** Extracting those files into the review queue is the
+job runner's `ingest` button — the same `make ingest` a terminal runs.
+
+**The scoreboard panel renders verdicts, it never computes them.** `/console/api/scores` hands
+the page `scoreboard()`'s payload as-is, and the page prints each metric's `verdict` verbatim.
+It must not colour a number by the sign of its delta: for a *toward* metric a rise can be a
+regression, and `tests/test_console_page.py` pins exactly that case. Its four inputs have the
+same `None`-means-default seams as the ingest paths (`CONSOLE_VOICE_REPORT_PATH`,
+`CONSOLE_RAG_REPORT_PATH`, `CONSOLE_HISTORY_PATH`, `CONSOLE_TRAINING_DIR`).
 
 ### Email (`analysis/on_this_day.py` + `bin/create_gmail_draft.py`)
 
