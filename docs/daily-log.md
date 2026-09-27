@@ -1518,3 +1518,27 @@ Format:
   entries are real but live in unmerged PRs #111, #112 and #113 — a merge-order artifact, not
   the 2026-09-19 deletion recurring. A §5b tally of "the last 7" will read short until those
   land, and should say so rather than tally a file it knows is incomplete.
+
+### 2026-09-27 — dashboard — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/119
+- Source: plan:ready/0011 (step 5's route and panel — the last open piece; plan moved to `plans/done/`)
+- Summary: **The flywheel has a dial.** #111–#114 merged on 09-26, which unblocked the one piece of
+  plan 0011 left: `GET /console/api/scores` and the scoreboard panel. The route is the thin caller
+  the plan asked for. It resolves four paths (`CONSOLE_VOICE_REPORT_PATH`, `…_RAG_REPORT_PATH`,
+  `…_HISTORY_PATH`, `…_TRAINING_DIR`, all `None`-means-default), forwards `?experiment=`, and
+  serializes `scoreboard.scoreboard()`. **One addition to the core was unavoidable:**
+  `scoreboard()` took a preflight report as a parameter, but the preflight writes no file, so
+  nothing could supply it. `preflight_report()` runs it (~16 ms on the real 667-record split,
+  a char-count estimate) and is total like `read_report`; the CLI gained `--training-dir` so it
+  and the console report the same number. **The page prints verdicts and never computes them.**
+  A live-Chromium test pins why: a fine-tune whose TTR *rises* from D15's 0.35 to 1.20 moved
+  further from his real 0.70, so the panel must say `worse`. Verdicts carry a glyph and a word,
+  not colour alone. **Self-review found one real bug, now fixed:** `history_rows()` promised to
+  skip malformed lines, but `5` or `[]` parsed fine and reached `group_runs`' `.get()`, which
+  would have turned the scores route into a 500. **Also restored eight run-history entries**
+  lost to merge-time clobbering: #83–#87 (08-20 → 09-05) and #111–#113 (09-21 → 09-23), each
+  verbatim from its merge commit. Every merged `daily/*` PR now appears in this file.
+  **Verification:** `make verify` exit 0 — ruff clean, 1792 passed, dashboard builds. An ID-level
+  diff against a clean `origin/main` worktree shows zero tests removed. **14 mutants, 14 caught.**
+  On the owner's real data the dial reads `unknown` everywhere, as the plan predicted: one run
+  per experiment, and D20 wrote its reports with `--output`, not to `voice_eval.json`.
