@@ -100,7 +100,7 @@ dashboard/      Interactive visualization (D3.js, vanilla JS, no build step)
 data/
   raw/          Individual article JSON files (gitignored)
   analysis/     Analysis outputs (themes, linguistics, psychoprofile, predictions)
-  cron/emails/  Weekly "On This Day" email HTML files
+  cron/emails/  Rendered keepsake emails: "On This Day" (weekly) + "Year in Review" (annual)
   training/     Fine-tuning data: JSONL, plain text corpus, metadata CSV
 bin/            Scripts: weekly cron, conductor restart, Gmail draft helper
 ```
@@ -406,11 +406,35 @@ make year-in-review
 # A specific year, or a preview that writes nothing
 make year-in-review ARGS="--year 2024"
 make year-in-review ARGS="--dry-run"
+
+# Approval gate — show who the latest digest would go to (sends nothing)
+make send-year-in-review
 ```
 
-The email is saved to `data/cron/emails/year_in_review_YYYY.html`. Delivery stays
-human-in-the-loop via the same Gmail-MCP draft path as On This Day (Decision D9) —
-nothing is sent automatically.
+The email is saved to `data/cron/emails/year_in_review_YYYY.html`, and the render
+appends a record to `data/cron/year_in_review.jsonl` so its subject survives to
+delivery time. Delivery stays human-in-the-loop via the same Gmail-MCP draft path as
+On This Day (Decision D9) — nothing is sent automatically.
+
+### One delivery path, several kinds
+
+Both keepsake emails render into `data/cron/emails/` and share one approval gate.
+`analysis/delivery.py` keys it on an **email kind** (`EMAIL_KINDS`), each carrying its
+own filename pattern, metadata log, and the fields the dry run reports:
+
+| Kind | Renders | Log | Approval gate |
+|------|---------|-----|---------------|
+| `on-this-day` | `on_this_day_*.html` | `on_this_day.jsonl` | `make send-on-this-day` |
+| `year-in-review` | `year_in_review_*.html` | `year_in_review.jsonl` | `make send-year-in-review` |
+
+Each pattern matches **only its own** files. A single `*.html` glob would let the
+annual digest be drafted as the weekly note, so widening it is not the way to add a
+kind — add an `EMAIL_KINDS` entry instead. An unrecognized kind is refused by name
+rather than quietly falling back to the weekly note.
+
+The printable anthology is deliberately **not** a kind: it is a print artifact in
+`data/analysis/`, and mailing it means attaching a PDF, which the Gmail-MCP payload
+(an HTML body) does not carry. That is a separate decision, not an oversight.
 
 ## "Best Of" Printable Anthology
 

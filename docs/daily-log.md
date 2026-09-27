@@ -1114,97 +1114,53 @@ Format:
   the next run at the job runner, including the trap that uploading only fills `data/inbox/` —
   staging into the queue is still `make ingest` until step 4 lands.
 
-### 2026-09-21 — infra — ready-for-review
-- PR: https://github.com/wcalhoun516/digital-dad/pull/111
-- Source: plan:ready/0011 (step 4 — the job runner)
-- Summary: **The console can turn the crank.** Uploading filled `data/inbox/` and then the page
-  told the operator to go run `make ingest` at a terminal; that note is now the button it was
-  apologising for. New top-level `console/` package: `console/jobs.py` is the state machine,
-  `POST`/`GET /console/api/job` and `GET /console/api/job/log` are the routes, and the page's
-  step-4 placeholder is a job panel with a live log. Six registered jobs — `ingest`,
-  `finetune-prep`, `finetune-preflight`, `voice-style`, `train`, `voice-eval` — as argv lists of
-  `python -m module`, never shell strings, from a closed registry: an operator picks a name,
-  never a command. Three rules: **never in the request handler** (a training run in a handler
-  thread is a hung tab and a leaked thread on this stdlib server); **one job at a time, refused
-  with a 409 rather than queued** (two trainers on one GPU is a corrupt result, not a slow one);
-  and **liveness re-derived from the pid on every read**, because the state file survives a
-  crash and the process does not — a `running` record with nothing behind it would otherwise
-  refuse every future job forever. **One deliberate deviation from the plan:** step 4 says to
-  reuse `_proxy`'s SSE for the log tail; it polls by byte offset instead, because SSE holds a
-  handler thread per viewer for the length of a training run and still needs tearing down at
-  job end, while an offset poll delivers each line exactly once, costs a stat and a seek, and
-  survives a closed laptop. Recorded in the plan's status block so a later step doesn't read
-  the original instruction and undo it — flagged in the PR for the human to overrule.
-  **A race the live browser test caught while every unit test was green and wrong:** running a
-  job in a real browser intermittently reported `interrupted` for a job that had *succeeded*.
-  Two races, one symptom — a poll landing between the child's exit and the watcher's write
-  reconciled a `running` record with a dead pid, but `interrupted` has to mean *nobody is coming
-  to write the real answer*, and the page stops polling on a terminal state so the wrong word
-  was permanent; and both writers then collided on a single `job.json.tmp`, where the first
-  `replace` moved the file out from under the second and the lost write was the job's final
-  outcome. Runs are now tracked by log name while watched, and the temp name is per-thread.
-  **Mutation-tested — 29 mutants, 28 caught; the first pass found five survivors that were four
-  real gaps.** Nothing exercised the real `_pid_alive` (every other test injects `alive=`, so a
-  check that always answered `True` would have wedged the runner on the first crashed server),
-  nothing pinned the non-clobbering log open (two runs in the same second would have merged into
-  one file), nothing asserted the child's stderr reaches the operator's log rather than the
-  server's, and nothing covered the `finally` that releases a run whose watcher died mid-write.
-  The lone survivor swaps the atomic `replace` for a direct write — no deterministic test can
-  observe a torn read. **Verification:** `make verify` — ruff clean across the widened
-  `LINT_PATHS`, **1650 passed**, zero warnings, dashboard builds; `__pycache__` cleared before
-  every red→green proof. **No test starts a real pipeline job:** the state machine runs on a
-  fake spawn, the route and page tests register a throwaway `python -m this`, and the two tests
-  naming `ingest` never spawn it (one gets a 409 from a pre-written busy record, the other has
-  `Popen` patched to fail). The job panel is exercised in **live headless Chromium** against the
-  real server through the Basic-Auth gate. **Security posture unchanged but worth more:** the
-  console is still tailnet-only and refuses to start under Funnel, and the new POST is in the
-  401 table with an assertion that an unauthenticated start leaves the runner `idle` — refused
-  before it can spend an afternoon of GPU. **Plan 0011 stays in `ready/`:** steps 5–6 remain,
-  and its status block now points the next run at **step 5, the scoreboard**, which is the point
-  of the whole plan and finally has the runs to score.
-
-### 2026-09-26 — dashboard — ready-for-review
-- PR: https://github.com/wcalhoun516/digital-dad/pull/116
-- Source: roadmap:#38 (the PARTIAL dashboard remainder)
-- Summary: **The archive now says what it is made of, and the honest answer is uncomfortable:
-  181 items, 340,720 words, 100% `article`, 100% `george`.** Roadmap #62 keeps the LoRA track
-  open on the hypothesis that every run so far was token-starved, and #38's remainder asked for
-  a corpus-composition panel — but nothing in the repo answered the prior question of what the
-  corpus actually contains. New `analysis/corpus_composition.py` + a panel at the top of the
-  Raw Corpus tab, which is where it belongs: beside the corpus it describes, not as an 18th nav
-  tab. **Three obvious implementations would each have produced a dial that lies, and all three
-  were caught by reading real data rather than by reasoning.** (1) Tallying `load_articles()`
-  would report "0 books" forever: `ingest.review.accept_item` appends a manifest entry with no
-  `file` key, `load_articles` skips exactly those, and nothing in `ingest/` ever writes
-  `data/raw/<id>.json` — so **every accepted ingest item is currently invisible to the entire
-  analysis pipeline**. The module therefore reads the *manifest*, and reports unreadable
-  material as its own line rather than dropping it, so the gap is visible instead of silent.
-  (2) Counting documents would describe a different archive than the one a model reads — one
-  ebook is ~80k words, roughly today's whole corpus — so shares are **word** shares, and the
-  panel says so on screen. (3) Tallying raw manifest entries would over-report by 23 items and
-  37,728 words (11%), because the manifest carries http/https twins of the same file; it reuses
-  the loader's own `dedupe_manifest_entries` so the repo collapses twins in one place, not two.
-  **A fingerprint-skip trap, avoided deliberately and pinned with two tests:** the corpus
-  fingerprint hashes what `load_articles` returns, so the arrival of a book leaves it unchanged
-  — gating this module on `_should_run` would have pinned the panel at "100% article" through
-  the very event it exists to report. It reads only the manifest, so running it every time is
-  free. **Mutation-tested — 11 mutants, 11 caught, no survivors**, which was the point: every
-  new symbol's first failure is an `ImportError`, and that proves nothing about the assertions.
-  The mutants worth naming are the two that exist because a green suite lied here before: adding
-  a field to `compose`'s return without updating `_EMPTY_DEFAULTS` (a fresh clone would render
-  `undefined` while every string assertion stayed green), and rendering row cells with
-  `.innerHTML`. **The panel is exercised in live headless Chromium**, not only as a grep over
-  `template.html`, because a string match cannot tell whether the thing renders: the XSS test
-  feeds a modality name of `<img src=x onerror=...>` — provenance an operator controls — and
-  asserts `window.__pwned` stays undefined, and the unreadable-material test asserts the note is
-  *visible*, since it is built hidden and rendering 80,900 un-analyzable words into a `hidden`
-  element would be this panel's worst failure. That live pass also cost an hour to a
-  non-bug: tab renders are deferred 50ms after the click so `display:block` lands before D3
-  measures widths, so the first fresh-clone assertion raced the render. Waiting on the render
-  rather than on a duration; noted in the test so the next person doesn't read it as flakiness.
-  **Verification:** `make verify` — ruff clean, **1682 passed**, zero warnings, dashboard builds;
-  `__pycache__` cleared before every red→green proof and before each mutant. Test delta measured
-  against a clean `origin/main` worktree rather than estimated: **1650 → 1682 collected** (30 new
-  tests in two files, plus 2 auto-parametrized cases the repo's own coverage gates added on their
-  own). Both dashboard paths exercised end to end: the real injection (181 / 340,720) and the
-  fresh-clone stub fallback, by moving the artifact aside and restoring it.
+### 2026-09-25 — family — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/115
+- Source: roadmap:family (#48 — deliver the year-in-review digest)
+- Summary: **Roadmap #48 says "generalize the glob." Doing literally that would have undone a
+  guard this log installed on purpose.** The 2026-09-13 entry records it: `latest_email_payload`
+  globs `on_this_day_*.html` *specifically* so a year-in-review file sharing `data/cron/emails/`
+  cannot be drafted as the weekly note. Widening to `*.html` would have made the newest file of
+  either kind win — the exact bug the narrow glob prevents. So the glob was not widened; delivery
+  learned about **kinds** instead. A frozen `EmailKind` registry (`label`, `pattern`, `log_name`,
+  `detail_fields`) gives each keepsake its own pattern, and adding a kind is a registry entry,
+  never a looser pattern. **The glob was only one of three hard-codings.** Fixing it alone would
+  have produced a dry run reading "On This Day / From the archive / Headline: N/A" for an annual
+  digest: the log path and the dry-run's field labels were hard-coded too. All three now derive
+  from the kind, so the annual digest reports Year/Articles/Words under its own heading. The old
+  flat `headline`/`matched_article` payload keys were **removed rather than kept alongside**
+  `details` — two mechanisms for one job is how they drift. **The digest had no log at all**, so
+  even a correct reader had no subject to find; `year_in_review.run()` now appends a record, and
+  `on_this_day.py`'s hard-coded log path was re-pointed at `log_path_for("on-this-day")` so
+  writer and reader cannot disagree about where the weekly log lives. **A footgun caught by its
+  own test, mid-implementation.** `run()` first took `log_path` as its own argument defaulting to
+  the live cron log — and a *pre-existing* test that passed only `email_dir=tmp_path` promptly
+  appended a pytest temp path to the real `data/cron/year_in_review.jsonl`, which `make
+  send-year-in-review` reads. It would have reported a subject for a file that does not exist.
+  The parameter was **deleted**, not defaulted more carefully: the log path is now derived from
+  `email_dir.parent`, so redirecting the render necessarily redirects the log. Same
+  "paired, not separately configured" shape as `rejected_dir_for()` in #114. The regression test
+  was written first and watched fail. **Mutation-tested — 14 mutants, 14 caught, zero survivors**
+  (glob widening, unknown-kind silently defaulting, kind-ignoring log path, reversed sort,
+  truncate-instead-of-append, log-written-on-a-dry-run, dropped subject). This mattered more than
+  usual because every new symbol can only fail as an `ImportError` first, which proves nothing
+  about the assertions. **The trap that nearly made this a false green — read this one.** After
+  the harness ran, `make verify` passed **1623/1623** while the *live* `make send-year-in-review`
+  printed a full path where the source plainly said `emails[0].name`. Mutant M9 was
+  `emails[0].name` → `str(emails[0])`: **same byte length**, so at this volume's mtime
+  granularity Python kept the mutated `.pyc` after a byte-correct restore. The known
+  `__pycache__` hazard, but with a new and worse symptom — **stale bytecode does not always show
+  up as a red test.** A green suite was not evidence the bytecode was current; only running the
+  real command was. Cleared and re-verified. Two other loose ends were chased rather than waved
+  off: seven tmp-path records in the live log turned out to be mutant M12 (the one that breaks
+  the pairing) doing exactly what it was written to do, not a leak in the shipped code — the full
+  suite leaves the live log untouched, confirmed by deleting it and re-running. And a +23 test
+  delta against a +22 hand-count reconciled to `test_makefile_targets.py`, which auto-derives a
+  parametrized case per documented target, so documenting `make send-year-in-review` generated
+  its own test. **Verification:** `make verify` **exit 0** — ruff clean, **1623 passed**, dashboard
+  builds; ID-level diff against a clean `origin/main` worktree shows **+23 added, zero removed**
+  (1600 → 1623). Both kinds confirmed live: the digest reports "2024 — A Year in the Archive",
+  12 articles, 24,775 words, and `make send-on-this-day` is byte-for-byte unchanged in behaviour.
+  **A documented refusal:** the anthology is deliberately *not* a kind, because mailing it needs
+  a PDF attachment the Gmail-MCP `html_body` payload cannot carry — recorded in the README so the
+  next run does not mistake the omission for an oversight. Nothing here sends mail; D9 holds.
