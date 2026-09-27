@@ -189,6 +189,62 @@ def test_main_does_not_consult_the_funnel_when_the_console_is_off(srv, tmp_path,
     assert srv.main() == 0
 
 
+# --- the console may not run without a password ----------------------------------------
+#
+# DIGITAL_DAD_ALLOW_OPEN=1 exists so the read-only dashboard can be served with no password
+# for trusted local use, and `_authed()` returns True unconditionally when PASSWORD is empty.
+# That bargain was struck for a surface where the worst case was "a stranger reads columns
+# that were already public". The console writes files and starts processes, so the same
+# bargain would hand those to anyone who can reach the port. Found by review of PR #113.
+
+
+def test_main_refuses_an_open_console(srv, tmp_path, capsys, monkeypatch):
+    dashboard = tmp_path / "dashboard"
+    dashboard.mkdir()
+    (dashboard / "index.html").write_text("<html></html>", encoding="utf-8")
+    monkeypatch.setattr(srv, "PASSWORD", "")
+    monkeypatch.setattr(srv, "DASHBOARD_DIR", str(dashboard))
+    monkeypatch.setattr(srv, "CONSOLE_ENABLED", True)
+    monkeypatch.setattr(srv, "PORT", 0)
+    monkeypatch.setenv("DIGITAL_DAD_ALLOW_OPEN", "1")
+    monkeypatch.setattr(srv, "probe_funnel", lambda binary=None: ("absent", None))
+    monkeypatch.setattr(srv, "_serve_forever", lambda server: None)
+
+    assert srv.main() == 1
+    err = capsys.readouterr().err
+    assert "REFUSING TO START" in err
+    assert "password" in err.lower()
+
+
+def test_open_mode_still_serves_the_read_only_dashboard(srv, tmp_path, monkeypatch):
+    """The escape hatch stands for the surface it was written for — only the console loses it."""
+    dashboard = tmp_path / "dashboard"
+    dashboard.mkdir()
+    (dashboard / "index.html").write_text("<html></html>", encoding="utf-8")
+    monkeypatch.setattr(srv, "PASSWORD", "")
+    monkeypatch.setattr(srv, "DASHBOARD_DIR", str(dashboard))
+    monkeypatch.setattr(srv, "CONSOLE_ENABLED", False)
+    monkeypatch.setattr(srv, "PORT", 0)
+    monkeypatch.setenv("DIGITAL_DAD_ALLOW_OPEN", "1")
+    monkeypatch.setattr(srv, "_serve_forever", lambda server: None)
+
+    assert srv.main() == 0
+
+
+def test_a_password_protected_console_starts(srv, tmp_path, monkeypatch):
+    dashboard = tmp_path / "dashboard"
+    dashboard.mkdir()
+    (dashboard / "index.html").write_text("<html></html>", encoding="utf-8")
+    monkeypatch.setattr(srv, "PASSWORD", "pw")
+    monkeypatch.setattr(srv, "DASHBOARD_DIR", str(dashboard))
+    monkeypatch.setattr(srv, "CONSOLE_ENABLED", True)
+    monkeypatch.setattr(srv, "PORT", 0)
+    monkeypatch.setattr(srv, "probe_funnel", lambda binary=None: ("absent", None))
+    monkeypatch.setattr(srv, "_serve_forever", lambda server: None)
+
+    assert srv.main() == 0
+
+
 def test_the_shipped_share_port_is_the_one_that_would_be_refused(srv):
     """Pins the real-world consequence: `make share` publishes 8000, so 8000 is off-limits."""
     default_share_port = int(os.environ.get("DIGITAL_DAD_SHARE_PORT", "8000"))

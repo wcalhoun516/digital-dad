@@ -22,7 +22,7 @@ PROJECT_ROOT="${DIGITAL_DAD_ROOT:-}"
 PROJECT_GLOB="/Volumes/FamilyWorkDrive*/development/digital-dad"
 PROMPT_REL="scripts/daily_routine_prompt.md"
 # Override with DIGITAL_DAD_MODEL to test a different model without re-staging.
-CLAUDE_MODEL="${DIGITAL_DAD_MODEL:-claude-opus-5}"
+CLAUDE_MODEL="${DIGITAL_DAD_MODEL:-claude-opus-5-5}"
 CLAUDE_EFFORT="high"
 MOUNT_WAIT_SECONDS=90
 
