@@ -710,6 +710,212 @@ Format:
   **NB (fourth ask):** the corpus-ingest work (PR **#79**) still has no plan in `docs/plans/ready/`,
   so §4 still can't see it; it remains higher value than anything left on the roadmap.
 
+### 2026-08-20 — docs — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/83
+- Source: roadmap:#28 follow-up (docs — least-recently-worked category, last touched 2026-06-25)
+- Summary: **`docs/architecture.md` had stopped being true, and nothing could tell.** `docs/INDEX.md`
+  sends every session to it as *"the repo map — read this before touching any module"*, but **11 of
+  the 27 modules in `analysis/` had no entry** (`adjudicate` `conductor` `delivery` `geo_baseline`
+  `geo_llm_status` `rag_eval` `reading_room` `verdict_backfill` `voice_eval` `voice_trials`
+  `year_in_review`) — a **41% miss rate**. Every one shipped through this agent, and **every one has
+  a test file**: the test gate caught them because a test gate *exists*; the doc gate was convention.
+  So this PR does both halves — the guard, then the entries. **The guard's strictness is the design
+  decision:** it requires the module's own filename in a code span (`` `foo.py` ``/`` `analysis/foo.py` ``),
+  not any mention of its stem. A looser stem rule scored 20/27 "documented" and was **vacuous** —
+  `reading_room` matched only `` `reading_room.json` `` (an artifact reference, not a description of
+  the builder), and `rag_eval`/`voice_eval` matched single passing mentions inside sentences about a
+  *different* module. **TDD'd:** +47 tests, **red first on all 11** for the right reason, and the
+  helper has 12 unit tests of its own (accepts bare/package-qualified/embedded filenames; rejects
+  artifact-only mentions, unbackticked prose, and a suffix collision — `graph.py` must not match
+  `` `entity_graph.py` ``). **Proved non-vacuous** by reverting: dropped the `year_in_review.py`
+  anchor → 1 failure; deleted the `reading-room:` target → 2 failures; restored → 47 pass.
+  **§8.5 deepen found a real user-facing bug.** The second guard checks the reverse direction — every
+  `` `make <target>` `` written in a code span must exist in the `Makefile` — and caught **two
+  targets that were documented but never existed**. (1) **`make reading-room` did not exist**, yet
+  it is what `dashboard/template.html` tells *the family* to run when the Reading Room tab is empty
+  ("Run `make reading-room` then `make dashboard`"), and README documents it three times with
+  `ARGS`. Clicking the tab and following its own instructions gave `No rule to make target`. (2)
+  `make voice-style` likewise absent; README promises it as the *"offline + free, safe to run
+  unattended"* path. Verified in source that `--style-only` **returns before the `require_conductor`
+  gate** (`voice_eval.py:495` vs `:498`), so the claim is accurate and only the target was missing —
+  added it as its own target so staying free isn't a flag you have to remember. Both new targets
+  **run for real**, not just parse: `make reading-room ARGS="--dry-run"` → *"197 readable articles
+  across 9 themes"*; `make voice-style` → wrote the style report. Also **corrected the dashboard tab
+  list, "Nine tabs" → sixteen** (the doc had missed Network, Stance, Intellectual Arc, Calhoun-isms,
+  Second Thoughts, Reading Room and Geo-LLM), and taught the convention in
+  `runbooks/adding-an-analysis-module.md` + its checklist, so the next module complies by
+  construction rather than by remembering. **Every claim written into the doc was checked against
+  source, not inferred** — the conductor gate in all four owner-gated CLIs, `--style-only`,
+  `--report`, `--year`'s "latest *complete* year" default, `eval/questions.json`, and the fact that
+  `geo_llm_status` is called **directly by `viz/build_dashboard.py:69`** rather than from a `make`
+  target. **Verification:** `make verify` **exit 0** — ruff clean, **899 passed**, dashboard builds;
+  a clean worktree off `origin/main` collects **852** (851 passed + 1 environment-skip that passes
+  in-repo), so **+47 is exactly the tests added** — `test_docs_coverage.py` collects 47. **No data artifact
+  committed** — `make voice-style` wrote an ungitignored `voice_style.json`/`.md`; both deleted, tree
+  left with only the three untracked paths that predated the run. **Backlog:** 4 open `daily/*` PRs
+  (#78, #80, #81, #82) at start, under 8; §3 resumed nothing (all four `ready-for-review`); `main`
+  green. **Cold-path pick:** `plans/ready/` is **empty** (0008 was retired on 08-19), no user pins,
+  and **docs** is absent from the entire last-7 rotation. **NB (sixth ask):** the corpus-ingest work
+  (PR **#79**) still has no plan in `docs/plans/ready/`; the directory is empty, so a plan dropped
+  there is tomorrow's hot path uncontested. **Noticed, not fixed (out of scope):** `reading_room.py`
+  reports **197** articles where the deduped corpus has **176** — it walks the manifest directly
+  rather than through `dedupe_manifest_entries()`, the same defect class as #77/#80.
+
+### 2026-08-21 — training — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/84
+- Source: roadmap:#27 (training — the only category absent from the last 7 runs)
+- Summary: **The module whose entire job is to stop us changing the pinned embedder on vibes was
+  itself declaring winners on noise.** `analysis/embedding_compare.py` crowned `best_mrr_model` by
+  a bare argmax over MRR — no margin, no per-query detail, no significance. On a 13-query gold set
+  MRR moves in coarse steps: one query slipping rank 2→3 shifts it by `(1/2−1/3)/13 ≈ 0.013`, and
+  the last real run (`data/analysis/embedding_compare.json`, 2026-07-18) separated the two models
+  by **0.027** — roughly two rank slots — and printed a winner. Decision **D2** pins the embedder
+  because cosine similarity is only meaningful inside one vector space, so a bogus winner here
+  would invalidate Semantic Search, Ask Dad retrieval and On This Day at once. Added
+  `per_query_metrics()` (per-query reciprocal rank + exact `first_relevant_rank`, so a reviewer can
+  see *which* query moved), `paired_comparison()` (wins/losses/ties + mean delta + an **exact
+  two-sided binomial sign test**, pairing only queries both models scored), and a `_verdict()` that
+  requires **both** `mean_delta > 0` **and** `p <= alpha` before naming a winner — otherwise
+  `inconclusive`, with a plain-English reason. Leading on MRR is no longer sufficient.
+  **§8.5 deepen:** the sharper finding is that the July run **could not have produced a significant
+  result under any outcome** — five paired queries bottom out at `p = 0.0625`, so even a unanimous
+  5–0 sweep misses `alpha = 0.05`. New `gold_set_power()` computes that floor and the number of
+  labelled queries needed to clear it, wired into the *offline* `make embedding-queries-check` — so
+  "your gold set is too small to decide anything" arrives **before** a live pass embeds the whole
+  corpus once per candidate model, not after. +37 tests (852 → 889); `test_embedding_compare.py`
+  54 → 91. Non-vacuousness proven by three reverts (3/1/0 failures) — the third revert exposed the
+  `n == 0` guard in `_sign_test_p` as dead code (`min(1.0, 2*1/1)` already yields 1.0); deleted
+  rather than kept and covered. All math stays pure behind the injected `embed(model_id, texts)`
+  seam, mirroring `rag_eval`/`voice_eval`; no model was downloaded and no live pass was run.
+  Deferred for the owner: the #27 dashboard viz (the report now carries everything it would need).
+
+### 2026-08-22 — analysis — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/85
+- Source: roadmap:analysis (the category absent from the last 7 runs; its listed items #11–#17 are all shipped)
+- Summary: **The builder behind the dashboard's Linguistic Fingerprint was throwing away his
+  sentences, and it was the only analysis module with no test file at all.**
+  `analysis/linguistic.py` computes `sentence_count`, average sentence length, Flesch-Kincaid,
+  Gunning Fog and the sentence-length histogram — every one of them downstream of
+  `_split_sentences()`. Three defects, each measured on the real 176-article corpus:
+  (1) **the histogram silently dropped its own tail** — bins were capped at 100 words and
+  half-open (`[a, b)`) throughout, so every sentence at or beyond the last edge was counted in
+  **no bin**; the committed `linguistics.json` summed to 17,474 against a `sentence_count` of
+  17,528, losing precisely the **53 longest sentences (up to 286 words)** — the most distinctive
+  part of a *fingerprint*. The final bucket is now open-ended (`bin_end: null`) and the counts
+  form a complete partition. (2) **The splitter cut inside abbreviations** — `(?<=[.!?])\s+(?=[A-Z])`
+  fires on any period before a capital, so `Ms. Lagarde`, `Prof. Calhoun`,
+  `Federal Reserve Inc. Mark` and `Mont St. Michel` each became two "sentences" (**122 bad
+  splits**). Guarded with a curated `ABBREVIATIONS` lexicon (same posture as `entity_aliases.py`)
+  plus generic rules for single initials (`George W. Bush`) and dotted acronyms (`U.S.`, `J.P.`).
+  (3) **§8.5 deepen — the sharpest find:** the orphan halves (`Ms.`, `Prof.`) fell under the
+  `>10`-character floor and were **deleted outright** — and so were **81 genuine one-word
+  sentences**: `Why?` `Perhaps.` `Wrong.` `Wow.` `Trust me.` Those are among the most
+  characteristic things in the corpus, erased from an archive whose whole point is his voice.
+  The floor is now "contains a letter" (a stray numeral is still rejected). Net on the corpus:
+  **−132 spurious sentences, +206 words recovered**, mean sentence length 21.63 → 21.82, and the
+  splitter now retains **331,049 of the corpus's 331,050 words**. Also stopped the chart lying:
+  the overflow tick renders **`100+`**, not `100`. **TDD'd:** new `tests/test_linguistic.py`,
+  **+23 tests (852 → 875)** — the module had **zero** dedicated coverage before today.
+  Non-vacuousness proven by three reverts (**3 / 6 / 6** failures; restored → 21 green).
+  **Verification:** `make verify` green (875 passed, ruff clean, dashboard builds) + a
+  headless-Chromium pass on a locally-regenerated `linguistics.json`: 21 bars, x-axis tick
+  `100+`, open bucket `(100, 53)`, **0 console errors, 0px h-overflow**. **No data artifact
+  committed** — `linguistics.json` was regenerated only to drive the browser check and then
+  **restored**, following PR #77's precedent; the corpus fingerprint re-runs the module on the
+  next weekly `make analyze`. **Offline / unattended-safe:** stdlib only, no
+  conductor/network/LLM, no re-scrape. **Backlog:** 6 open `daily/*` PRs at start
+  (#78/#80/#81/#82/#83/#84) — under 8; §3 didn't resume (all `ready-for-review`, none
+  `in-progress`); `main` green. **Deferred:** the corpus-level aggregates are still *unweighted
+  means of per-article means*, so `avg_sentence_length` reports 21.92 where the corpus-weighted
+  value is 21.06, and `avg_type_token_ratio` averages a length-sensitive ratio across articles
+  spanning 266–3,296 words — defensible, but undocumented and worth a follow-up.
+
+### 2026-08-23 — scraper — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/86
+- Source: roadmap:scraper (the only category absent from the last 7 runs; #8–#10 all shipped, so
+  this is a defect in the shipped discovery gate)
+- Summary: **The front door of the archive was rejecting real articles, silently.**
+  `scraper/utils.py`'s `is_article_url()` gates *every* discovery tier (Playwright, sitemap,
+  Wayback CDX) before a URL is ever fetched, so a false reject there means an article never
+  enters the corpus — no error, no log line. It filtered `/amp/` duplicate pages with a
+  **substring** test, `"/amp" in path`, which also discards every article whose **slug begins
+  with "amp"**: `ampere-…`, `amplify-…`, `ample-…`, `amplified-…`, `amped-…`, `amputating-…`
+  were all **REJECTED**, while `amazon-…` and `why-ample-…` passed. That lands squarely on his
+  beat — he runs a multi-part *Semiconductor Scoreboard* series and **Ampere Computing** is a
+  server-silicon company; the corpus already uses `amplified` (11×), `amped` (5×), `amplifies`,
+  `ample`, `amplify`, `amplifying`, `amputated`. The mirror bug: the test was
+  **case-sensitive**, so a real `/AMP/` duplicate was *accepted* as a distinct article. Now
+  matched as a whole path **segment**, case-insensitively. Second defect: `normalize_url()`
+  preserved **host casing** — `HTTPS://WWW.Forbes.com/…` normalized to
+  `https://WWW.Forbes.com/…`, a different string from the canonical one, which is exactly the
+  mechanism that mints URL-variant twins in the manifest. Scheme and host are case-insensitive
+  (RFC 3986 §3.1/§3.2.2) and are now lowercased; the **path keeps its case**, since that is what
+  identifies the article. **§8.5 deepen — the sharpest find:** `make coverage-audit`, the tool
+  whose whole job is reporting what the archive is missing, **cannot catch this class of bug**.
+  Its "discovered" set comes from `discover_urls_from_wayback()`, which filters through the same
+  `is_article_url()` — so a wrongly-rejected URL is absent from *both* sides of the comparison
+  and the audit reports **100% coverage** while the article is genuinely gone. The safety net
+  had the same hole as the thing it was checking; PR #38's live "100% coverage today" result was
+  measured through it. Pinned with 4 interaction tests in `test_coverage_audit.py` and
+  documented as a new **"The discovery gate"** section in `scraper/README.md`. **TDD'd:** +22
+  tests (`test_scraper_utils.py` 14→32, `test_coverage_audit.py` 31→35); **852 → 874**.
+  Non-vacuousness proven by revert: restoring the substring test fails **12** tests (9 gate + 3
+  audit-interaction); restored → 67 green across both files; the RED commit stands in history at
+  **11 failing**. **No data churn:** `normalize_url` rewrites **0 of the 199** committed manifest
+  URLs and is idempotent over all of them; the 2 genuine `/amp/` rows are still correctly
+  rejected. **Measured non-finding (deliberately not changed):** `known_urls()` compares raw URL
+  strings while `upsert_article()` matches on slug — two notions of identity in one loop — but
+  against the real manifest that costs **0 redundant re-fetches** (all 174 canonical article keys
+  already resolve to a clean `https://www` entry), so I left it alone rather than churn the
+  scrape loop for no payoff. **Offline / unattended-safe:** stdlib string/URL ops only, no
+  conductor/network/LLM, **no re-scrape and no data artifact committed** — the gate fix changes
+  what *future* discovery accepts. **Verification:** `make verify` green — **874 passed** (vs 852
+  on `origin/main`, +22), ruff clean, dashboard builds. **Backlog:** 7 open `daily/*` PRs at start
+  (#78/#80/#81/#82/#83/#84/#85) — under 8, but one short of the stand-down threshold, so the
+  owner should merge or close some soon; §3 didn't resume (all 7 are `ready-for-review`, none
+  `in-progress`); `main` green. **Deferred:** canonicalizing scheme/`www.` in `normalize_url`
+  (would make `known_urls()` variant-proof, but rewrites manifest URLs — owner-gated, and
+  `manifest_dedup` already repairs the existing twins); and `is_article_url` is still
+  case-sensitive on the **author path** itself (`/sites/GeorgeCalhoun/` would be rejected).
+
+### 2026-09-05 — ingest — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/87
+- Source: roadmap:#32
+- Summary: **The backlog broke.** Between 08-27 and today the owner merged **six** PRs (#77–#81
+  plus his own `feat/corpus-ingest-thin-slice` **#79**), so the three-day stand-down is over: **5**
+  open `daily/*` PRs (#82–#86), well under the §2 threshold, `main` green, and §3 had nothing to
+  resume (all five are `ready-for-review`, none `in-progress`). The un-drafting note from 08-27
+  appears to have been acted on — that is what unblocked the queue.
+  **#79 also created a brand-new roadmap category, `ingest` (Corpus II)**, which no daily run has
+  ever worked, making it unambiguously the least-recently-worked category — no need for the
+  "most-deferred item" tie-break the last four cold-path runs had to fall back on. #29–31 are done,
+  so the first unstarted item is **#32 (P2·S·ingest) — the `.eml`/`.mbox` handler**, which the
+  design spec puts in the **core stdlib-only** tier and names as the canonical case of the
+  load-bearing "one source yields many documents" rule.
+  New `ingest/handlers/mail.py`: one document per message, `Subject`→title, `Date`→exact ISO date,
+  `modality: email`, `authorship: mixed` once a thread has more than one sender, `text/plain`
+  preferred over HTML, and a pure `strip_quoted_reply()`. **That stripper is the point of the
+  slice** — without it a 12-reply thread hands the same sentence to themes/embeddings/entity-graph
+  twelve times, the exact duplicate-counting defect PR #77 spent a day removing from the *manifest*
+  side. It truncates at an `On … wrote:` attribution, an `-----Original Message-----` block or a
+  `--` signature, then drops `>` lines. **§8.5 deepen:** the one genuine bug found after the first
+  green — **Gmail hard-wraps long attributions**, so `wrote:` lands a line or two below the `On`,
+  and a single-line regex left a dangling `Will Calhoun <will@example.com>` in the body; the
+  matcher now joins up to two continuation lines (proved red→green). Plus guard tests for RFC-2047
+  encoded subjects, quoted-printable/base64/iso-8859-1 decoding, the private-by-default provenance
+  block (email is the most sensitive modality in the corpus), and the **queue integration seam** —
+  an `.eml` in `data/inbox/` now counts as `staged`, not `skipped`.
+  **TDD'd:** +37 tests (`tests/test_ingest_mail.py`), the first 25 proved red (all
+  `UnsupportedFormat`) before any handler existed. **Offline / unattended-safe:** stdlib `email` +
+  `mailbox` only — no conductor, network, LLM, or new dependency; every fixture is synthetic, so
+  **no real family mail enters git** (the spec's testing rule). No data artifact committed.
+  **Verification:** `make verify` green — **1029 passed**, ruff clean, dashboard builds. Baseline
+  measured, not assumed: a clean `origin/main` worktree collects **992** (991 passed + 1
+  environment-skip), so the delta is exactly the **+37** added here. The wrapped-attribution fix
+  was proved **red→green** (reverted to the single-line regex → that one test fails; restored → 37
+  pass). **Deferred:** `.docx` (#33) is the next isolated handler PR; the one-time
+  provenance data migration flagged in #29 is still pending and still owner-gated.
+
 ### 2026-09-07 — family — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/89
 - Source: roadmap:family (least-recently-worked category; #22–#24 all shipped, so a defect in one)
@@ -1113,6 +1319,162 @@ Format:
   as text. **Plan 0011 stays in `ready/`:** steps 4–6 remain, and its status block now points
   the next run at the job runner, including the trap that uploading only fills `data/inbox/` —
   staging into the queue is still `make ingest` until step 4 lands.
+
+### 2026-09-21 — infra — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/111
+- Source: plan:ready/0011 (step 4 — the job runner)
+- Summary: **The console can turn the crank.** Uploading filled `data/inbox/` and then the page
+  told the operator to go run `make ingest` at a terminal; that note is now the button it was
+  apologising for. New top-level `console/` package: `console/jobs.py` is the state machine,
+  `POST`/`GET /console/api/job` and `GET /console/api/job/log` are the routes, and the page's
+  step-4 placeholder is a job panel with a live log. Six registered jobs — `ingest`,
+  `finetune-prep`, `finetune-preflight`, `voice-style`, `train`, `voice-eval` — as argv lists of
+  `python -m module`, never shell strings, from a closed registry: an operator picks a name,
+  never a command. Three rules: **never in the request handler** (a training run in a handler
+  thread is a hung tab and a leaked thread on this stdlib server); **one job at a time, refused
+  with a 409 rather than queued** (two trainers on one GPU is a corrupt result, not a slow one);
+  and **liveness re-derived from the pid on every read**, because the state file survives a
+  crash and the process does not — a `running` record with nothing behind it would otherwise
+  refuse every future job forever. **One deliberate deviation from the plan:** step 4 says to
+  reuse `_proxy`'s SSE for the log tail; it polls by byte offset instead, because SSE holds a
+  handler thread per viewer for the length of a training run and still needs tearing down at
+  job end, while an offset poll delivers each line exactly once, costs a stat and a seek, and
+  survives a closed laptop. Recorded in the plan's status block so a later step doesn't read
+  the original instruction and undo it — flagged in the PR for the human to overrule.
+  **A race the live browser test caught while every unit test was green and wrong:** running a
+  job in a real browser intermittently reported `interrupted` for a job that had *succeeded*.
+  Two races, one symptom — a poll landing between the child's exit and the watcher's write
+  reconciled a `running` record with a dead pid, but `interrupted` has to mean *nobody is coming
+  to write the real answer*, and the page stops polling on a terminal state so the wrong word
+  was permanent; and both writers then collided on a single `job.json.tmp`, where the first
+  `replace` moved the file out from under the second and the lost write was the job's final
+  outcome. Runs are now tracked by log name while watched, and the temp name is per-thread.
+  **Mutation-tested — 29 mutants, 28 caught; the first pass found five survivors that were four
+  real gaps.** Nothing exercised the real `_pid_alive` (every other test injects `alive=`, so a
+  check that always answered `True` would have wedged the runner on the first crashed server),
+  nothing pinned the non-clobbering log open (two runs in the same second would have merged into
+  one file), nothing asserted the child's stderr reaches the operator's log rather than the
+  server's, and nothing covered the `finally` that releases a run whose watcher died mid-write.
+  The lone survivor swaps the atomic `replace` for a direct write — no deterministic test can
+  observe a torn read. **Verification:** `make verify` — ruff clean across the widened
+  `LINT_PATHS`, **1650 passed**, zero warnings, dashboard builds; `__pycache__` cleared before
+  every red→green proof. **No test starts a real pipeline job:** the state machine runs on a
+  fake spawn, the route and page tests register a throwaway `python -m this`, and the two tests
+  naming `ingest` never spawn it (one gets a 409 from a pre-written busy record, the other has
+  `Popen` patched to fail). The job panel is exercised in **live headless Chromium** against the
+  real server through the Basic-Auth gate. **Security posture unchanged but worth more:** the
+  console is still tailnet-only and refuses to start under Funnel, and the new POST is in the
+  401 table with an assertion that an unauthenticated start leaves the runner `idle` — refused
+  before it can spend an afternoon of GPU. **Plan 0011 stays in `ready/`:** steps 5–6 remain,
+  and its status block now points the next run at **step 5, the scoreboard**, which is the point
+  of the whole plan and finally has the runs to score.
+
+### 2026-09-22 — analysis — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/112
+- Source: plan:ready/0011 (step 5 — the scoreboard)
+- Summary: **The dial the flywheel was missing, minus its face.** Geo-LLM stalled because a
+  failed one-shot got shelved by an ADR and nobody could see whether a later change helped;
+  `analysis/scoreboard.py` is the arithmetic that answers "did this run beat the last one?"
+  It computes nothing of its own — it reads what the harnesses already write (`voice_eval.json`
+  win-rate / avg-rank and the style block's TTR and hinge-word rate, `rag_eval.json`'s grounding
+  and citation numbers, a preflight report's `checks.length_budget.pct_over`) and the run series
+  `voice_candidates.append_history` already appends. **Shipped as the core without the route,
+  deliberately**, following the same split the plan's own steps 2 and 3 took: the validation core
+  (#96) and decision core (#97) merged before PR #109 added their routes as thin callers, and the
+  plan says outright that the console is "a second *front end*, not a second implementation".
+  So the module sits in `analysis/` beside the harnesses it reads, and `GET /console/api/scores`
+  is left for the next run. That also keeps it clear of step 4 (PR #111, still open), which
+  creates `console/` and edits the `Makefile`, `.pre-commit-config.yaml`, `serve_dashboard.py`
+  and `console.html` — four shared files an add/add conflict could have been resolved wrongly in,
+  which is the exact failure that left `main` red for four weeks (#73). **The design judgement
+  worth reviewing is that direction is a property of the metric, not of the renderer.** Every
+  delta carries `better`/`worse`/`flat`, because a bare signed number is misread on two of these:
+  `avg_rank` improves by *falling*, and TTR and hinge-word rate are **toward-a-target** metrics
+  rather than more-is-better ones — D15's fine-tune over-used his distinctive vocabulary at ~2×
+  the natural rate (101 vs 46 per 1k), so scoring that "lower is better" would have rewarded a
+  model that had lost his voice entirely. The target is the current report's own `real` source,
+  re-measured as the corpus grows, falling back to D15's recorded numbers. **One bug the real
+  data caught that no unit test would have:** running the CLI over the committed history showed
+  `D_shot_rag` being scored against `C_shot` — D20 recorded a 2×2 in a single day, so "the run
+  before" is a different *condition* whose arms are differently named and were never
+  alternatives. The previous run is now the last earlier run of the **same experiment**, which
+  makes the dial honestly read `unknown` until a second run of one condition lands. D15 is
+  carried as the standing `BASELINE` so every run is read against the record it has to beat.
+  **Verification:** `make verify` — ruff clean, **1661 passed**, dashboard builds; 59 new tests,
+  each watched fail first; `__pycache__` cleared before the red→green proofs. The repo's own
+  doc-coverage gate went red until `docs/architecture.md` described the new module — working as
+  intended. **Plan 0011 stays in `ready/`:** steps 5's route and step 6 remain, and the status
+  block now records the plan correction that its "small append-only run history" already exists.
+
+### 2026-09-23 — docs — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/113
+- Source: plan:ready/0011 (step 6 — docs + ADR)
+- Summary: **The console's two unwritten decisions, written down — and a gate so the writing
+  can't rot.** Plan 0011's security section says outright: "Raise it in the PR body explicitly
+  so the owner rules on it." A PR body scrolls away, so this is **ADR D21** instead. It records
+  two things. First, the console is a **second surface, not an exception to D4** — D4 makes the
+  family dashboard fully client-side so one `index.html` opens anywhere forever, and the console
+  wants the opposite (it writes `data/inbox/`, mutates the manifest, will spawn subprocesses);
+  bolting it onto the artifact would quietly turn the archive into software someone has to keep
+  running. D4 stands unamended. Second, the **three fail-closed gates**: off unless
+  `DIGITAL_DAD_CONSOLE` is exactly `1` (with `/console.html` withheld from the static handler
+  too, since routing `/console` alone would not stop anyone holding the dashboard password from
+  asking for the page by name); a startup refusal if the listen port is Funnel-exposed; and a
+  refusal *also* when Tailscale is installed but its state cannot be read — an unanswered "is
+  this port public?" is not a no. The escalation being guarded is real and worth naming: before
+  the console, a leaked dashboard password meant a stranger read Forbes columns that were
+  already public; after it, a stranger writes files and starts processes on the Mac mini.
+  **The README had no mention of the console, the inbox, or the env var** that enables any of
+  it, so the section was written too — enable line, the refusal, the five live routes, and what
+  upload validation actually rejects. **The part worth reviewing is the gate, not the prose.**
+  `tests/test_docs_coverage.py` now reads `CONSOLE_ROUTES` from the server, the extension
+  allowlist from the ingest handler registry (**both** directions: a registered format must be
+  listed, and a listed one must be registered, so the README can't promise a `.pdf` upload the
+  console would refuse), and the default port from the Makefile's `CONSOLE_PORT`. When step 4's
+  `/console/api/job` and step 5's `/console/api/scores` land, the suite goes red until the
+  README names them. **Mutation-checked rather than trusted**: these guards passed on their
+  first run, which proves nothing, so six mutants were run — drop `.mbox` from the list, claim
+  `.pdf`, change the port, undocument a route, remove the prefix lookahead that stops
+  `/console/api/job/log` from vacuously documenting `/console/api/job`, and break the section
+  splitter. **6/6 caught**, files restored byte-identical.
+  **Why step 6 and not step 5's route, which the plan asked for:** `analysis/scoreboard.py` is
+  not on `main` — it is in PR #112, still open — and step 4's `console/` package is only in
+  #111. The route had nothing to call. The alternatives were stacking on another `daily/*`
+  branch or re-implementing the scoring core, and the plan warns against the second in three
+  separate places. **Every remaining piece of plan 0011 is now blocked on a merge, not on an
+  implementation**, which is worth knowing before tomorrow picks it up.
+  **Note on this file:** the entry above this one is 2026-09-21. The 2026-09-22 entry is real
+  but lives in unmerged PR #112, so a §5b tally of "the last 7" will read short until #112
+  lands — a merge-order artifact, not the 2026-09-19 deletion recurring.
+  **The ADR found two real security gaps, and that is the result worth reading.** A
+  fresh-context review was asked to check every claim in D21 against the source rather than to
+  review the prose, and two claims turned out to be aspirations. (1) The withhold that keeps
+  `/console.html` out of the family artifact compared the **raw request path** against a
+  literal string. `translate_path` percent-decodes *after* that check runs, and macOS matches
+  filenames case-insensitively — so with the console disabled, `/console%2Ehtml` and
+  `/CONSOLE.HTML` both served the console page. Reproduced live against a real server before
+  fixing: three spellings, one file, only one of them refused. It now compares **file identity**
+  (`os.path.samefile`) rather than spelling. (2) `DIGITAL_DAD_ALLOW_OPEN=1` let the console run
+  with **no password at all** — `_authed()` returns `True` whenever `PASSWORD` is empty. That
+  bargain was struck when the worst case was a stranger reading columns that were already
+  public; it does not transfer to a surface that writes files and starts processes, so the
+  console now refuses to start without a password. The dashboard keeps the escape hatch. Both
+  were caught by reviewing the *ADR* against the code, which is the argument for writing the
+  ADR — and the caution that an unverified claim in `decisions.md` is worse than an absent one,
+  because the next session builds on it.
+  **The review also showed the new guard was satisfiable without being true**, in three ways
+  now closed: routes were matched anywhere in the README rather than within the console
+  section; the port check was a bare-substring match, so `CONSOLE_PORT=8000` — the exact Funnel
+  collision D21 exists to prevent — would have passed green against the prose "keeps it off the
+  dashboard's 8000"; and the extension check was lowercase-only, so a promised `.PDF` upload
+  satisfied both directions. Three more mutants, all three now caught. Prose claims ("PDFs are
+  accepted") stay uncovered on purpose — matching format names in English fires on the word
+  "markdown" in a sentence that promises nothing.
+  **Verification:** `make verify` **exit 0** — ruff clean, **1638 passed**, dashboard builds;
+  `__pycache__` cleared before the red→green proofs. Every test was watched fail first: the
+  five route-coverage tests naming each undocumented route, and the five path spellings each
+  serving the page before the fix. Nine mutants across the two rounds, nine caught, files
+  restored byte-identical.
 
 ### 2026-09-24 — analysis — ready-for-review
 - PR: https://github.com/wcalhoun516/digital-dad/pull/114
