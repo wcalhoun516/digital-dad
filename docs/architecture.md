@@ -41,6 +41,7 @@ materials, letters, email, talks):
 
 ```
 data/inbox/ → make ingest → data/ingest/queue/ → make ingest-review → manifest
+                                                                  ↘ data/ingest/rejected/
 ```
 
 Handlers are pure `(Path) -> ExtractResult` functions registered by extension in
@@ -76,7 +77,16 @@ to a client-supplied length, and a colliding upload is written alongside the exi
 rather than over it.
 
 **Extraction never modifies the corpus** — only `ingest-review` does, and only on a human
-decision. Rejects keep their reason instead of being deleted.
+decision. Rejects keep their reason instead of being deleted, but they do not keep their
+place: `quarantine` moves them to `data/ingest/rejected/`, a sibling of the queue directory
+derived from it by `rejected_dir_for` rather than configured separately, so pointing anything
+at a different queue moves its quarantine with it. Two things had to survive that move, and
+both are load-bearing. **Dedup still reads the quarantine** — `data/inbox/` is never emptied,
+so without it every `make ingest` would re-queue every file a human already rejected. And
+**`apply_decision` still searches it**, so a second decision on a rejected item is reported as
+the already-decided item it is (400) rather than as an id nobody has ever seen (404). Anything
+that reports a *count* therefore reads `load_all`, not `load_queue`: the rejected total moved
+directories, it did not stop existing.
 
 `review.apply_decision(item_id, "accept" | "edit" | "reject")` is the **only** way a decision
 reaches disk. It validates first and writes afterwards, so a refused decision leaves both the
@@ -120,6 +130,26 @@ ran against; on the next run a module is **skipped if the fingerprint is unchang
 | `psychoprofile.py` | `psychoprofile.json` + `.md` | Map-reduce LLM analysis → narrative profile + 8 personality dimension scores. Logs cost to `runs.jsonl`. |
 | `semantic_search.py` | `embeddings.npy`, `embeddings_meta.json`, `embeddings.json` | sbert-mpnet-v2 (384-dim) embedding index; cached + corpus-hash busted; flattened export with snippets for the dashboard. |
 | `predictions.py` | `predictions.json` | Two-pass: extract falsifiable claims per article, then optional batched LLM verdict (pending/vindicated/wrong/mixed/unfalsifiable). Saves incrementally every 10 articles; resumable. |
+| `corpus_composition.py` | `corpus_composition.json` | What the corpus is made of: items **and words** per `provenance.modality` and per `authorship`, plus how much of it the pipeline can actually read. Reads the *manifest*, not article bodies. Committed and text-free. |
+
+**`corpus_composition.py` is the one module in the chain deliberately *not* fingerprint-skipped.**
+The fingerprint is an MD5 over what `load_articles()` returns, and that skips manifest entries
+naming no raw file — which is exactly what `ingest.review.accept_item` writes. So accepting a
+book leaves the fingerprint unchanged, and gating this module on it would pin the panel at
+"100% article" through the very change it exists to report. It reads only the manifest, so
+running it every time is free. `tests/test_corpus_composition.py` pins the reasoning.
+
+Two measurement choices are load-bearing, because the obvious version of each misleads:
+
+- **Words, not documents.** One ingested ebook is ~80k words — roughly the whole current
+  corpus (roadmap #35) — so a document count would report an archive of columns while the
+  tokens a model reads were mostly book. Items are shown; *shares* are word shares.
+- **Manifest entries are deduped** via `dedupe_manifest_entries`, like the loader does. 23 of
+  today's 204 entries are http/https twins naming the same raw file; counting them raw
+  over-reports the corpus by 23 items and 37,728 words (11%).
+
+The artifact carries no titles and no body text — only vocabulary names and counts — so it can
+describe private letters without disclosing them, and is safe to commit.
 
 **Sentence splitting (`linguistic.py`).** Everything the Linguistic Fingerprint reports —
 `sentence_count`, average sentence length, Flesch-Kincaid, Gunning Fog and the histogram —
@@ -341,6 +371,23 @@ seeded, reproducible shuffle, ranked by a judge model on how much they read like
 un-blinded into win-rates, average ranks and a `finetuned_over_rag` head-to-head. Also computes
 offline **style metrics** against his distinctive words (`--style-only` needs no judge).
 
+`scoreboard.py` — **did this run beat the last one?**; `python -m analysis.scoreboard`. The
+arithmetic behind plan 0011's console scoreboard, kept here beside the harnesses whose reports
+it reads (`voice_eval.json`, `rag_eval.json`, a `finetune_preflight` report's
+`checks.length_budget.pct_over`) and the run series `voice_candidates.append_history` already
+appends to `voice_eval_history.jsonl`. It computes nothing itself and writes nothing: every
+reader is total, so a report the operator has never generated is an absence rather than a
+traceback. Two judgements are the substance. **Direction is a property of the metric** —
+`avg_rank` improves by falling, and `type_token_ratio` / `fingerprint_hits_per_1k` are *toward*
+metrics with a target rather than a direction, because D15's finding was vocabulary over-use at
+~2× the natural rate and scoring that "lower is better" would reward a model that had lost his
+voice entirely. The target is the current report's own `real` source, measured fresh as the
+corpus grows, falling back to D15's recorded numbers. **The previous run is the last earlier run
+of the same experiment**, not the previous row group: the history interleaves conditions (D20
+recorded a 2×2 in one day), so the adjacent group is usually a different condition with
+differently-named arms that were never alternatives. D15 is carried as the standing `BASELINE`
+so every run is read against the record it has to beat.
+
 `voice_trials.py` — deterministic input builder for the above; `make voice-trials`. Turns 26a's
 held-out split (`data/training/heldout.jsonl`) into a real `eval/voice_trials.json` skeleton —
 each trial's prompt plus a length-balanced genuine excerpt, with `rag`/`finetuned` left as
@@ -487,7 +534,7 @@ drift apart:
 | Route | Calls | Refusals |
 |-------|-------|----------|
 | `POST /console/api/upload?filename=` | `stage_upload` | 400 `UploadRejected`, 413 over the cap |
-| `GET /console/api/queue` | `queue_view(load_queue(…))` | — |
+| `GET /console/api/queue` | `queue_view(load_all(…))` | — |
 | `POST /console/api/review` | `apply_decision` | 404 `UnknownItem`, 400 any other `ReviewError` |
 
 What the HTTP layer adds on top of those cores is only what HTTP makes possible:
@@ -514,7 +561,9 @@ is read-only and has to keep serving even if the ingest tree cannot be imported;
 not a package, so the repo root reaches `sys.path` at that point rather than at module scope.
 `CONSOLE_INBOX_DIR` / `CONSOLE_QUEUE_DIR` / `CONSOLE_MANIFEST_PATH` default to `None`, meaning
 "whatever the ingest modules default to", which keeps the on-disk layout defined once in
-`ingest/queue.py`; tests point them at a tmp dir.
+`ingest/queue.py`; tests point them at a tmp dir. There is deliberately no
+`CONSOLE_REJECTED_DIR` — the quarantine is derived from whichever queue is configured, so it
+cannot be pointed somewhere the queue is not.
 
 The page (`dashboard/console.html`) builds DOM nodes and assigns `textContent` throughout.
 Titles, warnings and previews are text recovered from whatever file was dropped in the inbox,

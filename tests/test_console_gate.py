@@ -178,6 +178,38 @@ def test_console_page_is_not_head_addressable_when_disabled(serve_dashboard, bas
     assert status == 404
 
 
+# One spelling of the path is not the file. The withhold compared the raw request path
+# against the literal "/console.html", but the static handler percent-decodes before it
+# resolves, and macOS (where this runs) matches filenames case-insensitively — so
+# `/console%2Ehtml` and `/CONSOLE.HTML` both reached the same file the check had just
+# refused. Found by review of PR #113; each spelling below served the page before the fix.
+@pytest.mark.parametrize(
+    "spelling",
+    ["/console%2Ehtml", "/console%2ehtml", "/CONSOLE.HTML", "/Console.html", "/console%2Ehtm%6C"],
+)
+def test_console_page_is_withheld_however_the_path_is_spelled(
+    serve_dashboard, base_url, spelling
+):
+    serve_dashboard.CONSOLE_ENABLED = False
+    status, _, body = _request(base_url + spelling, password=PASSWORD)
+    assert status == 404, f"{spelling} served the console page past the withhold: {body!r}"
+
+
+def test_withheld_spelling_does_serve_the_page_when_the_console_is_on(
+    serve_dashboard, base_url
+):
+    """The withhold must key on the console being *off*, not on the spelling being odd."""
+    serve_dashboard.CONSOLE_ENABLED = True
+    status, _, _ = _request(base_url + "/console%2Ehtml", password=PASSWORD)
+    assert status == 200
+
+
+def test_ordinary_static_files_are_untouched_by_the_withhold(serve_dashboard, base_url):
+    serve_dashboard.CONSOLE_ENABLED = False
+    status, _, _ = _request(base_url + "/index.html", password=PASSWORD)
+    assert status == 200
+
+
 def test_console_page_static_path_still_requires_the_password(serve_dashboard, base_url):
     serve_dashboard.CONSOLE_ENABLED = False
     status, _, _ = _request(base_url + "/console.html")

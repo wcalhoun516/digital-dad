@@ -112,3 +112,7 @@ Thumbs.db
 # material — never committed. Only the reviewed manifest entry lands in git.
 data/inbox/
 data/ingest/
+
+# Operator console job runner (plan 0011 step 4) — the live job record and its run logs.
+# Machine-local runtime state, regenerated on every run; never committed.
+data/console/
