@@ -763,7 +763,22 @@ footer {
 <!-- Tab 6: Raw Corpus -->
 <div class="tab-content" id="tab-corpus">
   <h2>Raw Corpus</h2>
-  <p class="section-desc">Every article, searchable and sortable.</p>
+
+  <h3 style="margin-bottom:4px">What this corpus is made of</h3>
+  <p class="section-desc">Measured in <strong>words</strong>, not documents — one book is worth
+    roughly fifty columns, so a document count would describe a different archive than the one a
+    model actually reads.</p>
+  <div id="composition-summary" class="corpus-status" role="status" aria-live="polite"></div>
+  <table class="corpus-table" id="composition-table">
+    <thead>
+      <tr><th>Kind</th><th>Documents</th><th>Words</th><th>Share of words</th></tr>
+    </thead>
+    <tbody id="composition-tbody"></tbody>
+  </table>
+  <p class="section-desc" id="composition-unreadable" hidden></p>
+
+  <h3 style="margin-bottom:4px">Every article</h3>
+  <p class="section-desc">Searchable and sortable.</p>
   <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;align-items:center">
     <input type="text" class="search-bar" id="corpus-search" placeholder="Search titles, tags, themes..." style="margin-bottom:0;flex:1;min-width:200px">
     <select id="corpus-year-filter" style="background:var(--bg-card);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:0.85em;padding:10px 12px;border-radius:0;cursor:pointer">
@@ -990,6 +1005,7 @@ const CALHOUN_ISMS_DATA = /*__CALHOUN_ISMS_DATA__*/;
 const CONTRADICTIONS_DATA = /*__CONTRADICTIONS_DATA__*/;
 const ENTITY_STANCE_DATA = /*__ENTITY_STANCE_DATA__*/;
 const JEV_VOICE_DATA = /*__JEV_VOICE_DATA__*/;
+const CORPUS_COMPOSITION_DATA = /*__CORPUS_COMPOSITION_DATA__*/;
 </script>
 
 <script>
@@ -1629,7 +1645,59 @@ function renderEntities() {
 }
 
 // ===== TAB 6: RAW CORPUS =====
+// ===== CORPUS COMPOSITION (roadmap #38) — what the archive is made of, from CORPUS_COMPOSITION_DATA =====
+// Built with createElement/textContent rather than innerHTML: the rows are named after ingested
+// documents' provenance, and an uploaded file's metadata must never be able to run script here.
+// Shares are word shares. A modality's document count is shown but never used to size anything.
+function renderComposition() {
+  const data = CORPUS_COMPOSITION_DATA || {};
+  const summary = document.getElementById('composition-summary');
+  const tbody = document.getElementById('composition-tbody');
+  const rows = data.by_modality || [];
+  const n = x => (x || 0).toLocaleString();
+
+  if (!rows.length) {
+    summary.textContent = 'No composition yet — run `make analyze` then `make dashboard`.';
+    document.getElementById('composition-table').hidden = true;
+    return;
+  }
+
+  const total = data.total || {};
+  const kinds = rows.length === 1
+    ? 'a single kind of document'
+    : rows.length + ' kinds of document';
+  summary.textContent = n(total.items) + ' documents · ' + n(total.words) + ' words · ' + kinds;
+
+  rows.forEach(row => {
+    const tr = document.createElement('tr');
+    [row.name, n(row.items), n(row.words), Math.round((row.share || 0) * 100) + '%']
+      .forEach((value, i) => {
+        const td = document.createElement('td');
+        td.textContent = value;
+        // A bar behind the share cell, so the reading is proportion-first.
+        if (i === 3) {
+          td.style.background = 'linear-gradient(to right, var(--accent-dim, #2a3a4a) '
+            + (row.share || 0) * 100 + '%, transparent ' + (row.share || 0) * 100 + '%)';
+        }
+        tr.appendChild(td);
+      });
+    tbody.appendChild(tr);
+  });
+
+  // Material the owner has accepted that no analysis module can read yet. Silence here would
+  // be the panel's worst failure: words counted as gathered that never reach the model.
+  const unreadable = data.unreadable || {};
+  if (unreadable.items) {
+    const note = document.getElementById('composition-unreadable');
+    note.textContent = unreadable.items + ' accepted document(s) — ' + n(unreadable.words)
+      + ' words — have no readable file yet, so they are counted above but reach no analysis'
+      + ' module. They are in the manifest; their text is not in data/raw/.';
+    note.hidden = false;
+  }
+}
+
 function renderCorpus() {
+  renderComposition();
   const articles = [];
 
   // Merge manifest data with theme labels
