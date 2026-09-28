@@ -121,3 +121,15 @@ class TestWriteLoadRoundtrip:
         assert load_heldout(path.parent / "h.jsonl") == []  # missing file -> []
         loaded = json.loads(path.read_text())
         assert len(loaded["trials"]) == 2
+
+
+class TestModalityCarriesThrough:
+    """Roadmap #41: a held-out record's ``modality`` reaches the trial, so the voice eval
+    can slice by it. Records from before #41 carry none, and neither does their trial."""
+
+    def test_trial_carries_the_records_modality(self):
+        record = {**_record(), "modality": "letter"}
+        assert build_trial(record, 1)["modality"] == "letter"
+
+    def test_an_untagged_record_yields_an_untagged_trial(self):
+        assert "modality" not in build_trial(_record(), 1)

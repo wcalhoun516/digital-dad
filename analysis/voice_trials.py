@@ -89,8 +89,12 @@ def build_trial(
     rag: str = RAG_PLACEHOLDER,
     finetuned: str = FINETUNED_PLACEHOLDER,
 ) -> dict:
-    """Shape one held-out record into a voice-eval trial with a ``vNN`` id."""
-    return {
+    """Shape one held-out record into a voice-eval trial with a ``vNN`` id.
+
+    The record's ``modality`` (roadmap #41) rides along when it has one, so the eval can
+    slice by it; a record from before #41 has none and neither does its trial.
+    """
+    trial = {
         "id": f"v{idx:02d}",
         "prompt": derive_prompt(record),
         "candidates": {
@@ -99,6 +103,9 @@ def build_trial(
             "finetuned": finetuned,
         },
     }
+    if "modality" in record:
+        trial["modality"] = record["modality"]
+    return trial
 
 
 def build_trials(

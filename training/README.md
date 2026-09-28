@@ -10,14 +10,39 @@ them — regenerate from the corpus).
 |------|--------|----------|
 | `finetune.jsonl` | `{"text": ...}` per line | raw body of every article (all 196) |
 | `instruct.jsonl` | chat `messages` per line | quality-filtered instruction/chat pairs |
-| `train.jsonl` | chat `messages` per line | fine-tune split (plan 0008) |
-| `heldout.jsonl` | chat `messages` per line | held-out split for the voice eval |
+| `train.jsonl` | chat `messages` + `shape` + `modality` per line | fine-tune split (plan 0008) |
+| `heldout.jsonl` | chat `messages` + `shape` + `modality` per line | held-out split for the voice eval |
 | `corpus.txt` | plain text | concatenated bodies, chronological |
 | `metadata.csv` | CSV | per-article slug/title/date/word_count/quality |
 
 Each instruction record is `{"messages": [system, user, assistant]}`: the system prompt sets
 his persona, the user asks "Write an analysis of <topic>" (topic derived from the title), and
 the assistant message is the real article body.
+
+## Provenance filter (roadmap #41)
+
+Before anything is written, `training_exclusion()` decides from each manifest entry's
+`provenance` block whether it may train the **written** voice. It applies to *every* output
+above, not just the splits:
+
+| Reason | Left out when |
+|--------|---------------|
+| `not-his` | `authorship` is not `george` (`mixed`, `other`) |
+| `spoken` | `modality` is in `SPOKEN_MODALITIES` (`talk`) — spoken register is not written register |
+| `unclassified` | `modality` is in neither set — fails closed, so a modality added to `ingest.provenance.MODALITIES` later must be classified before it trains |
+| `unreadable` | his written material with no raw `file` — what `ingest.review.accept_item` writes today |
+
+Policy is checked before readability, so the `unreadable` count is exactly the material that
+*should* train and cannot yet. Legacy entries with no `provenance` resolve as scraped Forbes
+columns, the same way the T3 guard resolves them. The run prints one line when anything was
+left out, e.g. `Provenance: 3 manifest entries left out (2 spoken, 1 unreadable)`.
+
+Every `train.jsonl` / `heldout.jsonl` record carries its `modality` beside its `shape`. Both
+are bookkeeping for the eval: `finetune_config.prepare_mlx_data` stages `messages` only, so
+the trainer never sees them. `analysis.voice_trials` copies the modality onto each trial, and
+`analysis.voice_eval` reports a `by_modality` slice (win-rate, avg rank, style deltas per
+modality) beside the pooled headline, as soon as any trial is tagged. The markdown shows the
+breakdown only when there is more than one modality.
 
 ## Quality filter
 

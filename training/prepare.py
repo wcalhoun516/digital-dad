@@ -21,6 +21,13 @@ Train/held-out split (plan 0008, 26a):
   reserved out of BOTH splits, so the voice fine-tune can't memorize the faithfulness eval's
   answers. When eval/questions.json is absent the exclusion is skipped (with a warning).
 
+Provenance filtering (roadmap #41):
+  Only material he wrote (``authorship: george``) in a written modality reaches any training
+  artifact. Spoken register is not written register, so a talk transcript is left out of a
+  written-voice fine-tune rather than mixed in unlabelled. Every passage record carries its
+  ``modality`` beside its ``shape`` so the voice eval can slice by it. Manifest entries with
+  no raw ``file`` (accepted ingest items, today) are skipped and counted, not crashed on.
+
 Quality filtering:
   Articles with word_count < 400 are excluded from instruct.jsonl (kept in finetune.jsonl).
   If linguistics.json exists, articles with type_token_ratio < 0.3 are also excluded from instruct.
@@ -33,6 +40,7 @@ import re
 from pathlib import Path
 
 from analysis.utils import chunk_text, dedupe_manifest_entries, strip_wire_boilerplate
+from ingest.provenance import migrate_articles
 from training.finetune_config import QLoRAConfig
 from training.finetune_preflight import DEFAULT_CHARS_PER_TOKEN
 
@@ -96,6 +104,45 @@ BOILERPLATE_MIN_ARTICLES = 3
 
 _PARAGRAPH_SPLIT = re.compile(r"\n\s*\n")
 _SENTENCE_SPLIT = re.compile(r"(?<=[.!?])\s+(?=[\"“'A-Z0-9])")
+
+
+# Roadmap #41: which modalities train the *written* voice. Every value in
+# ``ingest.provenance.MODALITIES`` sits in exactly one set (a test pins it), and anything
+# outside both fails closed — a modality added later must be classified before it trains.
+WRITTEN_MODALITIES = frozenset(
+    {"article", "book", "course", "letter", "email", "message", "post"}
+)
+SPOKEN_MODALITIES = frozenset({"talk"})
+
+
+def training_exclusion(entry: dict) -> str | None:
+    """Why a manifest entry may not reach the voice training data, or ``None`` if it may.
+
+    ``not-his`` (authorship other than ``george``), ``spoken``, ``unclassified`` (a modality
+    in neither set) and ``unreadable`` (his written material with no raw ``file`` — what
+    ``ingest.review.accept_item`` writes today). Policy is checked before readability, so
+    the ``unreadable`` count is exactly the material that *should* train but cannot yet.
+    Legacy entries with no ``provenance`` resolve the way the T3 guard resolves them: a
+    scraped, public Forbes column.
+    """
+    (resolved,), _ = migrate_articles([entry])
+    provenance = resolved.get("provenance") or {}
+    if provenance.get("authorship") != "george":
+        return "not-his"
+    modality = provenance.get("modality")
+    if modality in SPOKEN_MODALITIES:
+        return "spoken"
+    if modality not in WRITTEN_MODALITIES:
+        return "unclassified"
+    if not entry.get("file"):
+        return "unreadable"
+    return None
+
+
+def _modality(entry: dict) -> str:
+    """The modality of an entry :func:`training_exclusion` admitted."""
+    (resolved,), _ = migrate_articles([entry])
+    return resolved["provenance"]["modality"]
 
 
 def passage_budget_chars(config: QLoRAConfig | None = None) -> int:
@@ -380,15 +427,23 @@ def run():
         except (json.JSONDecodeError, KeyError):
             pass
 
-    # Load raw article data
+    # Load raw article data — only what training_exclusion admits (roadmap #41)
     loaded = []
+    left_out: dict[str, int] = {}
     for entry in sorted(articles, key=lambda a: a.get("date", "")):
+        reason = training_exclusion(entry)
+        if reason is not None:
+            left_out[reason] = left_out.get(reason, 0) + 1
+            continue
         raw_path = DATA_DIR / entry["file"]
         if raw_path.exists():
             article = json.loads(raw_path.read_text())
             loaded.append((entry, article))
 
     print(f"Preparing training data from {len(loaded)} articles...")
+    if left_out:
+        reasons = ", ".join(f"{n} {reason}" for reason, n in sorted(left_out.items()))
+        print(f"  Provenance: {sum(left_out.values())} manifest entries left out ({reasons})")
 
     # Quality check for instruct format
     def _is_quality(entry: dict, article: dict) -> bool:
@@ -433,9 +488,13 @@ def run():
             f.write(json.dumps(record, ensure_ascii=False) + "\n")
             instruct_count += 1
             slug = entry.get("slug", "")
-            quality_records[slug] = build_passage_records(
-                title, strip_boilerplate(body, boilerplate), slug=slug
-            )
+            modality = _modality(entry)
+            quality_records[slug] = [
+                {**record, "modality": modality}
+                for record in build_passage_records(
+                    title, strip_boilerplate(body, boilerplate), slug=slug
+                )
+            ]
     print(f"  JSONL (instruct): {instruct_path}  ({instruct_count} articles, {excluded_count} excluded by quality filter)")
 
     # 2b. Train / held-out split (plan 0008 26a) over the de-duplicated quality articles.
