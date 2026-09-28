@@ -173,6 +173,8 @@ def evaluate(
             "ranking": ranking,
             "winner": ranking[0] if ranking else None,
         }
+        if "modality" in trial:
+            record["modality"] = trial["modality"]
         if distinctive_words is not None:
             record["style"] = trial_style(trial, distinctive_words)
         records.append(record)
@@ -217,10 +219,27 @@ def evaluate_style(trials: list[dict], distinctive_words: set) -> list[dict]:
             "id": trial.get("id"),
             "prompt": trial.get("prompt", ""),
             "sources": sorted(trial.get("candidates", {})),
+            **({"modality": trial["modality"]} if "modality" in trial else {}),
             "style": trial_style(trial, distinctive_words),
         }
         for trial in trials
     ]
+
+
+def _by_modality(records: list[dict], summarize: Callable[[list[dict]], dict]) -> dict | None:
+    """``{modality: summarize(its records)}``, or ``None`` when no record is tagged.
+
+    Roadmap #41: spoken register is not written register, so a pooled score can hide an
+    arm that writes columns well and talks badly. Untagged records form an ``unknown``
+    slice rather than vanishing, so the slices' trial counts always add up to the whole.
+    Reports from before #41 carry no modality and keep exactly their old shape.
+    """
+    if not any("modality" in r for r in records):
+        return None
+    groups: dict[str, list[dict]] = {}
+    for record in records:
+        groups.setdefault(record.get("modality") or "unknown", []).append(record)
+    return {modality: summarize(group) for modality, group in sorted(groups.items())}
 
 
 def aggregate_style(records: list[dict]) -> dict:
@@ -229,8 +248,19 @@ def aggregate_style(records: list[dict]) -> dict:
     Reads ``record["style"]`` (``{source: metrics}``); records without it are skipped.
     ``delta_vs_real`` is averaged per-trial over trials where the source and ``real``
     co-appear, so a deterministic "how far from his actual prose" signal survives even
-    when the paid judge never runs.
+    when the paid judge never runs. Tagged records add a ``by_modality`` slice.
     """
+    summary = _style_summary(records)
+    slices = _by_modality(
+        [r for r in records if isinstance(r.get("style"), dict)], _style_summary
+    )
+    if slices:
+        summary["by_modality"] = slices
+    return summary
+
+
+def _style_summary(records: list[dict]) -> dict:
+    """:func:`aggregate_style` for one set of records, without the modality slices."""
     styled = [r["style"] for r in records if isinstance(r.get("style"), dict)]
     sources = sorted({s for st in styled for s in st})
 
@@ -291,6 +321,10 @@ def render_style_markdown(summary: dict) -> str:
     header = ["# Geo-LLM voice — deterministic style metrics", ""]
     if not table:
         return "\n".join(header + ["No style metrics (no candidate passages with text)."])
+    by_modality = summary.get("by_modality") or {}
+    if len(by_modality) > 1:
+        for modality, part in by_modality.items():
+            table += ["", f"## {modality}", ""] + _style_table(part)
     return "\n".join(header + table)
 
 
@@ -317,7 +351,18 @@ def aggregate(records: list[dict]) -> dict:
     - ``pairwise`` — ``"<a>_over_<b>"`` = fraction of trials where *a* outranked *b*,
       over trials that contain both (so RAG-vs-fine-tune isn't diluted by the real
       excerpt).
+    - ``by_modality`` — the same summary per modality, when records are tagged (#41).
+      The headline above still pools every trial.
     """
+    summary = _judged_summary(records)
+    slices = _by_modality(records, _judged_summary)
+    if slices:
+        summary["by_modality"] = slices
+    return summary
+
+
+def _judged_summary(records: list[dict]) -> dict:
+    """:func:`aggregate` for one set of records, without the modality slices."""
     judged = [r for r in records if r.get("ranking")]
     sources: list[str] = sorted({s for r in judged for s in r["ranking"]})
 
@@ -353,7 +398,7 @@ def aggregate(records: list[dict]) -> dict:
         "pairwise": pairwise,
     }
     if any(isinstance(r.get("style"), dict) for r in records):
-        summary["style"] = aggregate_style(records)
+        summary["style"] = _style_summary(records)
     return summary
 
 
@@ -385,6 +430,23 @@ def render_markdown(summary: dict) -> str:
         lines.append("")
         for key in sorted(pairwise):
             lines.append(f"- `{key}`: {pairwise[key]:.0%}")
+        lines.append("")
+    by_modality = summary.get("by_modality") or {}
+    if len(by_modality) > 1:  # one slice would only repeat the table above
+        lines += [
+            "## By modality",
+            "",
+            "| modality | source | win-rate | avg rank | appearances |",
+            "|----------|--------|----------|----------|-------------|",
+        ]
+        for modality, part in by_modality.items():
+            ranked = part.get("sources", {})
+            for source in sorted(ranked, key=lambda s: ranked[s]["avg_rank"]):
+                s = ranked[source]
+                lines.append(
+                    f"| {modality} | {source} | {s['win_rate']:.0%} | "
+                    f"{s['avg_rank']:.2f} | {s['appearances']} |"
+                )
         lines.append("")
     style_table = _style_table(summary.get("style", {}))
     if style_table:

@@ -444,3 +444,112 @@ class TestWriteStyleReport:
         assert payload["summary"] == summary
         assert payload["records"] == records
         assert "generated_at" in payload
+
+
+# --------------------------------------------------------------------------- #
+# Roadmap #41 — per-modality slices. Spoken register is not written register, so a
+# pooled win-rate can hide an arm that writes columns well and talks badly.
+# --------------------------------------------------------------------------- #
+
+
+def _ranked(ranking, modality=None):
+    record = {"ranking": ranking, "winner": ranking[0] if ranking else None}
+    if modality is not None:
+        record["modality"] = modality
+    return record
+
+
+class TestModalityOnRecords:
+    TRIALS = [
+        {"id": "v01", "prompt": "p", "modality": "article",
+         "candidates": {"real": "R", "rag": "G"}},
+        {"id": "v02", "prompt": "p", "candidates": {"real": "R", "rag": "G"}},
+    ]
+
+    def test_evaluate_carries_the_trials_modality(self):
+        records = evaluate(self.TRIALS, lambda _p, b: list(b), seed=1)
+        assert records[0]["modality"] == "article"
+        assert "modality" not in records[1]
+
+    def test_evaluate_style_carries_the_trials_modality(self):
+        records = evaluate_style(self.TRIALS, set())
+        assert records[0]["modality"] == "article"
+        assert "modality" not in records[1]
+
+
+class TestAggregateByModality:
+    def test_slices_win_rate_per_modality(self):
+        records = [
+            _ranked(["finetuned", "real"], "article"),
+            _ranked(["finetuned", "real"], "article"),
+            _ranked(["real", "finetuned"], "talk"),
+        ]
+        by = aggregate(records)["by_modality"]
+        assert by["article"]["sources"]["finetuned"]["win_rate"] == 1.0
+        assert by["talk"]["sources"]["finetuned"]["win_rate"] == 0.0
+        assert by["talk"]["n_judged"] == 1
+
+    def test_the_headline_still_pools_every_trial(self):
+        records = [
+            _ranked(["finetuned", "real"], "article"),
+            _ranked(["real", "finetuned"], "talk"),
+        ]
+        assert aggregate(records)["sources"]["finetuned"]["win_rate"] == 0.5
+
+    def test_untagged_records_land_in_an_unknown_slice_so_counts_add_up(self):
+        records = [_ranked(["rag", "real"], "article"), _ranked(["real", "rag"])]
+        by = aggregate(records)["by_modality"]
+        assert sorted(by) == ["article", "unknown"]
+        assert sum(s["n_trials"] for s in by.values()) == 2
+
+    def test_no_slice_when_no_record_is_tagged(self):
+        # every report written before #41 keeps exactly its old shape
+        assert "by_modality" not in aggregate([_ranked(["rag", "real"])])
+
+    def test_slices_carry_their_own_style(self):
+        records = [
+            {**_ranked(["rag", "real"], "article"),
+             "style": {"real": _metrics(0.7), "rag": _metrics(0.6)}},
+            {**_ranked(["real", "rag"], "talk"),
+             "style": {"real": _metrics(0.5), "rag": _metrics(0.5)}},
+        ]
+        by = aggregate(records)["by_modality"]
+        assert by["article"]["style"]["sources"]["rag"]["delta_vs_real"]["type_token_ratio"] == -0.1
+        assert by["talk"]["style"]["sources"]["rag"]["delta_vs_real"]["type_token_ratio"] == 0.0
+
+    def test_style_only_aggregate_slices_too(self):
+        records = [
+            {"modality": "article", "style": {"real": _metrics(0.7), "rag": _metrics(0.6)}},
+            {"modality": "talk", "style": {"real": _metrics(0.5), "rag": _metrics(0.4)}},
+        ]
+        by = aggregate_style(records)["by_modality"]
+        assert by["article"]["sources"]["real"]["mean"]["type_token_ratio"] == 0.7
+        assert by["talk"]["n_trials"] == 1
+        assert "by_modality" not in by["talk"]
+
+
+def _metrics(ttr):
+    return {"word_count": 100, "type_token_ratio": ttr, "avg_sentence_len": 20.0,
+            "fingerprint_hits_per_1k": 5.0}
+
+
+class TestRenderByModality:
+    def test_renders_a_row_per_modality_and_source(self):
+        md = render_markdown(aggregate([
+            _ranked(["finetuned", "real"], "article"), _ranked(["real", "finetuned"], "talk"),
+        ]))
+        assert "## By modality" in md
+        assert "| article | finetuned | 100% |" in md
+        assert "| talk | finetuned | 0% |" in md
+
+    def test_one_modality_is_not_a_breakdown(self):
+        # a single slice repeats the headline table; printing it is noise
+        md = render_markdown(aggregate([_ranked(["rag", "real"], "article")]))
+        assert "By modality" not in md
+
+    def test_style_markdown_renders_each_modality(self):
+        md = render_style_markdown(aggregate_style([
+            {"modality": "article", "style": {"real": _metrics(0.7), "rag": _metrics(0.6)}},
+            {"modality": "talk", "style": {"real": _metrics(0.5), "rag": _metrics(0.4)}},
+        ]))
+        assert "## article" in md and "## talk" in md
