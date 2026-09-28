@@ -10,7 +10,9 @@ import re
 
 from training import prepare
 from training.prepare import (
+    SPOKEN_MODALITIES,
     TASK_SHAPES,
+    WRITTEN_MODALITIES,
     build_instruct_record,
     build_passage_record,
     build_passage_records,
@@ -18,6 +20,7 @@ from training.prepare import (
     eval_grounded_slugs,
     passage_budget_chars,
     split_articles,
+    training_exclusion,
 )
 
 
@@ -474,3 +477,171 @@ class TestRunDeduplicatesTheCorpus:
         prepare.run()
         records = [json.loads(x) for x in (out / "finetune.jsonl").read_text().splitlines()]
         assert sum(1 for r in records if "Sentence about the economy" in r["text"]) == 2
+
+
+# --------------------------------------------------------------------------- #
+# Roadmap #41 — the training set is his *written* voice, decided by provenance
+# --------------------------------------------------------------------------- #
+
+
+def _prov(**fields) -> dict:
+    return {"provenance": {"modality": "article", "authorship": "george", **fields}}
+
+
+class TestTrainingExclusion:
+    """Which manifest entries may reach the voice training data, and why not.
+
+    Spoken register is not written register, and a co-author's sentences are not his;
+    either one mixed unlabelled into a written-voice fine-tune can *lower* fidelity
+    measured against the columns (roadmap #41).
+    """
+
+    def test_a_legacy_forbes_column_is_eligible(self):
+        # every entry in today's manifest: no provenance block, resolved as a scraped column
+        entry = {"slug": "s", "file": "raw/s.json", "url": "https://f.com/s/"}
+        assert training_exclusion(entry) is None
+
+    def test_his_written_material_is_eligible(self):
+        for modality in ("article", "book", "letter", "email"):
+            assert training_exclusion({"file": "raw/x.json", **_prov(modality=modality)}) is None
+
+    def test_a_talk_is_excluded_as_spoken(self):
+        assert training_exclusion({"file": "raw/x.json", **_prov(modality="talk")}) == "spoken"
+
+    def test_someone_elses_writing_is_excluded(self):
+        for authorship in ("other", "mixed"):
+            entry = {"file": "raw/x.json", **_prov(authorship=authorship)}
+            assert training_exclusion(entry) == "not-his"
+
+    def test_an_unrecognised_modality_fails_closed(self):
+        # a modality added to the vocabulary later must be classified before it trains
+        entry = {"file": "raw/x.json", **_prov(modality="podcast")}
+        assert training_exclusion(entry) == "unclassified"
+
+    def test_his_writing_with_no_raw_file_is_reported_unreadable(self):
+        # ingest.review.accept_item writes no `file` key — the pipeline cannot read it yet
+        assert training_exclusion(_prov(modality="book")) == "unreadable"
+
+    def test_policy_outranks_readability(self):
+        # a talk nobody can read is excluded because it is a talk; "unreadable" is reserved
+        # for material that *should* train, so that count means something
+        assert training_exclusion(_prov(modality="talk")) == "spoken"
+
+    def test_every_modality_in_the_vocabulary_is_classified_exactly_once(self):
+        from ingest.provenance import MODALITIES
+
+        assert WRITTEN_MODALITIES | SPOKEN_MODALITIES == MODALITIES
+        assert not WRITTEN_MODALITIES & SPOKEN_MODALITIES
+
+
+class TestRunFiltersByProvenance:
+    """`run()` applies :func:`training_exclusion` before writing any training artifact."""
+
+    BODY = "\n\n".join(
+        " ".join(f"Sentence {s} about {{tag}}." for s in range(8)) for _ in range(12)
+    )
+
+    def _corpus(self, tmp_path, monkeypatch, extra_entries=(), extra_raw=None):
+        raw = tmp_path / "raw"
+        raw.mkdir()
+        entries = []
+        for i in range(8):
+            slug = f"col-{i}"
+            (raw / f"{slug}.json").write_text(json.dumps({
+                "title": f"Column Title {i}", "body": self.BODY.format(tag=f"column{i}"),
+                "date": f"2021-02-{i + 1:02d}",
+            }))
+            entries.append({
+                "slug": slug, "url": f"https://f.com/{slug}/", "file": f"raw/{slug}.json",
+                "title": f"Column Title {i}", "date": f"2021-02-{i + 1:02d}", "word_count": 1000,
+            })
+        for name, tag in (extra_raw or {}).items():
+            (raw / f"{name}.json").write_text(json.dumps({
+                "title": f"Title {name}", "body": self.BODY.format(tag=tag), "date": "2021-03-01",
+            }))
+        entries.extend(extra_entries)
+        (tmp_path / "manifest.json").write_text(
+            json.dumps({"total_articles": len(entries), "articles": entries})
+        )
+        monkeypatch.setattr(prepare, "DATA_DIR", tmp_path)
+        monkeypatch.setattr(prepare, "MANIFEST_PATH", tmp_path / "manifest.json")
+        monkeypatch.setattr(prepare, "TRAINING_DIR", tmp_path / "training")
+        monkeypatch.setattr(prepare, "LINGUISTICS_PATH", tmp_path / "absent.json")
+        monkeypatch.setattr(prepare, "EVAL_QUESTIONS_PATH", tmp_path / "absent.json")
+        return tmp_path / "training"
+
+    @staticmethod
+    def _all_output_text(out) -> str:
+        names = ("finetune.jsonl", "instruct.jsonl", "train.jsonl", "heldout.jsonl",
+                 "corpus.txt", "metadata.csv")
+        return "\n".join((out / n).read_text() for n in names)
+
+    @staticmethod
+    def _entry(slug, *, file=True, **prov):
+        entry = {"slug": slug, "title": f"Title {slug}", "date": "2021-03-01",
+                 "url": "", "word_count": 1000, **_prov(**prov)}
+        if file:
+            entry["file"] = f"raw/{slug}.json"
+        return entry
+
+    def test_an_accepted_ingest_item_does_not_crash_the_run(self, tmp_path, monkeypatch, capsys):
+        # accept_item appends an entry with no `file`; run() used to index entry["file"]
+        out = self._corpus(tmp_path, monkeypatch,
+                           extra_entries=[self._entry("book-1", file=False, modality="book")])
+        prepare.run()
+        assert (out / "train.jsonl").exists()
+
+    def test_a_talk_reaches_no_training_artifact(self, tmp_path, monkeypatch, capsys):
+        out = self._corpus(tmp_path, monkeypatch,
+                           extra_entries=[self._entry("talk-1", modality="talk")],
+                           extra_raw={"talk-1": "spokenmarker"})
+        prepare.run()
+        text = self._all_output_text(out)
+        assert "column0" in text  # the columns still train
+        assert "spokenmarker" not in text
+        assert "talk-1" not in text
+
+    def test_a_co_authored_piece_reaches_no_training_artifact(self, tmp_path, monkeypatch, capsys):
+        out = self._corpus(tmp_path, monkeypatch,
+                           extra_entries=[self._entry("coauth-1", authorship="mixed")],
+                           extra_raw={"coauth-1": "coauthormarker"})
+        prepare.run()
+        assert "coauthormarker" not in self._all_output_text(out)
+
+    def test_his_written_ingested_material_trains(self, tmp_path, monkeypatch, capsys):
+        out = self._corpus(tmp_path, monkeypatch,
+                           extra_entries=[self._entry("letter-1", modality="letter")],
+                           extra_raw={"letter-1": "lettermarker"})
+        prepare.run()
+        assert "lettermarker" in (out / "finetune.jsonl").read_text()
+
+    def test_split_records_carry_their_modality(self, tmp_path, monkeypatch, capsys):
+        out = self._corpus(tmp_path, monkeypatch,
+                           extra_entries=[self._entry("letter-1", modality="letter")],
+                           extra_raw={"letter-1": "lettermarker"})
+        prepare.run()
+        records = [
+            json.loads(x)
+            for name in ("train.jsonl", "heldout.jsonl")
+            for x in (out / name).read_text().splitlines() if x.strip()
+        ]
+        letter = {r["modality"] for r in records if "lettermarker" in json.dumps(r["messages"])}
+        assert letter == {"letter"}
+        assert {r["modality"] for r in records} == {"article", "letter"}
+
+    def test_the_run_reports_what_it_left_out_and_why(self, tmp_path, monkeypatch, capsys):
+        self._corpus(tmp_path, monkeypatch, extra_entries=[
+            self._entry("talk-1", modality="talk"),
+            self._entry("talk-2", modality="talk"),
+            self._entry("book-1", file=False, modality="book"),
+        ], extra_raw={"talk-1": "t1", "talk-2": "t2"})
+        prepare.run()
+        printed = capsys.readouterr().out
+        assert "3 manifest entries left out" in printed
+        assert "2 spoken" in printed
+        assert "1 unreadable" in printed
+
+    def test_a_clean_corpus_reports_no_exclusions(self, tmp_path, monkeypatch, capsys):
+        self._corpus(tmp_path, monkeypatch)
+        prepare.run()
+        assert "left out" not in capsys.readouterr().out
