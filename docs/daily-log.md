@@ -1211,7 +1211,35 @@ Format:
   own). Both dashboard paths exercised end to end: the real injection (181 / 340,720) and the
   fresh-clone stub fallback, by moving the artifact aside and restoring it.
 
-### 2026-09-28 — training — in-progress
-- PR: (opening)
-- Source: roadmap:#41
-- Summary: Modality-aware training data + per-modality voice eval (first slice). In progress.
+### 2026-09-28 — training — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/120
+- Source: roadmap:#41 (first slice)
+- Summary: **The training set is now his written voice by rule, not by accident — and a crash
+  that was one accepted ingest item away is gone.** `training/prepare.py` indexed
+  `entry["file"]` on every manifest entry, but `ingest.review.accept_item` writes none, so the
+  first book the owner accepted would have killed `make training` (and `make all`) with
+  `KeyError: 'file'` — reproduced red before fixing. #116 found that ingested items are
+  invisible to *analysis*; training did not skip them, it crashed. New `training_exclusion()`
+  decides from `provenance` what may train: `authorship: george`, a written modality, a raw
+  file. Talks (`spoken`) and co-authored pieces (`not-his`) are left out of **every**
+  artifact, not just the splits; a modality in neither set fails closed (`unclassified`), and a
+  test pins that every value in `ingest.provenance.MODALITIES` is classified exactly once, so
+  adding one forces a decision. Policy is checked before readability, so the `unreadable`
+  count is exactly the material that *should* train but cannot yet — the number that says
+  when #38's raw-file gap starts costing tokens. Passage records carry `modality` beside
+  `shape`; it rides through `voice_trials` and `voice_eval` onto every judged record, and both
+  `aggregate()` and `aggregate_style()` add a `by_modality` slice beside the pooled headline.
+  **On the real corpus it is a no-op, deliberately:** prepare run into a temp dir gives 540 +
+  127 passages identical to the owner's split apart from the new key, and the other four
+  artifacts byte-identical; an offline style pass over 12 real held-out trials gives one
+  `article` slice equal to the pooled summary, and the markdown suppresses a one-slice
+  breakdown. The value arrives with the first talk or letter. **Not done (next slice):**
+  ingested items still have no raw file (#38's gap), so written ingest material is counted
+  `unreadable` rather than trained on; per-modality *conditioning* (a modality-aware system
+  prompt) is left until there is a second modality to condition on.
+  **Verification:** `make verify` exit 0 (ruff clean, all tests pass, dashboard builds);
+  `__pycache__` cleared before every red→green proof. **16 mutants, 16 caught.**
+  **Log housekeeping:** restored #116's 09-26 entry, dropped when #115 merged after it
+  (verbatim from `a2cbd65`). `main` is also missing 09-21 → 09-24; open PR #119 restores
+  those, so they are not duplicated here — merging #119 after this will conflict in this file,
+  and the resolution is keep both, ordered by date.
