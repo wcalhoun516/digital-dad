@@ -40,6 +40,10 @@ ingest:
 ingest-review:
 	$(PYTHON) -m ingest.review $(ARGS)
 
+# The primary modules, then the derived builders (intellectual-arc, reading-room, calhoun-isms,
+# entity-graph, entity-stance, contradictions) with their defaults — each skipped unless the
+# corpus or the upstream JSON it reads changed. The weekly cron runs this; their own targets
+# below are for custom ARGS.
 analyze:
 	$(PYTHON) -m analysis $(ARGS)
 

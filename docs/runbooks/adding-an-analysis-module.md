@@ -83,14 +83,21 @@ LLM example see `analysis/predictions.py` (tier-2 extraction, incremental/resuma
 `make analyze` is `python -m analysis`, dispatched by `analysis/__main__.py`. Three edits wire
 a module in:
 
-1. **Add the name to `ALL_MODULES`** (order matters — it's the run order):
+1. **Add the name to `PRIMARY_MODULES`** (order matters — it's the run order):
 
    ```python
-   ALL_MODULES = ["linguistic", "themes", "entities", "psychoprofile",
-                  "semantic_search", "predictions", "<name>"]
+   PRIMARY_MODULES = ["linguistic", "themes", "entities", "psychoprofile",
+                      "semantic_search", "predictions", "corpus_composition", "<name>"]
    ```
 
-   This also extends the CLI `choices`, so `python -m analysis <name>` works.
+   `ALL_MODULES` is `PRIMARY_MODULES` + the derived builders, so this also extends the CLI
+   `choices` and `python -m analysis <name>` works.
+
+   **Is your module a pure/offline view over *another module's output*** (it reads
+   `themes.json` / `entities.json`, not just the corpus)? Then it is a **derived builder**
+   instead: add `"<name>": ("<upstream>.json", ...)` to `DERIVED_MODULES` and a branch to
+   `_build_derived()`, and skip step 2. `run_derived()` gates it on a fingerprint of the corpus
+   *plus* those upstream files and isolates its crashes; see architecture.md §2.
 
 2. **Add a dispatch block** in `main()`, mirroring the existing ones. The `_should_run` /
    `_log_run` pair is what gives you fingerprint-skipping for free:

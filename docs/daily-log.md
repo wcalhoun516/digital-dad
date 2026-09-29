@@ -1164,3 +1164,32 @@ Format:
   **A documented refusal:** the anthology is deliberately *not* a kind, because mailing it needs
   a PDF attachment the Gmail-MCP `html_body` payload cannot carry — recorded in the README so the
   next run does not mistake the omission for an oversight. Nothing here sends mail; D9 holds.
+
+### 2026-09-29 — infra — ready-for-review
+- PR: #121
+- Source: roadmap:#47
+- Summary: The six derived builders (`intellectual_arc`, `reading_room`, `calhoun_isms`,
+  `entity_graph`, `entity_stance`, `contradictions`) now run inside `make analyze`, so the weekly
+  cron refreshes them without any change to `bin/`. **Selection:** `main` green; 2 open daily PRs
+  (#119, #120, both ready-for-review, so nothing to resume); `plans/ready/` holds only 0011, which
+  #119 closes; no pins. For the cold-path tally I read the last 7 entries **with #119's restored
+  09-21 → 09-24 and 09-27 entries included**, because `main`'s log still lacks them (the tally on
+  `main` alone would have been wrong): analysis 2, dashboard 2, docs/family/training 1 each,
+  **infra 0, scraper 0**. Scraper has nothing unstarted, so the pick was infra. #47 and #63 are
+  both P2·S; I took #47. **Design:** the builders are gated on an `inputs_fingerprint`, an MD5
+  over the corpus fingerprint plus the bytes of the upstream JSON each reads, not on the corpus
+  alone. That is the actual cause of the staleness: `themes.json`/`entities.json` were regenerated
+  on 09-19 with the corpus unchanged (boilerplate pruning), so a corpus-only gate would have kept
+  every derived tab frozen anyway. Failures are crash-isolated: a crash is logged, the rest still
+  run, the failed builder is not recorded (so it retries next run), and the process exits 1 so
+  the weekly step reads `failed`. **Real data (sandbox copy in `/tmp`, so the owner's tracked
+  outputs and `runs.jsonl` are untouched):** run 1 builds all six (~47s, 41s of it
+  `contradictions`). Run 2 skips all six. A real `themes.json` edit re-runs only its three
+  dependents. `--force` re-runs everything. The refresh is not cosmetic: the Reading Room goes
+  175 → 180 articles, and the entity graph goes 192 → 171 edges after the 09-19 pruning.
+  **Mutation-tested: 10 mutants, 10 caught.** One mutant first looked like a survivor. The
+  harness had replaced the *first* `sys.exit(1)` in the file, the `--local/--remote` guard, not
+  the new one. Applied by hand to the right line, it was caught. `__pycache__` was cleared before
+  every run. **Log note:** this entry is appended after 09-28's. #119 carries the restored
+  09-21 → 09-24 and 09-27 entries, so whichever merges second will conflict here. Keep both
+  sides, ordered by date.
