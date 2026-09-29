@@ -111,7 +111,8 @@ field Ask Dad must filter on, since only `george` is quotable as his thinking.
 ## 2. Analysis (`analysis/`)
 
 CLI: `python -m analysis [modules] [--dry-run] [--force] [--remote] [--verbose]`. Modules run in
-order: `linguistic · themes · entities · psychoprofile · semantic_search · predictions`.
+order: `linguistic · themes · entities · psychoprofile · semantic_search · predictions ·
+corpus_composition`, then the six **derived builders** (below).
 
 **Logging** (`analysis/utils.py`): modules emit progress through a shared `log`
 (`setup_logging()`, logger `digital-dad.analysis`, mirroring `scraper/utils.py`) rather than
@@ -121,6 +122,23 @@ order: `linguistic · themes · entities · psychoprofile · semantic_search · 
 Each completed module appends a line to `data/analysis/runs.jsonl` with the fingerprint it
 ran against; on the next run a module is **skipped if the fingerprint is unchanged** (unless
 `--force`). This is what makes the weekly cron cheap.
+
+**Derived builders** (`DERIVED_MODULES` in `__main__.py`, roadmap #47): `intellectual_arc`,
+`reading_room`, `calhoun_isms` (read `themes.json`) and `entity_graph`, `entity_stance`,
+`contradictions` (read `entities.json`). Pure/offline views over the primary outputs, run after
+all of them with their CLI defaults, so `make analyze` — and therefore the weekly cron — keeps
+their tabs as fresh as their neighbours'. Until then they ran only by hand and sat 3–7 weeks
+stale. Two rules differ from the primary modules:
+
+- **Gated on their inputs, not the corpus alone.** Each logs an `inputs_fingerprint` — an MD5
+  over the corpus fingerprint plus the bytes of its upstream JSON — and skips only when that
+  matches. `themes.json`/`entities.json` get regenerated with the corpus unchanged (a `--force`
+  re-cluster, boilerplate pruning), and a corpus-only gate would miss exactly that.
+- **Crash-isolated.** One builder raising (including a missing upstream file) is logged, the
+  others still run, nothing is recorded for it (so the next run retries), and the process exits
+  1 — the weekly cron's per-step exit code then reads `failed`, not `ok`. `--dry-run` skips them.
+
+Their `make <name>` targets remain for non-default `ARGS` (e.g. `make entity-graph ARGS="--top 60"`).
 
 | Module | Output | What it does |
 |--------|--------|--------------|
@@ -188,7 +206,7 @@ RSS headlines, embeds them, finds the best-matching archive article by cosine si
 generates a 2–3 sentence intro in Dr. Calhoun's voice (conductor T2), renders an HTML email
 to `data/cron/emails/`, logs to `data/cron/on_this_day.jsonl`.
 
-`entity_graph.py` — also outside the default chain; run via `make entity-graph`. A pure/offline
+`entity_graph.py` — a derived builder (in `make analyze`; `make entity-graph` for custom ARGS). A pure/offline
 **derived** artifact: reads `entities.json`'s `per_article` lists and emits `entity_graph.json`,
 an undirected co-occurrence graph (nodes = people/orgs, edge weight = shared-article count).
 Byline/photo-credit boilerplate is excluded by default (`--no-exclude` to keep it). Surface-form
@@ -204,7 +222,7 @@ injected via `build_dashboard`'s `/*__ENTITY_GRAPH_DATA__*/` placeholder (empty-
 CI / fresh clones, prompting `make entity-graph`); it re-fits on viewport change like the other
 pixel-sized chart tabs. (Roadmap #14.)
 
-`entity_stance.py` — also outside the default chain; run via `make entity-stance`. A pure/offline
+`entity_stance.py` — a derived builder (in `make analyze`; `make entity-stance` for custom ARGS). A pure/offline
 **derived** artifact: joins `entities.json`'s `per_article` lists to the corpus bodies and emits
 `entity_stance.json`, a per-entity **yearly stance trajectory** (mean tone of the sentences that
 name an entity, per year) plus warming/cooling trend boards. The dashboard **Stance** tab
@@ -244,7 +262,7 @@ candidate must beat the baseline on **both** direction and significance; when th
 small for any outcome to clear alpha, the verdict says so rather than blaming the model. A
 dashboard viz is still deferred. (Roadmap #27.)
 
-`calhoun_isms.py` — also outside the default chain; run via `make calhoun-isms`. A pure/offline
+`calhoun_isms.py` — a derived builder (in `make analyze`; `make calhoun-isms` for custom ARGS). A pure/offline
 **derived** artifact: reads `themes.json`'s per-article theme assignments plus the corpus bodies,
 scores every sentence for "quotability" with transparent heuristics (length band + aphoristic
 markers like *always/never/no one*, minus attribution/newsy-digit penalties), and emits
@@ -255,7 +273,7 @@ injected via `build_dashboard`'s `/*__CALHOUN_ISMS_DATA__*/` placeholder with an
 in CI / fresh clones (prompting `make calhoun-isms`); each quote deep-links into the Raw Corpus tab
 via the shared `deepLinkToCorpus()` helper. No conductor/network. (Roadmap #16.)
 
-`intellectual_arc.py` — also outside the default chain; run via `make intellectual-arc`. A
+`intellectual_arc.py` — a derived builder (in `make analyze`; `make intellectual-arc` for custom ARGS). A
 pure/offline **derived** artifact: bins `themes.json`'s clustered articles by calendar year and
 emits `intellectual_arc.json` — each year's theme composition (per-cluster share + a dominant
 theme), the consecutive year-over-year `shifts` (rising / fading / emergent / vanished + any
@@ -270,7 +288,7 @@ Timeline; click a legend theme to trace its band across every year), and year-ov
 cards — injected via `build_dashboard`'s `/*__INTELLECTUAL_ARC_DATA__*/` placeholder (empty-arc
 stub in CI / fresh clones, prompting `make intellectual-arc`). (Roadmap #13.)
 
-`contradictions.py` — also outside the default chain; run via `make contradictions`. A
+`contradictions.py` — a derived builder (in `make analyze`; `make contradictions` for custom ARGS). A
 pure/offline **derived** artifact: reads `entities.json`'s frequent people/orgs plus the corpus
 bodies, scores Dad's stance toward each subject sentence-by-sentence via a small transparent
 polarity lexicon, and emits `contradictions.json` — subjects whose mean stance **reversed sign**
@@ -326,8 +344,8 @@ bucketed by his hedging language, plus "most right / most wrong" conviction boar
 Joins `themes.json` (per-article theme label) and the manifest (ordering, word counts) to the
 full bodies in `data/raw/*.json`, emitting `reading_room.json`: every column with its
 paragraphs, reading time, theme tag, prev/next links and a "read on Forbes" deep link. Because
-it embeds **full article text** it is **git-ignored** — regenerate on demand. Note there is **no
-`make` target**; run `python -m analysis.reading_room`. Deterministic and offline.
+it embeds **full article text** it is **git-ignored** — regenerate on demand. A derived builder: `make
+analyze` rebuilds it; `make reading-room` for custom ARGS. Deterministic and offline.
 
 `year_in_review.py` — the annual counterpart to On This Day (roadmap #23); run via
 `make year-in-review` (`ARGS="--year 2024"`; defaults to the last complete year). Reads
