@@ -11,6 +11,7 @@ Examples:
   python -m analysis --dry-run          # estimate costs only
   python -m analysis --force            # re-run even if no articles changed
   python -m analysis --verbose          # DEBUG-level logging (e.g. per-k silhouette scores)
+  python -m analysis entity_graph       # rebuild one derived view (see DERIVED_MODULES)
 """
 
 import argparse
@@ -20,9 +21,26 @@ import sys
 
 from .utils import DATA_DIR, load_articles, log
 
-RUNS_LOG = DATA_DIR / "analysis" / "runs.jsonl"
-ALL_MODULES = ["linguistic", "themes", "entities", "psychoprofile", "semantic_search",
-               "predictions", "corpus_composition"]
+ANALYSIS_DIR = DATA_DIR / "analysis"
+RUNS_LOG = ANALYSIS_DIR / "runs.jsonl"
+PRIMARY_MODULES = ["linguistic", "themes", "entities", "psychoprofile", "semantic_search",
+                   "predictions", "corpus_composition"]
+
+# Derived builders (roadmap #47): pure/offline views over the primary modules' outputs, each
+# mapped to the upstream files (in ANALYSIS_DIR) it reads besides the corpus. They run after
+# every primary module and are gated on a fingerprint of *those inputs*, not the corpus alone:
+# themes.json and entities.json get regenerated with the corpus unchanged (a --force
+# re-cluster, boilerplate pruning), and a corpus-only gate would leave every tab downstream
+# of them stale. Before this they ran only by hand, and sat 3–7 weeks behind their neighbours.
+DERIVED_MODULES = {
+    "intellectual_arc": ("themes.json",),
+    "reading_room": ("themes.json",),
+    "calhoun_isms": ("themes.json",),
+    "entity_graph": ("entities.json",),
+    "entity_stance": ("entities.json",),
+    "contradictions": ("entities.json",),
+}
+ALL_MODULES = PRIMARY_MODULES + list(DERIVED_MODULES)
 
 
 def _corpus_fingerprint(articles: list[dict]) -> str:
@@ -35,8 +53,8 @@ def _corpus_fingerprint(articles: list[dict]) -> str:
     return hashlib.md5("|".join(parts).encode()).hexdigest()
 
 
-def _last_run_fingerprint(module: str) -> str | None:
-    """Read the corpus fingerprint from the last successful run of a module."""
+def _last_run_fingerprint(module: str, key: str = "corpus_fingerprint") -> str | None:
+    """Read a fingerprint (the corpus one by default) from a module's last successful run."""
     if not RUNS_LOG.exists():
         return None
     last = None
@@ -47,10 +65,10 @@ def _last_run_fingerprint(module: str) -> str | None:
                 last = entry
         except json.JSONDecodeError:
             continue
-    return last.get("corpus_fingerprint") if last else None
+    return last.get(key) if last else None
 
 
-def _log_run(module: str, fingerprint: str) -> None:
+def _log_run(module: str, fingerprint: str, **extra: str) -> None:
     """Log a completed non-psychoprofile run (psychoprofile logs itself)."""
     from datetime import datetime, timezone
     RUNS_LOG.parent.mkdir(parents=True, exist_ok=True)
@@ -58,9 +76,78 @@ def _log_run(module: str, fingerprint: str) -> None:
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "module": module,
         "corpus_fingerprint": fingerprint,
+        **extra,
     }
     with open(RUNS_LOG, "a") as f:
         f.write(json.dumps(entry) + "\n")
+
+
+def _inputs_fingerprint(corpus_fingerprint: str, upstream: tuple[str, ...]) -> str:
+    """MD5 over the corpus fingerprint plus the bytes of each upstream file a builder reads.
+
+    Raises FileNotFoundError when an upstream file is missing: the builder cannot run, and
+    that is a failure to report, not a reason to skip quietly.
+    """
+    h = hashlib.md5(corpus_fingerprint.encode())
+    for name in upstream:
+        h.update(f"|{name}:".encode())
+        h.update((ANALYSIS_DIR / name).read_bytes())
+    return h.hexdigest()
+
+
+def _build_derived(name: str, articles: list[dict]) -> None:
+    """Run one derived builder with its CLI defaults, writing its output file."""
+    if name == "intellectual_arc":
+        from .intellectual_arc import run
+        run()
+    elif name == "reading_room":
+        from .reading_room import run
+        run()
+    elif name == "calhoun_isms":
+        from .calhoun_isms import run
+        run(articles)
+    elif name == "entity_graph":
+        from .entity_graph import run
+        run()
+    elif name == "entity_stance":
+        from .entity_stance import run
+        run(articles)
+    elif name == "contradictions":
+        from .contradictions import run
+        run(articles)
+    else:
+        raise KeyError(f"no derived builder named {name!r}")
+
+
+def run_derived(articles: list[dict], corpus_fingerprint: str, modules: list[str], *,
+                force: bool = False, dry_run: bool = False, build=None) -> list[str]:
+    """Run the requested derived builders whose inputs changed; return the names that failed.
+
+    A crash in one builder is logged and does not stop the rest; it is not recorded in
+    runs.jsonl, so the next run retries it. ``build`` is injectable for tests.
+    """
+    build = build or _build_derived
+    failed: list[str] = []
+    for name, upstream in DERIVED_MODULES.items():
+        if name not in modules:
+            continue
+        log.info("=== DERIVED — %s ===", name)
+        if dry_run:
+            log.info("[skip] %s: --dry-run (derived builders write files)", name)
+            continue
+        try:
+            inputs = _inputs_fingerprint(corpus_fingerprint, upstream)
+            if not force and _last_run_fingerprint(name, "inputs_fingerprint") == inputs:
+                log.info("[skip] %s: inputs unchanged since last run (use --force to override)",
+                         name)
+                continue
+            build(name, articles)
+        except Exception:
+            log.exception("%s failed; the other builders carry on", name)
+            failed.append(name)
+            continue
+        _log_run(name, corpus_fingerprint, inputs_fingerprint=inputs)
+    return failed
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -175,6 +262,11 @@ def main():
         log.info("=== CORPUS COMPOSITION — what the corpus is made of ===")
         from .corpus_composition import run as run_corpus_composition
         run_corpus_composition(articles)
+
+    failed = run_derived(articles, fingerprint, modules, force=args.force, dry_run=args.dry_run)
+    if failed:
+        log.error("Analysis finished with failed derived builders: %s", ", ".join(failed))
+        sys.exit(1)
 
     log.info("Analysis complete.")
 
