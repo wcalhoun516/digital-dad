@@ -1164,3 +1164,29 @@ Format:
   **A documented refusal:** the anthology is deliberately *not* a kind, because mailing it needs
   a PDF attachment the Gmail-MCP `html_body` payload cannot carry — recorded in the README so the
   next run does not mistake the omission for an oversight. Nothing here sends mail; D9 holds.
+
+### 2026-09-30 — ingest — ready-for-review
+- PR: #122
+- Source: roadmap:#34
+- Summary: **`.pdf` ingest handler + no-text-layer detection — the first user of the `ingest`
+  extra (`pypdf>=5.0`, pure Python; in `all` and CI).** **Category pick:** `main`'s log is
+  missing 09-21→09-24 (restored by #119) and **09-26 (#116), dropped again when #115 merged
+  after it (restored by #120).** So the last 7 were rebuilt from merge commits + open
+  PRs #119–#121: docs, analysis, family, dashboard ×2, training, infra. `scraper` was least
+  worked but has no open items (#8–#10 done), so `ingest` (last run 09-05) was next, and #34 is
+  the roadmap's own next step after #41. **Design:** pypdf's *layout* extraction, because the
+  plain mode drops the vertical gaps that are a PDF's only paragraph breaks. A mutation run
+  confirmed the paragraph test fails without it. Wrapped lines are rejoined, and bare folios on a
+  page's first/last line are dropped. Whitespace is normalized directly rather than via
+  `clean_text`, whose Forbes-boilerplate regexes (`I am a.*?contributor`) would eat prose. Scanned
+  pages are named in a warning deferring them to OCR (#36); confidence is the share of pages read,
+  and a fully scanned file stages at 0.0. Password-protected → refused. Permissions-only (empty
+  user password) → opened. The creation date is kept as *approximate* (it dates the file, not the
+  writing), and every PDF's modality is flagged as a guess. **Missing pypdf** → new
+  `MissingDependency`: the file is counted as skipped, `make ingest` prints the install hint, and
+  **nothing is staged**, so no empty placeholder outlives the install. **Depth — a pre-existing
+  bug this PR would have made common:** every refused/scanned file extracts to the same empty
+  text, so the second one was reported "already queued" and never reviewed. `stage_file` now
+  keys text-less extractions on the file bytes. **Verified beyond fixtures** on a real Chromium
+  PDF (justified text, page-number footer): paragraphs intact, folio gone. `make ingest` twice →
+  staged 2, then 2 already queued.

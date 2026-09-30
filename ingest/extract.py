@@ -17,6 +17,18 @@ class UnsupportedFormat(Exception):
     """No handler is registered for this file extension."""
 
 
+class MissingDependency(Exception):
+    """A handler exists, but the parser it needs is not installed.
+
+    Distinct from ``UnsupportedFormat`` on purpose: the file *is* supported, so the caller
+    skips it with the install hint and stages nothing — a zero-confidence placeholder would
+    sit in the queue after the install and be re-proposed beside the real extraction.
+    """
+
+
+INSTALL_HINT = "pip install -e '.[ingest]'"
+
+
 @dataclass(frozen=True)
 class ExtractResult:
     """What a handler recovered from one file.
@@ -55,8 +67,9 @@ def handler_for(path: Path) -> Callable[[Path], ExtractResult] | None:
 def extract(path: Path) -> ExtractResult:
     """Run the registered handler for ``path``.
 
-    Raises ``UnsupportedFormat`` if no handler matches — callers stage that as a skipped
-    file rather than failing the whole run.
+    Raises ``UnsupportedFormat`` if no handler matches, or ``MissingDependency`` if the
+    handler's optional parser is not installed — callers treat both as a skipped file
+    rather than failing the whole run.
     """
     path = Path(path)
     handler = handler_for(path)

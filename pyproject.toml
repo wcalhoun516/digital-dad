@@ -27,13 +27,19 @@ jev = [
     # Exploratory one-off: tools/jev_voice_probe.py. Opt-in, kept out of `all`.
     "jevclient>=1.1",
 ]
+ingest = [
+    # Corpus-ingest handlers that need a parser the stdlib lacks (design: corpus-ingest
+    # § dependencies). pypdf is pure Python, so CI and every platform install it cleanly.
+    # Without it the .pdf handler skips the file with an install hint; nothing crashes.
+    "pypdf>=5.0",
+]
 finetune = [
     # Geo-LLM QLoRA fine-tune (plan 0008). MLX is Apple-Silicon/macOS only, so the
     # marker makes this a no-op elsewhere (e.g. Linux CI). Opt-in; kept out of `all`.
     "mlx-lm>=0.31; platform_machine == 'arm64'",
 ]
 all = [
-    "digital-dad[scrape,analyze,dev]",
+    "digital-dad[scrape,analyze,dev,ingest]",
 ]
 
 [tool.setuptools.packages.find]

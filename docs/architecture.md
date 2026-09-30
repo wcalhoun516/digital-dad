@@ -66,6 +66,19 @@ than crashing.
   someone else's book must never enter as his voice. A DRM-protected file (an
   `META-INF/encryption.xml`, or unparseable XML) is **detected and refused** at zero
   confidence — there is no circumvention; the owner supplies a DRM-free copy.
+- `handlers/pdf.py` — `.pdf` via **pypdf**, the first handler behind the `ingest` extra.
+  `pypdf` is imported inside the handler, so without it `.pdf` stays registered and the file
+  raises `MissingDependency`: `scan_inbox` counts it as skipped and `make ingest` prints the
+  `pip install -e '.[ingest]'` hint — nothing is staged, so no empty placeholder outlives the
+  install. One document per file; paragraphs come from pypdf's **layout** extraction (the
+  plain mode drops the vertical gaps that separate them), wrapped lines are rejoined, and a
+  bare folio on a page's first or last line is dropped. A page with no text layer is a scan:
+  its number goes in a warning deferring it to OCR (#36) and confidence is the share of pages
+  read — a fully scanned file stages at 0.0. Document info → title, author (not Calhoun, or
+  absent → `authorship: other`) and the creation date, marked **approximate** because it
+  dates the file, not the writing. The modality is flagged as a guess on every PDF. A
+  permissions-only PDF (empty user password) opens normally; one that needs a password is
+  refused, never guessed at.
 
 `upload.py` is the single gate for material arriving over the network rather than being
 copied into `data/inbox/` by hand. `sanitize_filename` **rejects** any name that is not a

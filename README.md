@@ -537,7 +537,7 @@ also refuses — an unanswered "is this port public?" is not a yes. `CONSOLE_POR
 
 Uploads are validated before anything touches disk: the name must be a bare filename (no
 path separators, no leading dot, no control characters), the extension must belong to a
-registered ingest handler (`.eml`, `.epub`, `.mbox`, `.md`, `.txt`), and the file must be
+registered ingest handler (`.eml`, `.epub`, `.mbox`, `.md`, `.pdf`, `.txt`), and the file must be
 under 25 MB. A name that looks like a path is **rejected, never repaired**. Nothing uploaded
 is ever executed.
 
