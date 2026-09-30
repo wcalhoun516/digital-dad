@@ -1171,7 +1171,7 @@ Format:
 - Summary: **`.pdf` ingest handler + no-text-layer detection — the first user of the `ingest`
   extra (`pypdf>=5.0`, pure Python; in `all` and CI).** **Category pick:** `main`'s log is
   missing 09-21→09-24 (restored by #119) and **09-26 (#116), dropped again when #115 merged
-  after it and restored by no open PR.** So the last 7 were rebuilt from merge commits + open
+  after it (restored by #120).** So the last 7 were rebuilt from merge commits + open
   PRs #119–#121: docs, analysis, family, dashboard ×2, training, infra. `scraper` was least
   worked but has no open items (#8–#10 done), so `ingest` (last run 09-05) was next, and #34 is
   the roadmap's own next step after #41. **Design:** pypdf's *layout* extraction, because the
