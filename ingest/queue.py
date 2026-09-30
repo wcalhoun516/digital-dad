@@ -9,7 +9,13 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 
-from ingest.extract import ExtractResult, UnsupportedFormat, extract, handler_for
+from ingest.extract import (
+    ExtractResult,
+    MissingDependency,
+    UnsupportedFormat,
+    extract,
+    handler_for,
+)
 from scraper.manifest_dedup import content_hash_for
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
@@ -79,7 +85,8 @@ def stage_file(path: Path, queue_dir: Path = QUEUE_DIR) -> dict | None:
 
     Returns the staged item, or ``None`` when the format is unsupported or the content is
     already queued. Never raises on an unsupported file — a mixed inbox must not fail the
-    whole run.
+    whole run. ``MissingDependency`` is the one exception that propagates: the caller owes
+    the operator the install hint, and ``None`` would read as "already queued".
     """
     path = Path(path)
     try:
@@ -107,8 +114,14 @@ def stage_file(path: Path, queue_dir: Path = QUEUE_DIR) -> dict | None:
     return item
 
 
-def scan_inbox(inbox: Path = INBOX_DIR, queue_dir: Path = QUEUE_DIR) -> dict:
-    """Stage every file in ``inbox``. Returns counts of staged / skipped / duplicates."""
+def scan_inbox(
+    inbox: Path = INBOX_DIR, queue_dir: Path = QUEUE_DIR, notices: list[str] | None = None
+) -> dict:
+    """Stage every file in ``inbox``. Returns counts of staged / skipped / duplicates.
+
+    A file whose handler needs an uninstalled parser counts as skipped; if ``notices`` is
+    given, a line saying which file and how to fix it is appended for the operator.
+    """
     inbox = Path(inbox)
     counts = {"staged": 0, "skipped": 0, "duplicates": 0}
     if not inbox.is_dir():
@@ -120,7 +133,14 @@ def scan_inbox(inbox: Path = INBOX_DIR, queue_dir: Path = QUEUE_DIR) -> dict:
         if handler_for(path) is None:
             counts["skipped"] += 1
             continue
-        if stage_file(path, queue_dir) is None:
+        try:
+            item = stage_file(path, queue_dir)
+        except MissingDependency as error:
+            counts["skipped"] += 1
+            if notices is not None:
+                notices.append(f"{path.name}: skipped — {error}")
+            continue
+        if item is None:
             counts["duplicates"] += 1
         else:
             counts["staged"] += 1

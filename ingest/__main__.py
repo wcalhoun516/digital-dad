@@ -16,7 +16,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--queue", type=Path, default=QUEUE_DIR)
     args = parser.parse_args(argv)
 
-    counts = scan_inbox(args.inbox, args.queue)
+    notices: list[str] = []
+    counts = scan_inbox(args.inbox, args.queue, notices=notices)
+    for notice in notices:
+        print(notice)
     print(
         f"Staged {counts['staged']}, skipped {counts['skipped']} (unsupported), "
         f"{counts['duplicates']} already queued."
