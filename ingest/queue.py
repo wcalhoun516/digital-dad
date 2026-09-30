@@ -5,6 +5,7 @@ accepts it in ``ingest.review``. Re-dropping a file is a no-op: de-duplication r
 scraper's ``content_hash`` convention (MD5 of body).
 """
 
+import hashlib
 import json
 from datetime import datetime, timezone
 from pathlib import Path
@@ -94,7 +95,14 @@ def stage_file(path: Path, queue_dir: Path = QUEUE_DIR) -> dict | None:
     except UnsupportedFormat:
         return None
 
-    content_hash = content_hash_for(_combined_text(result))
+    text = _combined_text(result)
+    # Every refused or scanned file extracts to the same empty text, so keying on it would
+    # file each later one as "already queued" and no human would ever see it. With no text
+    # to identify it, the file's own bytes do — and a re-drop of the same file stays a no-op.
+    if text.strip():
+        content_hash = content_hash_for(text)
+    else:
+        content_hash = hashlib.md5(path.read_bytes()).hexdigest()
     existing = {item.get("content_hash") for item in load_all(queue_dir)}
     if content_hash in existing:
         return None

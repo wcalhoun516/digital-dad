@@ -296,3 +296,24 @@ class TestQueueIntegration:
         assert item["status"] == "pending"
         assert item["meta"]["title"] == "Notes on Money"
         assert "Real argument." in item["documents"][0]["text"]
+
+    def test_two_different_scans_both_reach_review(self, tmp_path):
+        from ingest.queue import load_queue, scan_inbox
+
+        # Both extract to no text. Keyed on the empty text they would share one content
+        # hash, and the second scan would be reported "already queued" — never reviewed.
+        inbox = tmp_path / "inbox"
+        inbox.mkdir()
+        write_pdf(inbox / "scan-a.pdf", [[]], {"Title": "Lecture 1"})
+        write_pdf(inbox / "scan-b.pdf", [[], []], {"Title": "Lecture 2"})
+        counts = scan_inbox(inbox, tmp_path / "queue")
+        assert counts == {"staged": 2, "skipped": 0, "duplicates": 0}
+        hashes = {item["content_hash"] for item in load_queue(tmp_path / "queue")}
+        assert len(hashes) == 2
+
+    def test_re_dropping_the_same_scan_is_still_a_no_op(self, tmp_path):
+        from ingest.queue import stage_file
+
+        scan = write_pdf(tmp_path / "scan.pdf", [[]])
+        assert stage_file(scan, tmp_path / "queue") is not None
+        assert stage_file(scan, tmp_path / "queue") is None
