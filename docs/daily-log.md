@@ -1164,3 +1164,29 @@ Format:
   **A documented refusal:** the anthology is deliberately *not* a kind, because mailing it needs
   a PDF attachment the Gmail-MCP `html_body` payload cannot carry — recorded in the README so the
   next run does not mistake the omission for an oversight. Nothing here sends mail; D9 holds.
+
+### 2026-10-01 — analysis — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/123
+- Source: roadmap:#43
+- Summary: **The positions index — what he held to be true, grouped by subject, with his
+  won/lost record.** `analysis/positions.py` → `data/analysis/positions.json` (`make positions`),
+  built to the approved 2026-09-07 spec: 611 adjudicated claims across 402 topic strings fold
+  into **107 subjects** (inflation 70 claims: 9V/25M/27W; Fed policy 40; energy 33...), verdicts
+  through `adjudicate.effective_verdict` so a human ruling wins. **Category pick:** `main`'s log
+  is again missing 09-21→09-24 and 09-26 (restored by the open #119/#120), so the last 7 were
+  rebuilt from branches + merges: analysis 09-24, family, dashboard ×2, training, infra, ingest.
+  `docs` and `scraper` have no open items; `analysis` was least recent. Plan 0011 still sits in
+  `ready/` on `main` but #119 completes and moves it, so it was not re-executed. **Measured, not
+  guessed:** three embedding variants were scored against hand-labelled same/different topic
+  pairs on the real corpus. Topic-only merged Tesla with Alibaba valuation, and claims-only
+  merged "stock market" into "Fed policy"; only the topic+claims blend got all pairs right.
+  **The held-out check overturned the first threshold.** 0.60 was the conservative edge of the
+  plateau on the first 22 pairs; ten more, labelled *before* seeing results, split "Ant Group
+  IPO" from "Ant Group regulation" at 0.60, and only 0.45–0.50 score all 32. Default moved to
+  0.50 rather than dropping the label; subjects are now topic *areas* (oil + natural gas;
+  inflation + deflation), flagged for the owner. The pairs live in `eval/positions_pairs.json`,
+  `make positions ARGS=--sweep` re-runs the measurement, and a guard fails if the shipped
+  artifact breaks a pair. **Mutation-tested: 25/25 caught**; the first pass left two survivors
+  (the blend and cosine normalization were unpinned), and a third was an equivalent mutant
+  exposing a dead guard, deleted. Average linkage is incremental (0.7s vs 163s for the naive
+  loop). Not in the dashboard or the weekly refresh yet — #121 owns that wiring.
