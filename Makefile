@@ -5,7 +5,7 @@ PYTHON := .venv/bin/python
 # package drops out of the gate. E501 is off for the source packages only (see pyproject).
 LINT_PATHS := analysis scraper viz training tools bin ingest console tests
 
-.PHONY: retrain-check retrain voice-candidates scrape manifest-check manifest-dedup coverage-audit analyze training dashboard all serve share console search on-this-day send-on-this-day send-year-in-review adjudicate backfill-verdicts entity-graph calhoun-isms reading-room contradictions rag-eval voice-eval voice-style voice-trials embedding-compare embedding-queries-check clean test lint fmt lint-json hooks verify verify-responsive
+.PHONY: retrain-check retrain voice-candidates scrape manifest-check manifest-dedup coverage-audit analyze training dashboard all serve share console search on-this-day send-on-this-day send-year-in-review adjudicate backfill-verdicts entity-graph calhoun-isms reading-room contradictions positions rag-eval voice-eval voice-style voice-trials embedding-compare embedding-queries-check clean test lint fmt lint-json hooks verify verify-responsive
 
 scrape:
 	$(PYTHON) -m scraper $(ARGS)
@@ -175,6 +175,14 @@ entity-stance:
 # --min-mentions 6, --min-delta 1.5, --min-observations 6, or --no-exclude.
 contradictions:
 	$(PYTHON) -m analysis.contradictions $(ARGS)
+
+# Positions index (roadmap #43): the adjudicated claims in data/analysis/predictions.json
+# grouped into subjects, each with its claims, date span and won/lost record (verdicts via
+# adjudicate.effective_verdict). Embeds topics with the pinned sbert-mpnet-v2 through the local
+# conductor — embeddings only, no LLM call, no paid tier. Writes data/analysis/positions.json;
+# ARGS e.g. --dry-run, --threshold 0.55, --top 30.
+positions:
+	$(PYTHON) -m analysis.positions $(ARGS)
 
 # Calhoun-isms (roadmap #16): the most quotable/aphoristic sentences per theme, derived from
 # data/analysis/themes.json + the corpus (run `make analyze` first). Pure/offline — no conductor,
