@@ -1,0 +1,39 @@
+{
+  "description": "Hand-labelled topic pairs for the positions index (roadmap #43, analysis/positions.py). 'same' pairs are topic strings from data/analysis/predictions.json that a reader would file under one subject; 'different' pairs are ones that must stay apart, chosen to be hard (a shared word, or subjects he discusses in the same breath). The clustering threshold is measured against this set: `make positions ARGS=--sweep` scores each candidate threshold, and tests/test_positions.py fails if the shipped positions.json breaks a pair or a pair's topic no longer exists. Text-free (topic labels only), so it is committed like eval/embedding_queries.json. The first 12 same / 10 different pairs chose the 0.60 threshold on 2026-10-01; the rest were added afterwards, unseen, as a held-out check.",
+  "same": [
+    ["Fed policy", "Fed policy errors"],
+    ["Fed policy", "monetary policy"],
+    ["inflation", "structural inflation"],
+    ["EU fiscal integration", "EU fiscal union"],
+    ["oil prices", "oil market structure"],
+    ["Huawei business prospects", "Huawei market access"],
+    ["China Covid mortality", "China Zero-Covid policy"],
+    ["Alibaba valuation", "Alibaba stock valuation"],
+    ["China economy", "China economic outlook"],
+    ["inflation", "inflation expectations"],
+    ["oil prices", "oil demand"],
+    ["EU federalism", "EU fiscal union"],
+    ["CHIPS Act effectiveness", "CHIPS Act passage"],
+    ["recession", "recession risk"],
+    ["Ethereum Merge impact", "Ethereum Merge speculation"],
+    ["prediction markets", "prediction markets vs polling"],
+    ["Ant Group IPO", "Ant Group regulation"]
+  ],
+  "different": [
+    ["stock market", "Fed policy"],
+    ["egg prices", "Fed policy"],
+    ["Alibaba valuation", "Huawei business prospects"],
+    ["China Covid mortality", "China economy"],
+    ["EU fiscal union", "China economy"],
+    ["Tesla valuation", "Alibaba valuation"],
+    ["oil prices", "Fed policy"],
+    ["China trade", "China Covid mortality"],
+    ["egg prices", "oil prices"],
+    ["Huawei business prospects", "China semiconductors"],
+    ["Bitcoin energy consumption", "energy prices"],
+    ["recession", "inflation"],
+    ["crypto industry future", "prediction markets"],
+    ["CHIPS Act effectiveness", "China semiconductors"],
+    ["Ethereum Merge impact", "Bitcoin energy consumption"]
+  ]
+}
