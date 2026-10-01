@@ -108,6 +108,59 @@ class TestGrouping:
 
         assert len(subject["claims"]) == 2
 
+    # The blend was measured on the real corpus (see the module docstring): each signal alone
+    # made one of these two mistakes. The fake below embeds a bare topic by its own name and a
+    # "topic: claim" text by its claim, so the two signals can be set independently.
+    @staticmethod
+    def split_embed(topics, claims):
+        def embed(texts):
+            return [
+                list(claims[text.split(":", 1)[1].strip()] if ":" in text else topics[text])
+                for text in texts
+            ]
+
+        return embed
+
+    def test_a_shared_word_in_the_topic_alone_does_not_merge(self):
+        # "Tesla valuation" vs "Alibaba valuation": the topic strings embed alike, what he
+        # actually said about each does not. Topic-only embedding merged these.
+        preds = [
+            prediction("Tesla valuation", claim="cars"),
+            prediction("Alibaba valuation", claim="china"),
+        ]
+        embed = self.split_embed(
+            {"Tesla valuation": FED, "Alibaba valuation": FED},
+            {"cars": OIL, "china": EGGS},
+        )
+
+        assert len(build_positions(preds, embed=embed)) == 2
+
+    def test_claims_discussed_together_do_not_merge_distinct_topics(self):
+        # "stock market" vs "Fed policy": he writes about them in the same breath, so the
+        # claims embed alike, but they are different subjects. Claims-only embedding merged these.
+        preds = [
+            prediction("stock market", claim="rates and stocks"),
+            prediction("Fed policy", claim="rates and stocks too"),
+        ]
+        embed = self.split_embed(
+            {"stock market": OIL, "Fed policy": EGGS},
+            {"rates and stocks": FED, "rates and stocks too": FED},
+        )
+
+        assert len(build_positions(preds, embed=embed)) == 2
+
+    def test_topics_alike_in_name_and_substance_merge(self):
+        preds = [
+            prediction("EU fiscal union", claim="bonds"),
+            prediction("EU fiscal integration", claim="joint bonds"),
+        ]
+        embed = self.split_embed(
+            {"EU fiscal union": FED, "EU fiscal integration": FED},
+            {"bonds": OIL, "joint bonds": OIL},
+        )
+
+        assert len(build_positions(preds, embed=embed)) == 1
+
     def test_unrelated_topics_stay_apart(self):
         preds = [prediction("Fed policy"), prediction("egg prices")]
         embed = fake_embed({"fed policy": FED, "egg prices": EGGS})
@@ -146,7 +199,8 @@ class TestCluster:
         assert cluster([a, b, c], threshold=0.6) == [[0], [1, 2]]
 
     def test_unnormalized_vectors_are_compared_by_cosine(self):
-        assert cluster([[10.0, 0.0], [0.5, 0.0]], threshold=0.99) == [[0, 1]]
+        # Parallel, so cosine 1.0 — but a raw dot product of 0.02 would never merge them.
+        assert cluster([[0.1, 0.0], [0.2, 0.0]], threshold=0.99) == [[0, 1]]
 
     def test_output_is_deterministic_and_ordered_by_first_member(self):
         vectors = [list(EGGS), list(FED), list(EGGS), list(FED)]
