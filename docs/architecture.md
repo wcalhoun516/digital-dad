@@ -288,6 +288,23 @@ evidence is gathered under **every** raw spelling in a group and then de-duplica
 `(slug, sentence)` — which also keeps the corpus's 23 duplicate slugs (see `scraper/README.md`) from
 counting the same sentence twice. (Roadmap #15 × #14.)
 
+`positions.py` — also outside the default chain; run via `make positions`. A **derived** artifact
+over `predictions.json`: what he held to be true, grouped by subject. The ~600 adjudicated claims
+sit under ~400 free-text topic strings ("Fed policy", "Fed policy errors", "monetary policy"…), so
+it folds them into subjects and emits `positions.json` — one record per subject (`id`, `subject`,
+`aliases`, dated and sourced `claims`, `span`, and a won/lost `record`), deepest first. Verdicts
+resolve through `adjudicate.effective_verdict`, so a `make adjudicate` ruling outranks the LLM
+guess exactly as on the Track Record tab. Grouping: `entity_aliases.canonicalize` first, then
+**average-linkage** clustering (never single — it chains) of the *canonical topic* — never the
+individual claim, so a topic is never split — embedded as topic **plus** the mean of its claims.
+The blend and the 0.60 threshold were measured against hand-labelled same/different topic pairs.
+Each signal alone made a characteristic mistake, and 0.60 is the conservative edge of the plateau
+(see the module docstring). The embedder is an injected seam, so tests run against fixed vectors;
+live, it is the pinned `sbert-mpnet-v2` via the conductor — embeddings only, no LLM, no paid tier.
+The artifact holds claim summaries already committed in `predictions.json`, so it is committed
+too. Not yet in the dashboard; it is the subject unit the weekly column selects from (roadmap
+#44–#46) and is meant for Ask Dad and year-in-review too. (Roadmap #43.)
+
 `anthology.py` — a family keepsake, outside the default chain; run via `make anthology` (HTML +
 JSON) or `make anthology-pdf` (adds the PDF). Pure/offline: reads `themes.json` + `predictions.json`
 and assembles a "best of" — his vindicated **best calls** (most-committed first) and a **signature
