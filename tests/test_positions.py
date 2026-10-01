@@ -28,9 +28,13 @@ import pytest
 
 from analysis.positions import (
     DEFAULT_THRESHOLD,
+    PAIRS_PATH,
     build_document,
     build_positions,
     cluster,
+    load_pairs,
+    score_pairs,
+    sweep,
 )
 from analysis.utils import DATA_DIR
 
@@ -39,6 +43,7 @@ from analysis.utils import DATA_DIR
 FED = (1.0, 0.0, 0.0)
 OIL = (0.0, 1.0, 0.0)
 EGGS = (0.0, 0.0, 1.0)
+ANTI_OIL = (0.0, -1.0, 0.0)
 
 
 def fake_embed(table):
@@ -128,9 +133,10 @@ class TestGrouping:
             prediction("Tesla valuation", claim="cars"),
             prediction("Alibaba valuation", claim="china"),
         ]
+        # Anti-aligned claims, so the blend scores 0 whatever the threshold; topic alone scores 1.
         embed = self.split_embed(
             {"Tesla valuation": FED, "Alibaba valuation": FED},
-            {"cars": OIL, "china": EGGS},
+            {"cars": OIL, "china": ANTI_OIL},
         )
 
         assert len(build_positions(preds, embed=embed)) == 2
@@ -142,8 +148,9 @@ class TestGrouping:
             prediction("stock market", claim="rates and stocks"),
             prediction("Fed policy", claim="rates and stocks too"),
         ]
+        # Anti-aligned topics, so the blend scores 0 whatever the threshold; claims alone score 1.
         embed = self.split_embed(
-            {"stock market": OIL, "Fed policy": EGGS},
+            {"stock market": OIL, "Fed policy": ANTI_OIL},
             {"rates and stocks": FED, "rates and stocks too": FED},
         )
 
@@ -311,6 +318,64 @@ class TestDocument:
         assert len(doc["subjects"]) == 1
 
 
+class TestCalibration:
+    """The threshold is a measured choice, so the measurement has to be re-runnable.
+
+    ``eval/positions_pairs.json`` holds hand-labelled topic pairs — "these are one subject",
+    "these are not" — and ``sweep`` scores each candidate threshold against them. Without it,
+    0.60 would be a number someone once picked, and the next embedder change would silently
+    move every boundary.
+    """
+
+    SUBJECTS = [
+        {"id": "pos:fed", "aliases": ["Fed policy", "FOMC"]},
+        {"id": "pos:oil", "aliases": ["oil prices"]},
+    ]
+
+    def test_pairs_score_against_subject_aliases(self):
+        pairs = {
+            "same": [["Fed policy", "FOMC"], ["Fed policy", "oil prices"]],
+            "different": [["FOMC", "oil prices"]],
+        }
+
+        score = score_pairs(self.SUBJECTS, pairs)
+
+        assert score["same"] == {"ok": 1, "total": 2, "failed": [["Fed policy", "oil prices"]]}
+        assert score["different"] == {"ok": 1, "total": 1, "failed": []}
+        assert score["missing"] == []
+
+    def test_pair_topics_match_through_canonicalization(self):
+        # Labels are written by a human; "the fed policy" vs "Fed policy" must not miss.
+        pairs = {"same": [["fed policy", "fomc"]], "different": []}
+
+        assert score_pairs(self.SUBJECTS, pairs)["same"]["ok"] == 1
+
+    def test_a_pair_naming_an_unknown_topic_is_reported_not_scored(self):
+        # A label that rotted (the topic was re-extracted away) must not count as a pass.
+        pairs = {"same": [["Fed policy", "gold standard"]], "different": []}
+
+        score = score_pairs(self.SUBJECTS, pairs)
+
+        assert score["same"]["total"] == 0
+        assert score["missing"] == [["Fed policy", "gold standard"]]
+
+    def test_missing_pairs_file_loads_empty(self, tmp_path):
+        assert load_pairs(tmp_path / "absent.json") == {"same": [], "different": []}
+
+    def test_sweep_embeds_once_and_scores_every_threshold(self):
+        preds = [prediction("Fed policy"), prediction("FOMC"), prediction("oil prices")]
+        # cos(fed policy, fomc) = 0.6; oil is orthogonal to both.
+        embed = fake_embed({"fed policy": FED, "fomc": (0.6, 0.8, 0.0), "oil prices": EGGS})
+        pairs = {"same": [["Fed policy", "FOMC"]], "different": [["FOMC", "oil prices"]]}
+
+        rows = sweep(preds, embed=embed, thresholds=[0.5, 0.7], pairs=pairs)
+
+        assert embed.calls == 1
+        assert [(r["threshold"], r["num_subjects"]) for r in rows] == [(0.5, 2), (0.7, 3)]
+        assert [r["same_ok"] for r in rows] == [1, 0]
+        assert [r["different_ok"] for r in rows] == [1, 1]
+
+
 # ---------------------------------------------------------------------------
 # Real-corpus guard — invariants of the shipped artifact, not frozen numbers, so a re-run
 # after re-adjudication does not make it brittle. Skips on a fresh clone.
@@ -345,3 +410,18 @@ class TestShippedPositions:
     def test_ids_are_unique(self, doc):
         ids = [s["id"] for s in doc["subjects"]]
         assert len(ids) == len(set(ids))
+
+    def test_the_shipped_grouping_honours_every_labelled_pair(self, doc):
+        # Re-running `make positions` after an embedder or threshold change must not quietly
+        # merge subjects a human said are different (or split ones they said are one).
+        score = score_pairs(doc["subjects"], load_pairs())
+        assert score["same"]["failed"] == []
+        assert score["different"]["failed"] == []
+
+    def test_every_labelled_topic_still_exists(self, doc):
+        # A pair whose topic was re-extracted away scores nothing; better to hear about it.
+        assert score_pairs(doc["subjects"], load_pairs())["missing"] == []
+
+    def test_the_label_set_is_not_empty(self):
+        pairs = load_pairs(PAIRS_PATH)
+        assert pairs["same"] and pairs["different"]

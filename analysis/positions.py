@@ -16,15 +16,20 @@ under one topic lands in one subject. Clustering claims individually would scatt
 across subjects and make ``aliases`` a lie.
 
 **Each topic is embedded as topic + its claims, blended.** Measured, not guessed, on the real
-corpus against 22 hand-labelled same/different topic pairs (sbert-mpnet-v2, 2026-10-01): the
-topic string alone merges "Tesla valuation" with "Alibaba valuation" (the shared word wins);
-the claims alone drag "stock market" into "Fed policy" (he discusses them together). The
-normalized sum of the two got every pair right across thresholds 0.50–0.60.
+corpus against hand-labelled same/different topic pairs (``eval/positions_pairs.json``,
+sbert-mpnet-v2, 2026-10-01): the topic string alone merges "Tesla valuation" with "Alibaba
+valuation" (the shared word wins); the claims alone drag "stock market" into "Fed policy" (he
+discusses them together). The normalized sum of the two is the only variant that got every
+pair right.
 
-**Average linkage, at 0.60 — the conservative edge of that plateau.** Single linkage chains
-A≈B≈C into one blob; average linkage asks whether two groups are alike *on the whole*. Of the
-thresholds that scored perfectly, the highest was chosen because a false merge is the worse
-error here: it attaches one subject's won/lost record to another.
+**Average linkage, at 0.50.** Single linkage chains A≈B≈C into one blob; average linkage asks
+whether two groups are alike *on the whole*. The threshold is the conservative edge of the
+range that scores every labelled pair. On the first 22 pairs that range was 0.50-0.60, so 0.60
+was taken; ten pairs added *afterwards, unseen*, broke it ("Ant Group IPO" / "Ant Group
+regulation" split), and only 0.45-0.50 survive all 32. Subjects at 0.50 are topic *areas*
+(oil and natural gas are one "energy" subject; inflation includes deflation) rather than
+narrow claims. Re-measure with ``make positions ARGS=--sweep`` whenever the label set or the
+embedder changes — there is no held-out set left, so new labels are the next check.
 
 Verdicts resolve through ``adjudicate.effective_verdict``, so a ruling from ``make adjudicate``
 outranks the advisory LLM verdict here exactly as it does on the Track Record tab.
@@ -48,9 +53,11 @@ from .adjudicate import VALID_VERDICTS, effective_source, effective_verdict
 from .entity_aliases import canonicalize
 from .utils import DATA_DIR, log, save_analysis
 
-DEFAULT_THRESHOLD = 0.60
+DEFAULT_THRESHOLD = 0.50
 PREDICTIONS_PATH = DATA_DIR / "analysis" / "predictions.json"
 OUTPUT_NAME = "positions.json"
+# Hand-labelled topic pairs the threshold is measured against (text-free, committed).
+PAIRS_PATH = Path(__file__).resolve().parent.parent / "eval" / "positions_pairs.json"
 
 Embed = Callable[[list[str]], Sequence[Sequence[float]]]
 
@@ -173,16 +180,16 @@ def _subject(topics: list[dict]) -> dict:
     }
 
 
-def build_positions(
-    predictions: list[dict], *, embed: Embed, threshold: float = DEFAULT_THRESHOLD
-) -> list[dict]:
-    """Group predictions into subjects, deepest first. Blank-topic predictions are left out."""
-    topics = list(_group_by_topic(predictions).values())
+def _prepare(predictions: list[dict], embed: Embed) -> tuple[list[dict], np.ndarray]:
+    """Group by topic and embed once, so several thresholds can be tried on one embedding."""
+    topics = sorted(_group_by_topic(predictions).values(), key=lambda t: t["name"].casefold())
     if not topics:
-        return []
-    topics.sort(key=lambda t: t["name"].casefold())
+        return [], np.empty((0, 0))
+    return topics, _topic_vectors(topics, embed)
 
-    groups = cluster(_topic_vectors(topics, embed), threshold)
+
+def _assemble(topics: list[dict], vectors: np.ndarray, threshold: float) -> list[dict]:
+    groups = cluster(vectors, threshold)
     subjects = [_subject([topics[i] for i in group]) for group in groups]
     subjects.sort(key=lambda s: (-len(s["claims"]), s["subject"].casefold()))
 
@@ -193,6 +200,82 @@ def build_positions(
         s["id"] = f"pos:{base}" if used[base] == 1 else f"pos:{base}-{used[base]}"
     # Lead each record with its id, matching the spec's record shape.
     return [{"id": s.pop("id"), **s} for s in subjects]
+
+
+def build_positions(
+    predictions: list[dict], *, embed: Embed, threshold: float = DEFAULT_THRESHOLD
+) -> list[dict]:
+    """Group predictions into subjects, deepest first. Blank-topic predictions are left out."""
+    return _assemble(*_prepare(predictions, embed), threshold)
+
+
+# ---------------------------------------------------------------------------
+# Calibration — the threshold is a measured choice, so the measurement is re-runnable.
+# ---------------------------------------------------------------------------
+
+
+def load_pairs(path: Path = PAIRS_PATH) -> dict:
+    """Load hand-labelled ``{"same": [[a, b]], "different": [[a, b]]}`` topic pairs.
+
+    A missing file loads empty, so the module still builds without a label set.
+    """
+    path = Path(path)
+    if not path.exists():
+        return {"same": [], "different": []}
+    data = json.loads(path.read_text(encoding="utf-8"))
+    return {"same": data.get("same", []), "different": data.get("different", [])}
+
+
+def _topic_key(topic: str) -> str:
+    return canonicalize(topic).casefold()
+
+
+def score_pairs(subjects: list[dict], pairs: dict) -> dict:
+    """Score a grouping against labelled pairs.
+
+    A pair naming a topic no subject carries is listed under ``missing`` and not scored: a
+    label that rotted when the topics were re-extracted must not count as a pass.
+    """
+    subject_of = {_topic_key(alias): s["id"] for s in subjects for alias in s["aliases"]}
+    score: dict = {"missing": []}
+    for kind, want_same in (("same", True), ("different", False)):
+        tally = {"ok": 0, "total": 0, "failed": []}
+        for a, b in pairs.get(kind, []):
+            ids = subject_of.get(_topic_key(a)), subject_of.get(_topic_key(b))
+            if None in ids:
+                score["missing"].append([a, b])
+                continue
+            tally["total"] += 1
+            if (ids[0] == ids[1]) == want_same:
+                tally["ok"] += 1
+            else:
+                tally["failed"].append([a, b])
+        score[kind] = tally
+    return score
+
+
+def sweep(
+    predictions: list[dict], *, embed: Embed, thresholds: Sequence[float], pairs: dict
+) -> list[dict]:
+    """Score each threshold against the labelled pairs, embedding only once."""
+    topics, vectors = _prepare(predictions, embed)
+    rows = []
+    for threshold in thresholds:
+        subjects = _assemble(topics, vectors, threshold)
+        score = score_pairs(subjects, pairs)
+        rows.append(
+            {
+                "threshold": threshold,
+                "num_subjects": len(subjects),
+                "same_ok": score["same"]["ok"],
+                "same_total": score["same"]["total"],
+                "different_ok": score["different"]["ok"],
+                "different_total": score["different"]["total"],
+                "failed": score["same"]["failed"] + score["different"]["failed"],
+                "missing": score["missing"],
+            }
+        )
+    return rows
 
 
 def build_document(
@@ -282,6 +365,19 @@ def render_summary(doc: dict, top: int = 15) -> str:
     return "\n".join(lines)
 
 
+def render_sweep(rows: list[dict]) -> str:
+    lines = ["threshold  subjects  same     different  failed pairs"]
+    for r in rows:
+        lines.append(
+            f"{r['threshold']:9.2f}  {r['num_subjects']:8d}  "
+            f"{r['same_ok']:2d}/{r['same_total']:<2d}    {r['different_ok']:2d}/{r['different_total']:<2d}"
+            f"      {'; '.join(' ~ '.join(p) for p in r['failed'])}"
+        )
+    if rows and rows[0]["missing"]:
+        lines.append(f"\nUnscored (topic not found): {rows[0]['missing']}")
+    return "\n".join(lines)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="Positions index (roadmap #43): group predictions into subjects."
@@ -293,7 +389,17 @@ def main(argv: list[str] | None = None) -> int:
                         help="How many subjects to list in the summary (default 15).")
     parser.add_argument("--dry-run", action="store_true",
                         help="Print the summary without writing positions.json.")
+    parser.add_argument("--sweep", action="store_true",
+                        help="Score thresholds 0.40-0.80 against eval/positions_pairs.json and "
+                             "print the table; writes nothing.")
     args = parser.parse_args(argv)
+
+    if args.sweep:
+        predictions = json.loads(PREDICTIONS_PATH.read_text(encoding="utf-8"))["predictions"]
+        thresholds = [round(0.40 + 0.05 * i, 2) for i in range(9)]
+        rows = sweep(predictions, embed=_live_embed, thresholds=thresholds, pairs=load_pairs())
+        print(render_sweep(rows))
+        return 0
 
     doc = run(threshold=args.threshold, write=not args.dry_run)
     print(render_summary(doc, top=args.top))

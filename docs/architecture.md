@@ -297,8 +297,10 @@ resolve through `adjudicate.effective_verdict`, so a `make adjudicate` ruling ou
 guess exactly as on the Track Record tab. Grouping: `entity_aliases.canonicalize` first, then
 **average-linkage** clustering (never single — it chains) of the *canonical topic* — never the
 individual claim, so a topic is never split — embedded as topic **plus** the mean of its claims.
-The blend and the 0.60 threshold were measured against hand-labelled same/different topic pairs.
-Each signal alone made a characteristic mistake, and 0.60 is the conservative edge of the plateau
+The blend and the 0.50 threshold were measured against the hand-labelled same/different topic
+pairs in `eval/positions_pairs.json`. Each signal alone made a characteristic mistake, and 0.50 is
+the conservative edge of the range that scores every pair. `make positions ARGS=--sweep`
+re-runs that measurement, and a guard test fails if the shipped artifact breaks a labelled pair
 (see the module docstring). The embedder is an injected seam, so tests run against fixed vectors;
 live, it is the pinned `sbert-mpnet-v2` via the conductor — embeddings only, no LLM, no paid tier.
 The artifact holds claim summaries already committed in `predictions.json`, so it is committed
