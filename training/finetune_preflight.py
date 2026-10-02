@@ -106,7 +106,9 @@ def check_split_disjoint(train: list[dict], valid: list[dict]) -> dict:
 
 
 def _record_chars(record: dict) -> int:
-    return sum(len(m.get("content") or "") for m in record.get("messages", []))
+    """Characters in a chat record's turns, or in a plain ``{"text"}`` record (DAPT, #54)."""
+    turns = sum(len(m.get("content") or "") for m in record.get("messages", []))
+    return turns + len(record.get("text") or "")
 
 
 def _percentile(values: list[float], pct: float) -> float:
