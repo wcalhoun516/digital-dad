@@ -267,3 +267,8 @@ def test_make_dapt_prep_runs_this_module_with_args():
     assert "\ndapt-prep:" in makefile
     recipe = makefile.split("\ndapt-prep:", 1)[1].split("\n\n", 1)[0]
     assert "training.dapt" in recipe and "$(ARGS)" in recipe
+
+
+def test_report_says_which_way_a_passage_failed():
+    text = dapt.render_dapt_report(_report(train=[{"text": TRAIN_TEXT + "\n\n" + VALID_TEXT}]))
+    assert "valid, on the wrong side:" in text

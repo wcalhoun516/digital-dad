@@ -196,7 +196,12 @@ def check_same_split(
         crossed = [p for p in passages if _squash(p) in prose[other]]
         result[f"n_missing_{side}"] = len(missing)
         result[f"n_crossed_{side}"] = len(crossed)
-        result[f"examples_{side}"] = [p[:80] for p in (missing + crossed)[:MAX_EXAMPLES]]
+        result[f"examples_{side}"] = [
+            f"{kind}: {p[:80]}"
+            for kind, p in (
+                [("missing", p) for p in missing] + [("on the wrong side", p) for p in crossed]
+            )[:MAX_EXAMPLES]
+        ]
         result["ok"] = result["ok"] and not missing and not crossed
     return result
 
@@ -268,7 +273,7 @@ def render_dapt_report(report: dict) -> str:
         f"on the wrong side {same['n_crossed_train']} / {same['n_crossed_valid']}",
     ]
     for side in ("train", "valid"):
-        lines += [f"        {side}: {ex}…" for ex in same[f"examples_{side}"]]
+        lines += [f"        {side}, {ex}…" for ex in same[f"examples_{side}"]]
     if same["n_missing_train"] or same["n_missing_valid"]:
         lines.append("        → re-run `make training`; the split files predate the corpus.")
     lines.append(
