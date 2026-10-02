@@ -185,9 +185,19 @@ train already shares **318** 8-grams with its own held-out set — an absolute-z
 fail both arms equally. What must hold is that DAPT adds none, so its validation loss is not
 flattered relative to the arm it is compared with.
 
-On the corpus as of 2026-10-02: **483** train records from 140 articles, **112** valid from 35,
-est. tokens median 913 / max 972 against a 1024 window — fewer records than the instruction
-split's 540, because no window is spent on prompts.
+On the corpus as of 2026-10-02, counted with the real Gemma 4 e4b tokenizer (EOS included):
+
+| | records | loss-bearing tokens | rendered tokens | longest record |
+|---|---|---|---|---|
+| instruction train (`mask_prompt: true`) | 540 | 324,606 (assistant turns) | 396,324 | — |
+| **DAPT train** | **483** (140 articles) | **335,602** (all of it) | 335,602 | 987 / 1024 |
+| DAPT valid | 112 (35 articles) | 76,966 | 76,966 | 924 / 1024 |
+
+Same articles, ~3% *more* of his prose under the loss — the opening sentences the instruction
+shapes move into the (masked) prompt — and none of the 72k tokens of scaffolding. Nothing is
+truncated, though not by much: the preflight's 4-chars/token estimate is not a bound (the
+densest record runs 3.81), and it is the 0.95 headroom that keeps the worst case under the
+window.
 
 An mlx-lm config that changes only the objective relative to D19's run (same base, same
 adapter shape, same learning rate) — save it as e.g. `data/finetune_run/gemma4_dapt.yaml`
@@ -206,7 +216,7 @@ save_every: 50
 batch_size: 1
 max_seq_length: 1024
 grad_checkpoint: true
-mask_prompt: false   # there is no prompt — every token is his
+mask_prompt: false   # required: mlx-lm raises on prompt masking for a text dataset
 learning_rate: 1.0e-4
 seed: 42
 num_layers: 16
