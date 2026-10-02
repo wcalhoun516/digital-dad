@@ -1164,3 +1164,8 @@ Format:
   **A documented refusal:** the anthology is deliberately *not* a kind, because mailing it needs
   a PDF attachment the Gmail-MCP `html_body` payload cannot carry — recorded in the README so the
   next run does not mistake the omission for an oversight. Nothing here sends mail; D9 holds.
+
+### 2026-10-02 — training — in-progress
+- PR: (pending)
+- Source: roadmap:#54
+- Summary: DAPT dataset builder — raw-prose `{"text"}` records on the instruction set's own article-level split, with a preflight gate.
