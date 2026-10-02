@@ -4,7 +4,7 @@ from training import dapt
 from training.finetune_config import QLoRAConfig
 from training.prepare import build_passage_records
 
-PARAS = [f"Paragraph {i} makes one point. It then makes a second point about it." for i in range(40)]
+PARAS = [f"Paragraph {i} makes one point. It then makes a second point." for i in range(40)]
 BODY = "\n\n".join(PARAS)
 
 
