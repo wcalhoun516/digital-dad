@@ -149,3 +149,83 @@ toggle plumbing in `tests/test_dashboard_geo_flag.py`.
 
 > Still owner-interactive (not done by the daily agent): the actual `models.yaml` edit in
 > `local-llm-conductor`, and the live judged comparison (26f) that decides fine-tune vs RAG.
+
+## DAPT — continued pretraining on his raw prose (roadmap #54)
+
+ADR D19 found the instruction-pair LoRA *worse* than its own un-tuned base: on ~453K tokens,
+"Write an analysis of X" → article is cheapest to fit by copying surface markers. DAPT keeps
+the same tokens and drops the format — `{"text": ...}` records, no system prompt, no user
+turn. `training/dapt.py` builds that set; `make dapt-prep` stages it.
+
+```bash
+make training     # writes the instruction split + metadata.csv the DAPT set is derived from
+make dapt-prep    # → data/finetune_run/dapt/{train,valid}.jsonl, or exit 1 if the preflight fails
+```
+
+**Same tokens, different objective**, so the comparison holds the articles fixed. Membership is
+read from `make training`'s own `metadata.csv` (inheriting its quality filter rather than
+copying it), and the split is recomputed with `prepare.split_articles` +
+`prepare.eval_grounded_slugs`: DAPT train is exactly the instruction train articles, DAPT valid
+exactly the held-out ones, and the eval-grounded articles stay out of both.
+
+It has its own `--data` directory because `mlx_lm.lora` reads every file in it — text records
+must never sit beside chat records. Staging refuses, writing nothing, unless all five checks
+pass (`ARGS=--force` overrides):
+
+| Check | Fails when |
+|-------|-----------|
+| text shape | a record is empty, or is a chat record rather than plain `{"text"}` |
+| split disjoint | an identical record is on both sides |
+| length budget | a record's estimated tokens exceed `max_seq_len` |
+| same split | an instruction passage is missing from its side (a stale `make training`) or found on the other |
+| heldout 8-grams | DAPT train holds a held-out 8-gram the instruction train does **not** already hold |
+
+The last check is relative on purpose. He reused passages across columns, so the instruction
+train already shares **318** 8-grams with its own held-out set — an absolute-zero bar would
+fail both arms equally. What must hold is that DAPT adds none, so its validation loss is not
+flattered relative to the arm it is compared with.
+
+On the corpus as of 2026-10-02, counted with the real Gemma 4 e4b tokenizer (EOS included):
+
+| | records | loss-bearing tokens | rendered tokens | longest record |
+|---|---|---|---|---|
+| instruction train (`mask_prompt: true`) | 540 | 324,606 (assistant turns) | 396,324 | — |
+| **DAPT train** | **483** (140 articles) | **335,602** (all of it) | 335,602 | 987 / 1024 |
+| DAPT valid | 112 (35 articles) | 76,966 | 76,966 | 924 / 1024 |
+
+Same articles, ~3% *more* of his prose under the loss — the opening sentences the instruction
+shapes move into the (masked) prompt — and none of the 72k tokens of scaffolding. Nothing is
+truncated, though not by much: the preflight's 4-chars/token estimate is not a bound (the
+densest record runs 3.81), and it is the 0.95 headroom that keeps the worst case under the
+window.
+
+An mlx-lm config that changes only the objective relative to D19's run (same base, same
+adapter shape, same learning rate) — save it as e.g. `data/finetune_run/gemma4_dapt.yaml`
+(that directory is gitignored):
+
+```yaml
+model: "mlx-community/gemma-4-e4b-it-4bit"
+train: true
+data: "data/finetune_run/dapt"
+adapter_path: "data/finetune_run/adapters_gemma4_e4b_dapt"
+fine_tune_type: lora
+iters: 1000          # 483 records at batch 1 ≈ 2 epochs; D19's runs bottomed before 1
+steps_per_eval: 50
+val_batches: 12
+save_every: 50
+batch_size: 1
+max_seq_length: 1024
+grad_checkpoint: true
+mask_prompt: false   # required: mlx-lm raises on prompt masking for a text dataset
+learning_rate: 1.0e-4
+seed: 42
+num_layers: 16
+lora_parameters:
+  rank: 16
+  scale: 32.0
+  dropout: 0.05
+```
+
+> Not done here: the training run (owner GPU hours) and the measurement. A DAPT adapter on an
+> instruction-tuned base can erode instruction-following, so the voice eval needs a
+> `gemma-dapt` arm in `make voice-candidates` before any verdict — the next slice of #54.

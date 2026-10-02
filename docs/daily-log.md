@@ -1164,3 +1164,8 @@ Format:
   **A documented refusal:** the anthology is deliberately *not* a kind, because mailing it needs
   a PDF attachment the Gmail-MCP `html_body` payload cannot carry — recorded in the README so the
   next run does not mistake the omission for an oversight. Nothing here sends mail; D9 holds.
+
+### 2026-10-02 — training — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/124
+- Source: roadmap:#54
+- Summary: DAPT dataset (first slice of #54): `make dapt-prep` stages his raw prose as `{"text"}` records on exactly the instruction split's articles (membership from `metadata.csv`, split by `prepare`'s own functions) behind a five-check gate. Real corpus: 483 train / 112 valid records, 335,602 Gemma tokens, 0 truncated, 0 new held-out 8-grams (318 already shared by both arms — his own reuse). No training run. Tally note: `main`'s log still lacks 09-21→09-24 and 09-26 (held by #119/#120), so §5b was tallied from PR metadata.

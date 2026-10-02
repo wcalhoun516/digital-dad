@@ -589,6 +589,11 @@ Builds fine-tune inputs from the corpus: `finetune.jsonl` (raw text), `instruct.
 (quality-filtered chat format), `corpus.txt`, `metadata.csv`. Quality filter: word_count ≥
 400 and TTR ≥ 0.3. `notebooks/finetune_qlora.ipynb` is the (WIP) QLoRA fine-tune.
 
+`training/dapt.py` (`make dapt-prep`, roadmap #54) derives the continued-pretraining set from
+that output: his prose as plain `{"text"}` records, on exactly the instruction split's articles
+(read from `metadata.csv`, split by `prepare`'s own functions), staged into
+`data/finetune_run/dapt/` behind a five-check preflight. See `training/README.md` § DAPT.
+
 ## 6. Data layout
 
 ```

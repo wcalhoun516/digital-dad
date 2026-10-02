@@ -60,6 +60,13 @@ finetune-prep:
 finetune-preflight:
 	$(PYTHON) -m training.finetune_preflight $(ARGS)
 
+# Stage the DAPT (continued-pretraining) set in data/finetune_run/dapt/ — his raw prose as
+# {"text"} records on the instruction set's own article split (roadmap #54). Offline + free.
+# Run `make training` first. Refuses (exit 1) if its preflight fails — ARGS=--force to stage
+# anyway, ARGS="--max-seq-len 2048" to budget for a wider window.
+dapt-prep:
+	$(PYTHON) -m training.dapt $(ARGS)
+
 # Is a LoRA retrain warranted? Compares the live corpus fingerprint + token count
 # against the last recorded training run. Report-only: exit 1 means "due", so a cron
 # or the weekly job can gate on it. Costs nothing and touches nothing.
