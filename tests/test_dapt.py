@@ -257,3 +257,13 @@ class TestStageDaptData:
         from training.finetune_config import FINETUNE_DIR
 
         assert dapt.DAPT_DIR != FINETUNE_DIR and dapt.DAPT_DIR.parent == FINETUNE_DIR
+
+
+def test_make_dapt_prep_runs_this_module_with_args():
+    """The README and module docstring tell a human to run `make dapt-prep`."""
+    from pathlib import Path
+
+    makefile = (Path(__file__).resolve().parents[1] / "Makefile").read_text()
+    assert "\ndapt-prep:" in makefile
+    recipe = makefile.split("\ndapt-prep:", 1)[1].split("\n\n", 1)[0]
+    assert "training.dapt" in recipe and "$(ARGS)" in recipe
