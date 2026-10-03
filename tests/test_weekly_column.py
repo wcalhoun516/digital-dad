@@ -6,7 +6,12 @@ no network and no corpus are touched. Synthetic content throughout — no real f
 
 import pytest
 
-from analysis.weekly_column import build_evidence_pack
+from analysis.weekly_column import (
+    build_evidence_pack,
+    build_prompt,
+    compose,
+    parse_column,
+)
 
 
 def _claim(slug, date, verdict="vindicated", claim=None, title=None):
@@ -166,3 +171,126 @@ class TestBuildEvidencePack:
         # No claims means no position: there is nothing he held, so nothing to write about.
         with pytest.raises(ValueError):
             build_evidence_pack(_position([]), retrieve=_retrieve([_hit("a")]))
+
+
+def _pack(**overrides):
+    position = _position(
+        [
+            _claim("a", "2020-01-01", "vindicated", claim="Widgets will rise."),
+            _claim("b", "2022-06-01", "wrong", claim="Gadgets will fall."),
+        ]
+    )
+    hits = [_hit("a", snippet="Widgets — always.")]
+    pack = build_evidence_pack(position, retrieve=_retrieve(hits))
+    pack.update(overrides)
+    return pack
+
+
+class TestBuildPrompt:
+    def test_lists_every_source_under_its_number(self):
+        prompt = build_prompt(_pack())
+        assert '[1] "Title a" (2020-01-01)' in prompt
+        assert '[2] "Title b" (2022-06-01)' in prompt
+
+    def test_carries_claims_with_their_verdicts_and_passages(self):
+        # The verdict travels with the claim so the column cannot present a call that went
+        # wrong as one that came good.
+        prompt = build_prompt(_pack())
+        assert "Widgets will rise." in prompt and "vindicated" in prompt
+        assert "Gadgets will fall." in prompt and "wrong" in prompt
+        assert "Widgets — always." in prompt
+
+    def test_states_the_citation_and_quotation_rules(self):
+        prompt = build_prompt(_pack())
+        assert "every paragraph" in prompt.lower()
+        assert "exactly" in prompt.lower()
+
+    def test_tells_the_composer_not_to_state_the_record(self):
+        # The record block is rendered from the tally; a generated one could round it up.
+        assert "record" in build_prompt(_pack()).lower()
+
+    def test_names_this_weeks_news_when_it_differs_from_the_subject(self):
+        assert "Widgets surge" in build_prompt(_pack(query="Widgets surge"))
+
+    def test_author_is_a_parameter(self):
+        prompt = build_prompt(_pack(), author="Ada Lovelace")
+        assert "Ada Lovelace" in prompt
+        assert "Calhoun" not in prompt
+
+    def test_no_feedback_section_on_a_first_draft(self):
+        assert "rejected" not in build_prompt(_pack()).lower()
+
+    def test_feeds_the_gates_errors_back_on_a_retry(self):
+        errors = ["[7] cites no source", "paragraph 3 has no marker"]
+        prompt = build_prompt(_pack(), feedback=errors)
+        assert "[7] cites no source" in prompt
+        assert "paragraph 3 has no marker" in prompt
+
+
+class TestParseColumn:
+    def test_splits_paragraphs_on_blank_lines(self):
+        col = parse_column("One [1].\n\nTwo [2].\n\n\nThree [1].")
+        assert col["paragraphs"] == ["One [1].", "Two [2].", "Three [1]."]
+
+    def test_joins_wrapped_lines_inside_a_paragraph(self):
+        assert parse_column("One line\nwrapped [1].")["paragraphs"] == ["One line wrapped [1]."]
+
+    def test_takes_a_title_line(self):
+        col = parse_column("Title: The Widget Trap\n\nBody [1].")
+        assert col["title"] == "The Widget Trap"
+        assert col["paragraphs"] == ["Body [1]."]
+
+    def test_takes_a_markdown_heading_as_the_title(self):
+        assert parse_column("# The Widget Trap\n\nBody [1].")["title"] == "The Widget Trap"
+
+    def test_no_title_is_none_not_the_first_paragraph(self):
+        col = parse_column("Body [1].\n\nMore [2].")
+        assert col["title"] is None
+        assert col["paragraphs"][0] == "Body [1]."
+
+    def test_strips_code_fences(self):
+        assert parse_column("```\nBody [1].\n```")["paragraphs"] == ["Body [1]."]
+
+    def test_collects_markers_sorted_and_unique(self):
+        assert parse_column("A [3] [1].\n\nB [3].")["markers"] == [1, 3]
+
+    def test_grouped_markers_become_single_ones(self):
+        # One representation downstream: the gate and the renderer only ever see [n].
+        col = parse_column("A claim [1, 3].")
+        assert col["paragraphs"] == ["A claim [1][3]."]
+        assert col["markers"] == [1, 3]
+
+    def test_keeps_the_em_dashes_and_curly_quotes(self):
+        text = "He said \u201cno\u201d \u2014 twice [1]."
+        assert parse_column(text)["paragraphs"] == [text]
+
+    def test_empty_output_is_an_empty_column(self):
+        assert parse_column("  \n ") == {"title": None, "paragraphs": [], "markers": []}
+
+
+class TestCompose:
+    def test_generates_from_the_prompt_and_parses_the_result(self):
+        seen = {}
+
+        def generate(prompt, sources):
+            seen["prompt"], seen["sources"] = prompt, sources
+            return "Title: T\n\nBody [1]."
+
+        pack = _pack()
+        col = compose(pack, generate=generate)
+        assert seen["prompt"] == build_prompt(pack)
+        assert seen["sources"] == pack["sources"]
+        assert col["title"] == "T"
+        assert col["paragraphs"] == ["Body [1]."]
+        assert col["markers"] == [1]
+        assert col["raw"] == "Title: T\n\nBody [1]."
+
+    def test_passes_author_and_feedback_through_to_the_prompt(self):
+        seen = {}
+
+        def generate(prompt, sources):
+            seen["prompt"] = prompt
+            return ""
+
+        compose(_pack(), generate=generate, author="Ada Lovelace", feedback=["fix [9]"])
+        assert seen["prompt"] == build_prompt(_pack(), author="Ada Lovelace", feedback=["fix [9]"])

@@ -35,7 +35,12 @@ Retrieval and generation are injected seams (``retrieve``, ``generate``), mirror
 constant, so the same core can write for anyone the archive is about.
 """
 
+import re
+
 from .adjudicate import VALID_VERDICTS
+
+# The archive's subject. A parameter everywhere it matters; this is only the default.
+DEFAULT_AUTHOR = "Dr. George Calhoun"
 
 # The verdicts that mean the archive actually ruled on a call. A column leans on the claims
 # that were tested before the ones that were never testable or not yet judged.
@@ -117,3 +122,100 @@ def build_evidence_pack(
         "record": {v: (position.get("record") or {}).get(v, 0) for v in VALID_VERDICTS},
         "sources": sources,
     }
+
+
+
+# --------------------------------------------------------------------------- #
+# Composition — the in-voice column with [n] markers
+# --------------------------------------------------------------------------- #
+
+_PROMPT = """You are {author}, writing this week's column in your own voice — the voice of the \
+sources below, which are things you actually wrote.
+
+SUBJECT: {subject}
+{news}
+RULES
+- Write 4 to 6 paragraphs, separated by a blank line. Put a title on the first line as \
+"Title: ...".
+- Every paragraph must cite at least one source with its number in square brackets, like [2].
+- Cite only the numbers listed below. Never invent a source.
+- Anything you put in quotation marks must be copied exactly, word for word, from a passage \
+below. Paraphrase freely, but never misquote.
+- Where a source says a claim went wrong, do not present it as having come good.
+- Do not state your overall track record or a score on this subject; that record is appended \
+to the column separately, from the archive's own tally.
+{feedback}
+SOURCES
+{sources}"""
+
+_FEEDBACK = """
+YOUR PREVIOUS DRAFT WAS REJECTED. Fix every one of these and write the column again:
+{errors}
+"""
+
+
+def _format_source(source: dict) -> str:
+    lines = [f'[{source["n"]}] "{source["title"] or "Untitled"}" ({source["date"] or "undated"})']
+    for c in source["claims"]:
+        lines.append(f"  You claimed ({c['date']}): {c['claim']}  [the archive judges this: {c['verdict']}]")
+    if source["passage"]:
+        lines.append(f"  Passage: {source['passage']}")
+    return "\n".join(lines)
+
+
+def build_prompt(pack: dict, *, author: str = DEFAULT_AUTHOR, feedback=()) -> str:
+    """The grounded composition prompt. ``feedback`` is the gate's errors from a failed draft."""
+    query = pack.get("query")
+    news = f"THIS WEEK'S NEWS: {query}\n" if query and query != pack["subject"] else ""
+    errors = "\n".join(f"- {e}" for e in feedback)
+    return _PROMPT.format(
+        author=author,
+        subject=pack["subject"],
+        news=news,
+        feedback=_FEEDBACK.format(errors=errors) if feedback else "",
+        sources="\n\n".join(_format_source(s) for s in pack["sources"]),
+    )
+
+
+_TITLE = re.compile(r"^\s*(?:#+\s*|title:\s*)(?P<title>.+?)\s*$", re.IGNORECASE)
+_GROUPED_MARKER = re.compile(r"\[(\d+(?:\s*,\s*\d+)+)\]")
+_MARKER = re.compile(r"\[(\d+)\]")
+
+
+def _split_grouped(match: re.Match) -> str:
+    return "".join(f"[{n.strip()}]" for n in match.group(1).split(","))
+
+
+def parse_column(text: str) -> dict:
+    """Split model output into a title, paragraphs and the source numbers it cites.
+
+    Grouped markers (``[1, 3]``) are rewritten as ``[1][3]`` so everything downstream sees
+    one form. Text is otherwise kept exactly as written — the em-dashes are half the voice.
+    """
+    lines = [ln for ln in (text or "").splitlines() if not ln.strip().startswith("```")]
+    title = None
+    first = next((i for i, ln in enumerate(lines) if ln.strip()), None)
+    if first is not None and (m := _TITLE.match(lines[first])):
+        title = m.group("title")
+        del lines[first]
+
+    paragraphs, current = [], []
+    for line in lines + [""]:
+        if line.strip():
+            current.append(line.strip())
+        elif current:
+            paragraphs.append(_GROUPED_MARKER.sub(_split_grouped, " ".join(current)))
+            current = []
+
+    markers = sorted({int(n) for p in paragraphs for n in _MARKER.findall(p)})
+    return {"title": title, "paragraphs": paragraphs, "markers": markers}
+
+
+def compose(pack: dict, *, generate, author: str = DEFAULT_AUTHOR, feedback=()) -> dict:
+    """Write the column. ``generate(prompt, sources) -> str`` is the conductor at T2 live.
+
+    The pack's sources go to ``generate`` beside the prompt so the live seam can declare
+    their provenance (``assert_remote_allowed``) without re-deriving it from text.
+    """
+    raw = generate(build_prompt(pack, author=author, feedback=feedback), pack["sources"])
+    return {**parse_column(raw), "raw": raw}
