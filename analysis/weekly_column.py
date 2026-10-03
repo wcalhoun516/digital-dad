@@ -35,16 +35,15 @@ Retrieval and generation are injected seams (``retrieve``, ``generate``), mirror
 constant, so the same core can write for anyone the archive is about.
 """
 
+import html
 import re
 
 from .adjudicate import VALID_VERDICTS
+from .year_in_review import _TALLY_PHRASE, _VERDICT_COLOR, ADJUDICATED_VERDICTS, _join_clauses
 
 # The archive's subject. A parameter everywhere it matters; this is only the default.
 DEFAULT_AUTHOR = "Dr. George Calhoun"
 
-# The verdicts that mean the archive actually ruled on a call. A column leans on the claims
-# that were tested before the ones that were never testable or not yet judged.
-_ADJUDICATED = ("vindicated", "mixed", "wrong")
 
 DEFAULT_MAX_CLAIMS = 6
 DEFAULT_MAX_PASSAGES = 4
@@ -53,7 +52,7 @@ DEFAULT_MAX_PASSAGES = 4
 def _select_claims(claims: list[dict], max_claims: int) -> list[dict]:
     """Adjudicated claims first, most recent first within each group."""
     ranked = sorted(claims, key=lambda c: (c.get("date") or "", c.get("slug", "")), reverse=True)
-    ranked.sort(key=lambda c: c.get("verdict") not in _ADJUDICATED)  # stable: keeps recency
+    ranked.sort(key=lambda c: c.get("verdict") not in ADJUDICATED_VERDICTS)  # stable: keeps recency
     return ranked[:max_claims]
 
 
@@ -219,3 +218,128 @@ def compose(pack: dict, *, generate, author: str = DEFAULT_AUTHOR, feedback=()) 
     """
     raw = generate(build_prompt(pack, author=author, feedback=feedback), pack["sources"])
     return {**parse_column(raw), "raw": raw}
+
+
+
+# --------------------------------------------------------------------------- #
+# Rendering — the email body, with the record rendered from the tally
+# --------------------------------------------------------------------------- #
+
+_HTML_TEMPLATE = """\
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="font-family: Georgia, serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #2a2a2a; line-height: 1.7;">
+  <div style="border-bottom: 2px solid #c9a84c; padding-bottom: 12px; margin-bottom: 24px;">
+    <h1 style="font-size: 1.4em; font-weight: 400; margin: 0;">{title}</h1>
+    <p style="font-size: 0.85em; color: #888; margin: 4px 0 0;">{subtitle}</p>
+  </div>
+
+{paragraphs}
+
+  <div style="border-left: 3px solid #c9a84c; padding: 12px 20px; margin: 28px 0; font-size: 0.95em; color: #333;">
+    <p style="font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.05em; color: #888; margin: 0 0 6px;">The record on {subject}</p>
+    <p style="margin: 0;">{record}</p>
+  </div>
+
+  <h2 style="font-size: 1.1em; font-weight: 400; margin: 24px 0 8px;">Sources</h2>
+  <ol style="padding-left: 20px; margin: 0; font-size: 0.85em; color: #555;">
+{sources}
+  </ol>
+
+  <div style="margin-top: 32px; padding-top: 16px; border-top: 1px solid #ddd; font-size: 0.8em; color: #aaa; text-align: center;">
+    Digital Dad &middot; The Intellectual Archive of {author}
+  </div>
+</body>
+</html>
+"""
+
+_PARAGRAPH = '  <p style="font-size: 1.02em; margin: 0 0 16px;">{text}</p>'
+_MARKER_LINK = '<a href="{url}" style="color: #c9a84c; text-decoration: none;">[{n}]</a>'
+_SOURCE_ITEM = (
+    '    <li value="{n}" style="margin-bottom: 4px;">'
+    '<a href="{url}" style="color: #c9a84c; text-decoration: none;">{title}</a> ({date})</li>'
+)
+_RECORD_TALLY = '<strong style="color: {color};">{phrase}</strong>'
+
+
+def _esc(value) -> str:
+    return html.escape(str(value), quote=False)
+
+
+def _years(span) -> str:
+    years = sorted({d[:4] for d in (span or []) if d})
+    if not years:
+        return ""
+    return years[0] if years[0] == years[-1] else f"{years[0]}\u2013{years[-1]}"
+
+
+def record_sentence(record: dict, subject: str, span) -> str:
+    """One honest line about the subject's adjudicated record, as plain text."""
+    ruled = sum(record.get(v, 0) for v in ADJUDICATED_VERDICTS)
+    unruled = sum(record.get(v, 0) for v in VALID_VERDICTS) - ruled
+    if not ruled:
+        noun = "call" if unruled == 1 else "calls"
+        return f"None of the {unruled} {noun} on {subject} has been ruled on yet."
+    years = _years(span)
+    clauses = [_TALLY_PHRASE[v].format(n=record[v]) for v in ADJUDICATED_VERDICTS if record.get(v)]
+    sentence = (
+        f"Of the {ruled} {'call' if ruled == 1 else 'calls'} on {subject} the archive has ruled "
+        f"on{f' ({years})' if years else ''}, {_join_clauses(clauses)}."
+    )
+    if unruled:
+        sentence += f" {unruled} more were never testable or are not yet judged."
+    return sentence
+
+
+def _record_html(record: dict, subject: str, span) -> str:
+    # Escape the plain sentence, then colour each tally phrase — the words stay the same ones
+    # record_sentence() states, so the text and the email cannot disagree.
+    out = _esc(record_sentence(record, subject, span))
+    for v in ADJUDICATED_VERDICTS:
+        if record.get(v):
+            phrase = _esc(_TALLY_PHRASE[v].format(n=record[v]))
+            out = out.replace(phrase, _RECORD_TALLY.format(color=_VERDICT_COLOR[v], phrase=phrase), 1)
+    return out
+
+
+def render_html(
+    column: dict, pack: dict, *, author: str = DEFAULT_AUTHOR, week_of: str | None = None
+) -> str:
+    """Render a composed column as a Georgia-serif email body. All model text is escaped.
+
+    Raises ``ValueError`` on an empty column or a marker with no source in the pack.
+    """
+    paragraphs = column.get("paragraphs") or []
+    if not paragraphs:
+        raise ValueError("the column has no paragraphs to render")
+    by_n = {s["n"]: s for s in pack["sources"]}
+    unresolved = sorted({int(n) for p in paragraphs for n in _MARKER.findall(p)} - set(by_n))
+    if unresolved:
+        cited = ", ".join(f"[{n}]" for n in unresolved)
+        raise ValueError(f"cites {cited}, which the evidence pack does not contain")
+
+    def link(match: re.Match) -> str:
+        n = int(match.group(1))
+        return _MARKER_LINK.format(url=html.escape(by_n[n]["url"] or "#", quote=True), n=n)
+
+    body = "\n".join(_PARAGRAPH.format(text=_MARKER.sub(link, _esc(p))) for p in paragraphs)
+    cited = sorted({int(n) for p in paragraphs for n in _MARKER.findall(p)})
+    sources = "\n".join(
+        _SOURCE_ITEM.format(
+            n=n,
+            url=html.escape(by_n[n]["url"] or "#", quote=True),
+            title=_esc(by_n[n]["title"] or "Untitled"),
+            date=_esc(by_n[n]["date"] or "undated"),
+        )
+        for n in cited
+    )
+    return _HTML_TEMPLATE.format(
+        title=_esc(column.get("title") or pack["subject"]),
+        subtitle=_esc(f"Week of {week_of}" if week_of else "The weekly column"),
+        paragraphs=body,
+        subject=_esc(pack["subject"]),
+        record=_record_html(pack["record"], pack["subject"], pack["span"]),
+        sources=sources,
+        author=_esc(author),
+    )

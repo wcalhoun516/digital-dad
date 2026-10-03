@@ -11,6 +11,8 @@ from analysis.weekly_column import (
     build_prompt,
     compose,
     parse_column,
+    record_sentence,
+    render_html,
 )
 
 
@@ -294,3 +296,94 @@ class TestCompose:
 
         compose(_pack(), generate=generate, author="Ada Lovelace", feedback=["fix [9]"])
         assert seen["prompt"] == build_prompt(_pack(), author="Ada Lovelace", feedback=["fix [9]"])
+
+
+def _record(**counts):
+    verdicts = ("vindicated", "wrong", "mixed", "unfalsifiable", "pending")
+    return {v: counts.get(v, 0) for v in verdicts}
+
+
+class TestRecordSentence:
+    def test_states_the_ruled_calls_and_how_they_went(self):
+        sentence = record_sentence(
+            _record(vindicated=2, mixed=1, wrong=1), "widget policy", ["2019-01-01", "2024-02-02"]
+        )
+        assert sentence == (
+            "Of the 4 calls on widget policy the archive has ruled on (2019\u20132024), "
+            "2 came good, 1 landed partly and 1 went the other way."
+        )
+
+    def test_mentions_calls_not_yet_ruled_on(self):
+        record = _record(vindicated=1, unfalsifiable=2, pending=1)
+        sentence = record_sentence(record, "widgets", ["2020-01-01", "2020-05-05"])
+        assert sentence.endswith("3 more were never testable or are not yet judged.")
+        assert "(2020)" in sentence
+
+    def test_singular_call(self):
+        sentence = record_sentence(_record(wrong=1), "widgets", ["2020-01-01", "2021-01-01"])
+        assert sentence.startswith("Of the 1 call on widgets")
+        assert "1 went the other way." in sentence
+
+    def test_says_so_when_nothing_has_been_ruled_on(self):
+        sentence = record_sentence(_record(pending=2), "widgets", [None, None])
+        assert sentence == "None of the 2 calls on widgets has been ruled on yet."
+
+
+def _column(*paragraphs, title="The Widget Trap"):
+    col = parse_column("\n\n".join(paragraphs))
+    col["title"] = title
+    return col
+
+
+class TestRenderHtml:
+    def test_renders_title_and_paragraphs(self):
+        html = render_html(_column("First [1].", "Second [2]."), _pack())
+        assert "The Widget Trap" in html
+        assert "First" in html and "Second" in html
+
+    def test_title_falls_back_to_the_subject(self):
+        assert "widget policy" in render_html(_column("Body [1].", title=None), _pack())
+
+    def test_marker_links_to_the_cited_article(self):
+        html = render_html(_column("Body [2]."), _pack())
+        assert '<a href="https://example.com/b"' in html
+        assert "[2]</a>" in html
+
+    def test_hostile_text_renders_as_text(self):
+        html = render_html(_column("<script>x()</script> [1].", title="<b>T</b>"), _pack())
+        assert "<script>" not in html and "&lt;script&gt;" in html
+        assert "<b>T</b>" not in html
+
+    def test_an_unresolved_marker_refuses_to_render(self):
+        # Fails closed on its own, so a runner wired without the gate still cannot send a
+        # fabricated citation.
+        with pytest.raises(ValueError, match=r"\[7\]"):
+            render_html(_column("Body [1].", "Invented [7]."), _pack())
+
+    def test_an_empty_column_refuses_to_render(self):
+        with pytest.raises(ValueError):
+            render_html(parse_column(""), _pack())
+
+    def test_record_block_comes_from_the_pack_not_the_prose(self):
+        pack = _pack(record=_record(vindicated=3, wrong=2))
+        html = render_html(_column("I was always right [1]."), pack)
+        assert "3 came good" in html and "2 went the other way" in html
+
+    def test_lists_only_the_cited_sources(self):
+        html = render_html(_column("Only the first [1]."), _pack())
+        assert "Title a" in html
+        assert "Title b" not in html
+
+    def test_source_urls_are_attribute_escaped(self):
+        pack = _pack()
+        pack["sources"][0]["url"] = 'https://example.com/a" onclick="x'
+        html = render_html(_column("Body [1]."), pack)
+        assert 'onclick="x' not in html
+
+    def test_shows_the_week_when_given(self):
+        assert "Week of 2026-10-04" in render_html(_column("B [1]."), _pack(), week_of="2026-10-04")
+
+    def test_author_is_a_parameter(self):
+        html = render_html(_column("B [1]."), _pack(), author="Ada Lovelace")
+        assert "Ada Lovelace" in html
+        assert "Calhoun" not in html
