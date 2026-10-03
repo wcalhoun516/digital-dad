@@ -4,6 +4,8 @@ Pure logic only. Retrieval and generation are injected seams, faked here, so no 
 no network and no corpus are touched. Synthetic content throughout — no real family text.
 """
 
+import re
+
 import pytest
 
 from analysis.weekly_column import (
@@ -73,9 +75,10 @@ class TestBuildEvidencePack:
         assert len(pack["sources"][0]["claims"]) == 2
 
     def test_sources_numbered_from_one_in_date_order(self):
-        position = _position([_claim("late", "2024-05-01"), _claim("early", "2019-02-01")])
+        # Slugs chosen so alphabetical order is the reverse of date order.
+        position = _position([_claim("a-late", "2024-05-01"), _claim("z-early", "2019-02-01")])
         pack = build_evidence_pack(position, retrieve=_retrieve([]))
-        assert [(s["n"], s["slug"]) for s in pack["sources"]] == [(1, "early"), (2, "late")]
+        assert [(s["n"], s["slug"]) for s in pack["sources"]] == [(1, "z-early"), (2, "a-late")]
 
     def test_each_source_is_bound_to_slug_title_and_url(self):
         position = _position([_claim("a", "2020-01-01", title="On Widgets")])
@@ -348,7 +351,9 @@ class TestRenderHtml:
         assert "First" in html and "Second" in html
 
     def test_title_falls_back_to_the_subject(self):
-        assert "widget policy" in render_html(_column("Body [1].", title=None), _pack())
+        # In the heading itself — the subject is also named by the record block below it.
+        html = render_html(_column("Body [1].", title=None), _pack())
+        assert re.search(r"<h1[^>]*>widget policy</h1>", html)
 
     def test_marker_links_to_the_cited_article(self):
         html = render_html(_column("Body [2]."), _pack())
