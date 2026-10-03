@@ -352,6 +352,18 @@ name rather than falling back to the weekly note. `year_in_review.run()` derives
 from the email directory it was given rather than taking it as a separate argument, so a
 caller that redirects the render cannot still append to the live cron log.
 
+`weekly_column.py` — the **weekly column**'s compose/render core (roadmap #45, first slice;
+design: the 2026-09-07 spec, Arc B). `build_evidence_pack(position, *, retrieve)` folds a
+position's claims and retrieved passages into sources numbered `[1..n]`, **one per article**,
+in date order. `compose(pack, *, generate)` writes the column in his voice with `[n]` markers
+(the gate's errors can be passed back as `feedback` for a retry), and `render_html` produces the
+Georgia-serif email. The closing **record is rendered from the position's tally, never
+generated**, and `render_html` refuses an unresolved marker on its own. **No CLI or runner
+yet, on purpose:** an unverified column must never be rendered or drafted, and the citation
+gate (#46) does not exist. Selection (#44) and the positions index (#43) are separate.
+Retrieval and generation are injected seams, as in `rag_eval.py`, and the author is a
+parameter.
+
 ### Evaluation harnesses & the Geo-LLM ladder
 
 These establish whether Ask Dad is *trustworthy* and whether a fine-tune would beat it

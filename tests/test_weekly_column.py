@@ -207,6 +207,12 @@ class TestBuildPrompt:
         assert "every paragraph" in prompt.lower()
         assert "exactly" in prompt.lower()
 
+    def test_requires_the_column_to_engage_his_claims(self):
+        # Live, 2026-10-03: with only the citation rules, a T2 draft on inflation cited four
+        # passage-only sources and none of the four carrying his adjudicated claims — an essay
+        # *near* his positions rather than one about them.
+        assert "at least one of the claims" in build_prompt(_pack()).lower()
+
     def test_tells_the_composer_not_to_state_the_record(self):
         # The record block is rendered from the tally; a generated one could round it up.
         assert "record" in build_prompt(_pack()).lower()

@@ -138,6 +138,8 @@ RULES
 "Title: ...".
 - Every paragraph must cite at least one source with its number in square brackets, like [2].
 - Cite only the numbers listed below. Never invent a source.
+- The column is about what you held. Engage at least one of the claims you made below and
+cite its source number.
 - Anything you put in quotation marks must be copied exactly, word for word, from a passage \
 below. Paraphrase freely, but never misquote.
 - Where a source says a claim went wrong, do not present it as having come good.
