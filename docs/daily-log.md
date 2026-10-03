@@ -1164,3 +1164,8 @@ Format:
   **A documented refusal:** the anthology is deliberately *not* a kind, because mailing it needs
   a PDF attachment the Gmail-MCP `html_body` payload cannot carry — recorded in the README so the
   next run does not mistake the omission for an oversight. Nothing here sends mail; D9 holds.
+
+### 2026-10-03 — family — ready-for-review
+- PR: https://github.com/wcalhoun516/digital-dad/pull/125
+- Source: roadmap:#45 (first slice)
+- Summary: The weekly column's compose/render core, `analysis/weekly_column.py`: `build_evidence_pack` (claims plus passages, one `[n]` per article), `compose` (grounded T2 prompt, with gate feedback for retries), and `render_html` (record rendered from the tally, refuses unresolved markers). No CLI or runner until the #46 gate exists. Live on the real inflation position: 7/7 quotes were verbatim **once whitespace is ignored**, because the corpus has glued words (`caseagainstan`). #46's matcher must therefore drop whitespace, not just collapse it. Mutation testing: 26/26 caught. Plan 0011 is skipped as done in #119. §5b was tallied from PR metadata (`main`'s log still lacks 09-21→09-24 and 09-26).
