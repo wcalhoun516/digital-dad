@@ -36,6 +36,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
 
+from . import hub_offline
 from .utils import DATA_DIR
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -275,6 +276,9 @@ def _stage_best_adapter(adapter_dir: Path, log_path: Path, dest: Path) -> tuple[
 
 def _live_mlx(arm: ArmSpec, *, max_tokens: int, repetition_penalty: float,
               sources: dict[str, list[dict]] | None = None):
+    # Before mlx_lm is imported: huggingface_hub reads HF_HUB_OFFLINE once, at import.
+    hub_offline.apply_in_process([arm.model])
+
     from mlx_lm import generate as mlx_generate
     from mlx_lm import load
 
