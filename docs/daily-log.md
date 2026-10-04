@@ -1164,3 +1164,28 @@ Format:
   **A documented refusal:** the anthology is deliberately *not* a kind, because mailing it needs
   a PDF attachment the Gmail-MCP `html_body` payload cannot carry — recorded in the README so the
   next run does not mistake the omission for an oversight. Nothing here sends mail; D9 holds.
+
+### 2026-10-04 — infra — ready-for-review
+- PR: #126
+- Source: roadmap:#63
+- Summary: Roadmap **#63 (P2·S·infra)** — **unattended runs can no longer block on the HF hub
+  when the weights are already on disk.** New `analysis/hub_offline.py` (pure): offline exactly
+  when every model is *provably* cached (`refs/main` → a snapshot holding `config.json`, or a
+  local dir — a half-finished download stays online so it resumes), an explicit
+  `HF_HUB_OFFLINE`/`TRANSFORMERS_OFFLINE` always wins, and the hub timeouts are pinned otherwise.
+  Wired into `voice_candidates._live_mlx` (applied *before* `mlx_lm` is imported, because
+  `huggingface_hub` reads the flag once at import, and patches an already-imported hub) and
+  `retrain_watch` (the `mlx_lm.lora` subprocess gets the env, keyed on the config's `model:`).
+  **Live proof** against the real cache: mlx_lm's own `_download` on the cached gemma-4-e4b
+  opened **1** hub socket without the fix and **0** with it, resolving the same snapshot.
+  Mutation pass: **11/11** mutants of the policy killed. **Category tally note:** `main`'s log
+  stops at 09-25 because 09-27…10-03 sit in unmerged PRs (#119–#125), so the tally was taken
+  from those PR bodies. Scraper (last worked 08-23) and docs have no unstarted items, and the
+  dashboard items are all done, so infra (09-29) was next. **A mishap, disclosed:** the first
+  red draft of the pipeline test monkeypatched `_default_step`, missed the seam (bound as a
+  default argument), and **really ran** `prepare` + `preflight` + `mlx_lm.lora` against a fake
+  model. lora died at load (no adapters written), but `prepare` regenerated the gitignored
+  `data/training/*`. The split is a stable slug hash, so it is byte-equivalent to a normal
+  `make training`. The test now fakes `subprocess.call` itself. The 35-minute stall itself was
+  not reproduced: why the hub's 10s default read timeout did not fire on a `CLOSE_WAIT` socket
+  is still unexplained, which is why going offline (no socket at all) is the fix, not a timeout.
