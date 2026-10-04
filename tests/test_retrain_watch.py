@@ -181,3 +181,42 @@ def test_load_last_state_survives_an_unreadable_path(tmp_path):
     d = tmp_path / "state_is_a_dir"
     d.mkdir()
     assert rw.load_last_state(d) is None
+
+
+# --- hub access (roadmap #63) -----------------------------------------------------
+
+def test_config_model_reads_the_model_key(tmp_path):
+    cfg = tmp_path / "c.yaml"
+    cfg.write_text('# lora\nmodel: "mlx-community/gemma-4-e4b-it-4bit"  # base\niters: 10\n')
+    assert rw.config_model(cfg) == "mlx-community/gemma-4-e4b-it-4bit"
+
+
+def test_config_model_is_none_when_absent_or_unreadable(tmp_path):
+    cfg = tmp_path / "c.yaml"
+    cfg.write_text("iters: 10\n")
+    assert rw.config_model(cfg) is None
+    assert rw.config_model(tmp_path / "missing.yaml") is None
+
+
+def test_the_real_pipeline_hands_its_steps_an_offline_hub_env(tmp_path, monkeypatch):
+    """mlx_lm.lora is a subprocess: the offline decision must reach it through its env."""
+    snap = tmp_path / "hub" / "models--org--m" / "snapshots" / "abc"
+    snap.mkdir(parents=True)
+    (snap / "config.json").write_text("{}")
+    (tmp_path / "hub" / "models--org--m" / "refs").mkdir()
+    (tmp_path / "hub" / "models--org--m" / "refs" / "main").write_text("abc")
+    cfg = tmp_path / "c.yaml"
+    cfg.write_text("model: org/m\n")
+    monkeypatch.setenv("HF_HUB_CACHE", str(tmp_path / "hub"))
+    monkeypatch.delenv("HF_HUB_OFFLINE", raising=False)
+    monkeypatch.delenv("TRANSFORMERS_OFFLINE", raising=False)
+
+    # Fake the process boundary itself, never the step: a test that misses its seam here
+    # runs a real prepare + three-hour mlx_lm.lora.
+    calls = []
+    monkeypatch.setattr(rw.subprocess, "call",
+                        lambda cmd, cwd=None, env=None: calls.append((cmd, env)) or 0)
+    assert rw.run_pipeline(train=True, evaluate=False, config=cfg).ok
+    assert len(calls) == 3
+    assert all(env and env["HF_HUB_OFFLINE"] == "1" for _, env in calls)
+    assert calls[-1][1]["HF_HUB_CACHE"] == str(tmp_path / "hub")   # inherits the rest

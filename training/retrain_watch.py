@@ -21,12 +21,16 @@ seam, so the logic is unit-tested offline and no test starts a real training run
 import argparse
 import hashlib
 import json
+import os
+import re
 import subprocess
 import sys
 from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
 from typing import Callable
+
+from analysis import hub_offline
 
 ROOT = Path(__file__).resolve().parent.parent
 STATE_PATH = ROOT / "data" / "training" / "retrain_state.json"
@@ -126,14 +130,26 @@ def record_state(state: dict, path: Path = STATE_PATH) -> Path:
 
 # --- pipeline --------------------------------------------------------------------
 
-def _default_step(name: str, cmd: list[str]) -> int:
+_MODEL_LINE = re.compile(r"""^model:\s*["']?([^"'#\s]+)""", re.MULTILINE)
+
+
+def config_model(config: Path) -> str | None:
+    """The base model an ``mlx_lm.lora`` config trains, read without a YAML dependency."""
+    try:
+        match = _MODEL_LINE.search(config.read_text())
+    except OSError:
+        return None
+    return match.group(1) if match else None
+
+
+def _default_step(name: str, cmd: list[str], env: dict[str, str] | None = None) -> int:
     print(f"\n=== {name}: {' '.join(cmd)}", flush=True)
-    return subprocess.call(cmd, cwd=str(ROOT))
+    return subprocess.call(cmd, cwd=str(ROOT), env=env)
 
 
 def run_pipeline(
     *,
-    step: Callable[[str, list[str]], int] = _default_step,
+    step: Callable[[str, list[str]], int] | None = None,
     train: bool = True,
     evaluate: bool = False,
     config: Path = CONFIG_PATH,
@@ -143,7 +159,15 @@ def run_pipeline(
     ``preflight`` runs ``--strict`` on purpose: it is the gate that caught a real
     train/heldout leak, and a run that forces past it produces numbers that cannot be
     compared to anything. ``evaluate`` is opt-in because the judge costs real money.
+
+    The real steps run with the hub offline when the config's model is cached (roadmap
+    #63): ``mlx_lm.lora`` is a subprocess, so the decision has to travel in its env.
     """
+    if step is None:
+        env = {**os.environ, **hub_offline.hub_env([config_model(config)])}
+
+        def step(name: str, cmd: list[str]) -> int:
+            return _default_step(name, cmd, env)
     py = str(ROOT / ".venv" / "bin" / "python")
     steps: list[tuple[str, list[str]]] = [
         ("prepare", [py, "-m", "training"]),
