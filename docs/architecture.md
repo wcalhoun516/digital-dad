@@ -473,6 +473,18 @@ email and books are exactly what must never reach OpenRouter. Resolve slugs with
 `analysis.utils.provenance_for_slugs()`, or `corpus_provenance()` when the prompt could quote
 any article.
 
+**Hub access** (`analysis/hub_offline.py`, roadmap #63) — the local `mlx` model loads in
+`voice_candidates` and `retrain_watch` bypass the conductor and resolve weights through the
+HuggingFace hub, which checks for a newer revision **even when the weights are cached** unless
+`HF_HUB_OFFLINE` is set. An unattended run once stalled 35 minutes on a hung hub socket that
+way. `hub_env(models)` goes offline only when every model is *provably* cached (`refs/main` →
+a snapshot holding `config.json`, or a local directory) — a half-finished download stays online
+so it can resume — leaves an explicit `HF_HUB_OFFLINE`/`TRANSFORMERS_OFFLINE` alone, and pins
+the hub timeouts otherwise. `huggingface_hub` reads the flag **once, at import**, so in-process
+callers run `apply_in_process` before importing `mlx_lm` (it also patches an already-imported
+hub); `retrain_watch` passes the env to its `mlx_lm.lora` subprocess, keyed on the config's
+`model:` line.
+
 > Full reference (exact signatures, return shapes, error/retry behavior, health check):
 > [`conductor-contract.md`](conductor-contract.md).
 

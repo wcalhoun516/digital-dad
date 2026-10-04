@@ -281,3 +281,41 @@ def test_history_rows_skips_a_corrupt_line(tmp_path):
 
 def test_history_rows_empty_when_absent(tmp_path):
     assert vc.history_rows(tmp_path / "nope.jsonl") == []
+
+
+# --- hub access (roadmap #63) -----------------------------------------------------
+
+def test_live_mlx_goes_offline_before_loading_a_cached_model(tmp_path, monkeypatch):
+    """A cached model must load without a hub round-trip — one hung for 35 minutes.
+
+    huggingface_hub reads HF_HUB_OFFLINE at import, so the order matters: the env must be
+    set before ``mlx_lm`` is imported, and an already-imported hub patched.
+    """
+    import os
+    import sys
+    import types
+
+    snap = tmp_path / "models--org--m" / "snapshots" / "abc"
+    snap.mkdir(parents=True)
+    (snap / "config.json").write_text("{}")
+    (tmp_path / "models--org--m" / "refs").mkdir()
+    (tmp_path / "models--org--m" / "refs" / "main").write_text("abc")
+    monkeypatch.setenv("HF_HUB_CACHE", str(tmp_path))
+    for key in ("HF_HUB_OFFLINE", "TRANSFORMERS_OFFLINE",
+                "HF_HUB_ETAG_TIMEOUT", "HF_HUB_DOWNLOAD_TIMEOUT"):
+        monkeypatch.delenv(key, raising=False)
+    constants = types.SimpleNamespace(HF_HUB_OFFLINE=False)
+    monkeypatch.setitem(sys.modules, "huggingface_hub.constants", constants)
+
+    seen = {}
+
+    def load(model, adapter_path=None):
+        seen["env"] = os.environ.get("HF_HUB_OFFLINE")
+        seen["constant"] = constants.HF_HUB_OFFLINE
+        return object(), object()
+
+    monkeypatch.setitem(sys.modules, "mlx_lm",
+                        types.SimpleNamespace(load=load, generate=lambda *a, **k: ""))
+    vc._live_mlx(vc.ArmSpec("t", kind="mlx", model="org/m"),
+                 max_tokens=8, repetition_penalty=1.0)
+    assert seen == {"env": "1", "constant": True}
