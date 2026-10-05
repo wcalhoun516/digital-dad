@@ -1164,3 +1164,15 @@ Format:
   **A documented refusal:** the anthology is deliberately *not* a kind, because mailing it needs
   a PDF attachment the Gmail-MCP `html_body` payload cannot carry — recorded in the README so the
   next run does not mistake the omission for an oversight. Nothing here sends mail; D9 holds.
+
+### 2026-10-05 — docs — skipped
+- PR: skipped
+- Source: none (§2 backlog stand-down)
+- Summary: **Stood down: 8 open `daily/*` PRs (#119–#126), at the §2 threshold.** `main` is
+  green (latest run on #115's merge: success), so there was no §1.5 trunk fix to make. One of
+  the eight, **#119** (plan 0011 step 5), is no longer a draft, so it looks like the owner
+  marked it ready. It still counts because §2's command counts every open `daily/*` PR. If
+  #119 merges, the count drops to 7 and tomorrow's run picks up work again. **Note for whoever
+  merges:** `main`'s run history stops at 09-25. The entries for 09-27 through 10-04 live only
+  on the unmerged branches (#119–#126), so this entry sits directly after 09-25 here. When those
+  PRs land, resolve any conflict in this file by **keeping both sides**, ordered by date.
