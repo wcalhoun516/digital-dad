@@ -1164,3 +1164,16 @@ Format:
   **A documented refusal:** the anthology is deliberately *not* a kind, because mailing it needs
   a PDF attachment the Gmail-MCP `html_body` payload cannot carry — recorded in the README so the
   next run does not mistake the omission for an oversight. Nothing here sends mail; D9 holds.
+
+### 2026-10-06 — docs — skipped
+- PR: skipped
+- Source: none (§2 backlog stand-down)
+- Summary: **Stood down: 8 open `daily/*` PRs (#119–#126), at the §2 threshold. This is the second
+  skip in a row.** `main` is green (latest run on #115's merge: success) and unchanged since
+  yesterday, so there was no §1.5 trunk fix. All eight are green in CI, `MERGEABLE`, and carry
+  `**Status:** ready-for-review`. None is `in-progress`, so §3 had nothing to resume or flag as
+  stale. Seven are still drafts (#120–#126) and need `gh pr ready <n>` before GitHub will merge
+  them. #119 is already un-drafted. Merging any one of them drops the count to 7 and restarts
+  the daily work. **Note for whoever merges:** like yesterday's (`daily/2026-10-05-skipped`),
+  this entry sits directly after 09-25 because the 09-27 to 10-05 entries live only on unmerged
+  branches. Resolve any conflict in this file by **keeping both sides**, ordered by date.
